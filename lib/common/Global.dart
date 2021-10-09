@@ -1,4 +1,4 @@
-import 'package:tieba_flutter/common/API/net.dart';
+import 'package:tiebanana/common/API/net.dart';
 
 class Global {
   static TiebaAPI tiebaAPI = TiebaAPI();

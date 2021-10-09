@@ -1,5 +1,5 @@
-name: tieba_flutter
-description: A new Flutter project.
+name: tiebanana
+description: A unofficial tieba App based on flutter.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.

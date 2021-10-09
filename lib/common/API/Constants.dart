@@ -1,4 +1,4 @@
-import 'package:tieba_flutter/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/json.dart';
 
 const String BAIDU_URL = "https://www.baidu.com"; //百度首页
 const String LOGIN_POST_URL =

@@ -5,7 +5,7 @@ import 'package:json5/json5.dart';
 
 import 'Constants.dart';
 import 'package:dio/dio.dart';
-import 'package:tieba_flutter/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/json.dart';
 
 ///百度验证码类
 class PassMachine {

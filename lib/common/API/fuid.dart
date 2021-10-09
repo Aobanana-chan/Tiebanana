@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
-import 'package:tieba_flutter/common/API/Constants.dart';
+import 'package:tiebanana/common/API/Constants.dart';
 
 ///生成百度的fuid,待完善
 ///fuid是浏览器唯一标识

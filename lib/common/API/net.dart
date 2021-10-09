@@ -14,11 +14,11 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:tieba_flutter/Json_Model/json.dart';
-import 'package:tieba_flutter/common/API/LG_DV_ARG.dart';
-import 'package:tieba_flutter/common/API/fuid.dart';
-import 'package:tieba_flutter/common/API/passMachine.dart';
-import 'package:tieba_flutter/common/Global.dart';
+import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/common/API/LG_DV_ARG.dart';
+import 'package:tiebanana/common/API/fuid.dart';
+import 'package:tiebanana/common/API/passMachine.dart';
+import 'package:tiebanana/common/Global.dart';
 import 'Constants.dart';
 
 class TiebaAPI {
