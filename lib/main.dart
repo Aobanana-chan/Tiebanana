@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tieba_flutter/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/json.dart';
 
-import 'package:tieba_flutter/common/Global.dart';
+import 'package:tiebanana/common/Global.dart';
 
 void main() async {
   runApp(App());
