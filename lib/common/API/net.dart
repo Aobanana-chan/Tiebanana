@@ -72,7 +72,7 @@ class TiebaAPI {
       await dio.get(BAIDU_URL);
     }
     //登陆百度首页,以设置BAIDUID等Cookie
-    dio.get(BAIDU_URL);
+    await dio.get(BAIDU_URL);
     //获取token
     var _token = await _getToken();
     //获取RSA加密公钥
@@ -165,15 +165,17 @@ class TiebaAPI {
           //"callback":
           "time": time ~/ 1000,
           "alg": "v3",
-          "sig": _getSig(MapSrot(sigParams)),
+          "sig": _getSig(_mapSrot(sigParams)),
           "shaOne": _getshaOne(time),
           "elapsed": DateTime.now().millisecondsSinceEpoch - time,
           "rinfo": {
             "fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"
           } //这里的fuid是上面的fuid的md5值
         },
-        options: Options(
-            headers: {"Referer": BAIDU_URL}, responseType: ResponseType.plain));
+        options: Options(headers: {
+          "Referer": BAIDU_URL,
+          "Content-Type": "application/x-www-form-urlencoded"
+        }, responseType: ResponseType.plain));
     var errNo = RegExp(r"(?<=err_no=)(.+?)(?=&)").firstMatch(loginRes.data)![0];
     return BaiduErroNo.parse(errNo!);
   }
@@ -222,7 +224,7 @@ class TiebaAPI {
           'Referer': BAIDU_URL,
         }, responseType: ResponseType.plain));
     var resJson = JSON5.parse(res.data);
-
+    token = resJson['data']['token'];
     return resJson['data']['token'];
   }
 
@@ -484,7 +486,7 @@ class TiebaAPI {
     return headID + "01"; //登陆结尾为01，注册结尾为02
   }
 
-  Map<String, dynamic> MapSrot(Map<String, dynamic> map) {
+  Map<String, dynamic> _mapSrot(Map<String, dynamic> map) {
     var keys = map.keys.toList();
     // key排序
     keys.sort((a, b) {

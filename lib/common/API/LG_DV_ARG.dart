@@ -48,7 +48,7 @@ class WindowsDv {
         var c;
         if (d is num) {
           c = d >= 0 ? 1 : 2;
-          d = _getDvint(r, d as int);
+          d = _getDvint(r, d as num);
         } else if (d is bool) {
           c = 3;
           d = _getDvint(r, d ? 1 : 0);
@@ -58,7 +58,9 @@ class WindowsDv {
         } else {
           c = 0;
           d = _getDvstr(r, d + "");
-          a.add(_getDvstr(r, ([o[i], c, d.length]) + d as String));
+          if (d != null) {
+            a.add(_getDviary(r, [o[i], c, d.length]) + d);
+          }
         }
       }
     }
@@ -170,7 +172,7 @@ class WindowsDv {
     return o;
   }
 
-  String _getDvint(Map<String, dynamic> map, int e) {
+  String _getDvint(Map<String, dynamic> map, num e) {
     return _getDva(e, map["dict"]);
   }
 

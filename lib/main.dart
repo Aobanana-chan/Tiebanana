@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:tieba_flutter/Json_Model/json.dart';
 
-import 'package:tieba_flutter/common/API/net.dart';
+import 'package:tieba_flutter/common/Global.dart';
 
 void main() async {
   runApp(App());
-  var test = TiebaAPI();
-  await test.init();
-  test.loginByPassword("username", "password");
+  await Global.tiebaAPI.init();
+  LoginErrCode test = await Global.tiebaAPI.loginByPassword("940610311", "123");
+  print(test.errcode);
 }
 
 class App extends StatelessWidget {

@@ -68,7 +68,7 @@ class PassMachine {
     Response res = await dio.get(VIEW_LOG_URL,
         queryParameters: {"ak": ak, "_": DateTime.now().millisecondsSinceEpoch},
         options: Options(responseType: ResponseType.plain));
-    ViewlogData vlData = json5Decode(res.data);
+    ViewlogData vlData = ViewlogData.fromJson(json5Decode(res.data));
     as = vlData.data!.as!;
     ds = vlData.data!.ds!;
     tk = vlData.data!.tk!;

@@ -88,6 +88,8 @@ const String ChromeUA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36";
 const String VIEW_LOG_URL = "https://passport.baidu.com/viewlog";
 const String GETSTYLE_URL = "https://passport.baidu.com/viewlog/getstyle";
+const String MAIL_VERIFY_URL =
+    "https://passport.baidu.com/v2/sapi/authwidgetverify";
 
 ///百度err_no码 Web端口
 final webErrCode = {
@@ -114,7 +116,7 @@ final webErrCode = {
   "400032": {"msg": "", "field": ""},
   "400034": {"msg": "", "field": ""},
   "401007": {"msg": "您的手机号关联了其他帐号，请选择登录", "field": ""},
-  "120021": {"msg": "登录失败,请在弹出的窗口操作,或重新登录", "field": ""},
+  "120021": {"msg": "登录失败,请在弹出的窗口操作,或重新登录", "field": ""}, //需要手机短信验证
   "500010": {"msg": "登录过于频繁,请24小时后再试", "field": ""},
   "200010": {"msg": "验证码不存在或已过期", "field": ""},
   "100005": {"msg": "系统错误,请您稍后再试", "field": ""},
