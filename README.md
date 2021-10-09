@@ -1,16 +1,14 @@
-# tieba_flutter
+# Tiebanana
 
-A new Flutter project.
+Tiebanana是第三方百度贴吧客户端，基于Flutter。</br>
+目前状态：~~新建文件夹~~(其实也差不多)
 
-## Getting Started
+# 说明
+个人一直在使用TiebaLite,但TiebaLite咕咕咕了一年了，现在部分帖子也已经无法正常查看了（显示网络似乎有点问题）。此项目用于继承TiebaLite精神（如果原作者已经放弃了的话），以及个人对Flutter的一个学习。
+# Todo:
+- [ ] 贴吧API完成
+- [ ] 界面UI搭建
+- [ ] …… 
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# 声明
+源码仅供学习交流使用，严禁用于商业用途。

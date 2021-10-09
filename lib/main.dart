@@ -6,7 +6,7 @@ import 'package:tieba_flutter/common/Global.dart';
 void main() async {
   runApp(App());
   await Global.tiebaAPI.init();
-  LoginErrCode test = await Global.tiebaAPI.loginByPassword("940610311", "123");
+  LoginErrCode test = await Global.tiebaAPI.loginByPassword("test", "test");
   print(test.errcode);
 }
 
