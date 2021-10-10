@@ -297,3 +297,74 @@ class LoginErrCode {
     return data;
   }
 }
+
+///APP设置Model类
+class APPSetting {
+  ///主题，对应theme颜色的Hex
+  int? theme;
+
+  ///图片加载设置
+  ///0-智能省流量
+  ///1-智能无图
+  ///2-始终高质量
+  ///3-始终无图
+  int? pictureLoadSetting;
+
+  ///收藏贴浏览后自动缓存（防止帖子被删后找不到内容）
+  bool? markedCache;
+
+  ///夜间模式
+  bool? darkModel;
+
+  ///打开APP后自动签到
+  bool? signAllsinceOpen;
+
+  ///连接使用内置浏览器打开
+  bool? useBuildinBrowser;
+
+  ///自动检查更新
+  bool? checkUpdateAutomaticlly;
+
+  ///使用小尾巴
+  bool? usePostTail;
+
+  ///小尾巴内容
+  String? postTail;
+
+  APPSetting(
+      {this.theme,
+      this.pictureLoadSetting,
+      this.markedCache,
+      this.darkModel,
+      this.signAllsinceOpen,
+      this.useBuildinBrowser,
+      this.checkUpdateAutomaticlly,
+      this.usePostTail,
+      this.postTail});
+
+  APPSetting.fromJson(Map<String, dynamic> json) {
+    theme = json['theme'];
+    pictureLoadSetting = json['pictureLoadSetting'];
+    markedCache = json['MarkedCache'];
+    darkModel = json['darkModel'];
+    signAllsinceOpen = json['signAllsinceOpen'];
+    useBuildinBrowser = json['useBuildinBrowser'];
+    checkUpdateAutomaticlly = json['checkUpdateAutomaticlly'];
+    usePostTail = json['usePostTail'];
+    postTail = json['postTail'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['theme'] = this.theme;
+    data['pictureLoadSetting'] = this.pictureLoadSetting;
+    data['MarkedCache'] = this.markedCache;
+    data['darkModel'] = this.darkModel;
+    data['signAllsinceOpen'] = this.signAllsinceOpen;
+    data['useBuildinBrowser'] = this.useBuildinBrowser;
+    data['checkUpdateAutomaticlly'] = this.checkUpdateAutomaticlly;
+    data['usePostTail'] = this.usePostTail;
+    data['postTail'] = this.postTail;
+    return data;
+  }
+}
