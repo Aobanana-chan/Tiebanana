@@ -1,6 +1,7 @@
-import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui';
-import 'package:encrypt/encrypt.dart';
+import 'package:encrypt/encrypt.dart' as ecpt;
+import 'package:flutter/cupertino.dart';
 import 'package:json5/json5.dart';
 
 import 'Constants.dart';
@@ -96,7 +97,7 @@ class PassMachine {
   }
 
   //获取验证码图片
-  Future<String> getCaptchaImgUrl() async {
+  Future<String> _getCaptchaImgUrl() async {
     Response res = await dio.get(GETSTYLE_URL,
         queryParameters: {
           "ak": ak,
@@ -111,6 +112,18 @@ class PassMachine {
     //设置backstr的值
     backstr = getstyleData.getstyleData!.backstr!;
     return getstyleData.getstyleData!.ext!.img!;
+  }
+
+  Future<Uint8List> getCaptchaImg() async {
+    var url = Uri.decodeFull(await _getCaptchaImgUrl());
+    var res = await dio.get(url,
+        options: Options(headers: {
+          "Referer": BAIDU_URL,
+          "Accept":
+              "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+        }, responseType: ResponseType.bytes));
+
+    return res.data;
   }
 
   //发送验证码并获得验证结果结果
@@ -148,8 +161,13 @@ class PassMachine {
     var strData = _rzdata.toString();
     var nameL = as;
     var key = nameL + _nameR;
-    return Encrypter(AES(Key.fromUtf8(key), mode: AESMode.ecb))
-        .encrypt(strData, iv: IV.fromLength(0))
+    return ecpt.Encrypter(
+            ecpt.AES(ecpt.Key.fromUtf8(key), mode: ecpt.AESMode.ecb))
+        .encrypt(strData, iv: ecpt.IV.fromLength(0))
         .base64;
+  }
+
+  void setAcc(double value) {
+    _rzdata["ac_c"] = value;
   }
 }

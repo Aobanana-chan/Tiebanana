@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/common/API/net.dart';
 
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Global.init();
+  Global.tiebaAPI.init();
   runApp(App());
-  await Global.tiebaAPI.init();
-  LoginErrCode test = await Global.tiebaAPI.loginByPassword("test", "test");
-  print(test.errcode);
 }
 
 class App extends StatelessWidget {
@@ -28,6 +29,12 @@ class App extends StatelessWidget {
             return MaterialApp(
               initialRoute: PageRouter.home,
               routes: PageRouter.routes,
+              theme: ThemeData(primaryColor: theme.theme),
+              darkTheme: Global.setting.darkModel == 0
+                  ? ThemeData(
+                      brightness: Brightness.dark,
+                    )
+                  : null,
             );
           },
         ));

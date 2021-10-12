@@ -171,16 +171,15 @@ class Getstyle {
 
   Getstyle.fromJson(Map<String, dynamic> json) {
     code = json['code'];
-    getstyleData = json['getstyleData'] != null
-        ? new GetstyleData.fromJson(json['getstyleData'])
-        : null;
+    getstyleData =
+        json['data'] != null ? new GetstyleData.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['code'] = this.code;
     if (this.getstyleData != null) {
-      data['getstyleData'] = this.getstyleData!.toJson();
+      data['data'] = this.getstyleData!.toJson();
     }
     return data;
   }
@@ -220,7 +219,7 @@ class Ext {
   Ext.fromJson(Map<String, dynamic> json) {
     img = json['img'];
     info = json['info'];
-    sup = json['sup'];
+    sup = (json['sup'] as double).toInt();
   }
 
   Map<String, dynamic> toJson() {
@@ -314,7 +313,10 @@ class APPSetting {
   bool? markedCache;
 
   ///夜间模式
-  bool? darkModel;
+  ///0-跟随系统
+  ///1-打开
+  ///2-关闭
+  int? darkModel;
 
   ///打开APP后自动签到
   bool? signAllsinceOpen;
