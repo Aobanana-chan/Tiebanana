@@ -1,6 +1,7 @@
 import 'package:tiebanana/Json_Model/json.dart';
 
 const String BAIDU_URL = "https://www.baidu.com"; //百度首页
+const String LOGIN_GET_URL = "https://passport.baidu.com/v2/?login";
 const String LOGIN_POST_URL =
     "https://passport.baidu.com/v2/api/?login"; //登陆API
 const String TOKEN_GET_URL =
@@ -90,6 +91,9 @@ const String VIEW_LOG_URL = "https://passport.baidu.com/viewlog";
 const String GETSTYLE_URL = "https://passport.baidu.com/viewlog/getstyle";
 const String MAIL_VERIFY_URL =
     "https://passport.baidu.com/v2/sapi/authwidgetverify";
+const String WAP_URL = "https://wappass.baidu.com/"; //wap端入口
+const String WAP_LOGIN_URL =
+    "https://wappass.baidu.com/wp/api/login"; //wap端登陆入口
 
 ///百度err_no码 Web端口
 final webErrCode = {

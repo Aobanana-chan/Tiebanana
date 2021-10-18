@@ -22,11 +22,15 @@ import 'package:tiebanana/common/Global.dart';
 import 'Constants.dart';
 
 class TiebaAPI {
-  static Dio dio = new Dio(BaseOptions(headers: {"User-Agent": ChromeUA}));
+  static Dio dio = new Dio(BaseOptions(headers: {
+    "User-Agent": ChromeUA,
+    "Connection": "keep-alive",
+  }));
   var cookieJar;
   bool isLogin = false;
   String token = "";
   String _traceID = "";
+  String _gid = "";
   WindowsDv windowsDv = WindowsDv();
   PassMachine passMachine = PassMachine(dio);
   FingerPrint fuid = FingerPrint();
@@ -68,8 +72,6 @@ class TiebaAPI {
       await cookieJar.delete();
       token = "";
       isLogin = false;
-      //重新获取BDUID和token
-      await dio.get(BAIDU_URL);
     }
     //登陆百度首页,以设置BAIDUID等Cookie
     await dio.get(BAIDU_URL);
@@ -124,6 +126,7 @@ class TiebaAPI {
       "alg": "v3",
       "time": time ~/ 1000
     };
+
     var loginRes = await dio.post(LOGIN_POST_URL,
         data: {
           "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
@@ -230,13 +233,17 @@ class TiebaAPI {
 
   //获取随机的gid
   String _guideRandom() {
+    if (_gid != "") {
+      return _gid;
+    }
     String gid = "xxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
     gid = gid.replaceAllMapped(RegExp(r"[xy]"), (Match m) {
       final t = Random().nextInt(15);
       final n = "x" == m[0] ? t : 3 & t | 8;
       return n.toRadixString(16).toUpperCase();
     });
-    return gid;
+    _gid = gid;
+    return _gid;
   }
 
   String _getshaOne(int time) {
@@ -448,7 +455,7 @@ class TiebaAPI {
     };
     Response res = await dio.get(PUB_KEY_URL,
         queryParameters: {
-          'token': _getToken(),
+          'token': await _getToken(),
           'subpro': '',
           'traceid': '',
           'tpl': 'mn',

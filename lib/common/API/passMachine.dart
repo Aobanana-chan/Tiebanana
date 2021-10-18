@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:encrypt/encrypt.dart' as ecpt;
@@ -93,7 +94,9 @@ class PassMachine {
 
   //记录
   void recordAction(String actionType, Map<String, dynamic> data) {
-    (_rzdata[actionType]! as List).add(data);
+    if ((_rzdata[actionType]! as List).length < 10) {
+      (_rzdata[actionType]! as List).add(data);
+    }
   }
 
   //获取验证码图片
@@ -106,8 +109,9 @@ class PassMachine {
           "type": "default",
           "_": DateTime.now().millisecondsSinceEpoch
         },
-        options: Options(
-            headers: {"Referer": BAIDU_URL}, responseType: ResponseType.plain));
+        options: Options(headers: {
+          "Referer": BAIDU_URL,
+        }, responseType: ResponseType.plain));
     Getstyle getstyleData = Getstyle.fromJson(json5Decode(res.data));
     //设置backstr的值
     backstr = getstyleData.getstyleData!.backstr!;
@@ -128,21 +132,24 @@ class PassMachine {
 
   //发送验证码并获得验证结果结果
   Future<bool> verify() async {
-    String fs = _encrypt(); //用于存放加密后的rzdata
     Map<String, dynamic> sb = _rzdata; //用于请求的rzdata,和backstr等数据
     sb["backstr"] = backstr;
+    String fs = _encrypt(sb); //用于存放加密后的sb
     Response res = await dio.get(VIEW_LOG_URL,
         queryParameters: {
           "ak": ak,
           "as": as,
           "fs": fs,
-          "sb": sb,
+          "sb": jsonEncode(sb),
+          "tk": tk,
           "cv": _cv,
           "_": DateTime.now().millisecondsSinceEpoch
         },
-        options: Options(
-            headers: {"Referer": BAIDU_URL}, responseType: ResponseType.plain));
-    ViewlogVerify viewlogVerify = ViewlogVerify.fromJson(json5Decode(res.data));
+        options: Options(headers: {
+          "Referer": BAIDU_URL,
+          "Connection": "keep-alive",
+        }, responseType: ResponseType.plain));
+    ViewlogVerify viewlogVerify = ViewlogVerify.fromJson(jsonDecode(res.data));
     //重新设置as,ds,tk
     as = viewlogVerify.dsdata!.as!;
     ds = viewlogVerify.dsdata!.ds!;
@@ -156,9 +163,35 @@ class PassMachine {
     }
   }
 
-  //对rzdata进行aes加密
-  String _encrypt() {
-    var strData = _rzdata.toString();
+  //发送操作记录
+  Future sendRecord() async {
+    String fs = _encrypt(_rzdata); //用于存放加密后的rzdata
+    Map<String, dynamic> sb = _rzdata; //用于请求的rzdata,和backstr等数据
+    Response res = await dio.get(VIEW_LOG_URL,
+        queryParameters: {
+          "ak": ak,
+          "as": as,
+          "fs": fs,
+          "sb": jsonEncode(sb),
+          "tk": tk,
+          "_": DateTime.now().millisecondsSinceEpoch
+        },
+        options: Options(headers: {
+          "Referer": BAIDU_URL,
+          "Connection": "keep-alive",
+        }, responseType: ResponseType.plain));
+    ViewlogVerify viewlogVerify = ViewlogVerify.fromJson(jsonDecode(res.data));
+    //重新设置as,ds,tk
+    as = viewlogVerify.dsdata!.as!;
+    ds = viewlogVerify.dsdata!.ds!;
+    tk = viewlogVerify.dsdata!.tk!;
+    //清空操作记录
+    _clearRzdata();
+  }
+
+  //对数据进行aes加密
+  String _encrypt(Map data) {
+    var strData = jsonEncode(data);
     var nameL = as;
     var key = nameL + _nameR;
     return ecpt.Encrypter(

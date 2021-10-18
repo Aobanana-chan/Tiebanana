@@ -31,6 +31,7 @@ dependencies:
   json5: ^0.7.0
   provider: ^6.0.1
   shared_preferences: ^2.0.8
+  just_throttle_it: ^2.0.0
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2

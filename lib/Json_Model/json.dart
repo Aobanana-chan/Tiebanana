@@ -239,15 +239,14 @@ class ViewlogVerify {
 
   ViewlogVerify.fromJson(Map<String, dynamic> json) {
     code = json['code'];
-    dsdata =
-        json['dsdata'] != null ? new Dsdata.fromJson(json['dsdata']) : null;
+    dsdata = json['data'] != null ? new Dsdata.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['code'] = this.code;
     if (this.dsdata != null) {
-      data['dsdata'] = this.dsdata!.toJson();
+      data['data'] = this.dsdata!.toJson();
     }
     return data;
   }
@@ -367,6 +366,348 @@ class APPSetting {
     data['checkUpdateAutomaticlly'] = this.checkUpdateAutomaticlly;
     data['usePostTail'] = this.usePostTail;
     data['postTail'] = this.postTail;
+    return data;
+  }
+}
+
+//WAP端登陆服务器返回json
+class WAPLoginResponse {
+  ErrInfo? errInfo;
+  WAPData? data;
+
+  WAPLoginResponse({this.errInfo, this.data});
+
+  WAPLoginResponse.fromJson(Map<String, dynamic> json) {
+    errInfo =
+        json['errInfo'] != null ? new ErrInfo.fromJson(json['errInfo']) : null;
+    data = (json['data'] != null ? new Data.fromJson(json['data']) : null)
+        as WAPData?;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    if (this.errInfo != null) {
+      data['errInfo'] = this.errInfo!.toJson();
+    }
+    if (this.data != null) {
+      data['data'] = this.data!.toJson();
+    }
+    return data;
+  }
+}
+
+class ErrInfo {
+  String? no;
+  String? msg;
+
+  ErrInfo({this.no, this.msg});
+
+  ErrInfo.fromJson(Map<String, dynamic> json) {
+    no = json['no'];
+    msg = json['msg'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['no'] = this.no;
+    data['msg'] = this.msg;
+    return data;
+  }
+}
+
+class WAPData {
+  String? u;
+  int? serverTime;
+  String? codeString;
+  String? bduss;
+  String? ptoken;
+  String? bcsn;
+  String? bcsync;
+  String? bcchecksum;
+  String? bctime;
+  String? gotoUrl;
+  String? userid;
+  String? phone;
+  String? appealurl;
+  String? secondU;
+  String? ppU;
+  String? realnameswitch;
+  String? appealcode;
+  String? ppDatau;
+  String? livinguname;
+  String? liveSecurity;
+  String? xml;
+  String? username;
+  String? realName;
+  String? bdstoken;
+  String? bdstokenback;
+  String? authsid;
+  String? authsidback;
+  String? authtoken;
+  String? lstr;
+  String? ltoken;
+  String? isChangePwd;
+  String? isSilenceAccount;
+  String? jumpset;
+  String? secstate;
+  String? oriU;
+  String? showType;
+  String? email;
+  String? realnameverifyemail;
+  String? mobile;
+  String? mobileHidden;
+  String? countrycode;
+  String? idcard;
+  String? liveUsername;
+  String? loginProxy;
+  String? verifyUrl;
+  String? hasGuideFaceLogin;
+  String? guideFaceAuthsid;
+  String? isFinanceTpl;
+  String? openSwitchType;
+  String? authtokenFaceLogin;
+  String? guidefrom;
+  String? isFinance;
+  String? headImage;
+  String? defaultUserName;
+  String? isslide;
+  String? ppIsUpgradeMobile;
+  String? ppEncryptUserid;
+  String? hasRealName;
+  String? scscene;
+  String? scnewuser;
+  int? degradeUpSms;
+  String? needDelayHint;
+  String? portraitSign;
+  String? portrait;
+  String? isReg;
+  String? guideSetPwdUname;
+  String? secauthsid;
+  String? secbdstoken;
+  bool? switchJsonSec;
+  bool? switchJsonRealName;
+  String? target;
+
+  WAPData(
+      {this.u,
+      this.serverTime,
+      this.codeString,
+      this.bduss,
+      this.ptoken,
+      this.bcsn,
+      this.bcsync,
+      this.bcchecksum,
+      this.bctime,
+      this.gotoUrl,
+      this.userid,
+      this.phone,
+      this.appealurl,
+      this.secondU,
+      this.ppU,
+      this.realnameswitch,
+      this.appealcode,
+      this.ppDatau,
+      this.livinguname,
+      this.liveSecurity,
+      this.xml,
+      this.username,
+      this.realName,
+      this.bdstoken,
+      this.bdstokenback,
+      this.authsid,
+      this.authsidback,
+      this.authtoken,
+      this.lstr,
+      this.ltoken,
+      this.isChangePwd,
+      this.isSilenceAccount,
+      this.jumpset,
+      this.secstate,
+      this.oriU,
+      this.showType,
+      this.email,
+      this.realnameverifyemail,
+      this.mobile,
+      this.mobileHidden,
+      this.countrycode,
+      this.idcard,
+      this.liveUsername,
+      this.loginProxy,
+      this.verifyUrl,
+      this.hasGuideFaceLogin,
+      this.guideFaceAuthsid,
+      this.isFinanceTpl,
+      this.openSwitchType,
+      this.authtokenFaceLogin,
+      this.guidefrom,
+      this.isFinance,
+      this.headImage,
+      this.defaultUserName,
+      this.isslide,
+      this.ppIsUpgradeMobile,
+      this.ppEncryptUserid,
+      this.hasRealName,
+      this.scscene,
+      this.scnewuser,
+      this.degradeUpSms,
+      this.needDelayHint,
+      this.portraitSign,
+      this.portrait,
+      this.isReg,
+      this.guideSetPwdUname,
+      this.secauthsid,
+      this.secbdstoken,
+      this.switchJsonSec,
+      this.switchJsonRealName,
+      this.target});
+
+  WAPData.fromJson(Map<String, dynamic> json) {
+    u = json['u'];
+    serverTime = json['serverTime'];
+    codeString = json['codeString'];
+    bduss = json['bduss'];
+    ptoken = json['ptoken'];
+    bcsn = json['bcsn'];
+    bcsync = json['bcsync'];
+    bcchecksum = json['bcchecksum'];
+    bctime = json['bctime'];
+    gotoUrl = json['gotoUrl'];
+    userid = json['userid'];
+    phone = json['phone'];
+    appealurl = json['appealurl'];
+    secondU = json['second_u'];
+    ppU = json['ppU'];
+    realnameswitch = json['realnameswitch'];
+    appealcode = json['appealcode'];
+    ppDatau = json['ppDatau'];
+    livinguname = json['livinguname'];
+    liveSecurity = json['liveSecurity'];
+    xml = json['xml'];
+    username = json['username'];
+    realName = json['realName'];
+    bdstoken = json['bdstoken'];
+    bdstokenback = json['bdstokenback'];
+    authsid = json['authsid'];
+    authsidback = json['authsidback'];
+    authtoken = json['authtoken'];
+    lstr = json['lstr'];
+    ltoken = json['ltoken'];
+    isChangePwd = json['isChangePwd'];
+    isSilenceAccount = json['isSilenceAccount'];
+    jumpset = json['jumpset'];
+    secstate = json['secstate'];
+    oriU = json['ori_u'];
+    showType = json['showType'];
+    email = json['email'];
+    realnameverifyemail = json['realnameverifyemail'];
+    mobile = json['mobile'];
+    mobileHidden = json['mobileHidden'];
+    countrycode = json['countrycode'];
+    idcard = json['idcard'];
+    liveUsername = json['liveUsername'];
+    loginProxy = json['loginProxy'];
+    verifyUrl = json['verifyUrl'];
+    hasGuideFaceLogin = json['hasGuideFaceLogin'];
+    guideFaceAuthsid = json['guideFaceAuthsid'];
+    isFinanceTpl = json['isFinanceTpl'];
+    openSwitchType = json['openSwitchType'];
+    authtokenFaceLogin = json['authtokenFaceLogin'];
+    guidefrom = json['guidefrom'];
+    isFinance = json['isFinance'];
+    headImage = json['headImage'];
+    defaultUserName = json['defaultUserName'];
+    isslide = json['isslide'];
+    ppIsUpgradeMobile = json['ppIsUpgradeMobile'];
+    ppEncryptUserid = json['ppEncryptUserid'];
+    hasRealName = json['hasRealName'];
+    scscene = json['scscene'];
+    scnewuser = json['scnewuser'];
+    degradeUpSms = json['degradeUpSms'];
+    needDelayHint = json['needDelayHint'];
+    portraitSign = json['portraitSign'];
+    portrait = json['portrait'];
+    isReg = json['isReg'];
+    guideSetPwdUname = json['guide_set_pwd_uname'];
+    secauthsid = json['secauthsid'];
+    secbdstoken = json['secbdstoken'];
+    switchJsonSec = json['switchJsonSec'];
+    switchJsonRealName = json['switchJsonRealName'];
+    target = json['target'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['u'] = this.u;
+    data['serverTime'] = this.serverTime;
+    data['codeString'] = this.codeString;
+    data['bduss'] = this.bduss;
+    data['ptoken'] = this.ptoken;
+    data['bcsn'] = this.bcsn;
+    data['bcsync'] = this.bcsync;
+    data['bcchecksum'] = this.bcchecksum;
+    data['bctime'] = this.bctime;
+    data['gotoUrl'] = this.gotoUrl;
+    data['userid'] = this.userid;
+    data['phone'] = this.phone;
+    data['appealurl'] = this.appealurl;
+    data['second_u'] = this.secondU;
+    data['ppU'] = this.ppU;
+    data['realnameswitch'] = this.realnameswitch;
+    data['appealcode'] = this.appealcode;
+    data['ppDatau'] = this.ppDatau;
+    data['livinguname'] = this.livinguname;
+    data['liveSecurity'] = this.liveSecurity;
+    data['xml'] = this.xml;
+    data['username'] = this.username;
+    data['realName'] = this.realName;
+    data['bdstoken'] = this.bdstoken;
+    data['bdstokenback'] = this.bdstokenback;
+    data['authsid'] = this.authsid;
+    data['authsidback'] = this.authsidback;
+    data['authtoken'] = this.authtoken;
+    data['lstr'] = this.lstr;
+    data['ltoken'] = this.ltoken;
+    data['isChangePwd'] = this.isChangePwd;
+    data['isSilenceAccount'] = this.isSilenceAccount;
+    data['jumpset'] = this.jumpset;
+    data['secstate'] = this.secstate;
+    data['ori_u'] = this.oriU;
+    data['showType'] = this.showType;
+    data['email'] = this.email;
+    data['realnameverifyemail'] = this.realnameverifyemail;
+    data['mobile'] = this.mobile;
+    data['mobileHidden'] = this.mobileHidden;
+    data['countrycode'] = this.countrycode;
+    data['idcard'] = this.idcard;
+    data['liveUsername'] = this.liveUsername;
+    data['loginProxy'] = this.loginProxy;
+    data['verifyUrl'] = this.verifyUrl;
+    data['hasGuideFaceLogin'] = this.hasGuideFaceLogin;
+    data['guideFaceAuthsid'] = this.guideFaceAuthsid;
+    data['isFinanceTpl'] = this.isFinanceTpl;
+    data['openSwitchType'] = this.openSwitchType;
+    data['authtokenFaceLogin'] = this.authtokenFaceLogin;
+    data['guidefrom'] = this.guidefrom;
+    data['isFinance'] = this.isFinance;
+    data['headImage'] = this.headImage;
+    data['defaultUserName'] = this.defaultUserName;
+    data['isslide'] = this.isslide;
+    data['ppIsUpgradeMobile'] = this.ppIsUpgradeMobile;
+    data['ppEncryptUserid'] = this.ppEncryptUserid;
+    data['hasRealName'] = this.hasRealName;
+    data['scscene'] = this.scscene;
+    data['scnewuser'] = this.scnewuser;
+    data['degradeUpSms'] = this.degradeUpSms;
+    data['needDelayHint'] = this.needDelayHint;
+    data['portraitSign'] = this.portraitSign;
+    data['portrait'] = this.portrait;
+    data['isReg'] = this.isReg;
+    data['guide_set_pwd_uname'] = this.guideSetPwdUname;
+    data['secauthsid'] = this.secauthsid;
+    data['secbdstoken'] = this.secbdstoken;
+    data['switchJsonSec'] = this.switchJsonSec;
+    data['switchJsonRealName'] = this.switchJsonRealName;
+    data['target'] = this.target;
     return data;
   }
 }

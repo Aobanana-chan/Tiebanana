@@ -1,6 +1,22 @@
+import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/Global.dart';
+
+//角度转弧度
+double radians(double degree) {
+  return (degree / 180) * 3.1415926;
+}
+
+void record(e) {
+  Global.tiebaAPI.passMachine.recordAction(
+      "mv",
+      MoveActionData(
+              fx: e.localPosition.dx.toInt(),
+              fy: e.localPosition.dy.toInt(),
+              t: DateTime.now().millisecondsSinceEpoch)
+          .toJson());
+}
 
 ///验证码Widget
 
@@ -22,10 +38,16 @@ class _PassMachineWidgetState extends State<PassMachineWidget> {
         return Dialog(child: _Maincontainer());
       } else {
         return Container(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation(Colors.blue),
-            backgroundColor: Colors.grey[200],
-          ),
+          child: Row(children: [
+            Column(
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(Colors.blue),
+                  backgroundColor: Colors.grey[200],
+                ),
+              ],
+            )
+          ]),
         );
       }
     });
@@ -33,22 +55,26 @@ class _PassMachineWidgetState extends State<PassMachineWidget> {
 }
 
 class _Rotateableimg extends StatelessWidget {
-  final double rotateRadian;
+  final double rotateDegree;
   final img;
-  _Rotateableimg({Key? key, required this.rotateRadian, required this.img})
+  _Rotateableimg({Key? key, required this.rotateDegree, required this.img})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
+        // transform: Matrix4.rotationZ(radians(rotateDegree)),
         child: Padding(
             padding: EdgeInsets.fromLTRB(0, 28, 0, 24),
-            child: Transform(
-                transform: Matrix4.rotationY(rotateRadian),
-                child: Image.memory(img))));
+            child: Transform.rotate(
+                angle: radians(rotateDegree),
+                child: ClipOval(
+                  child: Image.memory(img),
+                ))));
   }
 }
 
+//旋转验证码主界面
 class _Maincontainer extends StatefulWidget {
   _Maincontainer({Key? key}) : super(key: key);
 
@@ -58,7 +84,7 @@ class _Maincontainer extends StatefulWidget {
 
 class __MaincontainerState extends State<_Maincontainer> {
   var img;
-  double rotateRadian = 0;
+  double rotateDegree = 0;
   @override
   void initState() {
     // TODO: implement initState
@@ -69,41 +95,45 @@ class __MaincontainerState extends State<_Maincontainer> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: EdgeInsets.fromLTRB(16, 40, 16, 18),
+      decoration:
+          BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(125))),
       child: Column(
         children: [
           Text(
             "安全验证",
-            style: TextStyle(color: Color(0xB8B8B8), fontSize: 14),
+            style: TextStyle(color: Color(0xFFB8B8B8)),
           ),
           SizedBox(
             height: 10,
           ),
           Text(
             "拖动滑块，使图片角度为正",
-            style: TextStyle(fontSize: 18, color: Color(0x1F1F1F)),
+            style: TextStyle(color: Color(0xFF1F1F1F)),
           ),
           _Rotateableimg(
             img: img,
-            rotateRadian: rotateRadian,
+            rotateDegree: rotateDegree,
           ),
           Listener(
             child: Slider(
-              value: 0,
+              // label: rotateDegree.toString(),
+              value: rotateDegree / 360,
               onChanged: (value) {
                 setState(() {
-                  rotateRadian = value * 360;
+                  rotateDegree = value * 360;
                 });
               },
               onChangeEnd: (value) async {
+                print(value);
                 Global.tiebaAPI.passMachine.setAcc(value);
                 if (await Global.tiebaAPI.passMachine.verify() == true) {
                   //验证成功就返回
                   Navigator.of(context).pop(true);
                 } else {
-                  setState(() async {
-                    value = 0;
-                    img = await Global.tiebaAPI.passMachine.getCaptchaImg();
-                  });
+                  rotateDegree = 0;
+                  img = await Global.tiebaAPI.passMachine.getCaptchaImg();
+                  setState(() {});
                 }
               },
               divisions: 100,
@@ -119,13 +149,7 @@ class __MaincontainerState extends State<_Maincontainer> {
                       .toJson());
             },
             onPointerMove: (e) {
-              Global.tiebaAPI.passMachine.recordAction(
-                  "mv",
-                  MoveActionData(
-                          fx: e.localPosition.dx.toInt(),
-                          fy: e.localPosition.dy.toInt(),
-                          t: DateTime.now().millisecondsSinceEpoch)
-                      .toJson());
+              Throttle.milliseconds(200, record, [e]);
             },
           ),
         ],
