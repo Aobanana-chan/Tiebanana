@@ -1,5 +1,7 @@
 import 'package:tiebanana/Json_Model/json.dart';
 
+const String ChromeUA =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36";
 const String BAIDU_URL = "https://www.baidu.com"; //百度首页
 const String LOGIN_GET_URL = "https://passport.baidu.com/v2/?login";
 const String LOGIN_POST_URL =
@@ -84,13 +86,12 @@ const String QRCODE_LOGIN_STATUS =
     "https://passport.baidu.com/channel/unicast"; //根据uk查询un
 const String UPLOAD_PHOTOS =
     "https://uploadphotos.baidu.com/upload/pic"; //传图 url
-
-const String ChromeUA =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36";
-const String VIEW_LOG_URL = "https://passport.baidu.com/viewlog";
-const String GETSTYLE_URL = "https://passport.baidu.com/viewlog/getstyle";
-const String MAIL_VERIFY_URL =
-    "https://passport.baidu.com/v2/sapi/authwidgetverify";
+const String VIEW_LOG_URL =
+    "https://passport.baidu.com/viewlog"; //用户操作记录提交&旋转验证码提交
+const String GETSTYLE_URL =
+    "https://passport.baidu.com/viewlog/getstyle"; //用于获取验证码图片地址
+const String AUTH_VERIFY_URL =
+    "https://passport.baidu.com/v2/sapi/authwidgetverify"; //强制安全验证
 const String WAP_URL = "https://wappass.baidu.com/"; //wap端入口
 const String WAP_LOGIN_URL =
     "https://wappass.baidu.com/wp/api/login"; //wap端登陆入口
@@ -98,6 +99,7 @@ const String WAP_LOGIN_URL =
 ///百度err_no码 Web端口
 final webErrCode = {
   "-1": {"msg": '系统错误,请您稍后再试', "field": ""},
+  "0": {"msg": '登陆成功', "field": ""},
   "1": {"msg": "您输入的帐号格式不正确", "field": "userName"},
   "2": {"msg": '用户名或密码有误，请重新输入或找回密码', "field": "userName"},
   "3": {"msg": "验证码不存在或已过期,请重新输入", "field": ""},

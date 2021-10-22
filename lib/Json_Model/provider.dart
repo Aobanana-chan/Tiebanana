@@ -9,7 +9,7 @@ class User with ChangeNotifier {
   bool get isLogin => Global.tiebaAPI.isLogin;
 
   //Login状态改变则通知其依赖项
-  void login(bool islogin) {
+  void login() {
     if (Global.tiebaAPI.isLogin != _islogin) {
       _islogin = Global.tiebaAPI.isLogin;
       notifyListeners();

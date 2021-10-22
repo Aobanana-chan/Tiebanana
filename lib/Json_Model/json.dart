@@ -711,3 +711,130 @@ class WAPData {
     return data;
   }
 }
+
+///手机安全验证服务器返回
+class AuthwidgetverifyRespone {
+  String? errno;
+  String? msg;
+  String? forgot;
+  String? ppEncryptuid;
+  String? ppAuthName;
+  String? ppNewAuthName;
+  String? ppBindAction;
+  AuthwidgetverifyResponeData? data;
+  String? countrycode;
+  String? traceid;
+
+  AuthwidgetverifyRespone(
+      {this.errno,
+      this.msg,
+      this.forgot,
+      this.ppEncryptuid,
+      this.ppAuthName,
+      this.ppNewAuthName,
+      this.ppBindAction,
+      this.data,
+      this.countrycode,
+      this.traceid});
+
+  AuthwidgetverifyRespone.fromJson(Map<String, dynamic> json) {
+    errno = json['errno'];
+    msg = json['msg'];
+    forgot = json['forgot'];
+    ppEncryptuid = json['ppEncryptuid'];
+    ppAuthName = json['ppAuthName'];
+    ppNewAuthName = json['ppNewAuthName'];
+    ppBindAction = json['ppBindAction'];
+    data = json['data'] != null
+        ? new AuthwidgetverifyResponeData.fromJson(json['data'])
+        : null;
+    countrycode = json['countrycode'];
+    traceid = json['traceid'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['errno'] = this.errno;
+    data['msg'] = this.msg;
+    data['forgot'] = this.forgot;
+    data['ppEncryptuid'] = this.ppEncryptuid;
+    data['ppAuthName'] = this.ppAuthName;
+    data['ppNewAuthName'] = this.ppNewAuthName;
+    data['ppBindAction'] = this.ppBindAction;
+    if (this.data != null) {
+      data['data'] = this.data!.toJson();
+    }
+    data['countrycode'] = this.countrycode;
+    data['traceid'] = this.traceid;
+    return data;
+  }
+}
+
+class AuthwidgetverifyResponeData {
+  String? mobile; //手机-验证六位数短信验证码
+  String? verifymobile;
+  String? email; //密保邮箱
+  String? softtoken; //百度帐号管家
+  String? password; //登录密码
+  String? isUc; //暂时不明确
+  String? historyPassword;
+  String? originalMobile; //当前手机
+  List? originalBankcard; //银行卡号
+  String? originalIdcard; //当前身份证号
+  String? username; //用户名
+  String? originalEmail; //当前邮箱
+
+  AuthwidgetverifyResponeData(
+      {this.mobile,
+      this.verifymobile,
+      this.email,
+      this.softtoken,
+      this.password,
+      this.isUc,
+      this.historyPassword,
+      this.originalMobile,
+      this.originalBankcard,
+      this.originalIdcard,
+      this.username,
+      this.originalEmail});
+
+  AuthwidgetverifyResponeData.fromJson(Map<String, dynamic> json) {
+    mobile = json['mobile'];
+    verifymobile = json['verifymobile'];
+    email = json['email'];
+    softtoken = json['softtoken'];
+    password = json['password'];
+    isUc = json['isUc'];
+    historyPassword = json['history_password'];
+    originalMobile = json['original_mobile'];
+    if (json['original_bankcard'] != null) {
+      originalBankcard = [];
+      json['original_bankcard'].forEach((v) {
+        originalBankcard!.add(v);
+      });
+    }
+    originalIdcard = json['original_idcard'];
+    username = json['username'];
+    originalEmail = json['original_email'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['mobile'] = this.mobile;
+    data['verifymobile'] = this.verifymobile;
+    data['email'] = this.email;
+    data['softtoken'] = this.softtoken;
+    data['password'] = this.password;
+    data['isUc'] = this.isUc;
+    data['history_password'] = this.historyPassword;
+    data['original_mobile'] = this.originalMobile;
+    if (this.originalBankcard != null) {
+      data['original_bankcard'] =
+          this.originalBankcard!.map((v) => v.toJson()).toList();
+    }
+    data['original_idcard'] = this.originalIdcard;
+    data['username'] = this.username;
+    data['original_email'] = this.originalEmail;
+    return data;
+  }
+}

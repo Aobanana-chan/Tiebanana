@@ -1,4 +1,5 @@
 ///百度贴吧API
+///作者：Aobanana
 
 import 'dart:ui';
 
@@ -16,6 +17,7 @@ import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/LG_DV_ARG.dart';
+import 'package:tiebanana/common/API/authverify.dart';
 import 'package:tiebanana/common/API/fuid.dart';
 import 'package:tiebanana/common/API/passMachine.dart';
 import 'package:tiebanana/common/Global.dart';
@@ -26,15 +28,17 @@ class TiebaAPI {
     "User-Agent": ChromeUA,
     "Connection": "keep-alive",
   }));
-  var cookieJar;
+  late PersistCookieJar cookieJar;
   bool isLogin = false;
   String token = "";
   String _traceID = "";
   String _gid = "";
+
   WindowsDv windowsDv = WindowsDv();
   PassMachine passMachine = PassMachine(dio);
   FingerPrint fuid = FingerPrint();
-  //类在用之前先初始化,初始化要在RunAPP之后
+  AuthVerifyManager authVerifyManager = AuthVerifyManager(dio);
+  //类在用之前先初始化
   Future init() async {
     //设置cookie保存目录
     Directory? cookiedir = await getApplicationDocumentsDirectory();
@@ -69,12 +73,17 @@ class TiebaAPI {
   Future<LoginErrCode> loginByPassword(String username, String password) async {
     if (isLogin) {
       //删除cookie和token
-      await cookieJar.delete();
+      await cookieJar.deleteAll();
       token = "";
       isLogin = false;
     }
-    //登陆百度首页,以设置BAIDUID等Cookie
     await dio.get(BAIDU_URL);
+    print(await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)));
+    //没有BAIDUID就浏览百度首页,以设置BAIDUID等Cookie
+    // if (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))
+    // {
+    //   await dio.get(BAIDU_URL);
+    // }
     //获取token
     var _token = await _getToken();
     //获取RSA加密公钥
@@ -180,6 +189,10 @@ class TiebaAPI {
           "Content-Type": "application/x-www-form-urlencoded"
         }, responseType: ResponseType.plain));
     var errNo = RegExp(r"(?<=err_no=)(.+?)(?=&)").firstMatch(loginRes.data)![0];
+    //需要安全验证时，初始化安全验证类
+    if (errNo == "120021") {
+      authVerifyManager.init(loginRes.data);
+    }
     return BaiduErroNo.parse(errNo!);
   }
 
@@ -492,6 +505,8 @@ class TiebaAPI {
     _traceID = headID + "01";
     return headID + "01"; //登陆结尾为01，注册结尾为02
   }
+
+  String getTraceID() => _getTraceID();
 
   Map<String, dynamic> _mapSrot(Map<String, dynamic> map) {
     var keys = map.keys.toList();
