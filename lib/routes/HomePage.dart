@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/Widgets/searchBar.dart';
 import 'package:tiebanana/routes/Login.dart';
 
 ///首页
@@ -24,15 +25,18 @@ class _HomePageState extends State<HomePage> {
               label: "首页",
               activeIcon: Icon(Icons.home)),
           BottomNavigationBarItem(
+            backgroundColor: Colors.purpleAccent[700],
             icon: Icon(Icons.circle_notifications_outlined),
             activeIcon: Icon(Icons.circle_notifications_rounded),
             label: "动态",
           ),
           BottomNavigationBarItem(
+              backgroundColor: Colors.purpleAccent[700],
               icon: Icon(Icons.reply),
               activeIcon: Icon(Icons.reply_all),
               label: "消息"),
           BottomNavigationBarItem(
+              backgroundColor: Colors.purpleAccent[700],
               icon: Icon(Icons.person_outline),
               activeIcon: Icon(Icons.person),
               label: "个人")
@@ -62,8 +66,45 @@ class __HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: LoginPage(),
-    );
+        decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
+        child: Column(
+          children: [
+            AppBar(
+              leading: null,
+              title: SearchBar(),
+              actions: [
+                RawMaterialButton(
+                  shape: CircleBorder(),
+                  onPressed: () {
+                    //TODO:签到
+                  },
+                  child: Stack(
+                    alignment: AlignmentDirectional.center,
+                    children: [
+                      Icon(
+                        Icons.circle_outlined,
+                        size: 32,
+                      ),
+                      Center(
+                        child: Text(
+                          "签",
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            Container(
+              decoration: BoxDecoration(color: Colors.white),
+              child: Row(
+                children: [],
+              ),
+            )
+          ],
+        ));
   }
 }
 
@@ -108,6 +149,8 @@ class _UserAndSettings extends StatefulWidget {
 class __UserAndSettingsState extends State<_UserAndSettings> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Container(
+      child: LoginPage(),
+    );
   }
 }

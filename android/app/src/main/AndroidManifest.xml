@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.tieba_flutter">
    <application
-        android:label="tieba_flutter"
+        android:label="Tiebanana"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

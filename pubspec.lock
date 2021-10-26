@@ -99,6 +99,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
+  dropdown_search:
+    dependency: "direct main"
+    description:
+      name: dropdown_search
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.0"
   encrypt:
     dependency: "direct main"
     description:
@@ -132,6 +139,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_statusbar_manager:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "5ab0bb72bdd7aee0fa4d99fc5e3e58e03df8e031"
+      url: "git://github.com/rafaelmaeuer/flutter_statusbar_manager.git"
+    source: git
+    version: "3.1.2"
   flutter_test:
     dependency: "direct dev"
     description: flutter

@@ -17,6 +17,8 @@ import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/LG_DV_ARG.dart';
+import 'package:tiebanana/common/API/TBSManager.dart';
+import 'package:tiebanana/common/API/UserInfo.dart';
 import 'package:tiebanana/common/API/authverify.dart';
 import 'package:tiebanana/common/API/fuid.dart';
 import 'package:tiebanana/common/API/passMachine.dart';
@@ -29,7 +31,45 @@ class TiebaAPI {
     "Connection": "keep-alive",
   }));
   late PersistCookieJar cookieJar;
-  bool isLogin = false;
+
+  bool _isLogin = false;
+  bool get isLogin {
+    return _isLogin;
+  }
+
+  set isLogin(bool val) {
+    _isLogin = val;
+    if (val == true) {
+      //登陆后加载用户信息
+      cookieJar.loadForRequest(Uri.parse(BAIDU_URL)).then((value) {
+        for (var i in value) {
+          if (i.name == "BDUSS") {
+            bduss = i.value;
+            break;
+          }
+        }
+        userInfomation.init(bduss);
+      });
+    }
+  }
+
+  //budss简单加密，考虑可能在本地保存
+  // ignore: non_constant_identifier_names
+  late String _bduss_encrypt;
+  set bduss(String str) {
+    _bduss_encrypt = Encrypter(AES(
+            Key.fromUtf8("d7c2dbf638964f50018b1161e174d8ba"),
+            mode: AESMode.ecb))
+        .encrypt(str, iv: IV.fromLength(0))
+        .base64;
+  }
+
+  String get bduss {
+    return Encrypter(AES(Key.fromUtf8("d7c2dbf638964f50018b1161e174d8ba"),
+            mode: AESMode.ecb))
+        .decrypt(Encrypted.fromBase64(_bduss_encrypt), iv: IV.fromLength(0));
+  }
+
   String token = "";
   String _traceID = "";
   String _gid = "";
@@ -38,6 +78,8 @@ class TiebaAPI {
   PassMachine passMachine = PassMachine(dio);
   FingerPrint fuid = FingerPrint();
   AuthVerifyManager authVerifyManager = AuthVerifyManager(dio);
+  TBSMagager tbsMagager = TBSMagager(dio);
+  UserInfomation userInfomation = UserInfomation(dio);
   //类在用之前先初始化
   Future init() async {
     //设置cookie保存目录
@@ -77,13 +119,12 @@ class TiebaAPI {
       token = "";
       isLogin = false;
     }
-    await dio.get(BAIDU_URL);
-    print(await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)));
+    var cookies =
+        (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
     //没有BAIDUID就浏览百度首页,以设置BAIDUID等Cookie
-    // if (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))
-    // {
-    //   await dio.get(BAIDU_URL);
-    // }
+    if (!cookies.contains("BAIDUID")) {
+      await dio.get(BAIDU_URL);
+    }
     //获取token
     var _token = await _getToken();
     //获取RSA加密公钥
@@ -508,6 +549,7 @@ class TiebaAPI {
 
   String getTraceID() => _getTraceID();
 
+  //map按照key的字典顺序排序
   Map<String, dynamic> _mapSrot(Map<String, dynamic> map) {
     var keys = map.keys.toList();
     // key排序
@@ -527,5 +569,38 @@ class TiebaAPI {
       sortedMap[element] = map[element];
     });
     return sortedMap;
+  }
+
+  //获取随机参数
+  Future<String> _getTBS() async {
+    return await tbsMagager.getTBS();
+  }
+
+  ///获取关注的贴吧
+  Future<List<LikeForumInfo>?> getLikes() async {
+    return await userInfomation.likes;
+  }
+
+  Future<int?> getUID() async {
+    return await userInfomation.uid;
+  }
+
+  ///签到所有关注的贴吧
+  void signAll() async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    //一键签到(7级以上)
+    await dio.post(ONE_KEY_SIGN_IN,
+        data: {"tbs": await _getTBS(), "ie": "utf-8"},
+        options: Options(headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "Origin": TIEBA_URL
+        }));
+    //签到剩下的
+    var forums = await getLikes();
+    if (forums != null) {
+      for (var forum in forums) {}
+    }
   }
 }

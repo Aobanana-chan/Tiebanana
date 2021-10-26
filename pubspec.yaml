@@ -33,7 +33,11 @@ dependencies:
   shared_preferences: ^2.0.8
   just_throttle_it: ^2.0.0
   fluttertoast: ^8.0.8
-  select_form_field: "^2.2.0"
+  select_form_field: ^2.2.0
+  flutter_statusbar_manager:
+    git:
+      url: git://github.com/rafaelmaeuer/flutter_statusbar_manager.git
+  dropdown_search: ^2.0.0
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2

@@ -37,6 +37,7 @@ class Global {
     }
   }
 
+  ///保持用户APP设置
   static void saveProfile() {
     profile.setString("APPSetting", json5Encode(setting.toJson()));
   }

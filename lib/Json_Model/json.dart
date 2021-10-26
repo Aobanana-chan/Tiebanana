@@ -838,3 +838,317 @@ class AuthwidgetverifyResponeData {
     return data;
   }
 }
+
+///GetForumHome数据Model
+class GetForumHomeData {
+  GetForumHomeMainData? data;
+  String? errmsg;
+  int? errno;
+  String? logid;
+  int? serverTime;
+  String? time;
+
+  GetForumHomeData(
+      {this.data,
+      this.errmsg,
+      this.errno,
+      this.logid,
+      this.serverTime,
+      this.time});
+
+  GetForumHomeData.fromJson(Map<String, dynamic> json) {
+    data = json['data'] != null
+        ? new GetForumHomeMainData.fromJson(json['data'])
+        : null;
+    errmsg = json['errmsg'];
+    errno = json['errno'];
+    logid = json['logid'];
+    serverTime = json['server_time'];
+    time = json['time'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    if (this.data != null) {
+      data['data'] = this.data!.toJson();
+    }
+    data['errmsg'] = this.errmsg;
+    data['errno'] = this.errno;
+    data['logid'] = this.logid;
+    data['server_time'] = this.serverTime;
+    data['time'] = this.time;
+    return data;
+  }
+}
+
+class GetForumHomeMainData {
+  LikeForum? likeForum;
+  Tokens? tokens;
+  List<UbsAbtestConfig>? ubsAbtestConfig;
+  String? ubsSampleIds;
+  UserInfo? userInfo;
+
+  GetForumHomeMainData(
+      {this.likeForum,
+      this.tokens,
+      this.ubsAbtestConfig,
+      this.ubsSampleIds,
+      this.userInfo});
+
+  GetForumHomeMainData.fromJson(Map<String, dynamic> json) {
+    likeForum = json['like_forum'] != null
+        ? new LikeForum.fromJson(json['like_forum'])
+        : null;
+    tokens =
+        json['tokens'] != null ? new Tokens.fromJson(json['tokens']) : null;
+    if (json['ubs_abtest_config'] != null) {
+      ubsAbtestConfig = <UbsAbtestConfig>[];
+      json['ubs_abtest_config'].forEach((v) {
+        ubsAbtestConfig!.add(new UbsAbtestConfig.fromJson(v));
+      });
+    }
+    ubsSampleIds = json['ubs_sample_ids'];
+    userInfo = json['user_info'] != null
+        ? new UserInfo.fromJson(json['user_info'])
+        : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    if (this.likeForum != null) {
+      data['like_forum'] = this.likeForum!.toJson();
+    }
+    if (this.tokens != null) {
+      data['tokens'] = this.tokens!.toJson();
+    }
+    if (this.ubsAbtestConfig != null) {
+      data['ubs_abtest_config'] =
+          this.ubsAbtestConfig!.map((v) => v.toJson()).toList();
+    }
+    data['ubs_sample_ids'] = this.ubsSampleIds;
+    if (this.userInfo != null) {
+      data['user_info'] = this.userInfo!.toJson();
+    }
+    return data;
+  }
+}
+
+class LikeForum {
+  List<TiebaList>? list;
+  Page? page;
+
+  LikeForum({this.list, this.page});
+
+  LikeForum.fromJson(Map<String, dynamic> json) {
+    if (json['list'] != null) {
+      list = <TiebaList>[];
+      json['list'].forEach((v) {
+        list!.add(new TiebaList.fromJson(v));
+      });
+    }
+    page = json['page'] != null ? new Page.fromJson(json['page']) : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    if (this.list != null) {
+      data['list'] = this.list!.map((v) => v.toJson()).toList();
+    }
+    if (this.page != null) {
+      data['page'] = this.page!.toJson();
+    }
+    return data;
+  }
+}
+
+class TiebaList {
+  String? avatar;
+  int? forumId;
+  String? forumName;
+  int? hotNum;
+  int? isBrandForum;
+  int? levelId;
+
+  TiebaList(
+      {this.avatar,
+      this.forumId,
+      this.forumName,
+      this.hotNum,
+      this.isBrandForum,
+      this.levelId});
+
+  TiebaList.fromJson(Map<String, dynamic> json) {
+    avatar = json['avatar'];
+    forumId = json['forum_id'];
+    forumName = json['forum_name'];
+    hotNum = json['hot_num'];
+    isBrandForum = json['is_brand_forum'];
+    levelId = json['level_id'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['avatar'] = this.avatar;
+    data['forum_id'] = this.forumId;
+    data['forum_name'] = this.forumName;
+    data['hot_num'] = this.hotNum;
+    data['is_brand_forum'] = this.isBrandForum;
+    data['level_id'] = this.levelId;
+    return data;
+  }
+}
+
+class Page {
+  int? curPage;
+  int? totalPage;
+
+  Page({this.curPage, this.totalPage});
+
+  Page.fromJson(Map<String, dynamic> json) {
+    curPage = json['cur_page'];
+    totalPage = json['total_page'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['cur_page'] = this.curPage;
+    data['total_page'] = this.totalPage;
+    return data;
+  }
+}
+
+class Tokens {
+  String? bottomBanner;
+  String? bottomLayer;
+  String? indexFooterClientDown;
+  String? indexMessageIcon;
+
+  Tokens(
+      {this.bottomBanner,
+      this.bottomLayer,
+      this.indexFooterClientDown,
+      this.indexMessageIcon});
+
+  Tokens.fromJson(Map<String, dynamic> json) {
+    bottomBanner = json['bottom_banner'];
+    bottomLayer = json['bottom_layer'];
+    indexFooterClientDown = json['index_footer_client_down'];
+    indexMessageIcon = json['index_message_icon'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['bottom_banner'] = this.bottomBanner;
+    data['bottom_layer'] = this.bottomLayer;
+    data['index_footer_client_down'] = this.indexFooterClientDown;
+    data['index_message_icon'] = this.indexMessageIcon;
+    return data;
+  }
+}
+
+class UbsAbtestConfig {
+  String? sid;
+
+  UbsAbtestConfig({this.sid});
+
+  UbsAbtestConfig.fromJson(Map<String, dynamic> json) {
+    sid = json['sid'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['sid'] = this.sid;
+    return data;
+  }
+}
+
+class UserInfo {
+  int? id;
+  int? isLogin;
+
+  UserInfo({this.id, this.isLogin});
+
+  UserInfo.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    isLogin = json['is_login'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['is_login'] = this.isLogin;
+    return data;
+  }
+}
+
+class LikeForumInfo {
+  String? forumId;
+  String? avatar;
+  String? isSign;
+  String? isTop;
+  String? inTime;
+  String? forumName;
+  String? levelId;
+  String? isBrandForum;
+  // ThemeColor themeColor;
+  String? content;
+  String? needTrans;
+  List? tabInfo;
+
+  LikeForumInfo(
+      {this.forumId,
+      this.avatar,
+      this.isSign,
+      this.isTop,
+      this.inTime,
+      this.forumName,
+      this.levelId,
+      this.isBrandForum,
+      // this.themeColor,
+      this.content,
+      this.needTrans,
+      this.tabInfo});
+
+  LikeForumInfo.fromJson(Map<String, dynamic> json) {
+    forumId = json['forum_id'];
+    avatar = json['avatar'];
+    isSign = json['is_sign'];
+    isTop = json['is_top'];
+    inTime = json['in_time'];
+    forumName = json['forum_name'];
+    levelId = json['level_id'];
+    isBrandForum = json['is_brand_forum'];
+    // themeColor = json['theme_color'] != null
+    //     ? new ThemeColor.fromJson(json['theme_color'])
+    //     : null;
+    content = json['content'];
+    needTrans = json['need_trans'];
+    if (json['tab_info'] != null) {
+      tabInfo = [];
+      json['tab_info'].forEach((v) {
+        tabInfo!.add(v);
+      });
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['forum_id'] = this.forumId;
+    data['avatar'] = this.avatar;
+    data['is_sign'] = this.isSign;
+    data['is_top'] = this.isTop;
+    data['in_time'] = this.inTime;
+    data['forum_name'] = this.forumName;
+    data['level_id'] = this.levelId;
+    data['is_brand_forum'] = this.isBrandForum;
+    // if (this.themeColor != null) {
+    //   data['theme_color'] = this.themeColor.toJson();
+    // }
+    data['content'] = this.content;
+    data['need_trans'] = this.needTrans;
+    if (this.tabInfo != null) {
+      data['tab_info'] = this.tabInfo!.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}

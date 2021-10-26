@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:encrypt/encrypt.dart' as ecpt;
-import 'package:flutter/cupertino.dart';
 import 'package:json5/json5.dart';
 
 import 'Constants.dart';

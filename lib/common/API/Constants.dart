@@ -95,6 +95,12 @@ const String AUTH_VERIFY_URL =
 const String WAP_URL = "https://wappass.baidu.com/"; //wap端入口
 const String WAP_LOGIN_URL =
     "https://wappass.baidu.com/wp/api/login"; //wap端登陆入口
+const String ONE_KEY_SIGN_IN =
+    "https://tieba.baidu.com/tbmall/onekeySignin1"; //贴吧一键签到入口，使用POST方法，只会签到7级以上的贴吧，功能有限，但效率最高
+const String GET_FORUM_HOME =
+    "https://tieba.baidu.com/mg/o/getForumHome"; //获取贴吧主页信息(手机web端)
+const String GET_FORUM_RECOMMEND =
+    "http://c.tieba.baidu.com/c/f/forum/forumrecommend"; //可以获取关注的吧信息，可以用GET或者是POST方法
 
 ///百度err_no码 Web端口
 final webErrCode = {
