@@ -96,6 +96,7 @@ class AuthVerifyManager {
   ///验证函数
   ///type参数为验证方式，猜测验证类型为[AuthwidgetverifyResponeData]中各个项，共12种验证方式，一般使用mobile，即手机短信验证，目前也只保证手机短信验证有效
   ///vocde参数是验证码
+  // ignore: non_constant_identifier_names
   Future<LoginErrCode> Verify(String type, String vcode) async {
     var res = await dio.get(AUTH_VERIFY_URL,
         queryParameters: {

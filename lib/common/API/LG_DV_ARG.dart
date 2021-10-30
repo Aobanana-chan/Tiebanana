@@ -48,6 +48,7 @@ class WindowsDv {
         var c;
         if (d is num) {
           c = d >= 0 ? 1 : 2;
+          // ignore: unnecessary_cast
           d = _getDvint(r, d as num);
         } else if (d is bool) {
           c = 3;

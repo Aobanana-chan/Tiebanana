@@ -20,7 +20,8 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FlutterStatusbarManager.setColor(Color(0x0), animated: true);
+    FlutterStatusbarManager.setHidden(true, animation: StatusBarAnimation.FADE);
+    // FlutterStatusbarManager.setColor(Color(0x0), animated: true);
     return MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: User()),

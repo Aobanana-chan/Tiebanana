@@ -68,35 +68,9 @@ class __HomeState extends State<_Home> {
     return Container(
         decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            AppBar(
-              leading: null,
-              title: SearchBar(),
-              actions: [
-                RawMaterialButton(
-                  shape: CircleBorder(),
-                  onPressed: () {
-                    //TODO:签到
-                  },
-                  child: Stack(
-                    alignment: AlignmentDirectional.center,
-                    children: [
-                      Icon(
-                        Icons.circle_outlined,
-                        size: 32,
-                      ),
-                      Center(
-                        child: Text(
-                          "签",
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
+            SearchBar(),
             Container(
               decoration: BoxDecoration(color: Colors.white),
               child: Row(
