@@ -107,11 +107,15 @@ class _AnimatedDropDownState extends State<AnimatedDropDown> {
   late _SearchBarState? bar;
   late List history;
 
+  void getHistory() {
+    var local = Global.profile.getStringList("searchHistory");
+    history = local == null ? [] : local;
+  }
+
   @override
   void initState() {
     super.initState();
-    var local = Global.profile.getStringList("searchHistory");
-    history = local == null ? [] : local;
+    getHistory();
   }
 
   @override
@@ -141,7 +145,9 @@ class _AnimatedDropDownState extends State<AnimatedDropDown> {
         padding: EdgeInsets.all(20),
         onPressed: () {
           Global.profile.setStringList("searchHistory", []);
-          setState(() {});
+          setState(() {
+            getHistory();
+          });
         },
         child: Align(
           alignment: Alignment.center,
