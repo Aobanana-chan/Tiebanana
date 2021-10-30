@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 
-///主页贴吧tag部件
+///主页贴合集
+class TagPan extends StatefulWidget {
+  TagPan({Key? key}) : super(key: key);
 
+  @override
+  _TagPanState createState() => _TagPanState();
+}
+
+class _TagPanState extends State<TagPan> {
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+}
+
+///主页贴吧tag部件
 class ForumTag extends StatelessWidget {
   LikeForumInfo info;
   ForumTag({Key? key, required this.info}) : super(key: key);
