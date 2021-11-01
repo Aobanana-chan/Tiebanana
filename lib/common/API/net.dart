@@ -234,6 +234,9 @@ class TiebaAPI {
     if (errNo == "120021") {
       authVerifyManager.init(loginRes.data);
     }
+    if (errNo == "0") {
+      isLogin = true;
+    }
     return BaiduErroNo.parse(errNo!);
   }
 
@@ -598,9 +601,50 @@ class TiebaAPI {
           "Origin": TIEBA_URL
         }));
     //签到剩下的
+    await userInfomation.refresh();
     var forums = await getLikes();
     if (forums != null) {
-      for (var forum in forums) {}
+      for (var forum in forums) {
+        if (forum.isSign == "0") {
+          signOneForum(forum.forumName!);
+          await Future.delayed(Duration(seconds: 1));
+        }
+      }
     }
+  }
+
+  Future<String> signOneForum(String kw) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var args = {"BDUSS": bduss, "kw": kw, "net_type": 1, "tbs": _getTBS()};
+    args["sign"] = _signArgs(args);
+    Response res;
+    try {
+      res = await dio.post(FORUM_SIGN_IN,
+          data: args,
+          options: Options(headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          }));
+    } catch (e) {
+      return "$kw吧签到失败";
+    }
+    if (res.data["error_code"] == "0") {
+      if (res.data["user_info"]["is_sign_in"] == "1") {
+        return "签到成功,你是今天第${res.data["user_info"]["user_sign_rank"]}个签到的,经验+${res.data["user_info"]["sign_bonus_point"]}";
+      }
+    }
+    return "$kw吧签到失败";
+  }
+
+  //sign签名算法
+  String _signArgs(Map<String, dynamic> map) {
+    var sortedmap = _mapSrot(map);
+    var str = "";
+    for (var key in sortedmap.keys) {
+      str += "$key=${sortedmap[key]}";
+    }
+    str += "tiebaclient!!!";
+    return md5.convert(utf8.encode(str)).toString();
   }
 }

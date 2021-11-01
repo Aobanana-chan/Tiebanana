@@ -7,7 +7,7 @@ class TBS {
 
   TBS.fromJson(Map<String, dynamic> json) {
     tbs = json['tbs'];
-    isLogin = json['is_login'];
+    isLogin = (json['is_login'] as num).toInt();
   }
 
   Map<String, dynamic> toJson() {
@@ -1110,19 +1110,19 @@ class LikeForumInfo {
       this.tabInfo});
 
   LikeForumInfo.fromJson(Map<String, dynamic> json) {
-    forumId = json['forum_id'];
+    forumId = (json['forum_id'] as num).toInt().toString();
     avatar = json['avatar'];
-    isSign = json['is_sign'];
-    isTop = json['is_top'];
-    inTime = json['in_time'];
+    isSign = (json['is_sign'] as num).toInt().toString();
+    isTop = (json['is_top'] as num).toInt().toString();
+    inTime = (json['in_time'] as num).toInt().toString();
     forumName = json['forum_name'];
     levelId = json['level_id'];
-    isBrandForum = json['is_brand_forum'];
+    isBrandForum = (json['is_brand_forum'] as num).toInt().toString();
     // themeColor = json['theme_color'] != null
     //     ? new ThemeColor.fromJson(json['theme_color'])
     //     : null;
     content = json['content'];
-    needTrans = json['need_trans'];
+    needTrans = (json['need_trans'] as num).toInt().toString();
     if (json['tab_info'] != null) {
       tabInfo = [];
       json['tab_info'].forEach((v) {

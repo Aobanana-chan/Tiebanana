@@ -14,7 +14,6 @@ const String TBS_URL = "http://tieba.baidu.com/dc/common/tbs/"; //tbs 获取随�
 const String IMGTBS_URL = "https://tieba.baidu.com/dc/common/imgtbs"; //获取传图 tbs
 const String USER_INFO_GET_URL =
     "http://tieba.baidu.com/f/user/json_userinfo"; //获取用户json信息
-const String WENKU_SIGN_URL = "https://wenku.baidu.com/task/submit/signin";
 const String MY_LIKE_URL = "http://tieba.baidu.com/f/like/mylike"; //我喜欢的贴吧
 const String CAPTCHA_IMG =
     "https://passport.baidu.com/cgi-bin/genimage"; //验证码图片地址
@@ -101,6 +100,7 @@ const String GET_FORUM_HOME =
     "https://tieba.baidu.com/mg/o/getForumHome"; //获取贴吧主页信息(手机web端)
 const String GET_FORUM_RECOMMEND =
     "http://c.tieba.baidu.com/c/f/forum/forumrecommend"; //可以获取关注的吧信息，可以用GET或者是POST方法
+const String FORUM_SIGN_IN = "http://c.tieba.baidu.com/c/c/forum/sign"; //单个吧签到
 
 ///百度err_no码 Web端口
 final webErrCode = {
