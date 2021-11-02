@@ -13,6 +13,7 @@ import 'package:dio/adapter.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
@@ -604,33 +605,57 @@ class TiebaAPI {
     await userInfomation.refresh();
     var forums = await getLikes();
     if (forums != null) {
+      //统计已经签到吧的个数
+      int totalSigned = 0;
+      int totoal = forums.length;
+      for (var forum in forums) {
+        if (forum.isSign == "1") {
+          totalSigned++;
+        }
+      }
       for (var forum in forums) {
         if (forum.isSign == "0") {
-          signOneForum(forum.forumName!);
+          await Global.showNotification(
+              0, "正在一键签到中...($totalSigned/$totoal)", "正在签到${forum.forumName}");
+          totalSigned++;
+          // var reslut = await signOneForum(forum.forumName!);
+          await Global.showNotification(
+              0, "正在一键签到中...($totalSigned/$totoal)", "reslut");
           await Future.delayed(Duration(seconds: 1));
         }
       }
     }
+    Global.localNotifications.cancel(0);
   }
 
   Future<String> signOneForum(String kw) async {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {"BDUSS": bduss, "kw": kw, "net_type": 1, "tbs": _getTBS()};
+    var args = {
+      "BDUSS": bduss,
+      "kw": kw,
+      "net_type": 1,
+      "tbs": await _getTBS()
+    };
     args["sign"] = _signArgs(args);
     Response res;
+    Map<String, dynamic> resJson;
     try {
       res = await dio.post(FORUM_SIGN_IN,
           data: args,
           options: Options(headers: {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
           }));
+      resJson = json5Decode(res.data);
     } catch (e) {
       return "$kw吧签到失败";
     }
-    if (res.data["error_code"] == "0") {
-      if (res.data["user_info"]["is_sign_in"] == "1") {
+    if (resJson["error_code"] == "0") {
+      if (resJson.containsKey("error")) {
+        return "${resJson["error"]["usermsg"]},$kw吧签到失败";
+      }
+      if (resJson["user_info"]["is_sign_in"] == "1") {
         return "签到成功,你是今天第${res.data["user_info"]["user_sign_rank"]}个签到的,经验+${res.data["user_info"]["sign_bonus_point"]}";
       }
     }

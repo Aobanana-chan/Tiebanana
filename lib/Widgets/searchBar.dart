@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
 import 'package:tiebanana/common/Global.dart';
@@ -66,6 +67,7 @@ class _SearchBarState extends State<SearchBar> {
         RawMaterialButton(
           shape: CircleBorder(),
           onPressed: () {
+            Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
             Global.tiebaAPI.signAll();
           },
           child: Stack(
