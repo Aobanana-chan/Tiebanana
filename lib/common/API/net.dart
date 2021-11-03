@@ -616,11 +616,11 @@ class TiebaAPI {
       for (var forum in forums) {
         if (forum.isSign == "0") {
           await Global.showNotification(
-              0, "正在一键签到中...($totalSigned/$totoal)", "正在签到${forum.forumName}");
+              0, "正在一键签到中...($totalSigned/$totoal)", "正在签到${forum.forumName}吧");
           totalSigned++;
-          // var reslut = await signOneForum(forum.forumName!);
+          var reslut = await signOneForum(forum.forumName!);
           await Global.showNotification(
-              0, "正在一键签到中...($totalSigned/$totoal)", "reslut");
+              0, "正在一键签到中...($totalSigned/$totoal)", reslut);
           await Future.delayed(Duration(seconds: 1));
         }
       }
@@ -646,7 +646,7 @@ class TiebaAPI {
           data: args,
           options: Options(headers: {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          }));
+          }, responseType: ResponseType.plain));
       resJson = json5Decode(res.data);
     } catch (e) {
       return "$kw吧签到失败";
@@ -655,8 +655,8 @@ class TiebaAPI {
       if (resJson.containsKey("error")) {
         return "${resJson["error"]["usermsg"]},$kw吧签到失败";
       }
-      if (resJson["user_info"]["is_sign_in"] == "1") {
-        return "签到成功,你是今天第${res.data["user_info"]["user_sign_rank"]}个签到的,经验+${res.data["user_info"]["sign_bonus_point"]}";
+      if (resJson["user_info"]["is_sign_in"] == 1) {
+        return "签到成功,你是今天第${(resJson["user_info"]["user_sign_rank"] as num).toInt()}个签到的,经验+${(resJson["user_info"]["sign_bonus_point"] as num).toInt()}";
       }
     }
     return "$kw吧签到失败";
