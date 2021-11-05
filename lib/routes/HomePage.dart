@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/Widgets/forumtag.dart';
 import 'package:tiebanana/Widgets/searchBar.dart';
 import 'package:tiebanana/routes/Login.dart';
 
@@ -69,15 +70,7 @@ class __HomeState extends State<_Home> {
         decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            SearchBar(),
-            Container(
-              decoration: BoxDecoration(color: Colors.white),
-              child: Row(
-                children: [],
-              ),
-            )
-          ],
+          children: [SearchBar(), TagPan()],
         ));
   }
 }
