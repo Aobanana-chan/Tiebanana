@@ -4,6 +4,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
+import 'package:tiebanana/Widgets/forumtag.dart';
 
 import 'package:tiebanana/common/Global.dart';
 
@@ -37,11 +38,18 @@ class _SearchBarState extends State<SearchBar> {
     if (cache == null) {
       cache = [searchText];
     } else {
-      cache.add(searchText);
+      if (cache.contains(searchText)) {
+        //重复搜索将关键词提前
+        cache.remove(searchText);
+        cache.insert(0, searchText);
+      } else {
+        cache.insert(0, searchText);
+      }
     }
     Global.profile.setStringList("searchHistory", cache);
-    //跳转到搜索页面
+    //TODO:跳转到搜索页面
     // Navigator.push(context, route)
+    setState(() {});
   }
 
   @override
@@ -66,9 +74,9 @@ class _SearchBarState extends State<SearchBar> {
       actions: [
         RawMaterialButton(
           shape: CircleBorder(),
-          onPressed: () {
+          onPressed: () async {
             Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
-            Global.tiebaAPI.signAll();
+            await Global.tiebaAPI.signAll();
           },
           child: Stack(
             alignment: AlignmentDirectional.center,
@@ -107,11 +115,12 @@ class AnimatedDropDown extends StatefulWidget {
 
 class _AnimatedDropDownState extends State<AnimatedDropDown> {
   late _SearchBarState? bar;
-  late List history;
-
+  late List<String> history;
+  PointerDownEvent? tapPoint;
   void getHistory() {
     var local = Global.profile.getStringList("searchHistory");
     history = local == null ? [] : local;
+    // history.toSet().toList();
   }
 
   @override
@@ -121,7 +130,15 @@ class _AnimatedDropDownState extends State<AnimatedDropDown> {
   }
 
   @override
+  void didUpdateWidget(covariant AnimatedDropDown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    getHistory();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final RenderBox overlay =
+        Overlay.of(context)!.context.findRenderObject() as RenderBox;
     bar = context.findAncestorStateOfType<_SearchBarState>();
     List<Widget> historyWidgetList = history.map((item) {
       return MaterialButton(
@@ -129,6 +146,29 @@ class _AnimatedDropDownState extends State<AnimatedDropDown> {
         onPressed: () {
           bar!.barController.query = item;
           // bar!.barController.close();
+        },
+        onLongPress: () {
+          showMenu(
+              context: context,
+              position: RelativeRect.fromLTRB(
+                  tapPoint!.localPosition.dx,
+                  tapPoint!.localPosition.dy,
+                  overlay.size.width - tapPoint!.localPosition.dx,
+                  overlay.size.height - tapPoint!.localPosition.dy),
+              items: [
+                PopupMenuItem(
+                  onTap: () {
+                    //删除该历史搜索
+                    history.remove(item);
+                    Global.profile.setStringList("searchHistory", history);
+                    setState(() {});
+                  },
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text("删除"),
+                  ),
+                )
+              ]);
         },
         child: Container(
           color: Color(0),
@@ -160,7 +200,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown> {
         ),
       ));
     }
-    return FadeInDown(
+    return FadeInDownBig(
         duration: Duration(milliseconds: 400),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
@@ -168,7 +208,10 @@ class _AnimatedDropDownState extends State<AnimatedDropDown> {
             color: Colors.white,
             elevation: 4.0,
             child: SingleChildScrollView(
-              child: Column(children: historyWidgetList),
+              child: Listener(
+                child: Column(children: historyWidgetList),
+                onPointerDown: (e) => tapPoint = e,
+              ),
             ),
           ),
         ));

@@ -590,7 +590,7 @@ class TiebaAPI {
   }
 
   ///签到所有关注的贴吧
-  void signAll() async {
+  Future<void> signAll() async {
     if (isLogin == false) {
       throw Exception("未登录");
     }

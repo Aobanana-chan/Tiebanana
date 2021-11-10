@@ -70,7 +70,14 @@ class __HomeState extends State<_Home> {
         decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [SearchBar(), TagPan()],
+          children: [
+            SearchBar(),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text("我关注的吧"),
+            ),
+            TagPan()
+          ],
         ));
   }
 }

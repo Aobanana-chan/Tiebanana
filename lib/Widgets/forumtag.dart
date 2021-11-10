@@ -43,7 +43,9 @@ class _TagPanState extends State<TagPan> {
                 );
               }).toList(),
             ),
-            onRefresh: () async {})
+            onRefresh: () async {
+              //TODO:刷新
+            })
       ],
     ));
   }
@@ -96,11 +98,53 @@ class _Rank extends StatelessWidget {
   bool isSigned;
   _Rank({Key? key, required this.rank, required this.isSigned})
       : super(key: key);
+  //[字体,背景色]
+  final List<List<Color>> _rankColor = [
+    [Color(0xFF6F6F6F), Color(0xFFFFFFFF)],
+    [Color(0xFFFFFFFF), Color(0xFF6F6F6F)],
+    [Color(0xFF3AFF44), Color(0xFF553626)],
+    [Color(0xFF281DCF), Color(0xFFFFE7B8)],
+    [Color(0xFF753771), Color(0xFFFDE9D6)],
+    [Color(0xFFFF8E31), Color(0xFF3D3B02)],
+  ];
+  List<Color> setColor() {
+    int r = int.parse(rank);
+    return _rankColor[r ~/ 3];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Text(rank),
+      padding: EdgeInsets.only(left: 5, right: 5),
+      decoration: BoxDecoration(
+          color: setColor()[1], borderRadius: BorderRadius.circular(16)),
+      child: ClipRRect(
+        // borderRadius: BorderRadius.circular(16),
+        child: Row(
+          children: [
+            Text(
+              rank,
+              style: TextStyle(color: setColor()[0]),
+            ),
+            Visibility(
+                visible: isSigned,
+                child: SizedBox(
+                  width: 10,
+                )),
+            AnimatedSwitcher(
+              duration: Duration(milliseconds: 200),
+              child: Visibility(
+                visible: isSigned,
+                child: Icon(
+                  Icons.check_circle,
+                  key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
+                  color: Colors.green,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
     );
   }
 }
