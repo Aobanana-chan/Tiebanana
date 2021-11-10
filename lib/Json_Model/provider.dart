@@ -36,3 +36,6 @@ class APPTheme with ChangeNotifier {
     }
   }
 }
+
+//吧状态Model
+class ForumState with ChangeNotifier {}
