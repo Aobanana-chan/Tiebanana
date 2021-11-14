@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
@@ -67,18 +68,25 @@ class __HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SearchBar(),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text("我关注的吧"),
-            ),
-            TagPan()
-          ],
-        ));
+      decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return ListView(
+            physics: NeverScrollableScrollPhysics(),
+            children: [
+              SearchBar(
+                maxHeight: constraints.maxHeight,
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text("我关注的吧"),
+              ),
+              TagPan()
+            ],
+          );
+        },
+      ),
+    );
   }
 }
 

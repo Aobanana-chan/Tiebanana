@@ -11,7 +11,7 @@ import 'package:tiebanana/routes/routes.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Global.init();
-  Global.tiebaAPI.init();
+  await Global.tiebaAPI.init();
   runApp(App());
 }
 

@@ -25,8 +25,7 @@ class _TagPanState extends State<TagPan> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-        child: Stack(
+    return Stack(
       children: [
         RefreshIndicator(
             child: GridView(
@@ -47,7 +46,7 @@ class _TagPanState extends State<TagPan> {
               //TODO:刷新
             })
       ],
-    ));
+    );
   }
 }
 
