@@ -12,8 +12,8 @@ import 'package:tiebanana/common/Global.dart';
 
 ///主页搜索栏Widget
 class SearchBar extends StatefulWidget {
-  double? maxHeight = double.infinity;
-  SearchBar({Key? key, this.maxHeight}) : super(key: key);
+  final double? maxHeight;
+  SearchBar({Key? key, this.maxHeight = double.infinity}) : super(key: key);
 
   @override
   _SearchBarState createState() => _SearchBarState();
@@ -88,6 +88,7 @@ class _SearchBarState extends State<SearchBar> {
           onPressed: () async {
             Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
             await Global.tiebaAPI.signAll();
+            Provider.of<ForumState>(context, listen: false).refresh();
           },
           child: Stack(
             alignment: AlignmentDirectional.center,

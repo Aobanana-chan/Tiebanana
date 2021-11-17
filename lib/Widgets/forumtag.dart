@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/common/Global.dart';
 
 ///主页贴合集
@@ -13,46 +15,73 @@ class TagPan extends StatefulWidget {
 class _TagPanState extends State<TagPan> {
   List<LikeForumInfo> likeForumInfo = [];
   Future<void> getLikes() async {
-    likeForumInfo = (await Global.tiebaAPI.userInfomation.likes)!;
-    setState(() {});
+    Provider.of<ForumState>(context, listen: false).refresh();
+    // likeForumInfo = (await Global.tiebaAPI.userInfomation.likes)!;
+    // setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
-    getLikes();
+    // getLikes();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        RefreshIndicator(
-            child: GridView(
-              shrinkWrap: true,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  mainAxisExtent: 50,
-                  crossAxisCount: 2,
-                  childAspectRatio: 2.5,
-                  mainAxisSpacing: 5,
-                  crossAxisSpacing: 5),
-              children: likeForumInfo.map((e) {
-                return ForumTag(
-                  info: e,
-                );
-              }).toList(),
-            ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return RefreshIndicator(
+            triggerMode: RefreshIndicatorTriggerMode.anywhere,
             onRefresh: () async {
-              //TODO:刷新
-            })
-      ],
+              getLikes();
+            },
+            child: Consumer<ForumState>(builder: (builder, forumState, _) {
+              return CustomScrollView(
+                physics: BouncingScrollPhysics(),
+                slivers: <Widget>[
+                  SliverToBoxAdapter(
+                    child: LimitedBox(
+                      maxHeight: constraints.maxHeight,
+                      child: Container(
+                        padding: EdgeInsets.only(left: 10),
+                        child: IntrinsicHeight(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "我关注的吧",
+                              style: TextStyle(
+                                  color: Color(0xFF6F6F6F), fontSize: 18),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverGrid(
+                      delegate: SliverChildBuilderDelegate((builder, index) {
+                        return Container(
+                          child: ForumTag(
+                            info: forumState.forums[index],
+                          ),
+                        );
+                      }, childCount: forumState.forums.length),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          mainAxisExtent: 50,
+                          crossAxisCount: 2,
+                          childAspectRatio: 2.5,
+                          mainAxisSpacing: 5,
+                          crossAxisSpacing: 5))
+                ],
+              );
+            }));
+      },
     );
   }
 }
 
 ///主页贴吧tag部件
 class ForumTag extends StatelessWidget {
-  LikeForumInfo info;
+  final LikeForumInfo info;
   ForumTag({Key? key, required this.info}) : super(key: key);
 
   @override
@@ -93,8 +122,8 @@ class ForumTag extends StatelessWidget {
 }
 
 class _Rank extends StatelessWidget {
-  String rank;
-  bool isSigned;
+  final String rank;
+  final bool isSigned;
   _Rank({Key? key, required this.rank, required this.isSigned})
       : super(key: key);
   //[字体,背景色]

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/forumtag.dart';
 import 'package:tiebanana/Widgets/searchBar.dart';
 import 'package:tiebanana/routes/Login.dart';
@@ -71,18 +73,21 @@ class __HomeState extends State<_Home> {
       decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          return ListView(
-            physics: NeverScrollableScrollPhysics(),
-            children: [
-              SearchBar(
-                maxHeight: constraints.maxHeight,
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text("我关注的吧"),
-              ),
-              TagPan()
-            ],
+          return ChangeNotifierProvider.value(
+            value: ForumState(),
+            builder: (builderContext, _) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SearchBar(
+                    maxHeight: constraints.maxHeight,
+                  ),
+                  Expanded(
+                    child: TagPan(),
+                  )
+                ],
+              );
+            },
           );
         },
       ),

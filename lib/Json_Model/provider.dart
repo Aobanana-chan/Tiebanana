@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/Global.dart';
 
 ///用户信息Model类
@@ -38,4 +39,17 @@ class APPTheme with ChangeNotifier {
 }
 
 //吧状态Model
-class ForumState with ChangeNotifier {}
+class ForumState with ChangeNotifier {
+  List<LikeForumInfo> _forums = [];
+  List<LikeForumInfo> get forums {
+    return _forums;
+  }
+
+  ForumState() {
+    refresh();
+  }
+  Future<void> refresh() async {
+    _forums = (await Global.tiebaAPI.userInfomation.likes)!;
+    notifyListeners();
+  }
+}
