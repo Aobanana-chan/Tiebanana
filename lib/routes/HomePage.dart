@@ -53,7 +53,10 @@ class _HomePageState extends State<HomePage> {
         },
         fixedColor: Colors.white,
       ),
-      body: page[_currentPage],
+      body: IndexedStack(
+        children: page,
+        index: _currentPage,
+      ),
     );
   }
 }
