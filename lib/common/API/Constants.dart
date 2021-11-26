@@ -101,6 +101,24 @@ const String GET_FORUM_HOME =
 const String GET_FORUM_RECOMMEND =
     "http://c.tieba.baidu.com/c/f/forum/forumrecommend"; //可以获取关注的吧信息，可以用GET或者是POST方法
 const String FORUM_SIGN_IN = "http://c.tieba.baidu.com/c/c/forum/sign"; //单个吧签到
+const String FORUM_DYNMANIC =
+    "http://c.tieba.baidu.com/c/f/excellent/personalized"; //获取动态贴
+const String AUTHOR_AVATAR =
+    "http://tb.himg.baidu.com/sys/portrait/item/"; //获取头像
+
+///不喜欢首页推荐贴 参数：
+///
+///BDUSS
+///
+///dislike:[{"click_time":时间戳,"dislike_ids":"","extra":"","fid":"14911","tid":"7555696416"}]
+///
+///dislike_from
+///
+///stoken
+///
+///sign
+const String RECOMMED_DISLIKE =
+    "http://c.tieba.baidu.com/c/c/excellent/submitDislike";
 
 ///百度err_no码 Web端口
 final webErrCode = {

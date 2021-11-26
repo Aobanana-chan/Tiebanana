@@ -13,7 +13,6 @@ import 'package:dio/adapter.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
@@ -662,7 +661,7 @@ class TiebaAPI {
     return "$kw吧签到失败";
   }
 
-  //sign签名算法
+  ///sign签名算法
   String _signArgs(Map<String, dynamic> map) {
     var sortedmap = _mapSrot(map);
     var str = "";
@@ -671,5 +670,44 @@ class TiebaAPI {
     }
     str += "tiebaclient!!!";
     return md5.convert(utf8.encode(str)).toString();
+  }
+
+  ///主页-获取动态贴
+  ///
+  ///[pageThreadCount]一页有多少帖子
+  ///
+  ///[pn]第几页
+  Future<List<ThreadRecommendSummary>> getRecommThread(
+      int pageThreadCount, int pn) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var args = {
+      "BDUSS": bduss,
+      "page_thread_count": pageThreadCount,
+      "pn": pn,
+      "pre_ad_thread_count": 0,
+      "request_time": DateTime.now().millisecondsSinceEpoch,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "invoke_source": "",
+      "load_type": 1,
+      "_client_version": "8.0.8.0",
+    };
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(FORUM_DYNMANIC,
+        data: args,
+        options: Options(
+            responseType: ResponseType.plain,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"}));
+    var resJson = json5Decode(res.data);
+    if (resJson['error_code'] != "0") {
+      throw Exception("获取失败");
+    }
+    List<ThreadRecommendSummary> threads = [];
+    for (var thread in resJson['thread_list']) {
+      var t = ThreadRecommendSummary.fromJson(thread);
+      threads.add(t);
+    }
+    return threads;
   }
 }

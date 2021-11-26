@@ -1,3 +1,9 @@
+library json_model;
+
+part 'Json/ThreadRecommendSummary.dart';
+
+//TODO:拆分
+
 ///TBS随机参数
 class TBS {
   String? tbs;

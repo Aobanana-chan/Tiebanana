@@ -4,6 +4,7 @@ import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/forumtag.dart';
 import 'package:tiebanana/Widgets/searchBar.dart';
 import 'package:tiebanana/routes/Login.dart';
+import 'package:tiebanana/routes/Recommend.dart';
 
 ///首页
 var page = <Widget>[_Home(), _Recommand(), _Notifaction(), _UserAndSettings()];
@@ -109,7 +110,7 @@ class _Recommand extends StatefulWidget {
 class __RecommandState extends State<_Recommand> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return RecommendPan();
   }
 }
 
