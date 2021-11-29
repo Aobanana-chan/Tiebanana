@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/Widgets/searchBar.dart';
 import 'package:tiebanana/Widgets/threadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
 
@@ -14,9 +17,11 @@ class _RecommendPanState extends State<RecommendPan> {
   List<ThreadRecommendSummary?> recommend = [];
   int pn = 1;
   Future<void> refresh() async {
-    recommend.addAll(await Global.tiebaAPI.getRecommThread(15, pn));
-    pn++;
+    recommend.remove(null);
     recommend.insert(0, null);
+    var newThread = await Global.tiebaAPI.getRecommThread(15, pn);
+    recommend.insertAll(0, newThread);
+    pn++;
     setState(() {});
   }
 
@@ -29,22 +34,66 @@ class _RecommendPanState extends State<RecommendPan> {
   @override
   Widget build(BuildContext context) {
     List<Widget> threadwidgets = [];
+    ScrollController controller = ScrollController();
     for (var i = 1; i < recommend.length; i++) {
       if (recommend[i] != null) {
         threadwidgets.add(ThreadSummary(info: recommend[i]!));
       } else {
-        //TODO:上次阅读到这里widget
+        threadwidgets.add(ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: GestureDetector(
+            onTap: () async {
+              refresh();
+              controller.animateTo(0,
+                  duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+            },
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Provider.of<APPTheme>(context).theme,
+                // border: Border.all(width: 0.05),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.refresh,
+                    color: Colors.white,
+                  ),
+                  Text(
+                    "上次读到这里,点击刷新",
+                    style: TextStyle(color: Colors.white),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ));
       }
     }
-    return Container(
-      child: RefreshIndicator(
-        triggerMode: RefreshIndicatorTriggerMode.anywhere,
-        onRefresh: refresh,
-        child: ListView(
-          physics: BouncingScrollPhysics(),
-          children: threadwidgets,
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return Column(
+          children: [
+            SearchBar(
+              maxHeight: constraints.maxHeight,
+            ),
+            Expanded(
+                child: Container(
+              padding: EdgeInsets.only(left: 5, right: 5),
+              child: RefreshIndicator(
+                triggerMode: RefreshIndicatorTriggerMode.anywhere,
+                onRefresh: refresh,
+                child: ListView(
+                  controller: controller,
+                  physics: BouncingScrollPhysics(),
+                  children: threadwidgets,
+                ),
+              ),
+            ))
+          ],
+        );
+      },
     );
   }
 }

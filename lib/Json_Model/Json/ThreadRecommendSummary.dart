@@ -50,7 +50,7 @@ class ThreadRecommendSummary {
     createTime = json['create_time'];
     userId = json['user_id'];
     isDeleted = json['is_deleted'];
-    mediaNum = json['media_num'] != null
+    mediaNum = json['media_num'] != ""
         ? new MediaNum.fromJson(json['media_num'])
         : null;
     author =

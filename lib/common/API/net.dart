@@ -705,6 +705,9 @@ class TiebaAPI {
     }
     List<ThreadRecommendSummary> threads = [];
     for (var thread in resJson['thread_list']) {
+      if ((thread as Map<String, dynamic>).containsKey("lego_card")) {
+        continue;
+      }
       var t = ThreadRecommendSummary.fromJson(thread);
       threads.add(t);
     }
