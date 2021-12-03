@@ -120,6 +120,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
       }
       i++;
     }
+    setState(() {});
   }
 
   bool shouldShowOriginSrc() {
@@ -132,11 +133,20 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
     return true;
   }
 
+  String qualitySelect(int index) {
+    if (highQualityLoaded[index] == false && wantShowScrImg[index] == false) {
+      return widget.imgUrls[index];
+    } else {
+      return widget.highQualityUrls![index]!;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     highQualityLoaded = List.filled(widget.imgUrls.length, false);
     wantShowScrImg = List.filled(widget.imgUrls.length, false);
+    highQualityCacheCheck();
   }
 
   @override
@@ -180,9 +190,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                   return Hero(
                       tag: widget.imgUrls[index],
                       child: ExtendedImage.network(
-                        highQualityLoaded[index] == false
-                            ? widget.imgUrls[index]
-                            : widget.highQualityUrls![index]!,
+                        qualitySelect(index),
                         mode: ExtendedImageMode.gesture,
                         initGestureConfigHandler: (state) {
                           return GestureConfig(
@@ -246,11 +254,14 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                                 onPressed: () {
                                   //TODO:查看原图
                                   wantShowScrImg[currentIndex] = true;
+                                  setState(() {
+                                    highQualityCacheCheck();
+                                  });
                                 },
                                 child: Text(
                                   wantShowScrImg[currentIndex] == false
                                       ? "查看原图"
-                                      : "加载中... $highQualityLoadState",
+                                      : "加载中... ${highQualityLoadState == null ? "" : highQualityLoadState}",
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),

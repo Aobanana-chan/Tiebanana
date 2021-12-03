@@ -27,17 +27,18 @@ class ThreadSummary extends StatelessWidget {
         switch (Global.setting.pictureLoadSetting) {
           case 0:
             imgs.add(elem.bigCdnSrc!);
-            imgsOriginSrc.add(elem.originSrc!);
+            imgsOriginSrc!.add(elem.originSrc!);
             break;
           case 1:
             if (int.parse(elem.bsize!.replaceAll(",", "")) < 0x100000) {
               //小于1mb就加载
               imgs.add(elem.bigCdnSrc!);
-              imgsOriginSrc.add(elem.originSrc!);
+              imgsOriginSrc!.add(elem.originSrc!);
             }
             break;
           case 2:
             imgs.add(elem.originSrc!);
+            imgsOriginSrc = null;
             break;
 
           default:
