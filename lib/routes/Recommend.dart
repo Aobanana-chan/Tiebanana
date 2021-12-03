@@ -17,8 +17,11 @@ class _RecommendPanState extends State<RecommendPan> {
   List<ThreadRecommendSummary?> recommend = [];
   int pn = 1;
   Future<void> refresh() async {
-    recommend.remove(null);
-    recommend.insert(0, null);
+    if (recommend.length != 0) {
+      recommend.remove(null);
+      recommend.insert(0, null);
+    }
+
     var newThread = await Global.tiebaAPI.getRecommThread(15, pn);
     recommend.insertAll(0, newThread);
     pn++;
