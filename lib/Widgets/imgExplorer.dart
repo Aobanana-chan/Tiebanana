@@ -1,5 +1,6 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ImgExplorer extends StatefulWidget {
   final String imgUrl;
@@ -12,8 +13,46 @@ class ImgExplorer extends StatefulWidget {
 }
 
 class _ImgExplorerState extends State<ImgExplorer> {
+  bool shouldShowOriginSrc = false;
+  bool highQualityLoaded = false;
+  double? highQualityLoadState;
+  Future<void> highQualityCacheCheck() async {
+    bool shouldupdate = false;
+
+    //图片原图已缓存，直接加载原图
+    if (highQualityLoaded == false &&
+        widget.highQualityUrl != null &&
+        await getCachedImageFilePath(widget.highQualityUrl!) != null) {
+      highQualityLoaded = true;
+      shouldupdate = true;
+    }
+
+    if (shouldupdate) {
+      setState(() {});
+    }
+  }
+
+  String qualitySelect() {
+    if (highQualityLoaded == false && shouldShowOriginSrc == false) {
+      // print(widget.imgUrls[index]);
+      return widget.imgUrl;
+    } else if (widget.highQualityUrl != null) {
+      // print(widget.highQualityUrls![index]!);
+      return widget.highQualityUrl!;
+    }
+    return widget.imgUrl;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    highQualityCacheCheck();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final GlobalKey<ExtendedImageGestureState> gestureKey =
+        GlobalKey<ExtendedImageGestureState>();
     return Container(
       color: Colors.black,
       child: Scaffold(
@@ -42,15 +81,62 @@ class _ImgExplorerState extends State<ImgExplorer> {
               child: Hero(
                 tag: widget.imgUrl,
                 child: ExtendedImage.network(
-                  widget.imgUrl,
+                  qualitySelect(),
                   mode: ExtendedImageMode.gesture,
                   cache: true,
+                  handleLoadingProgress: true,
+                  loadStateChanged: (state) {
+                    switch (state.extendedImageLoadState) {
+                      case LoadState.completed:
+                        highQualityCacheCheck();
+                        return null;
+                      case LoadState.loading:
+                        if (state.loadingProgress == null ||
+                            state.loadingProgress!.expectedTotalBytes == null) {
+                          highQualityLoadState = null;
+                        } else {
+                          highQualityLoadState =
+                              (state.loadingProgress!.cumulativeBytesLoaded /
+                                  state.loadingProgress!.expectedTotalBytes!);
+                        }
+                        //未加载完前显示低质量图片
+                        return ExtendedImage.network(
+                          widget.imgUrl,
+                          extendedImageGestureKey: gestureKey,
+                          mode: ExtendedImageMode.gesture,
+                          initGestureConfigHandler: (_) {
+                            return GestureConfig(
+                                inPageView: true,
+                                initialScale: 1.0,
+                                cacheGesture: true);
+                          },
+                          handleLoadingProgress: true,
+                        );
+                      case LoadState.failed:
+                        shouldShowOriginSrc = false;
+                        Fluttertoast.showToast(msg: "原图加载失败");
+                        return ExtendedImage.network(
+                          widget.imgUrl,
+                          extendedImageGestureKey: gestureKey,
+                          mode: ExtendedImageMode.gesture,
+                          initGestureConfigHandler: (_) {
+                            return GestureConfig(
+                                inPageView: true,
+                                initialScale: 1.0,
+                                cacheGesture: true);
+                          },
+                          handleLoadingProgress: true,
+                        );
+                      default:
+                    }
+                  },
                 ),
               ),
             ),
             SizedBox.expand(
               child: Visibility(
-                  visible: widget.highQualityUrl == null ? false : true,
+                  visible:
+                      !shouldShowOriginSrc && widget.highQualityUrl != null,
                   child: FractionallySizedBox(
                       alignment: Alignment.bottomCenter,
                       heightFactor: 0.2,
@@ -69,10 +155,15 @@ class _ImgExplorerState extends State<ImgExplorer> {
                               borderRadius: BorderRadius.circular(10),
                               child: MaterialButton(
                                 onPressed: () {
-                                  //TODO:查看原图
+                                  shouldShowOriginSrc = true;
+                                  setState(() {
+                                    highQualityCacheCheck();
+                                  });
                                 },
                                 child: Text(
-                                  "查看原图",
+                                  shouldShowOriginSrc == false
+                                      ? "查看原图"
+                                      : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
@@ -112,15 +203,19 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
   late List<bool> wantShowScrImg;
   Future<void> highQualityCacheCheck() async {
     int i = 0;
+    bool shouldupdate = false;
     for (var url in widget.highQualityUrls ?? []) {
       //图片原图已缓存，直接加载原图
       if (highQualityLoaded[i] == false &&
           await getCachedImageFilePath(url) != null) {
         highQualityLoaded[i] = true;
+        shouldupdate = true;
       }
       i++;
     }
-    setState(() {});
+    if (shouldupdate) {
+      setState(() {});
+    }
   }
 
   bool shouldShowOriginSrc() {
@@ -135,8 +230,10 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
 
   String qualitySelect(int index) {
     if (highQualityLoaded[index] == false && wantShowScrImg[index] == false) {
+      // print(widget.imgUrls[index]);
       return widget.imgUrls[index];
     } else {
+      // print(widget.highQualityUrls![index]!);
       return widget.highQualityUrls![index]!;
     }
   }
@@ -147,6 +244,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
     highQualityLoaded = List.filled(widget.imgUrls.length, false);
     wantShowScrImg = List.filled(widget.imgUrls.length, false);
     highQualityCacheCheck();
+    currentIndex = widget.pageController?.initialPage ?? 0;
   }
 
   @override
@@ -157,7 +255,6 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
 
   @override
   Widget build(BuildContext context) {
-    currentIndex = widget.pageController?.initialPage ?? 0;
     return Container(
       color: Colors.black,
       child: Scaffold(
@@ -180,45 +277,84 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
               Navigator.pop(context);
             },
           ),
+          title: Text("${currentIndex + 1}/${widget.imgUrls.length}"),
         ),
         body: Stack(
           children: [
             Container(
               padding: EdgeInsets.all(5),
               child: ExtendedImageGesturePageView.builder(
+                canScrollPage: (gestureDetails) {
+                  if (gestureDetails!.totalScale! > 1.0 &&
+                      gestureDetails.layoutRect ==
+                          gestureDetails.destinationRect) {
+                    return false;
+                  }
+                  return true;
+                },
                 itemBuilder: (itemBuilder, index) {
+                  final GlobalKey<ExtendedImageGestureState> gestureKey =
+                      GlobalKey<ExtendedImageGestureState>();
                   return Hero(
                       tag: widget.imgUrls[index],
                       child: ExtendedImage.network(
                         qualitySelect(index),
+                        extendedImageGestureKey: gestureKey,
                         mode: ExtendedImageMode.gesture,
                         initGestureConfigHandler: (state) {
                           return GestureConfig(
-                              inPageView: true,
-                              initialScale: 1.0,
-                              cacheGesture: true);
-                        },
-                        loadStateChanged: (state) {
-                          if (state.loadingProgress == null ||
-                              state.loadingProgress!.expectedTotalBytes ==
-                                  null) {
-                            highQualityLoadState = null;
-                          } else {
-                            highQualityLoadState =
-                                (state.loadingProgress!.cumulativeBytesLoaded /
-                                    state.loadingProgress!.expectedTotalBytes!);
-                          }
-                          //未加载完前显示低质量图片
-                          return ExtendedImage.network(
-                            widget.imgUrls[index],
-                            mode: ExtendedImageMode.gesture,
-                            initGestureConfigHandler: (state) {
-                              return GestureConfig(
-                                  inPageView: true,
-                                  initialScale: 1.0,
-                                  cacheGesture: true);
-                            },
+                            inPageView: true,
+                            initialScale: 1.0,
+                            cacheGesture: true,
                           );
+                        },
+                        handleLoadingProgress: true,
+                        loadStateChanged: (state) {
+                          // state.returnLoadStateChangedWidget = true;
+                          switch (state.extendedImageLoadState) {
+                            case LoadState.completed:
+                              highQualityCacheCheck();
+                              return null;
+                            case LoadState.loading:
+                              if (state.loadingProgress == null ||
+                                  state.loadingProgress!.expectedTotalBytes ==
+                                      null) {
+                                highQualityLoadState = null;
+                              } else {
+                                highQualityLoadState = (state.loadingProgress!
+                                        .cumulativeBytesLoaded /
+                                    state.loadingProgress!.expectedTotalBytes!);
+                              }
+                              //未加载完前显示低质量图片
+                              return ExtendedImage.network(
+                                widget.imgUrls[index],
+                                extendedImageGestureKey: gestureKey,
+                                mode: ExtendedImageMode.gesture,
+                                initGestureConfigHandler: (_) {
+                                  return GestureConfig(
+                                      inPageView: true,
+                                      initialScale: 1.0,
+                                      cacheGesture: true);
+                                },
+                                handleLoadingProgress: true,
+                              );
+                            case LoadState.failed:
+                              wantShowScrImg[index] = false;
+                              Fluttertoast.showToast(msg: "原图加载失败");
+                              return ExtendedImage.network(
+                                widget.imgUrls[index],
+                                extendedImageGestureKey: gestureKey,
+                                mode: ExtendedImageMode.gesture,
+                                initGestureConfigHandler: (_) {
+                                  return GestureConfig(
+                                      inPageView: true,
+                                      initialScale: 1.0,
+                                      cacheGesture: true);
+                                },
+                                handleLoadingProgress: true,
+                              );
+                            default:
+                          }
                         },
                       ));
                 },
@@ -226,6 +362,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                 itemCount: widget.imgUrls.length,
                 onPageChanged: (index) {
                   currentIndex = index;
+                  setState(() {});
                 },
                 physics: BouncingScrollPhysics(),
                 pageSnapping: true,
@@ -252,8 +389,8 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                               borderRadius: BorderRadius.circular(10),
                               child: MaterialButton(
                                 onPressed: () {
-                                  //TODO:查看原图
                                   wantShowScrImg[currentIndex] = true;
+
                                   setState(() {
                                     highQualityCacheCheck();
                                   });
@@ -261,7 +398,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                                 child: Text(
                                   wantShowScrImg[currentIndex] == false
                                       ? "查看原图"
-                                      : "加载中... ${highQualityLoadState == null ? "" : highQualityLoadState}",
+                                      : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),

@@ -65,7 +65,10 @@ class ThreadSummary extends StatelessWidget {
 
     //图片
     int index = 0;
-    Widget imgLeft = Container();
+    Widget imgLeft = Container(
+      height: 0,
+      width: 0,
+    );
     for (var img in imgs) {
       ExtendedPageController controller =
           ExtendedPageController(initialPage: index);
@@ -417,10 +420,14 @@ class Avatar extends StatelessWidget {
         child: ClipOval(
           child: Hero(
             tag: imgUrl,
-            child: FadeInImage(
-                placeholder:
-                    NetworkImage("http://placehold.it/200&text=Avatar"),
-                image: NetworkImage(imgUrl)),
+            child: ExtendedImage.network(
+              imgUrl,
+              cache: true,
+            ),
+            // child: FadeInImage(
+            //     placeholder:
+            //         NetworkImage("http://placehold.it/200&text=Avatar"),
+            //     image: NetworkImage(imgUrl)),
           ),
         ),
       ),

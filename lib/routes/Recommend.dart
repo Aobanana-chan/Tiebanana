@@ -38,7 +38,7 @@ class _RecommendPanState extends State<RecommendPan> {
   Widget build(BuildContext context) {
     List<Widget> threadwidgets = [];
     ScrollController controller = ScrollController();
-    for (var i = 1; i < recommend.length; i++) {
+    for (var i = 0; i < recommend.length; i++) {
       if (recommend[i] != null) {
         threadwidgets.add(ThreadSummary(info: recommend[i]!));
       } else {
