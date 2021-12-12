@@ -713,4 +713,58 @@ class TiebaAPI {
     }
     return threads;
   }
+
+  ///主页-获取回复
+  ///
+  ///[pn]页码
+  Future<ReplyMessage> getReply(int pn) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var args = {
+      "BDUSS": bduss,
+      "pn": pn,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "_client_version": "8.2.2",
+    };
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(GET_REPLY,
+        data: args,
+        options: Options(
+            responseType: ResponseType.plain,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"}));
+    var resJson = json5Decode(res.data);
+    if (resJson['error_code'] != "0") {
+      throw Exception("获取失败");
+    }
+    ReplyMessage replyMessage = ReplyMessage.fromJson(resJson);
+    return replyMessage;
+  }
+
+  ///主页-获取@
+  ///
+  ///[pn]页码
+  Future<AtMeMessage> getAtMe(int pn) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var args = {
+      "BDUSS": bduss,
+      "pn": pn,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "_client_version": "8.2.2",
+    };
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(GET_REPLY,
+        data: args,
+        options: Options(
+            responseType: ResponseType.plain,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"}));
+    var resJson = json5Decode(res.data);
+    if (resJson['error_code'] != "0") {
+      throw Exception("获取失败");
+    }
+    AtMeMessage replyMessage = AtMeMessage.fromJson(resJson);
+    return replyMessage;
+  }
 }

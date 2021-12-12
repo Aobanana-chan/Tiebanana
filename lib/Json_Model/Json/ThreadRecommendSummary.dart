@@ -20,6 +20,7 @@ class ThreadRecommendSummary {
   String? fname;
   List<FirstPostContent>? firstPostContent;
   List<ThreadPersonalized>? threadPersonalized;
+  VideoInfo? videoInfo;
   ThreadRecommendSummary(
       {this.id,
       this.tid,
@@ -38,7 +39,8 @@ class ThreadRecommendSummary {
       this.fid,
       this.fname,
       this.firstPostContent,
-      this.threadPersonalized});
+      this.threadPersonalized,
+      this.videoInfo});
 
   ThreadRecommendSummary.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -77,6 +79,9 @@ class ThreadRecommendSummary {
         threadPersonalized!.add(new ThreadPersonalized.fromJson(v));
       });
     }
+    videoInfo = json['video_info'] != null
+        ? new VideoInfo.fromJson(json['video_info'])
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -112,6 +117,9 @@ class ThreadRecommendSummary {
     if (this.threadPersonalized != null) {
       data['thread_personalized'] =
           this.threadPersonalized!.map((v) => v.toJson()).toList();
+    }
+    if (this.videoInfo != null) {
+      data['video_info'] = this.videoInfo?.toJson();
     }
     return data;
   }
@@ -414,6 +422,237 @@ class DislikeResource {
     data['dislike_reason'] = this.dislikeReason;
     data['dislike_id'] = this.dislikeId;
     data['extra'] = this.extra;
+    return data;
+  }
+}
+
+class VideoInfo {
+  String? auditing;
+  String? formatMatched;
+  String? ptid;
+  String? thumbnailHeight;
+  String? thumbnailPicid;
+  String? thumbnailUrl;
+  String? thumbnailWidth;
+  String? versionH265;
+  List<VideoDesc>? videoDesc;
+  List<VideoDescCae3>? videoDescCae3;
+  List<VideoDescH265>? videoDescH265;
+  String? videoDuration;
+  String? videoFormat;
+  String? videoFrom;
+  String? videoHeight;
+  String? videoLogId;
+  String? videoMd5;
+  String? videoType;
+  String? videoUrl;
+  String? videoWidth;
+  String? playCount;
+  String? playTime;
+  String? videoLength;
+  String? isVertical;
+
+  VideoInfo(
+      {this.auditing,
+      this.formatMatched,
+      this.ptid,
+      this.thumbnailHeight,
+      this.thumbnailPicid,
+      this.thumbnailUrl,
+      this.thumbnailWidth,
+      this.versionH265,
+      this.videoDesc,
+      this.videoDescCae3,
+      this.videoDescH265,
+      this.videoDuration,
+      this.videoFormat,
+      this.videoFrom,
+      this.videoHeight,
+      this.videoLogId,
+      this.videoMd5,
+      this.videoType,
+      this.videoUrl,
+      this.videoWidth,
+      this.playCount,
+      this.playTime,
+      this.videoLength,
+      this.isVertical});
+
+  VideoInfo.fromJson(Map<String, dynamic> json) {
+    auditing = json['auditing'];
+    formatMatched = json['format_matched'];
+    ptid = json['ptid'];
+    thumbnailHeight = json['thumbnail_height'];
+    thumbnailPicid = json['thumbnail_picid'];
+    thumbnailUrl = json['thumbnail_url'];
+    thumbnailWidth = json['thumbnail_width'];
+    versionH265 = json['version_h265'];
+    if (json['video_desc'] != null) {
+      videoDesc = [];
+      json['video_desc'].forEach((v) {
+        videoDesc?.add(new VideoDesc.fromJson(v));
+      });
+    }
+    if (json['video_desc_cae3'] != null) {
+      videoDescCae3 = [];
+      json['video_desc_cae3'].forEach((v) {
+        videoDescCae3?.add(new VideoDescCae3.fromJson(v));
+      });
+    }
+    if (json['video_desc_h265'] != null) {
+      videoDescH265 = [];
+      json['video_desc_h265'].forEach((v) {
+        videoDescH265?.add(new VideoDescH265.fromJson(v));
+      });
+    }
+    videoDuration = json['video_duration'];
+    videoFormat = json['video_format'];
+    videoFrom = json['video_from'];
+    videoHeight = json['video_height'];
+    videoLogId = json['video_log_id'];
+    videoMd5 = json['video_md5'];
+    videoType = json['video_type'];
+    videoUrl = json['video_url'];
+    videoWidth = json['video_width'];
+    playCount = json['play_count'];
+    playTime = json['play_time'];
+    videoLength = json['video_length'];
+    isVertical = json['is_vertical'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['auditing'] = this.auditing;
+    data['format_matched'] = this.formatMatched;
+    data['ptid'] = this.ptid;
+    data['thumbnail_height'] = this.thumbnailHeight;
+    data['thumbnail_picid'] = this.thumbnailPicid;
+    data['thumbnail_url'] = this.thumbnailUrl;
+    data['thumbnail_width'] = this.thumbnailWidth;
+    data['version_h265'] = this.versionH265;
+    if (this.videoDesc != null) {
+      data['video_desc'] = this.videoDesc?.map((v) => v.toJson()).toList();
+    }
+    if (this.videoDescCae3 != null) {
+      data['video_desc_cae3'] =
+          this.videoDescCae3?.map((v) => v.toJson()).toList();
+    }
+    if (this.videoDescH265 != null) {
+      data['video_desc_h265'] =
+          this.videoDescH265?.map((v) => v.toJson()).toList();
+    }
+    data['video_duration'] = this.videoDuration;
+    data['video_format'] = this.videoFormat;
+    data['video_from'] = this.videoFrom;
+    data['video_height'] = this.videoHeight;
+    data['video_log_id'] = this.videoLogId;
+    data['video_md5'] = this.videoMd5;
+    data['video_type'] = this.videoType;
+    data['video_url'] = this.videoUrl;
+    data['video_width'] = this.videoWidth;
+    data['play_count'] = this.playCount;
+    data['play_time'] = this.playTime;
+    data['video_length'] = this.videoLength;
+    data['is_vertical'] = this.isVertical;
+    return data;
+  }
+}
+
+class VideoDesc {
+  String? videoHeight;
+  String? videoId;
+  String? videoSize;
+  String? videoUrl;
+  String? videoWidth;
+
+  VideoDesc(
+      {this.videoHeight,
+      this.videoId,
+      this.videoSize,
+      this.videoUrl,
+      this.videoWidth});
+
+  VideoDesc.fromJson(Map<String, dynamic> json) {
+    videoHeight = json['video_height'];
+    videoId = json['video_id'];
+    videoSize = json['video_size'];
+    videoUrl = json['video_url'];
+    videoWidth = json['video_width'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['video_height'] = this.videoHeight;
+    data['video_id'] = this.videoId;
+    data['video_size'] = this.videoSize;
+    data['video_url'] = this.videoUrl;
+    data['video_width'] = this.videoWidth;
+    return data;
+  }
+}
+
+class VideoDescCae3 {
+  String? videoHeight;
+  String? videoId;
+  String? videoSize;
+  String? videoUrl;
+  String? videoWidth;
+
+  VideoDescCae3(
+      {this.videoHeight,
+      this.videoId,
+      this.videoSize,
+      this.videoUrl,
+      this.videoWidth});
+
+  VideoDescCae3.fromJson(Map<String, dynamic> json) {
+    videoHeight = json['video_height'];
+    videoId = json['video_id'];
+    videoSize = json['video_size'];
+    videoUrl = json['video_url'];
+    videoWidth = json['video_width'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['video_height'] = this.videoHeight;
+    data['video_id'] = this.videoId;
+    data['video_size'] = this.videoSize;
+    data['video_url'] = this.videoUrl;
+    data['video_width'] = this.videoWidth;
+    return data;
+  }
+}
+
+class VideoDescH265 {
+  String? videoHeight;
+  String? videoId;
+  String? videoSize;
+  String? videoUrl;
+  String? videoWidth;
+
+  VideoDescH265(
+      {this.videoHeight,
+      this.videoId,
+      this.videoSize,
+      this.videoUrl,
+      this.videoWidth});
+
+  VideoDescH265.fromJson(Map<String, dynamic> json) {
+    videoHeight = json['video_height'];
+    videoId = json['video_id'];
+    videoSize = json['video_size'];
+    videoUrl = json['video_url'];
+    videoWidth = json['video_width'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['video_height'] = this.videoHeight;
+    data['video_id'] = this.videoId;
+    data['video_size'] = this.videoSize;
+    data['video_url'] = this.videoUrl;
+    data['video_width'] = this.videoWidth;
     return data;
   }
 }

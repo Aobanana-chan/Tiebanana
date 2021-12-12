@@ -1,7 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
+import 'package:fijkplayer/fijkplayer.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/Widgets/imgExplorer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
@@ -26,10 +28,26 @@ class ThreadSummary extends StatelessWidget {
         //图片
         switch (Global.setting.pictureLoadSetting) {
           case 0:
-            imgs.add(elem.bigCdnSrc!);
+            if (elem.type == "4" && elem.originSrc == null) {
+              //@用户
+              body.add(Text(
+                elem.text!,
+                style: TextStyle(color: Colors.blue),
+              ));
+              break;
+            }
+            imgs.add(elem.bigCdnSrc ?? elem.originSrc!);
             imgsOriginSrc!.add(elem.originSrc!);
             break;
           case 1:
+            if (elem.type == "4" && elem.originSrc == null) {
+              //@用户
+              body.add(Text(
+                elem.text!,
+                style: TextStyle(color: Colors.blue),
+              ));
+              break;
+            }
             if (int.parse(elem.bsize!.replaceAll(",", "")) < 0x100000) {
               //小于1mb就加载
               imgs.add(elem.bigCdnSrc!);
@@ -37,6 +55,14 @@ class ThreadSummary extends StatelessWidget {
             }
             break;
           case 2:
+            if (elem.type == "4" && elem.originSrc == null) {
+              //@用户
+              body.add(Text(
+                elem.text!,
+                style: TextStyle(color: Colors.blue),
+              ));
+              break;
+            }
             imgs.add(elem.originSrc!);
             imgsOriginSrc = null;
             break;
@@ -46,8 +72,7 @@ class ThreadSummary extends StatelessWidget {
       } else if (elem.type == "5") {
         //视频
         print("find vedio");
-        print(elem);
-        videos.add(elem.text!);
+        videos.add(info.videoInfo!.videoUrl!);
       }
     }
 
@@ -132,6 +157,11 @@ class ThreadSummary extends StatelessWidget {
     //视频
     for (var video in videos) {
       //TODO:添加视频widget
+      bodyMedia.add(Expanded(
+          child: VideoPlayer(
+        cover: info.videoInfo!.thumbnailUrl!,
+        url: video,
+      )));
     }
 
     // for (FirstPostContent elem in info.firstPostContent ?? []) {

@@ -105,6 +105,8 @@ const String FORUM_DYNMANIC =
     "http://c.tieba.baidu.com/c/f/excellent/personalized"; //获取动态贴
 const String AUTHOR_AVATAR =
     "http://tb.himg.baidu.com/sys/portrait/item/"; //获取头像
+const String GET_REPLY = "http://c.tieba.baidu.com/c/u/feed/replyme"; //获取回复
+const String GET_ATME = "http://c.tieba.baidu.com/c/u/feed/atme"; //获取@我
 
 ///不喜欢首页推荐贴 参数：
 ///

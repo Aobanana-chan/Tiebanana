@@ -4,6 +4,7 @@ import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/forumtag.dart';
 import 'package:tiebanana/Widgets/searchBar.dart';
 import 'package:tiebanana/routes/Login.dart';
+import 'package:tiebanana/routes/Message.dart';
 import 'package:tiebanana/routes/Recommend.dart';
 
 ///首页
@@ -125,7 +126,7 @@ class _Notifaction extends StatefulWidget {
 class __NotifactionState extends State<_Notifaction> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return MessagePan();
   }
 }
 

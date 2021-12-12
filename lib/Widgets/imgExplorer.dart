@@ -390,7 +390,6 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                               child: MaterialButton(
                                 onPressed: () {
                                   wantShowScrImg[currentIndex] = true;
-
                                   setState(() {
                                     highQualityCacheCheck();
                                   });
