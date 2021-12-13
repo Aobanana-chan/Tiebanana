@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ImgExplorer extends StatefulWidget {
+  final String heroTagSalt;
   final String imgUrl;
   final String? highQualityUrl;
-  ImgExplorer({Key? key, required this.imgUrl, this.highQualityUrl})
+  ImgExplorer(
+      {Key? key,
+      required this.imgUrl,
+      this.highQualityUrl,
+      required this.heroTagSalt})
       : super(key: key);
 
   @override
@@ -79,7 +84,7 @@ class _ImgExplorerState extends State<ImgExplorer> {
           children: [
             Center(
               child: Hero(
-                tag: widget.imgUrl,
+                tag: widget.imgUrl + widget.heroTagSalt,
                 child: ExtendedImage.network(
                   qualitySelect(),
                   mode: ExtendedImageMode.gesture,
@@ -184,12 +189,14 @@ class ZoomedImgExplorer extends StatefulWidget {
   final List<String?>? highQualityUrls;
   final ExtendedPageController? pageController;
   final int index;
+  final String heroTagSalt;
   ZoomedImgExplorer(
       {Key? key,
       required this.imgUrls,
       this.pageController,
       this.index = 0,
-      this.highQualityUrls})
+      this.highQualityUrls,
+      required this.heroTagSalt})
       : super(key: key);
 
   @override
@@ -296,7 +303,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                   final GlobalKey<ExtendedImageGestureState> gestureKey =
                       GlobalKey<ExtendedImageGestureState>();
                   return Hero(
-                      tag: widget.imgUrls[index],
+                      tag: widget.imgUrls[index] + widget.heroTagSalt,
                       child: ExtendedImage.network(
                         qualitySelect(index),
                         extendedImageGestureKey: gestureKey,

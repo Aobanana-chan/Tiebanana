@@ -100,7 +100,7 @@ class Replyer {
   String? displayAuthType;
   String? workCreatorInfo;
   PrivSets? privSets;
-  String? bazhuGrade;
+  // List? bazhuGrade;
   String? isFriend;
   String? isFans;
   String? nameShow;
@@ -112,7 +112,7 @@ class Replyer {
       this.displayAuthType,
       this.workCreatorInfo,
       this.privSets,
-      this.bazhuGrade,
+      // this.bazhuGrade,
       this.isFriend,
       this.isFans,
       this.nameShow});
@@ -123,10 +123,10 @@ class Replyer {
     portrait = json['portrait'];
     displayAuthType = json['display_auth_type'];
     workCreatorInfo = json['work_creator_info'];
-    privSets = json['priv_sets'] != null
+    privSets = json['priv_sets'] != ""
         ? new PrivSets.fromJson(json['priv_sets'])
         : null;
-    bazhuGrade = json['bazhu_grade'];
+    // bazhuGrade = json['bazhu_grade'];
     isFriend = json['is_friend'];
     isFans = json['is_fans'];
     nameShow = json['name_show'];
@@ -143,7 +143,7 @@ class Replyer {
     if (this.privSets != null) {
       data['priv_sets'] = this.privSets?.toJson();
     }
-    data['bazhu_grade'] = this.bazhuGrade;
+    // data['bazhu_grade'] = this.bazhuGrade;
     data['is_friend'] = this.isFriend;
     data['is_fans'] = this.isFans;
     data['name_show'] = this.nameShow;

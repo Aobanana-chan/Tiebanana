@@ -7,6 +7,7 @@ import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/Widgets/imgExplorer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:uuid/uuid.dart';
 
 ///帖子气泡-小部件
 class ThreadSummary extends StatelessWidget {
@@ -125,6 +126,7 @@ class ThreadSummary extends StatelessWidget {
         );
         break;
       }
+      String heroTagSalt = Uuid().v4();
       bodyMedia.add(
         Expanded(
             child: GestureDetector(
@@ -134,6 +136,7 @@ class ThreadSummary extends StatelessWidget {
                       imgUrls: imgs,
                       highQualityUrls: imgsOriginSrc,
                       pageController: controller,
+                      heroTagSalt: heroTagSalt,
                     );
                   }));
                 },
@@ -143,7 +146,7 @@ class ThreadSummary extends StatelessWidget {
                     borderRadius: BorderRadius.circular(5),
                     child: FadeIn(
                         child: Hero(
-                            tag: img,
+                            tag: img + heroTagSalt,
                             child: ExtendedImage.network(
                               img,
                               fit: BoxFit.cover,
@@ -436,11 +439,15 @@ class Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String heroTagSalt = Uuid().v4();
     return GestureDetector(
       onTap: onTap ??
           () {
             Navigator.push(context, MaterialPageRoute(builder: (builder) {
-              return ImgExplorer(imgUrl: imgUrl);
+              return ImgExplorer(
+                imgUrl: imgUrl,
+                heroTagSalt: heroTagSalt,
+              );
             }));
           },
       child: Container(
@@ -449,7 +456,7 @@ class Avatar extends StatelessWidget {
         margin: EdgeInsets.only(right: 5),
         child: ClipOval(
           child: Hero(
-            tag: imgUrl,
+            tag: imgUrl + heroTagSalt,
             child: ExtendedImage.network(
               imgUrl,
               cache: true,
