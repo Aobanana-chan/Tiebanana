@@ -159,7 +159,6 @@ class ThreadSummary extends StatelessWidget {
     }
     //视频
     for (var video in videos) {
-      //TODO:添加视频widget
       bodyMedia.add(Expanded(
           child: VideoPlayer(
         cover: info.videoInfo!.thumbnailUrl!,
@@ -316,119 +315,125 @@ class ThreadSummary extends StatelessWidget {
           borderRadius: BorderRadius.circular(5),
           color: Colors.white,
           border: Border.all(width: 0.05)),
-      padding: EdgeInsets.all(5),
+      // padding: EdgeInsets.all(5),
       margin: EdgeInsets.only(top: 3, bottom: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Avatar(
-                imgUrl: AUTHOR_AVATAR + info.author!.portrait!,
-                height: 45,
-                width: 45,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: <Widget>[
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text("${info.author!.nameShow}"),
-                          ),
-                        ] +
-                        icons,
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        createText,
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        postText,
-                        style: TextStyle(color: Colors.grey),
-                      )
-                    ],
-                  )
-                ],
-              ),
-              Spacer(),
-              Container(
-                child: IconButton(
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    onPressed: () {
-                      //TODO:不感兴趣
-                    },
-                    icon: Icon(
-                      Icons.close,
-                      size: 16,
-                    )),
-              )
-            ],
-          ),
-          //标题
-          Container(
-            padding: EdgeInsets.all(5),
-            child: Column(
+      child: MaterialButton(
+        onPressed: () {
+          //TODO:进入主题帖
+        },
+        padding: EdgeInsets.all(5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  info.title!,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                Avatar(
+                  imgUrl: AUTHOR_AVATAR + info.author!.portrait!,
+                  height: 45,
+                  width: 45,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: <Widget>[
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text("${info.author!.nameShow}"),
+                            ),
+                          ] +
+                          icons,
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          createText,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          postText,
+                          style: TextStyle(color: Colors.grey),
+                        )
+                      ],
+                    )
+                  ],
+                ),
+                Spacer(),
+                Container(
+                  child: IconButton(
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      onPressed: () {
+                        //TODO:不感兴趣
+                      },
+                      icon: Icon(
+                        Icons.close,
+                        size: 16,
+                      )),
                 )
               ],
             ),
-          ),
-          //正文
-          Container(
-            padding: EdgeInsets.all(5),
-            child: Wrap(
-              // crossAxisAlignment: CrossAxisAlignment.start,
-              children: buildBody(context),
+            //标题
+            Container(
+              padding: EdgeInsets.all(5),
+              child: Column(
+                children: [
+                  Text(
+                    info.title!,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  )
+                ],
+              ),
             ),
-          ),
-          //底部
-          Container(
-            padding: EdgeInsets.all(5),
-            child: Row(
-              children: [
-                Expanded(
-                    child: Text(
-                  "${info.fname}吧",
-                  style: TextStyle(color: Colors.grey[600]),
-                  overflow: TextOverflow.ellipsis,
-                )),
-                // Spacer(),
-                Icon(Icons.remove_red_eye),
-                SizedBox(width: 2),
-                Text(info.viewNum!),
-                SizedBox(width: 5),
-                Icon(Icons.thumb_up),
-                SizedBox(width: 2),
-                Text(info.agree!.agreeNum!),
-                SizedBox(width: 5),
-                Icon(Icons.thumb_down),
-                SizedBox(width: 2),
-                Text(info.agree!.disagreeNum!),
-                SizedBox(width: 5),
-                Icon(Icons.speaker_notes),
-                SizedBox(width: 2),
-                Text(info.replyNum!)
-              ],
+            //正文
+            Container(
+              padding: EdgeInsets.all(5),
+              child: Wrap(
+                // crossAxisAlignment: CrossAxisAlignment.start,
+                children: buildBody(context),
+              ),
             ),
-          )
-        ],
+            //底部
+            Container(
+              padding: EdgeInsets.all(5),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: Text(
+                    "${info.fname}吧",
+                    style: TextStyle(color: Colors.grey[600]),
+                    overflow: TextOverflow.ellipsis,
+                  )),
+                  // Spacer(),
+                  Icon(Icons.remove_red_eye),
+                  SizedBox(width: 2),
+                  Text(info.viewNum!),
+                  SizedBox(width: 5),
+                  Icon(Icons.thumb_up),
+                  SizedBox(width: 2),
+                  Text(info.agree!.agreeNum!),
+                  SizedBox(width: 5),
+                  Icon(Icons.thumb_down),
+                  SizedBox(width: 2),
+                  Text(info.agree!.disagreeNum!),
+                  SizedBox(width: 5),
+                  Icon(Icons.speaker_notes),
+                  SizedBox(width: 2),
+                  Text(info.replyNum!)
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
 }
 
-class Avatar extends StatelessWidget {
+class Avatar extends StatefulWidget {
   final String imgUrl;
   final double? height;
   final double? width;
@@ -438,27 +443,32 @@ class Avatar extends StatelessWidget {
       : super(key: key);
 
   @override
+  _AvatarState createState() => _AvatarState();
+}
+
+class _AvatarState extends State<Avatar> {
+  String heroTagSalt = Uuid().v4();
+  @override
   Widget build(BuildContext context) {
-    String heroTagSalt = Uuid().v4();
     return GestureDetector(
-      onTap: onTap ??
+      onTap: widget.onTap ??
           () {
             Navigator.push(context, MaterialPageRoute(builder: (builder) {
               return ImgExplorer(
-                imgUrl: imgUrl,
+                imgUrl: widget.imgUrl,
                 heroTagSalt: heroTagSalt,
               );
             }));
           },
       child: Container(
-        height: height,
-        width: width,
+        height: widget.height,
+        width: widget.width,
         margin: EdgeInsets.only(right: 5),
         child: ClipOval(
           child: Hero(
-            tag: imgUrl + heroTagSalt,
+            tag: widget.imgUrl + heroTagSalt,
             child: ExtendedImage.network(
-              imgUrl,
+              widget.imgUrl,
               cache: true,
             ),
             // child: FadeInImage(

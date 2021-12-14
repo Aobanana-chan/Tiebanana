@@ -755,7 +755,7 @@ class TiebaAPI {
       "_client_version": "8.2.2",
     };
     args['sign'] = _signArgs(args);
-    var res = await dio.post(GET_REPLY,
+    var res = await dio.post(GET_ATME,
         data: args,
         options: Options(
             responseType: ResponseType.plain,
