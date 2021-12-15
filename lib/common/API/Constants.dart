@@ -107,6 +107,8 @@ const String AUTHOR_AVATAR =
     "http://tb.himg.baidu.com/sys/portrait/item/"; //获取头像
 const String GET_REPLY = "http://c.tieba.baidu.com/c/u/feed/replyme"; //获取回复
 const String GET_ATME = "http://c.tieba.baidu.com/c/u/feed/atme"; //获取@我
+const String GET_MY_USER_INFO =
+    "https://tieba.baidu.com/mo/q/newmoindex?need_user=1"; //获取个人信息，用Get方法
 
 ///不喜欢首页推荐贴 参数：
 ///

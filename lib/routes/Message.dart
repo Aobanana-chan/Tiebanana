@@ -1,5 +1,7 @@
+import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/Widgets/MessageCard.dart';
@@ -27,6 +29,39 @@ class _MessagePanState extends State<MessagePan>
   ScrollController controllerAtme = ScrollController();
   bool hasNextReply = false;
   bool hasNextAtMe = false;
+  @override
+  void initState() {
+    super.initState();
+    _controller = TabController(
+      length: tabs.length,
+      vsync: this,
+    );
+    _initReply = Global.tiebaAPI.getReply(1);
+    _initAtMe = Global.tiebaAPI.getAtMe(1);
+    controllerReply.addListener(() {
+      if (controllerReply.offset >
+              controllerReply.position.maxScrollExtent -
+                  controllerReply.position.viewportDimension &&
+          hasNextReply) {
+        Throttle.seconds(1, nextReply);
+      } else if (controllerReply.offset >
+          controllerReply.position.maxScrollExtent + 40) {
+        Throttle.seconds(5, nextReply);
+      }
+    });
+    controllerAtme.addListener(() {
+      if (controllerAtme.offset >
+              controllerAtme.position.maxScrollExtent -
+                  controllerAtme.position.viewportDimension &&
+          hasNextAtMe) {
+        Throttle.seconds(1, nextAtMe);
+      } else if (controllerAtme.offset >
+          controllerAtme.position.maxScrollExtent + 40) {
+        Throttle.seconds(5, nextAtMe);
+      }
+    });
+  }
+
   Widget _tabBar(double maxHeight, double realHeight) {
     return Container(
       height: 56,
@@ -58,28 +93,36 @@ class _MessagePanState extends State<MessagePan>
     );
   }
 
+  Future refresh() async {
+    //TODO:刷新+通知
+  }
   Future nextReply() async {
     if (hasNextReply == true) {
+      hasNextReply = false;
       var message = await Global.tiebaAPI.getReply(++replypn);
       replyMessage.addAll(message.reply!);
       hasNextReply = message.page!.hasMore == "1" ? true : false;
       setState(() {});
-    } else
+    } else {
       Fluttertoast.showToast(msg: "没有更多了");
+    }
   }
 
   Future nextAtMe() async {
     if (hasNextAtMe == true) {
+      hasNextAtMe = false;
       var message = await Global.tiebaAPI.getAtMe(++atMepn);
       atMeMessage.addAll(message.atMe!);
       hasNextAtMe = message.messagePage!.hasMore == "1" ? true : false;
       setState(() {});
-    } else
+    } else {
       Fluttertoast.showToast(msg: "没有更多了");
+    }
   }
 
   Widget buildReply() {
-    return FutureBuilder(
+    return KeepAliveWrapper(
+        child: FutureBuilder(
       future: _initReply,
       initialData: null,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
@@ -115,7 +158,9 @@ class _MessagePanState extends State<MessagePan>
             } else if (snapshot.hasError) {
               return GestureDetector(
                 onTap: () {
-                  setState(() {});
+                  setState(() {
+                    _initReply = Global.tiebaAPI.getReply(1);
+                  });
                 },
                 child: Container(
                   child: Center(
@@ -127,11 +172,12 @@ class _MessagePanState extends State<MessagePan>
         }
         return Container();
       },
-    );
+    ));
   }
 
   Widget buildAtMe() {
-    return FutureBuilder(
+    return KeepAliveWrapper(
+        child: FutureBuilder(
       future: _initAtMe,
       initialData: null,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
@@ -157,9 +203,10 @@ class _MessagePanState extends State<MessagePan>
                         ? true
                         : false;
               }
+
               return ListView.builder(
                   controller: controllerAtme,
-                  itemCount: replyMessage.length,
+                  itemCount: atMeMessage.length,
                   physics: BouncingScrollPhysics(),
                   itemBuilder: (itemBuilder, index) {
                     return MessageCard(atME: atMeMessage[index]);
@@ -167,7 +214,9 @@ class _MessagePanState extends State<MessagePan>
             } else if (snapshot.hasError) {
               return GestureDetector(
                 onTap: () {
-                  setState(() {});
+                  setState(() {
+                    _initAtMe = Global.tiebaAPI.getAtMe(1);
+                  });
                 },
                 child: Container(
                   child: Center(
@@ -179,18 +228,7 @@ class _MessagePanState extends State<MessagePan>
         }
         return Container();
       },
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TabController(
-      length: tabs.length,
-      vsync: this,
-    );
-    _initReply = Global.tiebaAPI.getReply(1);
-    _initAtMe = Global.tiebaAPI.getAtMe(1);
+    ));
   }
 
   @override

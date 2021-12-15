@@ -6,6 +6,7 @@ import 'package:tiebanana/Widgets/searchBar.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Message.dart';
 import 'package:tiebanana/routes/Recommend.dart';
+import 'package:tiebanana/routes/User.dart';
 
 ///首页
 var page = <Widget>[_Home(), _Recommand(), _Notifaction(), _UserAndSettings()];
@@ -141,8 +142,6 @@ class _UserAndSettings extends StatefulWidget {
 class __UserAndSettingsState extends State<_UserAndSettings> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: LoginPage(),
-    );
+    return UserPage();
   }
 }

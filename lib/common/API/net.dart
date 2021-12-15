@@ -767,4 +767,17 @@ class TiebaAPI {
     AtMeMessage replyMessage = AtMeMessage.fromJson(resJson);
     return replyMessage;
   }
+
+  Future<MyUserData> getMyInfo() async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var res = await dio.get(GET_MY_USER_INFO);
+    var resJson = MyUserInfo.fromJson(res.data);
+    if (resJson.error == "success") {
+      return resJson.data!;
+    } else {
+      throw Exception("出现异常,errono=${resJson.no},erro=${resJson.error}");
+    }
+  }
 }

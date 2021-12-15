@@ -72,7 +72,7 @@ class ThreadSummary extends StatelessWidget {
         }
       } else if (elem.type == "5") {
         //视频
-        print("find vedio");
+        // print("find vedio");
         videos.add(info.videoInfo!.videoUrl!);
       }
     }
