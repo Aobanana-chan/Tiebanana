@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 ///主页贴合集
 class TagPan extends StatefulWidget {
@@ -94,7 +95,8 @@ class ForumTag extends StatelessWidget {
             borderRadius: BorderRadius.circular(8)),
         child: MaterialButton(
           onPressed: () {
-            //TODO:进入贴吧路由
+            Navigator.pushNamed(context, PageRouter.forumHome,
+                arguments: info.forumName);
           },
           onLongPress: () {
             //TODO:弹出贴吧操作菜单

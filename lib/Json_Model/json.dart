@@ -5,6 +5,7 @@ part 'Json/ReplyMe.dart';
 part 'Json/AtMe.dart';
 part 'Json/Message.dart';
 part './Json/MyUserInfo.dart';
+part './Json/ForumHomeInfo.dart';
 //TODO:拆分
 
 ///TBS随机参数
