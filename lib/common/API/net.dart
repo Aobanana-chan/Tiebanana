@@ -780,4 +780,34 @@ class TiebaAPI {
       throw Exception("出现异常,errono=${resJson.no},erro=${resJson.error}");
     }
   }
+
+  ///获取吧页面信息
+  Future<ForumHomeInfo> getForumPage(
+      {required String kw,
+      required int pn,
+      int rn = 20,
+      int sortType = 0}) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var args = {
+      "BDUSS": bduss,
+      "kw": kw,
+      "pn": pn,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "_client_version": "8.2.2",
+      "sort_type": sortType
+    };
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(GET_REPLY,
+        data: args,
+        options: Options(
+            responseType: ResponseType.plain,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"}));
+    var resJson = json5Decode(res.data);
+    if (resJson['error_code'] != "0") {
+      throw Exception("获取失败");
+    }
+    return ForumHomeInfo.fromJson(resJson);
+  }
 }
