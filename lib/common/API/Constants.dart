@@ -127,7 +127,7 @@ const String RECOMMED_DISLIKE =
     "http://c.tieba.baidu.com/c/c/excellent/submitDislike";
 
 ///百度err_no码 Web端口
-final webErrCode = {
+const webErrCode = {
   "-1": {"msg": '系统错误,请您稍后再试', "field": ""},
   "0": {"msg": '登陆成功', "field": ""},
   "1": {"msg": "您输入的帐号格式不正确", "field": "userName"},

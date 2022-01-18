@@ -489,9 +489,17 @@ class VideoInfo {
     versionH265 = json['version_h265'];
     if (json['video_desc'] != null) {
       videoDesc = [];
-      json['video_desc'].forEach((v) {
-        videoDesc?.add(new VideoDesc.fromJson(v));
-      });
+      if (json['video_desc'] is List) {
+        json['video_desc'].forEach((v) {
+          videoDesc?.add(new VideoDesc.fromJson(v));
+        });
+      } else if (json['video_desc'] is Map) {
+        json['video_desc'].forEach((v, f) {
+          videoDesc?.add(new VideoDesc.fromJson({v: f}));
+        });
+      } else {
+        throw Exception("未知视频类型");
+      }
     }
     if (json['video_desc_cae3'] != null) {
       videoDescCae3 = [];

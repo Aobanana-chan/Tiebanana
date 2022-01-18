@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/Global.dart';
@@ -52,4 +51,29 @@ class ForumState with ChangeNotifier {
     _forums = (await Global.tiebaAPI.userInfomation.likes)!;
     notifyListeners();
   }
+}
+
+//页面标题Model
+class APPBarTitle with ChangeNotifier {
+  String _title = "";
+  set title(String title) {
+    if (title != _title) {
+      _title = title;
+      notifyListeners();
+    }
+  }
+
+  get getTitle {
+    return _title;
+  }
+}
+
+class ThreadListProviderModel with ChangeNotifier {
+  List<ForumThreadList>? _threadList;
+  set setList(List<ForumThreadList>? list) {
+    _threadList = list;
+    notifyListeners();
+  }
+
+  List<ForumThreadList>? get threadList => _threadList;
 }

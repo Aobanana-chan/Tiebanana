@@ -19,17 +19,21 @@ import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/LG_DV_ARG.dart';
 import 'package:tiebanana/common/API/TBSManager.dart';
 import 'package:tiebanana/common/API/UserInfo.dart';
-import 'package:tiebanana/common/API/authverify.dart';
-import 'package:tiebanana/common/API/fuid.dart';
-import 'package:tiebanana/common/API/passMachine.dart';
+import 'package:tiebanana/common/API/Authverify.dart';
+import 'package:tiebanana/common/API/FUID.dart';
+import 'package:tiebanana/common/API/PassMachine.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'Constants.dart';
 
 class TiebaAPI {
-  static Dio dio = new Dio(BaseOptions(headers: {
-    "User-Agent": ChromeUA,
-    "Connection": "keep-alive",
-  }));
+  static Dio dio = new Dio(BaseOptions(
+    headers: {
+      "User-Agent": ChromeUA,
+
+      // "Connection": "keep-alive",
+    },
+    // receiveTimeout: 0x7FFFFFFFF
+  ));
   late PersistCookieJar cookieJar;
 
   bool _isLogin = false;
@@ -619,7 +623,7 @@ class TiebaAPI {
           totalSigned++;
           var reslut = await signOneForum(forum.forumName!);
           await Global.showNotification(
-              0, "正在一键签到中...($totalSigned/$totoal)", reslut);
+              0, "正在一键签到中...($totalSigned/$totoal)", reslut["TiebananaMsg"]);
           await Future.delayed(Duration(seconds: 1));
         }
       }
@@ -627,7 +631,7 @@ class TiebaAPI {
     Global.localNotifications.cancel(0);
   }
 
-  Future<String> signOneForum(String kw) async {
+  Future<Map> signOneForum(String kw) async {
     if (isLogin == false) {
       throw Exception("未登录");
     }
@@ -648,17 +652,26 @@ class TiebaAPI {
           }, responseType: ResponseType.plain));
       resJson = json5Decode(res.data);
     } catch (e) {
-      return "$kw吧签到失败";
+      return {"TiebananaMsg": "$kw吧签到失败"};
+
+      // return "$kw吧签到失败";
     }
+
     if (resJson["error_code"] == "0") {
       if (resJson.containsKey("error")) {
-        return "${resJson["error"]["usermsg"]},$kw吧签到失败";
+        // return "${resJson["error"]["usermsg"]},$kw吧签到失败";
+        resJson["TiebananaMsg"] = "$kw吧签到失败";
+        return resJson;
       }
       if (resJson["user_info"]["is_sign_in"] == 1) {
-        return "签到成功,你是今天第${(resJson["user_info"]["user_sign_rank"] as num).toInt()}个签到的,经验+${(resJson["user_info"]["sign_bonus_point"] as num).toInt()}";
+        resJson["TiebananaMsg"] =
+            "签到成功,你是今天第${(resJson["user_info"]["user_sign_rank"] as num).toInt()}个签到的,经验+${(resJson["user_info"]["sign_bonus_point"] as num).toInt()}";
+        return resJson;
       }
     }
-    return "$kw吧签到失败";
+    resJson["TiebananaMsg"] = "$kw吧签到失败";
+    // return "$kw吧签到失败";
+    return resJson;
   }
 
   ///sign签名算法
@@ -782,11 +795,22 @@ class TiebaAPI {
   }
 
   ///获取吧页面信息
+  ///
+  ///[sortType] 0 - 回复时间顺序
+  ///
+  ///1 - 发帖时间
+  ///
+  ///2 - 关注的人
+  ///
+  ///[isgood] - 精品贴
+  ///[cid] - 精品贴分类
   Future<ForumHomeInfo> getForumPage(
       {required String kw,
       required int pn,
       int rn = 20,
-      int sortType = 0}) async {
+      int sortType = 0,
+      bool isgood = false,
+      int cid = 0}) async {
     if (isLogin == false) {
       throw Exception("未登录");
     }
@@ -794,17 +818,22 @@ class TiebaAPI {
       "BDUSS": bduss,
       "kw": kw,
       "pn": pn,
+      "rn": rn,
       "timestamp": DateTime.now().millisecondsSinceEpoch,
       "_client_version": "8.2.2",
       "sort_type": sortType
     };
+    if (isgood) {
+      args["is_good"] = "1";
+      args["cid"] = cid;
+    }
     args['sign'] = _signArgs(args);
-    var res = await dio.post(GET_REPLY,
+    var res = await dio.post(GET_FORUM_PAGE,
         data: args,
         options: Options(
-            responseType: ResponseType.plain,
+            responseType: ResponseType.bytes,
             headers: {"Content-Type": "application/x-www-form-urlencoded"}));
-    var resJson = json5Decode(res.data);
+    var resJson = json5Decode(String.fromCharCodes(res.data));
     if (resJson['error_code'] != "0") {
       throw Exception("获取失败");
     }

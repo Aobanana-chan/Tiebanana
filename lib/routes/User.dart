@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/SettingPanel.dart';
 import 'package:tiebanana/Widgets/UserCard.dart';
-import 'package:tiebanana/Widgets/searchBar.dart';
+import 'package:tiebanana/Widgets/SearchBar.dart';
 import 'package:tiebanana/common/Global.dart';
 
 ///用户信息和设置界面

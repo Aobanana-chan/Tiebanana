@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
-import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///主页贴合集

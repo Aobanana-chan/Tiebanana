@@ -172,9 +172,18 @@ class ForumHomeInfo {
     //     : null;
     if (json['frs_tab_info'] != null) {
       frsTabInfo = [];
-      json['frs_tab_info'].forEach((v) {
-        frsTabInfo?.add(new FrsTabInfo.fromJson(v));
-      });
+      //json['frs_tab_info']有时是Map有时是List，加一个判断
+      if (json['frs_tab_info'] is List) {
+        (json['frs_tab_info']).forEach((v) {
+          frsTabInfo?.add(new FrsTabInfo.fromJson(v));
+        });
+      } else if (json['frs_tab_info'] is Map) {
+        (json['frs_tab_info']).forEach((v, f) {
+          frsTabInfo?.add(new FrsTabInfo.fromJson(f));
+        });
+      } else {
+        throw Exception("未知形态frs_tab_info");
+      }
     }
     frsTabDefault = json['frs_tab_default'];
     alaLiveCount = json['ala_live_count'];
@@ -215,10 +224,18 @@ class ForumHomeInfo {
       });
     }
     serverTime = json['server_time'];
-    time = json['time'];
+    time = (json['time'] as double).toInt();
     ctime = json['ctime'];
-    logid = json['logid'];
+    logid = (json['logid'] as double).toInt();
     errorCode = json['error_code'];
+    for (var thread in threadList ?? []) {
+      for (var user in userList ?? []) {
+        if (thread.authorId == user.id) {
+          thread.author = user;
+          break;
+        }
+      }
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -369,11 +386,11 @@ class ForumThreadList extends ThreadRecommendSummary {
   List<Media>? media;
   List<Abstract>? abstract;
   String? firstPostId;
-  String? zan;
+  // String? zan;
   // List<Null> location;
   String? isVoiceThread;
   String? threadType;
-  // List<Null> voiceInfo;
+  List? voiceInfo;
   String? isActivity;
   Agree? agree;
   // String fid;
@@ -423,11 +440,11 @@ class ForumThreadList extends ThreadRecommendSummary {
     this.media,
     // this.abstract,
     this.firstPostId,
-    this.zan,
+    // this.zan,
     // this.location,
     // this.isVoiceThread,
     // this.threadType,
-    // this.voiceInfo,
+    this.voiceInfo,
     // this.isActivity,
     this.agree,
     // this.fid,
@@ -436,7 +453,6 @@ class ForumThreadList extends ThreadRecommendSummary {
     this.tabId,
     this.tabName,
   });
-
   ForumThreadList.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     tid = json['tid'];
@@ -457,7 +473,7 @@ class ForumThreadList extends ThreadRecommendSummary {
     shareNum = json['share_num'];
     isProThread = json['is_pro_thread'];
     tiebaplusCantDelete = json['tiebaplus_cant_delete'];
-    if (json['first_post_content'] != null) {
+    if (json['first_post_content'] != "") {
       firstPostContent = [];
       json['first_post_content'].forEach((v) {
         firstPostContent?.add(new FirstPostContent.fromJson(v));
@@ -483,9 +499,9 @@ class ForumThreadList extends ThreadRecommendSummary {
     isProtal = json['is_protal'];
     isBakan = json['is_bakan'];
     isVote = json['is_vote'];
-    mediaNum = json['media_num'];
+    mediaNum = json['media_num'] == "" ? null : json['media_num'];
     meizhiPic = json['meizhi_pic'];
-    if (json['media'] != null) {
+    if (json['media'] != "") {
       media = [];
       json['media'].forEach((v) {
         media?.add(new Media.fromJson(v));
@@ -498,7 +514,7 @@ class ForumThreadList extends ThreadRecommendSummary {
       });
     }
     firstPostId = json['first_post_id'];
-    zan = json['zan'];
+    // zan = json['zan'];
     // if (json['location'] != null) {
     //   location = new List<Null>();
     //   json['location'].forEach((v) {
@@ -507,19 +523,26 @@ class ForumThreadList extends ThreadRecommendSummary {
     // }
     isVoiceThread = json['is_voice_thread'];
     threadType = json['thread_type'];
-    // if (json['voice_info'] != null) {
-    //   voiceInfo = [];
-    //   json['voice_info'].forEach((v) {
-    //     voiceInfo.add(v);
-    //   });
-    // }
+    if (json['voice_info'] is String && json['voice_info'] != "") {
+      voiceInfo = [];
+      json['voice_info'].forEach((v) {
+        voiceInfo?.add(v);
+      });
+    }
     isActivity = json['is_activity'];
-    agree = json['agree'] != null ? new Agree.fromJson(json['agree']) : null;
+    agree = json['agree'] != "" ? new Agree.fromJson(json['agree']) : null;
     fid = json['fid'];
     postList = json['post_list'];
     authorId = json['author_id'];
     tabId = json['tab_id'];
     tabName = json['tab_name'];
+    videoInfo = json['video_info'] != ""
+        ? new VideoInfo.fromJson(json['video_info'])
+        : null;
+    userId = json['user_id'];
+    fname = json['fname'];
+
+    agree = Agree(agreeNum: agreeNum, disagreeNum: disagreeNum);
   }
 
   Map<String, dynamic> toJson() {
@@ -573,15 +596,15 @@ class ForumThreadList extends ThreadRecommendSummary {
       data['abstract'] = this.abstract?.map((v) => v.toJson()).toList();
     }
     data['first_post_id'] = this.firstPostId;
-    data['zan'] = this.zan;
+    // data['zan'] = this.zan;
     // if (this.location != null) {
     //   data['location'] = this.location.map((v) => v.toJson()).toList();
     // }
     data['is_voice_thread'] = this.isVoiceThread;
     data['thread_type'] = this.threadType;
-    // if (this.voiceInfo != null) {
-    //   data['voice_info'] = this.voiceInfo.map((v) => v.toJson()).toList();
-    // }
+    if (this.voiceInfo != null) {
+      data['voice_info'] = this.voiceInfo?.map((v) => v.toJson()).toList();
+    }
     data['is_activity'] = this.isActivity;
     if (this.agree != null) {
       data['agree'] = this.agree?.toJson();
@@ -654,7 +677,7 @@ class Forum {
   // AnchorPower? anchorPower;
   // List<Null> forumSignCalendar;
   TagInfo? tagInfo;
-  Banner? banner;
+  // Banner? banner;
   String? isShowAllTopThread;
   BannerList? bannerList;
   String? tids;
@@ -700,7 +723,7 @@ class Forum {
       // this.anchorPower,
       // this.forumSignCalendar,
       this.tagInfo,
-      this.banner,
+      // this.banner,
       this.isShowAllTopThread,
       this.bannerList,
       this.tids});
@@ -779,11 +802,10 @@ class Forum {
     //     forumSignCalendar.add(new Null.fromJson(v));
     //   });
     // }
-    tagInfo = json['tag_info'] != null
-        ? new TagInfo.fromJson(json['tag_info'])
-        : null;
-    banner =
-        json['banner'] != null ? new Banner.fromJson(json['banner']) : null;
+    tagInfo =
+        json['tag_info'] != "" ? new TagInfo.fromJson(json['tag_info']) : null;
+    // banner =
+    //     json['banner'] != null ? new Banner.fromJson(json['banner']) : null;
     isShowAllTopThread = json['is_show_all_top_thread'];
     bannerList = json['banner_list'] != null
         ? new BannerList.fromJson(json['banner_list'])
@@ -856,9 +878,9 @@ class Forum {
     if (this.tagInfo != null) {
       data['tag_info'] = this.tagInfo?.toJson();
     }
-    if (this.banner != null) {
-      data['banner'] = this.banner?.toJson();
-    }
+    // if (this.banner != null) {
+    //   data['banner'] = this.banner?.toJson();
+    // }
     data['is_show_all_top_thread'] = this.isShowAllTopThread;
     if (this.bannerList != null) {
       data['banner_list'] = this.bannerList?.toJson();
@@ -1181,24 +1203,24 @@ class TagInfo {
   }
 }
 
-class Banner {
-  String? type;
-  String? desc;
+// class Banner {
+//   String? type;
+//   String? desc;
 
-  Banner({this.type, this.desc});
+//   Banner({this.type, this.desc});
 
-  Banner.fromJson(Map<String, dynamic> json) {
-    type = json['type'];
-    desc = json['desc'];
-  }
+//   Banner.fromJson(Map<String, dynamic> json) {
+//     type = json['type'];
+//     desc = json['desc'];
+//   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['type'] = this.type;
-    data['desc'] = this.desc;
-    return data;
-  }
-}
+//   Map<String, dynamic> toJson() {
+//     final Map<String, dynamic> data = new Map<String, dynamic>();
+//     data['type'] = this.type;
+//     data['desc'] = this.desc;
+//     return data;
+//   }
+// }
 
 class BannerList {
   List<App>? app;
@@ -2391,7 +2413,7 @@ class FrsTabInfo {
   }
 }
 
-class UserList {
+class UserList extends Author {
   String? id;
   String? portrait;
   String? name;
@@ -2399,7 +2421,8 @@ class UserList {
   String? sex;
   String? gender;
   String? type;
-  List<ForumIconinfo>? iconinfo;
+  List<Iconinfo>? iconinfo;
+  // List<ForumIconinfo>? iconinfo;
   // List<TshowIcon> tshowIcon;
   // List<NewTshowIcon> newTshowIcon;
   String? isMem;
@@ -2416,9 +2439,9 @@ class UserList {
   // AlaInfo? alaInfo;
   String? sealPrefix;
   String? isVideobiggie;
-  String? bazhuGrade;
+  // String? bazhuGrade;
   String? displayAuthType;
-  String? workCreatorInfo;
+  // String? workCreatorInfo;
   String? isDefaultAvatar;
   // NewGodData? newGodData;
   // List<Null> businessAccountInfo;
@@ -2448,9 +2471,9 @@ class UserList {
     // this.alaInfo,
     this.sealPrefix,
     this.isVideobiggie,
-    this.bazhuGrade,
+    // this.bazhuGrade,
     this.displayAuthType,
-    this.workCreatorInfo,
+    // this.workCreatorInfo,
     this.isDefaultAvatar,
     // this.newGodData,
     // this.businessAccountInfo
@@ -2467,7 +2490,8 @@ class UserList {
     if (json['iconinfo'] != null) {
       iconinfo = [];
       json['iconinfo'].forEach((v) {
-        iconinfo?.add(new ForumIconinfo.fromJson(v));
+        // iconinfo?.add(new ForumIconinfo.fromJson(v));
+        iconinfo?.add(new Iconinfo.fromJson(v));
       });
     }
     // if (json['tshow_icon'] != null) {
@@ -2486,7 +2510,7 @@ class UserList {
     fansNum = json['fans_num'];
     fansNickname = json['fans_nickname'];
     godData = json['god_data'];
-    privSets = json['priv_sets'] != null
+    privSets = json['priv_sets'] != ""
         ? new ForumPrivSets.fromJson(json['priv_sets'])
         : null;
     // themeCard = json['theme_card'] != null
@@ -2508,9 +2532,9 @@ class UserList {
     //     : null;
     sealPrefix = json['seal_prefix'];
     isVideobiggie = json['is_videobiggie'];
-    bazhuGrade = json['bazhu_grade'];
+    // bazhuGrade = json['bazhu_grade'];
     displayAuthType = json['display_auth_type'];
-    workCreatorInfo = json['work_creator_info'];
+    // workCreatorInfo = json['work_creator_info'];
     isDefaultAvatar = json['is_default_avatar'];
     // newGodData = json['new_god_data'] != null
     //     ? new NewGodData.fromJson(json['new_god_data'])
@@ -2566,9 +2590,9 @@ class UserList {
     // }
     data['seal_prefix'] = this.sealPrefix;
     data['is_videobiggie'] = this.isVideobiggie;
-    data['bazhu_grade'] = this.bazhuGrade;
+    // data['bazhu_grade'] = this.bazhuGrade;
     data['display_auth_type'] = this.displayAuthType;
-    data['work_creator_info'] = this.workCreatorInfo;
+    // data['work_creator_info'] = this.workCreatorInfo;
     data['is_default_avatar'] = this.isDefaultAvatar;
     // if (this.newGodData != null) {
     //   data['new_god_data'] = this.newGodData?.toJson();
@@ -2581,57 +2605,57 @@ class UserList {
   }
 }
 
-class ForumIconinfo {
-  String? name;
-  String? value;
-  String? weight;
-  Terminal? terminal;
-  // Position? position;
-  // Sprite? sprite;
-  String? icon;
+// class ForumIconinfo {
+//   String? name;
+//   String? value;
+//   String? weight;
+//   Terminal? terminal;
+//   // Position? position;
+//   // Sprite? sprite;
+//   String? icon;
 
-  ForumIconinfo(
-      {this.name,
-      this.value,
-      this.weight,
-      this.terminal,
-      // this.position,
-      // this.sprite,
-      this.icon});
+//   ForumIconinfo(
+//       {this.name,
+//       this.value,
+//       this.weight,
+//       this.terminal,
+//       // this.position,
+//       // this.sprite,
+//       this.icon});
 
-  ForumIconinfo.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    value = json['value'];
-    weight = json['weight'];
-    terminal = json['terminal'] != null
-        ? new Terminal.fromJson(json['terminal'])
-        : null;
-    // position = json['position'] != null
-    //     ? new Position.fromJson(json['position'])
-    //     : null;
-    // sprite =
-    //     json['sprite'] != null ? new Sprite.fromJson(json['sprite']) : null;
-    icon = json['icon'];
-  }
+//   ForumIconinfo.fromJson(Map<String, dynamic> json) {
+//     name = json['name'];
+//     value = json['value'];
+//     weight = json['weight'];
+//     terminal = json['terminal'] != null
+//         ? new Terminal.fromJson(json['terminal'])
+//         : null;
+//     // position = json['position'] != null
+//     //     ? new Position.fromJson(json['position'])
+//     //     : null;
+//     // sprite =
+//     //     json['sprite'] != null ? new Sprite.fromJson(json['sprite']) : null;
+//     icon = json['icon'];
+//   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['name'] = this.name;
-    data['value'] = this.value;
-    data['weight'] = this.weight;
-    if (this.terminal != null) {
-      data['terminal'] = this.terminal?.toJson();
-    }
-    // if (this.position != null) {
-    //   data['position'] = this.position.toJson();
-    // }
-    // if (this.sprite != null) {
-    //   data['sprite'] = this.sprite.toJson();
-    // }
-    data['icon'] = this.icon;
-    return data;
-  }
-}
+//   Map<String, dynamic> toJson() {
+//     final Map<String, dynamic> data = new Map<String, dynamic>();
+//     data['name'] = this.name;
+//     data['value'] = this.value;
+//     data['weight'] = this.weight;
+//     if (this.terminal != null) {
+//       data['terminal'] = this.terminal?.toJson();
+//     }
+//     // if (this.position != null) {
+//     //   data['position'] = this.position.toJson();
+//     // }
+//     // if (this.sprite != null) {
+//     //   data['sprite'] = this.sprite.toJson();
+//     // }
+//     data['icon'] = this.icon;
+//     return data;
+//   }
+// }
 
 class Terminal {
   String? client;

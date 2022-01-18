@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
-import 'package:tiebanana/Widgets/searchBar.dart';
-import 'package:tiebanana/Widgets/threadSummary.dart';
+import 'package:tiebanana/Widgets/SearchBar.dart';
+import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
 
 class RecommendPan extends StatefulWidget {

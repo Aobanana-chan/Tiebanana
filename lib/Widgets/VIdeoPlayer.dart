@@ -1363,7 +1363,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                     color: Colors.white70,
                     child: Container(
                       color: Colors.blue,
-                      width: curBottomProW is double ? curBottomProW : 0,
+                      width: curBottomProW,
                       height: 4,
                     ),
                   )

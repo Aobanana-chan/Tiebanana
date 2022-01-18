@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
-import 'package:tiebanana/Widgets/authwidgetverify.dart';
-import 'package:tiebanana/Widgets/passmachine.dart';
+import 'package:tiebanana/Widgets/AuthWidgetVerify.dart';
+import 'package:tiebanana/Widgets/PassMachine.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 

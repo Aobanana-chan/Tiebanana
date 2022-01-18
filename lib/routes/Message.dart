@@ -5,7 +5,7 @@ import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/Widgets/MessageCard.dart';
-import 'package:tiebanana/Widgets/searchBar.dart';
+import 'package:tiebanana/Widgets/SearchBar.dart';
 import 'package:tiebanana/common/Global.dart';
 
 ///消息页
@@ -38,6 +38,8 @@ class _MessagePanState extends State<MessagePan>
     );
     _initReply = Global.tiebaAPI.getReply(1);
     _initAtMe = Global.tiebaAPI.getAtMe(1);
+
+    //添加加载下一页的监听
     controllerReply.addListener(() {
       if (controllerReply.offset >
               controllerReply.position.maxScrollExtent -

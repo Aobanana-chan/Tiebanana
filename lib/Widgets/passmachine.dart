@@ -170,11 +170,10 @@ class __MaincontainerState extends State<_Maincontainer> {
   }
 }
 
-//滑块样式(待完成)
+//TODO:滑块样式(待完成)
 class _CaptchaSliderThumb extends SliderComponentShape {
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    // TODO: implement getPreferredSize
     throw UnimplementedError();
   }
 
@@ -189,7 +188,5 @@ class _CaptchaSliderThumb extends SliderComponentShape {
       required TextDirection textDirection,
       required double value,
       required double textScaleFactor,
-      required Size sizeWithOverflow}) {
-    // TODO: implement paint
-  }
+      required Size sizeWithOverflow}) {}
 }

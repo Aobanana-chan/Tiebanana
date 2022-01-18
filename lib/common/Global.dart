@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:json5/json5.dart';
 import 'package:tiebanana/Json_Model/json.dart';
-import 'package:tiebanana/common/API/net.dart';
+import 'package:tiebanana/common/API/TiebaNetAPI.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiebanana/common/DefaultConfig.dart';
 

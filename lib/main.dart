@@ -1,10 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_statusbar_manager/flutter_statusbar_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
-import 'package:tiebanana/common/API/net.dart';
-
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 
@@ -31,7 +29,16 @@ class App extends StatelessWidget {
           builder: (BuildContext context, theme, user, Widget? child) {
             return MaterialApp(
               initialRoute: PageRouter.home,
-              routes: PageRouter.routes,
+              // routes: PageRouter.routes,
+
+              onGenerateRoute: (settings) {
+                if (PageRouter.routes.containsKey(settings.name)) {
+                  return CupertinoPageRoute(
+                      settings: settings,
+                      builder: (context) =>
+                          PageRouter.routes[settings.name]!(context));
+                }
+              },
               theme: ThemeData(primaryColor: theme.theme),
               darkTheme: Global.setting.darkModel == 0
                   ? ThemeData(

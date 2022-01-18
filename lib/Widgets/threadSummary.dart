@@ -1,10 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:fijkplayer/fijkplayer.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
-import 'package:tiebanana/Widgets/imgExplorer.dart';
+import 'package:tiebanana/Widgets/ImgExplorer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:uuid/uuid.dart';
@@ -73,7 +72,11 @@ class ThreadSummary extends StatelessWidget {
       } else if (elem.type == "5") {
         //视频
         // print("find vedio");
-        videos.add(info.videoInfo!.videoUrl!);
+        if (info.videoInfo?.videoUrl == null) {
+          //TODO:外链视频
+        } else {
+          videos.add(info.videoInfo!.videoUrl!);
+        }
       }
     }
 
@@ -126,35 +129,54 @@ class ThreadSummary extends StatelessWidget {
         );
         break;
       }
-      String heroTagSalt = Uuid().v4();
-      bodyMedia.add(
-        Expanded(
-            child: GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (builder) {
-                    return ZoomedImgExplorer(
-                      imgUrls: imgs,
-                      highQualityUrls: imgsOriginSrc,
-                      pageController: controller,
-                      heroTagSalt: heroTagSalt,
-                    );
-                  }));
-                },
-                child: Padding(
-                  padding: EdgeInsets.only(left: 2.5, right: 2.5),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(5),
-                    child: FadeIn(
-                        child: Hero(
-                            tag: img + heroTagSalt,
-                            child: ExtendedImage.network(
-                              img,
-                              fit: BoxFit.cover,
-                              cache: true,
-                            ))),
-                  ),
-                ))),
-      );
+      // String heroTagSalt = Uuid().v4();
+      bodyMedia.add(Thumbnail(
+        imgs: imgs,
+        controller: controller,
+        img: img,
+        imgsOriginSrc: imgsOriginSrc,
+      )
+          // Expanded(child: Builder(
+          //   builder: (context) {
+          //     String salt = heroTagSalt;
+          //     return GestureDetector(
+          //         onTap: () {
+          //           Navigator.push(context, MaterialPageRoute(builder: (builder) {
+          //             return ZoomedImgExplorer(
+          //               imgUrls: imgs,
+          //               highQualityUrls: imgsOriginSrc,
+          //               pageController: controller,
+          //               heroTagSalt: salt,
+          //             );
+          //           }));
+          //         },
+          //         child: Padding(
+          //           padding: EdgeInsets.only(left: 2.5, right: 2.5),
+          //           child: ClipRRect(
+          //             borderRadius: BorderRadius.circular(5),
+          //             child: FadeIn(
+          //                 child: Hero(
+          //               tag: img + salt,
+          //               child: LayoutBuilder(
+          //                 builder:
+          //                     (BuildContext context, BoxConstraints constraints) {
+          //                   return Container(
+          //                     height: constraints.maxHeight,
+          //                     width: constraints.maxWidth,
+          //                     child: ExtendedImage.network(
+          //                       img,
+          //                       fit: BoxFit.cover,
+          //                       cache: true,
+          //                     ),
+          //                   );
+          //                 },
+          //               ),
+          //             )),
+          //           ),
+          //         ));
+          //   },
+          // )),
+          );
       index++;
     }
     //视频
@@ -261,12 +283,13 @@ class ThreadSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var icons = info.author!.iconinfo!.map((e) {
+    List<Widget>? icons = info.author?.iconinfo?.map((e) {
       return FadeIn(
-          child: Image.network(
+          child: ExtendedImage.network(
         e.icon!,
         width: 16,
         height: 16,
+        cache: true,
       ));
     }).toList();
     var create = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(
@@ -274,40 +297,53 @@ class ThreadSummary extends StatelessWidget {
     Map timeGranularity = {0: "天", 1: "小时", 2: "分钟", 3: "秒"};
     var f = 0;
     late String createText;
-    for (var t in [
-      create.inDays,
-      create.inHours,
-      create.inMinutes,
-      create.inSeconds
-    ]) {
-      if (t != 0) {
-        createText = "创建于$t${timeGranularity[f]}前";
-        break;
+    if (create.inDays > 30) {
+      var date = DateTime.fromMillisecondsSinceEpoch(
+          int.parse(info.createTime!) * 1000);
+      createText = "${date.year}年${date.month}月${date.day}日";
+    } else {
+      for (var t in [
+        create.inDays,
+        create.inHours,
+        create.inMinutes,
+        create.inSeconds
+      ]) {
+        if (t != 0) {
+          createText = "创建于$t${timeGranularity[f]}前";
+          break;
+        }
+        f++;
       }
-      f++;
+      if (f == 4) {
+        createText = "创建于0秒前";
+      }
     }
-    if (f == 4) {
-      createText = "创建于0秒前";
-    }
+
     var lastPost = DateTime.now().difference(
         DateTime.fromMillisecondsSinceEpoch(
             int.parse(info.lastTimeInt!) * 1000));
     f = 0;
     late String postText;
-    for (var t in [
-      lastPost.inDays,
-      lastPost.inHours,
-      lastPost.inMinutes,
-      lastPost.inSeconds
-    ]) {
-      if (t != 0) {
-        postText = "最近回复$t${timeGranularity[f]}前";
-        break;
+    if (lastPost.inDays > 30) {
+      var date = DateTime.fromMillisecondsSinceEpoch(
+          int.parse(info.lastTimeInt!) * 1000);
+      postText = "${date.year}年${date.month}月${date.day}日";
+    } else {
+      for (var t in [
+        lastPost.inDays,
+        lastPost.inHours,
+        lastPost.inMinutes,
+        lastPost.inSeconds
+      ]) {
+        if (t != 0) {
+          postText = "最近回复$t${timeGranularity[f]}前";
+          break;
+        }
+        f++;
       }
-      f++;
-    }
-    if (f == 4) {
-      postText = "最近回复0秒前";
+      if (f == 4) {
+        postText = "最近回复0秒前";
+      }
     }
 
     return Container(
@@ -342,7 +378,7 @@ class ThreadSummary extends StatelessWidget {
                               child: Text("${info.author!.nameShow}"),
                             ),
                           ] +
-                          icons,
+                          (icons ?? <Widget>[]),
                     ),
                     Row(
                       children: [
@@ -402,23 +438,26 @@ class ThreadSummary extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                      child: Text(
-                    "${info.fname}吧",
-                    style: TextStyle(color: Colors.grey[600]),
-                    overflow: TextOverflow.ellipsis,
+                      child: Visibility(
+                    visible: info.fname == null,
+                    child: Text(
+                      "${info.fname}吧",
+                      style: TextStyle(color: Colors.grey[600]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   )),
                   // Spacer(),
                   Icon(Icons.remove_red_eye),
                   SizedBox(width: 2),
-                  Text(info.viewNum!),
+                  Text(info.viewNum ?? "0"),
                   SizedBox(width: 5),
                   Icon(Icons.thumb_up),
                   SizedBox(width: 2),
-                  Text(info.agree!.agreeNum!),
+                  Text(info.agree?.agreeNum ?? "0"),
                   SizedBox(width: 5),
                   Icon(Icons.thumb_down),
                   SizedBox(width: 2),
-                  Text(info.agree!.disagreeNum!),
+                  Text(info.agree?.disagreeNum ?? "0"),
                   SizedBox(width: 5),
                   Icon(Icons.speaker_notes),
                   SizedBox(width: 2),
@@ -479,5 +518,68 @@ class _AvatarState extends State<Avatar> {
         ),
       ),
     );
+  }
+}
+
+class Thumbnail extends StatefulWidget {
+  final List<String> imgs;
+  final List<String?>? imgsOriginSrc;
+  final ExtendedPageController controller;
+  final String img;
+  Thumbnail(
+      {Key? key,
+      required this.imgs,
+      this.imgsOriginSrc,
+      required this.controller,
+      required this.img})
+      : super(key: key);
+
+  @override
+  _ThumbnailState createState() => _ThumbnailState();
+}
+
+class _ThumbnailState extends State<Thumbnail> {
+  String heroTagSalt = Uuid().v4();
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(child: Builder(
+      builder: (context) {
+        return GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (builder) {
+                return ZoomedImgExplorer(
+                  imgUrls: widget.imgs,
+                  highQualityUrls: widget.imgsOriginSrc,
+                  pageController: widget.controller,
+                  heroTagSalt: heroTagSalt,
+                );
+              }));
+            },
+            child: Padding(
+              padding: EdgeInsets.only(left: 2.5, right: 2.5),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: FadeIn(
+                    child: Hero(
+                  tag: widget.img + heroTagSalt,
+                  child: LayoutBuilder(
+                    builder:
+                        (BuildContext context, BoxConstraints constraints) {
+                      return Container(
+                        height: constraints.maxHeight,
+                        width: constraints.maxWidth,
+                        child: ExtendedImage.network(
+                          widget.img,
+                          fit: BoxFit.cover,
+                          cache: true,
+                        ),
+                      );
+                    },
+                  ),
+                )),
+              ),
+            ));
+      },
+    ));
   }
 }
