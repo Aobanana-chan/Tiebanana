@@ -37,7 +37,7 @@ class APPTheme with ChangeNotifier {
   }
 }
 
-//吧状态Model
+///吧状态Model
 class ForumState with ChangeNotifier {
   List<LikeForumInfo> _forums = [];
   List<LikeForumInfo> get forums {
@@ -53,7 +53,7 @@ class ForumState with ChangeNotifier {
   }
 }
 
-//页面标题Model
+///页面标题Model
 class APPBarTitle with ChangeNotifier {
   String _title = "";
   set title(String title) {
@@ -68,12 +68,34 @@ class APPBarTitle with ChangeNotifier {
   }
 }
 
+///精品贴列表Provider
 class ThreadListProviderModel with ChangeNotifier {
   List<ForumThreadList>? _threadList;
+  int goodpn = 1;
   set setList(List<ForumThreadList>? list) {
     _threadList = list;
     notifyListeners();
   }
 
   List<ForumThreadList>? get threadList => _threadList;
+}
+
+///精品贴控制栏Provider
+class GoodClassifyProviderModel with ChangeNotifier {
+  int _goodClassify = 0;
+  bool _showClassidy = false;
+  int get goodClassify => _goodClassify;
+  bool get shouldShow => _showClassidy;
+
+  ///设置精品贴分类可见性
+  set show(bool show) {
+    _showClassidy = show;
+    notifyListeners();
+  }
+
+  ///修改精品贴分类
+  set changeClassify(int c) {
+    _goodClassify = c;
+    notifyListeners();
+  }
 }

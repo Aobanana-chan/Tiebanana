@@ -59,7 +59,7 @@ class Global {
     profile.setString("APPSetting", json5Encode(setting.toJson()));
   }
 
-  //
+  ///显示通知
   static Future<void> showNotification(
       int id, String title, String body) async {
     AndroidNotificationDetails androidPlatformChannelSpecifics =

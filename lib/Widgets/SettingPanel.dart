@@ -15,6 +15,7 @@ class _SettingPanelState extends State<SettingPanel> {
       child: Column(
         children: [
           MaterialButton(
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             elevation: 0,
             focusElevation: 0,
             hoverElevation: 0,
@@ -34,6 +35,7 @@ class _SettingPanelState extends State<SettingPanel> {
             ),
           ),
           MaterialButton(
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             elevation: 0,
             focusElevation: 0,
             hoverElevation: 0,
@@ -53,6 +55,7 @@ class _SettingPanelState extends State<SettingPanel> {
             ),
           ),
           MaterialButton(
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             elevation: 0,
             focusElevation: 0,
             hoverElevation: 0,
@@ -72,6 +75,7 @@ class _SettingPanelState extends State<SettingPanel> {
             ),
           ),
           MaterialButton(
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             elevation: 0,
             focusElevation: 0,
             hoverElevation: 0,
@@ -91,6 +95,7 @@ class _SettingPanelState extends State<SettingPanel> {
             ),
           ),
           MaterialButton(
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             elevation: 0,
             focusElevation: 0,
             hoverElevation: 0,
