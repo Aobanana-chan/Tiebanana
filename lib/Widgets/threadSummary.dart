@@ -6,6 +6,7 @@ import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/Widgets/ImgExplorer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/routes.dart';
 import 'package:uuid/uuid.dart';
 
 ///帖子气泡-小部件
@@ -130,12 +131,13 @@ class ThreadSummary extends StatelessWidget {
         break;
       }
       // String heroTagSalt = Uuid().v4();
-      bodyMedia.add(Thumbnail(
+      bodyMedia.add(Expanded(
+              child: Thumbnail(
         imgs: imgs,
         controller: controller,
         img: img,
         imgsOriginSrc: imgsOriginSrc,
-      )
+      ))
           // Expanded(child: Builder(
           //   builder: (context) {
           //     String salt = heroTagSalt;
@@ -354,13 +356,16 @@ class ThreadSummary extends StatelessWidget {
       // padding: EdgeInsets.all(5),
       margin: EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(
-        onPressed: () {
-          //TODO:进入主题帖
+        onPressed: () async {
+          Navigator.pushNamed(context, PageRouter.threadPage,
+              arguments: info.tid!);
+          // await Global.tiebaAPI.getThreadPage(info.tid!);
         },
         padding: EdgeInsets.all(5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            //作者
             Row(
               children: [
                 Avatar(
@@ -439,7 +444,7 @@ class ThreadSummary extends StatelessWidget {
                 children: [
                   Expanded(
                       child: Visibility(
-                    visible: info.fname == null,
+                    visible: info.fname != null && info.fname != "",
                     child: Text(
                       "${info.fname}吧",
                       style: TextStyle(color: Colors.grey[600]),
@@ -526,12 +531,14 @@ class Thumbnail extends StatefulWidget {
   final List<String?>? imgsOriginSrc;
   final ExtendedPageController controller;
   final String img;
+  final BoxFit fit;
   Thumbnail(
       {Key? key,
       required this.imgs,
       this.imgsOriginSrc,
       required this.controller,
-      required this.img})
+      required this.img,
+      this.fit = BoxFit.cover})
       : super(key: key);
 
   @override
@@ -542,7 +549,7 @@ class _ThumbnailState extends State<Thumbnail> {
   String heroTagSalt = Uuid().v4();
   @override
   Widget build(BuildContext context) {
-    return Expanded(child: Builder(
+    return Builder(
       builder: (context) {
         return GestureDetector(
             onTap: () {
@@ -566,11 +573,12 @@ class _ThumbnailState extends State<Thumbnail> {
                     builder:
                         (BuildContext context, BoxConstraints constraints) {
                       return Container(
-                        height: constraints.maxHeight,
-                        width: constraints.maxWidth,
+                        constraints: constraints,
+                        // height: constraints.maxHeight,
+                        // width: constraints.maxWidth,
                         child: ExtendedImage.network(
                           widget.img,
-                          fit: BoxFit.cover,
+                          fit: widget.fit,
                           cache: true,
                         ),
                       );
@@ -580,6 +588,6 @@ class _ThumbnailState extends State<Thumbnail> {
               ),
             ));
       },
-    ));
+    );
   }
 }

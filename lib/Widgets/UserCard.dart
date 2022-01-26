@@ -59,7 +59,8 @@ class _UserCardState extends State<UserCard> {
           // alignment: Alignment.center,
           // margin: EdgeInsets.only(right: 5, left: 5),
           child: MaterialButton(
-              padding: EdgeInsets.zero,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: EdgeInsets.all(8),
               onPressed: i["onPress"],
               child: Column(
                 children: [

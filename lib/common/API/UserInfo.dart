@@ -16,7 +16,7 @@ class UserInfomation {
   UserInfomation(this.dio);
   void init(String bduss) {
     _bduss = bduss;
-    refresh();
+    //refresh();
   }
 
   Future<List<LikeForumInfo>?> get likes async {
@@ -73,9 +73,9 @@ class UserInfomation {
         throw Exception(
             "error_code:${dataJson['error_code']}\n${dataJson['error_msg']}");
       }
-      _likes = [];
+      this._likes = [];
       for (var like in dataJson['like_forum']) {
-        _likes!.add(LikeForumInfo.fromJson(like));
+        this._likes!.add(LikeForumInfo.fromJson(like));
       }
     } catch (e) {
       Fluttertoast.showToast(msg: "获取用户信息失败\n$e");

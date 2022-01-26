@@ -111,6 +111,7 @@ const String GET_MY_USER_INFO =
     "https://tieba.baidu.com/mo/q/newmoindex?need_user=1"; //获取个人信息，用Get方法
 const String GET_MESSAGE = "http://c.tieba.baidu.com/c/s/msg"; // 获取消息通知
 const String GET_FORUM_PAGE = "http://c.tieba.baidu.com/c/f/frs/page"; //获取吧主页信息
+const String AgreeURL = "http://c.tieba.baidu.com/c/c/agree/opAgree"; //点赞
 
 ///不喜欢首页推荐贴 参数：
 ///

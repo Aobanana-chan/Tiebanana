@@ -830,13 +830,68 @@ class TiebaAPI {
     args['sign'] = _signArgs(args);
     var res = await dio.post(GET_FORUM_PAGE,
         data: args,
-        options: Options(
-            responseType: ResponseType.bytes,
+        options: Options(responseType: ResponseType.bytes, //这个bytes有点故事
             headers: {"Content-Type": "application/x-www-form-urlencoded"}));
     var resJson = json5Decode(String.fromCharCodes(res.data));
     if (resJson['error_code'] != "0") {
       throw Exception("获取失败");
     }
     return ForumHomeInfo.fromJson(resJson);
+  }
+
+  ///获取贴页面
+  ///
+  ///[kz] - 贴子ID
+  ///
+  ///[onlyLz] - 只看楼主
+  Future<ThreadPageData> getThreadPage(String kz,
+      {int pn = 1, int rn = 30, bool onlyLz = false}) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var args = {
+      "BDUSS": bduss,
+      "kz": kz,
+      "pn": pn,
+      "rn": rn,
+      "with_floor": "1",
+      "lz": onlyLz ? "1" : "0",
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "_client_version": "8.2.2",
+    };
+
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(F_PAGE,
+        data: args,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    var resJson = json5Decode(res.data);
+    if (resJson["error_code"] != "0") {
+      throw Exception(resJson["error_msg"]);
+    }
+    return ThreadPageData.fromJson(resJson);
+  }
+
+  //TODO:获取stoken
+
+  ///点赞
+  Future<bool> agreePost(String postID, String threadID,
+      {int agreeType = 2}) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var args = {
+      "BDUSS": bduss,
+      "thread_id": threadID,
+      "post_id": postID,
+      "agreeType": agreeType,
+      "tbs": await tbsMagager.getTBS(),
+      "stoken": "",
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "_client_version": "8.2.2",
+    };
+    return true;
   }
 }

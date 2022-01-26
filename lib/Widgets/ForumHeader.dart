@@ -37,7 +37,6 @@ class _ForumHeaderState extends State<ForumHeader> {
       return GradientButton(
           borderRadius: BorderRadius.circular(18),
           onPressed: () async {
-            //TODO:签到单个吧
             var msg = await Global.tiebaAPI.signOneForum(widget.info.name!);
             Fluttertoast.showToast(msg: msg["TiebananaMsg"]);
             info.levelupScore = (msg["user_info"]["levelup_score"] as double)

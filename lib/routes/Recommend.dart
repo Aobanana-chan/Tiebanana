@@ -32,6 +32,8 @@ class _RecommendPanState extends State<RecommendPan> {
   void initState() {
     super.initState();
     refresh();
+
+    //TODO:下滑加载
   }
 
   @override

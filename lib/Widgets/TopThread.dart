@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 //置顶帖部件
 class TopThread extends StatelessWidget {
@@ -14,9 +15,11 @@ class TopThread extends StatelessWidget {
       decoration: BoxDecoration(color: Colors.white),
       child: MaterialButton(
         onPressed: () {
-          //TODO:进入主题帖
+          Navigator.pushNamed(context, PageRouter.threadPage,
+              arguments: info.tid!);
         },
-        padding: EdgeInsets.all(5),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: EdgeInsets.all(8),
         child: Row(
           children: [
             ClipOval(

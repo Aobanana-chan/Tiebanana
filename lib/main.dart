@@ -22,31 +22,30 @@ class App extends StatelessWidget {
     // FlutterStatusbarManager.setColor(Color(0x0), animated: true);
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider.value(value: User()),
-          ChangeNotifierProvider.value(value: APPTheme()),
+          ChangeNotifierProvider(create: (BuildContext context) => User()),
+          ChangeNotifierProvider(create: (context) => APPTheme()),
         ],
-        child: Consumer2<APPTheme, User>(
-          builder: (BuildContext context, theme, user, Widget? child) {
-            return MaterialApp(
-              initialRoute: PageRouter.home,
-              // routes: PageRouter.routes,
-
-              onGenerateRoute: (settings) {
-                if (PageRouter.routes.containsKey(settings.name)) {
-                  return CupertinoPageRoute(
-                      settings: settings,
-                      builder: (context) =>
-                          PageRouter.routes[settings.name]!(context));
-                }
+        builder: (context, child) => Consumer2<APPTheme, User>(
+              builder: (BuildContext context, theme, user, Widget? child) {
+                return MaterialApp(
+                  initialRoute: PageRouter.home,
+                  //配置命名路由
+                  onGenerateRoute: (settings) {
+                    if (PageRouter.routes.containsKey(settings.name)) {
+                      return CupertinoPageRoute(
+                          settings: settings,
+                          builder: (context) =>
+                              PageRouter.routes[settings.name]!(context));
+                    }
+                  },
+                  theme: ThemeData(primaryColor: theme.theme),
+                  darkTheme: Global.setting.darkModel == 0
+                      ? ThemeData(
+                          brightness: Brightness.dark,
+                        )
+                      : null,
+                );
               },
-              theme: ThemeData(primaryColor: theme.theme),
-              darkTheme: Global.setting.darkModel == 0
-                  ? ThemeData(
-                      brightness: Brightness.dark,
-                    )
-                  : null,
-            );
-          },
-        ));
+            ));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
@@ -8,7 +9,12 @@ import 'package:tiebanana/routes/Recommend.dart';
 import 'package:tiebanana/routes/User.dart';
 
 ///首页
-var page = <Widget>[_Home(), _Recommand(), _Notifaction(), _UserAndSettings()];
+var page = <Widget>[
+  KeepAliveWrapper(child: _Home()),
+  KeepAliveWrapper(child: _Recommand()),
+  KeepAliveWrapper(child: _Notifaction()),
+  KeepAliveWrapper(child: _UserAndSettings())
+];
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -19,6 +25,14 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   var _currentPage = 0;
+  late ForumState forumState;
+  PageController controller = PageController();
+  @override
+  void initState() {
+    super.initState();
+    forumState = ForumState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,13 +65,19 @@ class _HomePageState extends State<HomePage> {
         onTap: (index) {
           setState(() {
             _currentPage = index;
+            controller.animateToPage(_currentPage,
+                duration: Duration(milliseconds: 200), curve: Curves.easeIn);
           });
         },
         fixedColor: Colors.white,
       ),
-      body: IndexedStack(
-        children: page,
-        index: _currentPage,
+      body: ChangeNotifierProvider.value(
+        value: forumState,
+        builder: (context, child) => PageView(
+          physics: NeverScrollableScrollPhysics(),
+          controller: controller,
+          children: page,
+        ),
       ),
     );
   }
@@ -73,26 +93,26 @@ class _Home extends StatefulWidget {
 
 class __HomeState extends State<_Home> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          return ChangeNotifierProvider.value(
-            value: ForumState(),
-            builder: (builderContext, _) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SearchBar(
-                    maxHeight: constraints.maxHeight,
-                  ),
-                  Expanded(
-                    child: TagPan(),
-                  )
-                ],
-              );
-            },
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SearchBar(
+                maxHeight: constraints.maxHeight,
+              ),
+              Expanded(
+                child: TagPan(),
+              )
+            ],
           );
         },
       ),

@@ -802,8 +802,9 @@ class Forum {
     //     forumSignCalendar.add(new Null.fromJson(v));
     //   });
     // }
-    tagInfo =
-        json['tag_info'] != "" ? new TagInfo.fromJson(json['tag_info']) : null;
+    tagInfo = (json['tag_info'] != "" && json['tag_info'] != null)
+        ? new TagInfo.fromJson(json['tag_info'])
+        : null;
     // banner =
     //     json['banner'] != null ? new Banner.fromJson(json['banner']) : null;
     isShowAllTopThread = json['is_show_all_top_thread'];
@@ -2445,39 +2446,39 @@ class UserList extends Author {
   String? isDefaultAvatar;
   // NewGodData? newGodData;
   // List<Null> businessAccountInfo;
-
-  UserList({
-    this.id,
-    this.portrait,
-    this.name,
-    this.nameShow,
-    this.sex,
-    this.gender,
-    this.type,
-    this.iconinfo,
-    // this.tshowIcon,
-    // this.newTshowIcon,
-    this.isMem,
-    this.fansNum,
-    this.fansNickname,
-    this.godData,
-    this.privSets,
-    // this.themeCard,
-    // this.tbVip,
-    this.isBawu,
-    this.bawuType,
-    this.baijiahaoInfo,
-    // this.pendant,
-    // this.alaInfo,
-    this.sealPrefix,
-    this.isVideobiggie,
-    // this.bazhuGrade,
-    this.displayAuthType,
-    // this.workCreatorInfo,
-    this.isDefaultAvatar,
-    // this.newGodData,
-    // this.businessAccountInfo
-  });
+  String? levelID;
+  UserList(
+      {this.id,
+      this.portrait,
+      this.name,
+      this.nameShow,
+      this.sex,
+      this.gender,
+      this.type,
+      this.iconinfo,
+      // this.tshowIcon,
+      // this.newTshowIcon,
+      this.isMem,
+      this.fansNum,
+      this.fansNickname,
+      this.godData,
+      this.privSets,
+      // this.themeCard,
+      // this.tbVip,
+      this.isBawu,
+      this.bawuType,
+      this.baijiahaoInfo,
+      // this.pendant,
+      // this.alaInfo,
+      this.sealPrefix,
+      this.isVideobiggie,
+      // this.bazhuGrade,
+      this.displayAuthType,
+      // this.workCreatorInfo,
+      this.isDefaultAvatar,
+      // this.newGodData,
+      // this.businessAccountInfo
+      this.levelID});
 
   UserList.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -2487,7 +2488,7 @@ class UserList extends Author {
     sex = json['sex'];
     gender = json['gender'];
     type = json['type'];
-    if (json['iconinfo'] != null) {
+    if (json['iconinfo'] != null && json['iconinfo'] != "") {
       iconinfo = [];
       json['iconinfo'].forEach((v) {
         // iconinfo?.add(new ForumIconinfo.fromJson(v));
@@ -2522,6 +2523,7 @@ class UserList extends Author {
     //     tbVip.add(new Null.fromJson(v));
     //   });
     // }
+    levelID = json["level_id"];
     isBawu = json['is_bawu'];
     bawuType = json['bawu_type'];
     baijiahaoInfo = json['baijiahao_info'];
@@ -2566,6 +2568,7 @@ class UserList extends Author {
     //   data['new_tshow_icon'] =
     //       this.newTshowIcon.map((v) => v.toJson()).toList();
     // }
+    data["level_id"] = this.levelID;
     data['is_mem'] = this.isMem;
     data['fans_num'] = this.fansNum;
     data['fans_nickname'] = this.fansNickname;
