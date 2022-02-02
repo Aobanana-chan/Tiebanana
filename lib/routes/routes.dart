@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/routes/ForumHomePage.dart';
 import 'package:tiebanana/routes/HomePage.dart';
+import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 
 ///命名路由表
@@ -16,9 +17,13 @@ class PageRouter {
       return ThreadPageRoute(
         kz: ModalRoute.of(buidler)!.settings.arguments as String,
       );
+    },
+    "login": (builder) {
+      return LoginPage();
     }
   };
   static String home = "/";
   static String forumHome = "forumHome";
   static String threadPage = "threadPage";
+  static String login = "login";
 }

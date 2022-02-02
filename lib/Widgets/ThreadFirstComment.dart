@@ -232,7 +232,8 @@ class ThreadFirstComment extends StatelessWidget {
                   height: 45,
                   width: 45,
                 ),
-                Column(
+                Expanded(
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
@@ -260,18 +261,31 @@ class ThreadFirstComment extends StatelessWidget {
                           style: TextStyle(color: Colors.grey),
                         ),
                         SizedBox(
-                          width: 20,
+                          width: 10,
                         ),
                         //发帖时间
                         Text(
                           getPostTime(strTime: postMain.time),
                           style: TextStyle(color: Colors.grey),
-                        )
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+
+                        Expanded(
+                            child: Container(
+                          constraints:
+                              BoxConstraints(maxHeight: 1000, maxWidth: 1000),
+                          child: Visibility(
+                              visible: postMain.lbsInfo != null,
+                              child: Text("${postMain.lbsInfo?.name}",
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: Colors.grey))),
+                        ))
                       ],
                     )
                   ],
-                ),
-                Spacer(),
+                )),
                 AgreeAndDisagreeBar(
                   agreeNum: int.parse(postMain.agree!.agreeNum!),
                   disagreeNum: int.parse(postMain.agree!.disagreeNum!),

@@ -1,9 +1,12 @@
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
+import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Message.dart';
 import 'package:tiebanana/routes/Recommend.dart';
 import 'package:tiebanana/routes/User.dart';
@@ -27,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   var _currentPage = 0;
   late ForumState forumState;
   PageController controller = PageController();
+  DateTime? lastPopTime;
   @override
   void initState() {
     super.initState();
@@ -35,51 +39,71 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
+    Widget childpage;
+    if (Global.tiebaAPI.isLogin == false) {
+      childpage = LoginPage();
+    } else {
+      childpage = Scaffold(
+        resizeToAvoidBottomInset: false,
+        bottomNavigationBar: BottomNavigationBar(
+          items: [
+            BottomNavigationBarItem(
+                backgroundColor: Colors.purpleAccent[700],
+                icon: Icon(Icons.home_outlined),
+                label: "首页",
+                activeIcon: Icon(Icons.home)),
+            BottomNavigationBarItem(
               backgroundColor: Colors.purpleAccent[700],
-              icon: Icon(Icons.home_outlined),
-              label: "首页",
-              activeIcon: Icon(Icons.home)),
-          BottomNavigationBarItem(
-            backgroundColor: Colors.purpleAccent[700],
-            icon: Icon(Icons.circle_notifications_outlined),
-            activeIcon: Icon(Icons.circle_notifications_rounded),
-            label: "动态",
-          ),
-          BottomNavigationBarItem(
-              backgroundColor: Colors.purpleAccent[700],
-              icon: Icon(Icons.reply),
-              activeIcon: Icon(Icons.reply_all),
-              label: "消息"),
-          BottomNavigationBarItem(
-              backgroundColor: Colors.purpleAccent[700],
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: "个人")
-        ],
-        currentIndex: _currentPage,
-        onTap: (index) {
-          setState(() {
-            _currentPage = index;
-            controller.animateToPage(_currentPage,
-                duration: Duration(milliseconds: 200), curve: Curves.easeIn);
-          });
-        },
-        fixedColor: Colors.white,
-      ),
-      body: ChangeNotifierProvider.value(
-        value: forumState,
-        builder: (context, child) => PageView(
-          physics: NeverScrollableScrollPhysics(),
-          controller: controller,
-          children: page,
+              icon: Icon(Icons.circle_notifications_outlined),
+              activeIcon: Icon(Icons.circle_notifications_rounded),
+              label: "动态",
+            ),
+            BottomNavigationBarItem(
+                backgroundColor: Colors.purpleAccent[700],
+                icon: Icon(Icons.reply),
+                activeIcon: Icon(Icons.reply_all),
+                label: "消息"),
+            BottomNavigationBarItem(
+                backgroundColor: Colors.purpleAccent[700],
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: "个人")
+          ],
+          currentIndex: _currentPage,
+          onTap: (index) {
+            setState(() {
+              _currentPage = index;
+              controller.animateToPage(_currentPage,
+                  duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+            });
+          },
+          fixedColor: Colors.white,
         ),
-      ),
-    );
+        body: ChangeNotifierProvider.value(
+          value: forumState,
+          builder: (context, child) => PageView(
+            physics: NeverScrollableScrollPhysics(),
+            controller: controller,
+            children: page,
+          ),
+        ),
+      );
+    }
+    return WillPopScope(
+        child: childpage,
+        onWillPop: () async {
+          // 点击返回键的操作
+          if (lastPopTime == null ||
+              DateTime.now().difference(lastPopTime!) > Duration(seconds: 2)) {
+            lastPopTime = DateTime.now();
+            Fluttertoast.showToast(msg: '请再按一次退出！');
+            return false;
+          } else {
+            lastPopTime = DateTime.now();
+            // 退出app
+            return true;
+          }
+        });
   }
 }
 

@@ -23,6 +23,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   dio: ^4.0.4 
   dio_cookie_manager: ^2.0.0
   path_provider: ^2.0.3

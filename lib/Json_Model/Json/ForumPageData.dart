@@ -513,7 +513,7 @@ class PostList {
   String? hasSignature;
   Signature? signature;
   // List<Null>? tailInfo;
-  // List<Null>? lbsInfo;
+  LbsInfo? lbsInfo;
   String? zan;
   String? isGiftpost;
   String? tpointPost;
@@ -555,7 +555,7 @@ class PostList {
       this.hasSignature,
       this.signature,
       // this.tailInfo,
-      // this.lbsInfo,
+      this.lbsInfo,
       this.zan,
       this.isGiftpost,
       this.tpointPost,
@@ -629,12 +629,15 @@ class PostList {
     //     tailInfo?.add(v);
     //   });
     // }
-    // if (json['lbs_info'] != null) {
-    //   lbsInfo = [];
-    //   json['lbs_info'].forEach((v) {
-    //     lbsInfo?.add(v);
-    //   });
-    // }
+    if (json['lbs_info'] != null) {
+      if (json['lbs_info'] is Map) {
+        lbsInfo = LbsInfo.fromJson(json['lbs_info']);
+      } else if (json['lbs_info'] is List && json['lbs_info'].length == 0) {
+        lbsInfo = null;
+      } else {
+        throw Exception("未知数据类型");
+      }
+    }
     zan = json['zan'];
     isGiftpost = json['is_giftpost'];
     tpointPost = json['tpoint_post'];
@@ -686,9 +689,9 @@ class PostList {
     // if (this.tailInfo != null) {
     //   // data['tail_info'] = this.tailInfo?.map((v) => v.toJson()).toList();
     // }
-    // if (this.lbsInfo != null) {
-    //   // data['lbs_info'] = this.lbsInfo?.map((v) => v.toJson()).toList();
-    // }
+    if (this.lbsInfo != null) {
+      data['lbs_info'] = this.lbsInfo!.toJson();
+    }
     data['zan'] = this.zan;
     data['is_giftpost'] = this.isGiftpost;
     data['tpoint_post'] = this.tpointPost;
@@ -2140,6 +2143,23 @@ class SubPostList {
     data['title'] = this.title;
     data['is_voice'] = this.isVoice;
     data['author_id'] = this.authorId;
+    return data;
+  }
+}
+
+//可能是地理位置
+class LbsInfo {
+  String? name;
+
+  LbsInfo({this.name});
+
+  LbsInfo.fromJson(Map<String, dynamic> json) {
+    name = json['name'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['name'] = this.name;
     return data;
   }
 }

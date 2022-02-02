@@ -121,8 +121,11 @@ class _SearchBarState extends State<SearchBar> {
 
 class AnimatedDropDown extends StatefulWidget {
   final Duration duration;
+  final double barHeight;
   AnimatedDropDown(
-      {Key? key, this.duration = const Duration(milliseconds: 400)})
+      {Key? key,
+      this.duration = const Duration(milliseconds: 400),
+      this.barHeight = 56})
       : super(key: key);
 
   @override
@@ -135,79 +138,50 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
   late List<String> history;
   PointerDownEvent? tapPoint;
   late Animation<double> animation;
-  bool bind = false;
   ScrollController scrollController = ScrollController();
-
+  late RenderBox overlay;
   double? realheight;
   double? prevheight;
-  double barHeight = 0;
   void getHistory() {
     var local = Global.profile.getStringList("searchHistory");
-    history = local == null ? [] : local;
-  }
-
-  //TODO:该代码可以优化
-  double calcHeight() {
-    if (realheight == null && prevheight == null) {
-      return 0;
-    } else if (realheight == null && prevheight != null) {
-      return animation.value * prevheight!;
-    } else {
-      prevheight = realheight;
-      return animation.value * realheight!;
-    }
+    history = local ?? [];
   }
 
   @override
   void initState() {
     super.initState();
     getHistory();
+    overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+    bar = context.findAncestorStateOfType<_SearchBarState>();
+    bar!.controller =
+        AnimationController(duration: widget.duration, vsync: this);
+    animation = Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(parent: bar!.controller!, curve: Curves.easeOut));
+    bar!.controller!.forward();
+    bar!.controller!.addStatusListener((status) {
+      if (status == AnimationStatus.dismissed) {
+        bar!.showBody = false;
+        bar!.setState(() {});
+        scrollController.jumpTo(0);
+        bar!.barController.close();
+      }
+    });
   }
 
   @override
   void didUpdateWidget(covariant AnimatedDropDown oldWidget) {
     super.didUpdateWidget(oldWidget);
+    var historyLen = history.length;
     getHistory();
-    // realheight = null;
-  }
-
-  @override
-  void dispose() {
-    bar!.controller!.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final RenderBox overlay =
-        Overlay.of(context)!.context.findRenderObject() as RenderBox;
-    if (realheight == null) {
+    if (history.length != historyLen) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        realheight = scrollController.position.maxScrollExtent;
-        barHeight = bar!.context.size!.height;
+        realheight = scrollController.position.viewportDimension;
         setState(() {});
       });
     }
+  }
 
-    //动画绑定
-    if (!bind) {
-      bar = context.findAncestorStateOfType<_SearchBarState>();
-      bar!.controller =
-          AnimationController(duration: widget.duration, vsync: this);
-      animation = Tween<double>(begin: 0, end: 1).animate(
-          CurvedAnimation(parent: bar!.controller!, curve: Curves.easeOut));
-      bar!.controller!.forward();
-      bar!.controller!.addStatusListener((status) {
-        if (status == AnimationStatus.dismissed) {
-          bar!.showBody = false;
-          bar!.setState(() {});
-          scrollController.jumpTo(0);
-          bar!.barController.close();
-        }
-      });
-      bind = true;
-    }
-
+  List<Widget> getListWidget() {
     //获取历史记录添加到列表
     List<Widget> historyWidgetList = history.map((item) {
       return MaterialButton(
@@ -224,6 +198,8 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
                   tapPoint!.localPosition.dy,
                   overlay.size.width - tapPoint!.localPosition.dx,
                   overlay.size.height - tapPoint!.localPosition.dy),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
               items: [
                 PopupMenuItem(
                   onTap: () {
@@ -256,6 +232,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
         onPressed: () {
           Global.profile.setStringList("searchHistory", []);
           setState(() {
+            realheight = null;
             getHistory();
           });
         },
@@ -268,6 +245,23 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
         ),
       ));
     }
+    return historyWidgetList;
+  }
+
+  @override
+  void dispose() {
+    bar!.controller!.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (realheight == null) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        realheight = scrollController.position.maxScrollExtent;
+        setState(() {});
+      });
+    }
     return AnimatedBuilder(
       animation: animation,
       child: FadeInDown(
@@ -279,9 +273,10 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
                 elevation: 4.0,
                 child: Listener(
                   child: ListView(
+                      shrinkWrap: true,
                       controller: scrollController,
                       physics: BouncingScrollPhysics(),
-                      children: historyWidgetList),
+                      children: getListWidget()),
                   onPointerDown: (e) => tapPoint = e,
                 )
 
@@ -298,9 +293,8 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
       builder: (BuildContext context, Widget? child) {
         return Container(
           constraints: BoxConstraints(
-            maxHeight: bar!.widget.maxHeight! - barHeight,
+            maxHeight: bar!.widget.maxHeight! - widget.barHeight,
           ),
-          height: calcHeight(),
           child: child,
         );
       },
