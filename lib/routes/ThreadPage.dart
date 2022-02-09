@@ -234,6 +234,7 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
           author: userListSet[floor.authorId!]!,
           postMain: floor,
           userList: userListSet,
+          threadID: widget.initInfo.thread!.id!,
         ));
       }
     }
@@ -287,6 +288,8 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
                       videoInfo: videoInfo,
                       allImgs: imgs,
                       allOrgImgs: imgsOrgSrc,
+                      threadID: widget.initInfo.thread!.id!,
+                      thread: widget.initInfo.thread!,
                     )),
               ),
               SliverToBoxAdapter(

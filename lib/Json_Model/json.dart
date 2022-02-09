@@ -7,6 +7,8 @@ part 'Json/Message.dart';
 part './Json/MyUserInfo.dart';
 part './Json/ForumHomeInfo.dart';
 part './Json/ForumPageData.dart';
+part './Json/PhoneNumberStatus.dart';
+part './Json/SendDPass.dart';
 //TODO:拆分
 
 ///TBS随机参数

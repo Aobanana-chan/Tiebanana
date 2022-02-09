@@ -41,7 +41,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     Widget childpage;
     if (Global.tiebaAPI.isLogin == false) {
-      childpage = LoginPage();
+      childpage = Scaffold(
+        body: ChangeNotifierProvider.value(
+          value: forumState,
+          builder: (context, child) => LoginPage(),
+        ),
+      );
     } else {
       childpage = Scaffold(
         resizeToAvoidBottomInset: false,

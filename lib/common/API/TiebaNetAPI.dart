@@ -54,28 +54,42 @@ class TiebaAPI {
         }
         userInfomation.init(bduss);
       });
+      cookieJar.loadForRequest(Uri.parse(BAIDU_PASSPORT_URL)).then((value) {
+        for (var i in value) {
+          if (i.name == "STOKEN") {
+            stoken = i.value;
+            break;
+          }
+        }
+        userInfomation.init(bduss);
+      });
     }
   }
 
   //budss简单加密，考虑可能在本地保存
   // ignore: non_constant_identifier_names
-  late String _bduss_encrypt;
-  set bduss(String str) {
-    _bduss_encrypt = Encrypter(AES(
-            Key.fromUtf8("d7c2dbf638964f50018b1161e174d8ba"),
-            mode: AESMode.ecb))
-        .encrypt(str, iv: IV.fromLength(0))
-        .base64;
-  }
+  // late String _bduss_encrypt;
+  // set bduss(String str) {
+  //   _bduss_encrypt = Encrypter(AES(
+  //           Key.fromUtf8("d7c2dbf638964f50018b1161e174d8ba"),
+  //           mode: AESMode.ecb))
+  //       .encrypt(str, iv: IV.fromLength(0))
+  //       .base64;
+  // }
 
-  String get bduss {
-    return Encrypter(AES(Key.fromUtf8("d7c2dbf638964f50018b1161e174d8ba"),
-            mode: AESMode.ecb))
-        .decrypt(Encrypted.fromBase64(_bduss_encrypt), iv: IV.fromLength(0));
-  }
+  // String get bduss {
+  //   return Encrypter(AES(Key.fromUtf8("d7c2dbf638964f50018b1161e174d8ba"),
+  //           mode: AESMode.ecb))
+  //       .decrypt(Encrypted.fromBase64(_bduss_encrypt), iv: IV.fromLength(0));
+  // }
+  late String bduss;
+  late String stoken;
 
+  ///token值可能为空，不建议直接使用,建议使用_getToken获取token
   String token = "";
+
   String _traceID = "";
+
   String _gid = "";
 
   WindowsDv windowsDv = WindowsDv();
@@ -84,7 +98,8 @@ class TiebaAPI {
   AuthVerifyManager authVerifyManager = AuthVerifyManager(dio);
   TBSMagager tbsMagager = TBSMagager(dio);
   UserInfomation userInfomation = UserInfomation(dio);
-  //类在用之前先初始化
+
+  ///类在用之前先初始化
   Future init() async {
     //设置cookie保存目录
     Directory? cookiedir = await getApplicationDocumentsDirectory();
@@ -115,7 +130,7 @@ class TiebaAPI {
     await passMachine.init();
   }
 
-  //模拟web入口的账号密码登陆
+  ///模拟web入口的账号密码登陆
   Future<LoginErrCode> loginByPassword(String username, String password) async {
     if (isLogin) {
       //删除cookie和token
@@ -178,7 +193,7 @@ class TiebaAPI {
       "dv": windowsDv.dv,
       "fuid": fuid.fuid, //fuid是由fingerprint2js算出来的浏览器唯一标识
       "alg": "v3",
-      "time": time ~/ 1000
+      "time": time ~/ 1000,
     };
 
     var loginRes = await dio.post(LOGIN_POST_URL,
@@ -244,7 +259,260 @@ class TiebaAPI {
     return BaiduErroNo.parse(errNo!);
   }
 
-  //获取连接的token
+  ///模拟web端的短信登陆
+  Future<LoginErrCode> loginByPhone(String phoneNumber, String verifyCode,
+      {String? smsvcodesign, String? smsvcodestr}) async {
+    if (isLogin) {
+      //删除cookie和token
+      await cookieJar.deleteAll();
+      token = "";
+      isLogin = false;
+    }
+    var cookies =
+        (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
+    //没有BAIDUID就浏览百度首页,以设置BAIDUID等Cookie
+    if (!cookies.contains("BAIDUID")) {
+      await dio.get(BAIDU_URL);
+    }
+    var verify = {
+      "smsvcodesign": smsvcodesign,
+      "smsvcodestr": smsvcodestr,
+    };
+    //获取token
+    var _token = await _getToken();
+    //提交登陆POST
+    var gid = _guideRandom();
+    var time = DateTime.now().millisecondsSinceEpoch;
+    var sigParams = {
+      "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
+      "charset": "UTF-8",
+      "token": _token,
+      "tpl": "mn",
+      "subpro": "",
+      "apiver": "v3",
+      "tt": time,
+      "smscodestring": "",
+      "u": BAIDU_URL,
+      "gid": gid,
+      "idc": "",
+      "mkey": "",
+      "username": phoneNumber,
+      "password": verifyCode,
+      "countrycode": "",
+      "fp_uid": "",
+      "fp_info": "",
+      "loginversion": "v4",
+      "dv": windowsDv.dv,
+      "fuid": fuid.fuid, //fuid是由fingerprint2js算出来的浏览器唯一标识
+      "alg": "v3",
+      "time": time ~/ 1000,
+      "isdpass": 1,
+      "switchuname": "",
+      "is_voice_sms": 0,
+      "voice_sms_flag": 0,
+      "client": "",
+      "isupsms": "",
+      "channelid": "",
+      "smsvcodesign": smsvcodesign,
+      "smsvcodestr": smsvcodestr,
+    };
+
+    var data = {
+      "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
+      "charset": " UTF-8",
+      "token": _token,
+      "tpl": "mn",
+      "subpro": "",
+      "apiver": "v3",
+      "tt": time,
+      "smscodestring": "",
+      "u": BAIDU_URL,
+      "gid": gid,
+      "idc": "",
+      "mkey": "",
+      "username": phoneNumber,
+      "password": verifyCode,
+      "countrycode": "",
+      "fp_uid": "",
+      "fp_info": "",
+      "loginversion": "v4",
+      "dv": windowsDv.dv,
+      "fuid": fuid.fuid,
+      "traceid": _getTraceID(),
+      "time": time ~/ 1000,
+      "alg": "v3",
+      "sig": _getSig(_mapSrot(sigParams)),
+      "shaOne": _getshaOne(time),
+      "elapsed": DateTime.now().millisecondsSinceEpoch - time,
+      "rinfo": {
+        "fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"
+      } //这里的fuid是上面的fuid的md5值
+      ,
+      "isdpass": 1,
+      "switchuname": "",
+      "is_voice_sms": 0,
+      "voice_sms_flag": 0,
+      "client": "",
+      "isupsms": "",
+      "channelid": "",
+      "smsvcodesign": smsvcodesign,
+      "smsvcodestr": smsvcodestr,
+    };
+
+    var loginRes = await dio.post(LOGIN_POST_URL,
+        data: data,
+        options: Options(headers: {
+          "Referer": BAIDU_URL,
+          "Content-Type": "application/x-www-form-urlencoded"
+        }, responseType: ResponseType.plain));
+    var errNo = RegExp(r"(?<=err_no=)(.+?)(?=&)").firstMatch(loginRes.data)![0];
+    //需要安全验证时，初始化安全验证类
+    if (errNo == "120021") {
+      authVerifyManager.init(loginRes.data);
+    }
+    if (errNo == "0") {
+      isLogin = true;
+    }
+    return BaiduErroNo.parse(errNo!);
+  }
+
+  ///获取手机号码的状态(是否已经注册)
+  Future<PhoneNumberStatus> checkRegPhone(String phoneNumber) async {
+    var time = DateTime.now().millisecondsSinceEpoch;
+    var gid = _guideRandom();
+    //签名的参数
+    var sigParams = {
+      "token": await _getToken(),
+      "tpl": "mn",
+      "subpro": "",
+      "apiver": "v3",
+      "tt": time,
+      "gid": gid,
+      "phone": phoneNumber,
+      "loginversion": "v4",
+      "countrycode": "",
+      "mobileencryption": "",
+      "alg": "v3",
+      "time": time ~/ 1000
+    };
+
+    var args = {
+      "token": await _getToken(),
+      "tpl": "mn",
+      "subpro": "",
+      "apiver": "v3",
+      "tt": time,
+      "gid": gid,
+      "phone": phoneNumber,
+      "loginversion": "v4",
+      "countrycode": "",
+      "mobileencryption": "",
+      "traceid": "",
+      "time": time ~/ 1000,
+      "alg": "v3",
+      "sig": _getSig(_mapSrot(sigParams)),
+      "elapsed": DateTime.now().millisecondsSinceEpoch - time,
+      "shaOne": _getshaOne(time),
+      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"}
+    };
+    var res = await dio.get(GET_PHONE_NUMBER_STATUS,
+        queryParameters: args,
+        options: Options(responseType: ResponseType.plain));
+    var data = PhoneNumberStatus.fromJson(json5Decode(res.data));
+    return data;
+  }
+
+  ///短信登录发送密码短信
+  Future<SendDPass> sendPass(String phoneNumber,
+      {bool needVerify = false,
+      String? vcodesign,
+      String? vcodestr,
+      String? verifycode}) async {
+    var gid = _guideRandom();
+    var time = DateTime.now().millisecondsSinceEpoch;
+    var moonshadow =
+        md5.convert(utf8.encode(phoneNumber + "Moonshadow")).toString();
+    moonshadow = moonshadow
+        .replaceFirst("o", "ow")
+        .replaceFirst("d", "do")
+        .replaceFirst("a", "ad");
+    moonshadow = moonshadow
+        .replaceFirst("h", "ha")
+        .replaceFirst("s", "sh")
+        .replaceFirst("n", "ns")
+        .replaceFirst("m", "mo");
+    //验证码
+    var verify = {
+      "vcodesign": vcodesign,
+      "vcodestr": vcodestr,
+      "verifycode": verifycode
+    };
+
+    //签名的参数
+    var sigParams = {
+      "apiver": "v3",
+      "bdstoken": await _getToken(),
+      "client": "",
+      "countrycode": "",
+      "ds": passMachine.ds,
+      "dv": windowsDv.dv,
+      "flag_code": "0",
+      "gid": gid,
+      "loginVersion": "v4",
+      "mkey": "",
+      "moonshad": moonshadow,
+      "supportdv": "1",
+      "tk": passMachine.tk,
+      "tpl": "mn",
+      "traceid": "",
+      "tt": time,
+      "username": phoneNumber,
+    };
+    if (needVerify) {
+      verify.forEach(((key, value) {
+        sigParams[key] = value!;
+      }));
+    }
+    var args = {
+      "gid": gid,
+      "username": phoneNumber,
+      "countrycode": "",
+      "bdstoken": await _getToken(),
+      "tpl": "mn",
+      "loginVersion": "v4",
+      "flag_code": "0",
+      "client": "",
+      "mkey": "",
+      "moonshad": moonshadow,
+      "ds": passMachine.ds,
+      "tk": passMachine.tk,
+      "supportdv": "1",
+      "dv": windowsDv.dv,
+      "apiver": "v3",
+      "tt": time,
+      "traceid": "",
+      "time": time ~/ 1000,
+      "alg": "v3",
+      "sig": _getSig(_mapSrot(sigParams)),
+      "elapsed": DateTime.now().millisecondsSinceEpoch - time,
+      "shaOne": _getshaOne(time),
+      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"}
+    };
+    if (needVerify) {
+      verify.forEach(((key, value) {
+        args[key] = value!;
+      }));
+    }
+    var res = await dio.get(LOGIN_SEND_PASS,
+        queryParameters: args,
+        options: Options(responseType: ResponseType.plain));
+    //数据外围会多一对括号...
+    var resJson = SendDPass.fromJson(
+        json5Decode((res.data as String).substring(1, res.data.length - 1)));
+    return resJson;
+  }
+
+  ///获取连接的token
   Future<String> _getToken() async {
     if (token != "") {
       return token;
@@ -857,7 +1125,7 @@ class TiebaAPI {
       "with_floor": "1",
       "lz": onlyLz ? "1" : "0",
       "timestamp": DateTime.now().millisecondsSinceEpoch,
-      "_client_version": "8.2.2",
+      "_client_version": "9.9.2",
     };
 
     args['sign'] = _signArgs(args);
@@ -874,11 +1142,18 @@ class TiebaAPI {
     return ThreadPageData.fromJson(resJson);
   }
 
-  //TODO:获取stoken
-
-  ///点赞
-  Future<bool> agreePost(String postID, String threadID,
-      {int agreeType = 2}) async {
+  ///点赞API
+  ///
+  ///[objType] = 1,给楼层点赞/踩
+  ///[objType] = 3,给贴点赞/踩
+  ///
+  ///[opType] = 0,点赞/踩
+  ///[opType] = 1,取消点赞/踩
+  ///
+  ///[agreeType] = 2,点赞
+  ///[agreeType] = 5,点踩
+  Future<void> agreePost(String postID, String threadID, int objType,
+      {int agreeType = 2, int opType = 0}) async {
     if (isLogin == false) {
       throw Exception("未登录");
     }
@@ -888,10 +1163,22 @@ class TiebaAPI {
       "post_id": postID,
       "agreeType": agreeType,
       "tbs": await tbsMagager.getTBS(),
-      "stoken": "",
+      "stoken": stoken,
       "timestamp": DateTime.now().millisecondsSinceEpoch,
       "_client_version": "8.2.2",
+      "op_type": opType,
+      "obj_type": objType
     };
-    return true;
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(AgreeURL,
+        data: args,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    var resJson = json5Decode(res.data);
+    if (resJson["error_code"] != "0") {
+      throw Exception(resJson["error_msg"]);
+    }
   }
 }

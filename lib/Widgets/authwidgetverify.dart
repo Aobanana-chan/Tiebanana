@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:select_form_field/select_form_field.dart';
@@ -32,13 +33,14 @@ class _AuthwidgetverifyState extends State<Authwidgetverify> {
                 padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(
                   children: [
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text(
-                      "您的帐号可能存在安全风险，为了确保为您本人操作，请先进行安全验证。",
-                      style: TextStyle(color: Color(0xFF606060), fontSize: 14),
-                      textAlign: TextAlign.left,
+                    Container(
+                      margin: EdgeInsets.only(top: 5),
+                      child: Text(
+                        "您的帐号可能存在安全风险，为了确保为您本人操作，请先进行安全验证。",
+                        style:
+                            TextStyle(color: Color(0xFF606060), fontSize: 14),
+                        textAlign: TextAlign.left,
+                      ),
                     ),
                     SizedBox(
                       height: 25,
@@ -54,22 +56,38 @@ class _AuthwidgetverifyState extends State<Authwidgetverify> {
                       ],
                     ),
                     _VerifyTypeDropDown(),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 150,
+                    Container(
+                      margin: EdgeInsets.only(top: 5, bottom: 20),
+                      child: LeftRightBox(
+                        verticalAlign: VerticalAlign.center,
+                        left: Container(
+                          margin: EdgeInsets.only(right: 10),
                           child: TextField(
+                            decoration: InputDecoration(
+                              hintText: "验证码",
+                              isCollapsed: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 10),
+                              filled: true,
+                              fillColor: Color(0xFFF5F5F5),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(64),
+                                  borderSide: BorderSide.none),
+                            ),
                             controller: _controller,
                           ),
                         ),
-                        Spacer(),
-                        SendVerifyButton(),
-                      ],
+                        right: SendVerifyButton(
+                          sendVerify: () async {
+                            Global.tiebaAPI.authVerifyManager
+                                .sendVerify(verifyType);
+                            return true;
+                          },
+                        ),
+                      ),
                     ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    ElevatedButton(
+                    GradientButton(
+                        borderRadius: BorderRadius.circular(64),
                         onPressed: () async {
                           var respone = await Global.tiebaAPI.authVerifyManager
                               .Verify(verifyType, _controller.text);
@@ -89,7 +107,10 @@ class _AuthwidgetverifyState extends State<Authwidgetverify> {
                           }
                         },
                         child: Center(
-                          child: Text("确定"),
+                          child: Text(
+                            "确定",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ))
                   ],
                 ),
@@ -155,7 +176,7 @@ class __VerifyTypeDropDownState extends State<_VerifyTypeDropDown> {
     return Container(
       child: SelectFormField(
         items: _items,
-        labelText: controller.text,
+        hintText: controller.text,
         controller: controller,
         onChanged: (val) {
           context
@@ -171,7 +192,12 @@ class __VerifyTypeDropDownState extends State<_VerifyTypeDropDown> {
 }
 
 class SendVerifyButton extends StatefulWidget {
-  SendVerifyButton({Key? key}) : super(key: key);
+  ///按钮冷却
+  final int coolDownCount;
+  final Future<bool> Function() sendVerify;
+  SendVerifyButton(
+      {Key? key, this.coolDownCount = 60, required this.sendVerify})
+      : super(key: key);
 
   @override
   _SendVerifyButtonState createState() => _SendVerifyButtonState();
@@ -181,19 +207,19 @@ class SendVerifyButton extends StatefulWidget {
 class _SendVerifyButtonState extends State<SendVerifyButton> {
   int cooldown = 0; //按钮冷却
   bool isClicked = false;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: ElevatedButton(
+      child: GradientButton(
         onPressed: cooldown > 0
             ? null
-            : () {
-                var type = context
-                    .findAncestorStateOfType<_AuthwidgetverifyState>()!
-                    .verifyType;
-                Global.tiebaAPI.authVerifyManager.sendVerify(type);
+            : () async {
+                if (await widget.sendVerify() == false) {
+                  return;
+                }
                 isClicked = true;
-                cooldown = 60;
+                cooldown = widget.coolDownCount;
                 //设置倒计时
                 Timer.periodic(Duration(seconds: 1), (timer) {
                   cooldown--;
@@ -202,11 +228,6 @@ class _SendVerifyButtonState extends State<SendVerifyButton> {
                   }
                   setState(() {});
                 });
-
-                // //获取输入的验证码
-                // var i = context.findAncestorStateOfType<_AuthwidgetverifyState>();
-                // var vcode = i!._controller.text;
-                // Global.tiebaAPI.authVerifyManager.Verify(type, vcode)
               },
         child: Builder(
           builder: (context) {
@@ -221,6 +242,7 @@ class _SendVerifyButtonState extends State<SendVerifyButton> {
             }
           },
         ),
+        borderRadius: BorderRadius.circular(64),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:tiebanana/Json_Model/json.dart';
 const String ChromeUA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36";
 const String BAIDU_URL = "https://www.baidu.com"; //百度首页
+const String BAIDU_PASSPORT_URL = "https://passport.baidu.com"; //用户首页
 const String LOGIN_GET_URL = "https://passport.baidu.com/v2/?login";
 const String LOGIN_POST_URL =
     "https://passport.baidu.com/v2/api/?login"; //登陆API
@@ -112,6 +113,12 @@ const String GET_MY_USER_INFO =
 const String GET_MESSAGE = "http://c.tieba.baidu.com/c/s/msg"; // 获取消息通知
 const String GET_FORUM_PAGE = "http://c.tieba.baidu.com/c/f/frs/page"; //获取吧主页信息
 const String AgreeURL = "http://c.tieba.baidu.com/c/c/agree/opAgree"; //点赞
+const String GET_PHONE_NUMBER_STATUS =
+    "https://passport.baidu.com/v2/?getphonestatus"; //获取手机号码注册状态
+const String LOGIN_SEND_PASS =
+    "https://passport.baidu.com/v2/api/senddpass"; //短信登录发送短信API
+const String WORD_CAPTCHA_IMAGE =
+    "https://passport.baidu.com/cgi-bin/genimage?"; //文字图片验证码，后加vcodestr
 
 ///不喜欢首页推荐贴 参数：
 ///

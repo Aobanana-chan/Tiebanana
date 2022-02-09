@@ -460,9 +460,16 @@ class ThreadSummary extends StatelessWidget {
                   SizedBox(width: 2),
                   Text(info.agree?.agreeNum ?? "0"),
                   SizedBox(width: 5),
-                  Icon(Icons.thumb_down),
-                  SizedBox(width: 2),
-                  Text(info.agree?.disagreeNum ?? "0"),
+                  Visibility(
+                    visible: info.agree?.disagreeNum != null,
+                    child: Icon(Icons.thumb_down),
+                  ),
+                  Visibility(
+                      visible: info.agree?.disagreeNum != null,
+                      child: SizedBox(width: 2)),
+                  Visibility(
+                      visible: info.agree?.disagreeNum != null,
+                      child: Text(info.agree?.disagreeNum ?? "0")),
                   SizedBox(width: 5),
                   Icon(Icons.speaker_notes),
                   SizedBox(width: 2),

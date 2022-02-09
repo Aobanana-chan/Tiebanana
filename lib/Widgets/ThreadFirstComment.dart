@@ -1,6 +1,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/LikeButtonEx.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
@@ -15,13 +16,17 @@ class ThreadFirstComment extends StatelessWidget {
   final VideoInfo? videoInfo;
   final List<String> allImgs;
   final List<String> allOrgImgs;
+  final String threadID;
+  final Thread thread;
   const ThreadFirstComment(
       {Key? key,
       required this.postMain,
       required this.author,
       this.videoInfo,
       required this.allImgs,
-      required this.allOrgImgs})
+      required this.allOrgImgs,
+      required this.threadID,
+      required this.thread})
       : super(key: key);
 
   List<Widget>? processIcon() {
@@ -289,7 +294,10 @@ class ThreadFirstComment extends StatelessWidget {
                 AgreeAndDisagreeBar(
                   agreeNum: int.parse(postMain.agree!.agreeNum!),
                   disagreeNum: int.parse(postMain.agree!.disagreeNum!),
-                  agreeType: int.parse(postMain.agree!.agreeType!),
+                  agreeType: int.parse(thread.agree!.agreeType!),
+                  postID: postMain.id!,
+                  threadID: threadID,
+                  objType: 3,
                 )
               ],
             ),
@@ -311,8 +319,17 @@ class AgreeAndDisagreeBar extends StatefulWidget {
   final int agreeNum;
   final int disagreeNum;
   final int agreeType;
+  final String postID;
+  final String threadID;
+  final int objType;
   AgreeAndDisagreeBar(
-      {Key? key, this.agreeNum = 0, this.disagreeNum = 0, this.agreeType = 0})
+      {Key? key,
+      this.agreeNum = 0,
+      this.disagreeNum = 0,
+      this.agreeType = 0,
+      required this.postID,
+      required this.threadID,
+      required this.objType})
       : super(key: key);
 
   @override
@@ -324,6 +341,7 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
   late int disagreeNum;
   bool like = false;
   bool dislike = false;
+
   GlobalKey<LikeButtonStateEx> likeKey = GlobalKey<LikeButtonStateEx>();
   GlobalKey<LikeButtonStateEx> dislikeKey = GlobalKey<LikeButtonStateEx>();
   @override
@@ -333,6 +351,8 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
     disagreeNum = widget.disagreeNum;
     if (widget.agreeType == 2) {
       like = true;
+    } else if (widget.agreeType == 5) {
+      dislike = true;
     }
   }
 
@@ -344,8 +364,24 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
           LikeButtonEx(
             key: likeKey,
             onTap: (isLiked) async {
-              //TODO:发送点赞数据
               like = !isLiked;
+              if (!dislike) {
+                try {
+                  if (like) {
+                    //点赞
+                    await Global.tiebaAPI.agreePost(
+                        widget.postID, widget.threadID, widget.objType);
+                  } else {
+                    //取消点赞
+                    await Global.tiebaAPI.agreePost(
+                        widget.postID, widget.threadID, widget.objType,
+                        opType: 1);
+                  }
+                } catch (e) {
+                  Fluttertoast.showToast(msg: e.toString().substring(11));
+                }
+              }
+
               if (!isLiked && dislike) {
                 dislikeKey.currentState?.onTap();
               }
@@ -362,12 +398,30 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
               }
             },
             likeCount: agreeNum,
+            isLiked: like,
           ),
           LikeButtonEx(
             key: dislikeKey,
             onTap: (isLiked) async {
-              //TODO:发送点踩数据
               dislike = !isLiked;
+              if (!like) {
+                try {
+                  if (dislike) {
+                    //点踩
+                    await Global.tiebaAPI.agreePost(
+                        widget.postID, widget.threadID, widget.objType,
+                        agreeType: 5);
+                  } else {
+                    //取消点踩
+                    await Global.tiebaAPI.agreePost(
+                        widget.postID, widget.threadID, widget.objType,
+                        opType: 1, agreeType: 5);
+                  }
+                } catch (e) {
+                  Fluttertoast.showToast(msg: e.toString().substring(11));
+                }
+              }
+
               if (!isLiked && like) {
                 likeKey.currentState?.onTap();
               }
@@ -384,17 +438,8 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
               }
             },
             likeCount: disagreeNum,
+            isLiked: dislike,
           )
-          // IconButton(
-          //     onPressed: () {
-          //       //TODO:点赞
-          //     },
-          //     icon: Icon(Icons.thumb_up_alt_outlined)),
-          // IconButton(
-          //     onPressed: () {
-          //       //TODO:点赞
-          //     },
-          //     icon: Icon(Icons.thumb_up_alt_outlined))
         ],
       ),
     );

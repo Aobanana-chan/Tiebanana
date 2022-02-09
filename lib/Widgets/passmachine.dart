@@ -1,6 +1,10 @@
+import 'package:extended_image/extended_image.dart';
+import 'package:flukit/flukit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
 
 //角度转弧度
@@ -18,7 +22,7 @@ void record(e) {
           .toJson());
 }
 
-///验证码Widget
+///旋转验证码Widget
 ///验证成功返回true
 class PassMachineWidget extends StatefulWidget {
   PassMachineWidget({Key? key}) : super(key: key);
@@ -189,4 +193,113 @@ class _CaptchaSliderThumb extends SliderComponentShape {
       required double value,
       required double textScaleFactor,
       required Size sizeWithOverflow}) {}
+}
+
+///数字字母验证码
+class WordPassMachine extends StatefulWidget {
+  final String vcodestr;
+  final Future<bool> Function(TextEditingController controller) verifyFunction;
+  WordPassMachine(
+      {Key? key, required this.vcodestr, required this.verifyFunction})
+      : super(key: key);
+
+  @override
+  State<WordPassMachine> createState() => _WordPassMachineState();
+}
+
+class _WordPassMachineState extends State<WordPassMachine> {
+  TextEditingController controller = TextEditingController();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Dialog(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              AppBar(
+                title: Text("安全验证"),
+                leading: Icon(Icons.lock),
+              ),
+              Container(
+                margin: EdgeInsets.all(5),
+                child: Center(
+                  child: Text("请填写图中的验证码,点击图片可以换一张"),
+                ),
+              ),
+              //图片和输入
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                child: LeftRightBox(
+                  verticalAlign: VerticalAlign.center,
+                  left: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 5),
+                    child: TextField(
+                      controller: controller,
+                      autofocus: false,
+                      decoration: InputDecoration(
+                        hintText: "验证码",
+                        isCollapsed: true,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                        filled: true,
+                        fillColor: Color(0xFFF5F5F5),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(64),
+                            borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                  right: Container(
+                    height: 38,
+                    width: 100,
+                    margin: EdgeInsets.symmetric(horizontal: 5),
+                    // decoration: BoxDecoration(
+                    //     border: Border.all(width: 1),
+                    //     borderRadius: BorderRadius.circular(8)),
+                    child: ExtendedImage.network(
+                      WORD_CAPTCHA_IMAGE + widget.vcodestr,
+                      cache: false,
+                      loadStateChanged: (state) {
+                        if (state.extendedImageLoadState ==
+                            LoadState.completed) {
+                          return GestureDetector(
+                            child: ExtendedRawImage(
+                              image: state.extendedImageInfo?.image,
+                            ),
+                            onTap: () {
+                              state.reLoadImage();
+                            },
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              //按钮
+              Container(
+                margin: EdgeInsets.only(
+                  top: 5,
+                  bottom: 10,
+                ),
+                child: GradientButton(
+                  onPressed: () async {
+                    if (await widget.verifyFunction(controller)) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(64),
+                  child: Text(
+                    "确定",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -48,8 +48,10 @@ class ForumState with ChangeNotifier {
     refresh();
   }
   Future<void> refresh() async {
-    _forums = (await Global.tiebaAPI.userInfomation.likes)!;
-    notifyListeners();
+    if (Global.tiebaAPI.isLogin) {
+      _forums = (await Global.tiebaAPI.userInfomation.likes)!;
+      notifyListeners();
+    }
   }
 }
 

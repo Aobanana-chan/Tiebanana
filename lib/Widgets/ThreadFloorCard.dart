@@ -7,7 +7,6 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
-import 'package:tiebanana/routes/HomePage.dart';
 
 ///帖子-楼层组件
 class ThreadFloorComment extends StatelessWidget {
@@ -18,6 +17,7 @@ class ThreadFloorComment extends StatelessWidget {
   final List<String> allImgs;
   final List<String> allOrgImgs;
   final Map<String, UserList> userList;
+  final String threadID;
   const ThreadFloorComment({
     Key? key,
     required this.author,
@@ -26,6 +26,7 @@ class ThreadFloorComment extends StatelessWidget {
     required this.allOrgImgs,
     required this.postMain,
     required this.userList,
+    required this.threadID,
   }) : super(key: key);
 
   List<Widget>? processIcon() {
@@ -91,7 +92,6 @@ class ThreadFloorComment extends StatelessWidget {
 
   List<Widget> buildBody(BuildContext context) {
     List<Widget> body = [];
-    List<Widget> bodyMedia = [];
     List<String> imgs = [];
     List<String>? imgsOriginSrc = [];
     List<String> videos = [];
@@ -291,6 +291,9 @@ class ThreadFloorComment extends StatelessWidget {
                           agreeNum: int.parse(postMain.agree!.agreeNum!),
                           disagreeNum: int.parse(postMain.agree!.disagreeNum!),
                           agreeType: int.parse(postMain.agree!.agreeType!),
+                          postID: postMain.id!,
+                          threadID: threadID,
+                          objType: 1,
                         )
                       ],
                     ),

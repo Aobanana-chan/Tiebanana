@@ -534,7 +534,7 @@ class PostList {
   String? item;
   String? outerItem;
   String? itemStar;
-  String? advertisement;
+  // String? advertisement;
   String? foldCommentStatus;
   String? foldCommentApplyUrl;
   String? novelInfo;
@@ -576,7 +576,7 @@ class PostList {
       this.item,
       this.outerItem,
       this.itemStar,
-      this.advertisement,
+      // this.advertisement,
       this.foldCommentStatus,
       this.foldCommentApplyUrl,
       this.novelInfo,
@@ -658,7 +658,7 @@ class PostList {
     item = json['item'];
     outerItem = json['outer_item'];
     itemStar = json['item_star'];
-    advertisement = json['advertisement'];
+    // advertisement = json['advertisement'];
     foldCommentStatus = json['fold_comment_status'];
     foldCommentApplyUrl = json['fold_comment_apply_url'];
     novelInfo = json['novel_info'];
@@ -714,7 +714,7 @@ class PostList {
     data['item'] = this.item;
     data['outer_item'] = this.outerItem;
     data['item_star'] = this.itemStar;
-    data['advertisement'] = this.advertisement;
+    // data['advertisement'] = this.advertisement;
     data['fold_comment_status'] = this.foldCommentStatus;
     data['fold_comment_apply_url'] = this.foldCommentApplyUrl;
     data['novel_info'] = this.novelInfo;
@@ -775,9 +775,17 @@ class Content {
     isNativeApp = json['is_native_app'];
     if (json['native_app'] != null) {
       nativeApp = [];
-      json['native_app'].forEach((v) {
-        nativeApp?.add(v);
-      });
+      if (json['native_app'] is Map) {
+        json['native_app'].forEach((k, v) {
+          nativeApp?.add({k: v});
+        });
+      } else if (json['native_app'] is List) {
+        json['native_app'].forEach((v) {
+          nativeApp?.add(v);
+        });
+      } else {
+        throw Exception("未知类型");
+      }
     }
     text = json['text'];
     c = json['c'];
@@ -924,7 +932,7 @@ class Thread {
   String? pushStatus;
   String? cartoonInfo;
   String? richTitle;
-  String? originThreadInfo;
+  // OriginThreadInfo? originThreadInfo;
   String? isShareThread;
   String? richAbstract;
   String? declareList;
@@ -980,7 +988,7 @@ class Thread {
       this.pushStatus,
       this.cartoonInfo,
       this.richTitle,
-      this.originThreadInfo,
+      // this.originThreadInfo,
       this.isShareThread,
       this.richAbstract,
       this.declareList,
@@ -1050,7 +1058,10 @@ class Thread {
     //[{type: 18, text: #刀剑神域进击篇#, link: http://tieba.baidu.com/mo/q/hotMessage?topic_id=0&fid=7012688&topic_name=刀剑神域进击篇&is_video_topic=0}, {type: 0, text:   《无星之夜的咏叹调》先蹲起来 二楼补脑}]
     //部分贴会带有话题Tag,不带话题Tag时候是String
     // richTitle = json['rich_title'];
-    originThreadInfo = json['origin_thread_info'];
+
+    // originThreadInfo = json['origin_thread_info'] != null
+    //     ? new OriginThreadInfo.fromJson(json['origin_thread_info'])
+    //     : null;
     isShareThread = json['is_share_thread'];
     richAbstract = json['rich_abstract'];
     declareList = json['declare_list'];
@@ -1118,7 +1129,9 @@ class Thread {
     data['push_status'] = this.pushStatus;
     data['cartoon_info'] = this.cartoonInfo;
     data['rich_title'] = this.richTitle;
-    data['origin_thread_info'] = this.originThreadInfo;
+    // if (this.originThreadInfo != null) {
+    //   data['origin_thread_info'] = this.originThreadInfo?.toJson();
+    // }
     data['is_share_thread'] = this.isShareThread;
     data['rich_abstract'] = this.richAbstract;
     data['declare_list'] = this.declareList;
@@ -1146,6 +1159,166 @@ class Thread {
   }
 }
 
+class OriginThreadInfo {
+  String? title;
+  List<Media>? media;
+  List<Abstract>? abstract;
+  String? fname;
+  String? tid;
+  AlaInfo? alaInfo;
+  String? fid;
+  String? threadType;
+  String? isDeleted;
+  String? isBlocked;
+  String? isUcg;
+  // OriUgcInfo? oriUgcInfo;
+  String? voiceInfo;
+  String? videoInfo;
+  // PollInfo? pollInfo;
+  List<Content>? content;
+  String? isNewStyle;
+  Agree? agree;
+  String? replyNum;
+  Author? author;
+  String? sharedNum;
+  String? itemId;
+  // Item? item;
+  String? itemStar;
+  String? pbLinkInfo;
+  String? isFrsMask;
+  String? richTitle;
+
+  OriginThreadInfo(
+      {this.title,
+      this.media,
+      this.abstract,
+      this.fname,
+      this.tid,
+      this.alaInfo,
+      this.fid,
+      this.threadType,
+      this.isDeleted,
+      this.isBlocked,
+      this.isUcg,
+      // this.oriUgcInfo,
+      this.voiceInfo,
+      this.videoInfo,
+      // this.pollInfo,
+      this.content,
+      this.isNewStyle,
+      this.agree,
+      this.replyNum,
+      this.author,
+      this.sharedNum,
+      this.itemId,
+      // this.item,
+      this.itemStar,
+      this.pbLinkInfo,
+      this.isFrsMask,
+      this.richTitle});
+
+  OriginThreadInfo.fromJson(Map<String, dynamic> json) {
+    title = json['title'];
+    if (json['media'] != null) {
+      media = [];
+      json['media'].forEach((v) {
+        media?.add(new Media.fromJson(v));
+      });
+    }
+    if (json['abstract'] != null) {
+      abstract = [];
+      json['abstract'].forEach((v) {
+        abstract?.add(new Abstract.fromJson(v));
+      });
+    }
+    fname = json['fname'];
+    tid = json['tid'];
+    alaInfo = json['ala_info'] != null
+        ? new AlaInfo.fromJson(json['ala_info'])
+        : null;
+    fid = json['fid'];
+    threadType = json['thread_type'];
+    isDeleted = json['is_deleted'];
+    isBlocked = json['is_blocked'];
+    isUcg = json['is_ucg'];
+    // oriUgcInfo = json['ori_ugc_info'] != null
+    //     ? new OriUgcInfo.fromJson(json['ori_ugc_info'])
+    //     : null;
+    voiceInfo = json['voice_info'];
+    videoInfo = json['video_info'];
+    // pollInfo = json['poll_info'] != null
+    //     ? new PollInfo.fromJson(json['poll_info'])
+    //     : null;
+    if (json['content'] != null) {
+      content = [];
+      json['content'].forEach((v) {
+        content?.add(new Content.fromJson(v));
+      });
+    }
+    isNewStyle = json['is_new_style'];
+    agree = json['agree'] != null ? new Agree.fromJson(json['agree']) : null;
+    replyNum = json['reply_num'];
+    author =
+        json['author'] != null ? new Author.fromJson(json['author']) : null;
+    sharedNum = json['shared_num'];
+    itemId = json['item_id'];
+    // item = json['item'] != null ? new Item.fromJson(json['item']) : null;
+    itemStar = json['item_star'];
+    pbLinkInfo = json['pb_link_info'];
+    isFrsMask = json['is_frs_mask'];
+    richTitle = json['rich_title'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['title'] = this.title;
+    if (this.media != null) {
+      data['media'] = this.media?.map((v) => v.toJson()).toList();
+    }
+    if (this.abstract != null) {
+      data['abstract'] = this.abstract?.map((v) => v.toJson()).toList();
+    }
+    data['fname'] = this.fname;
+    data['tid'] = this.tid;
+    if (this.alaInfo != null) {
+      data['ala_info'] = this.alaInfo?.toJson();
+    }
+    data['fid'] = this.fid;
+    data['thread_type'] = this.threadType;
+    data['is_deleted'] = this.isDeleted;
+    data['is_blocked'] = this.isBlocked;
+    data['is_ucg'] = this.isUcg;
+    // if (this.oriUgcInfo != null) {
+    //   data['ori_ugc_info'] = this.oriUgcInfo.toJson();
+    // }
+    data['voice_info'] = this.voiceInfo;
+    data['video_info'] = this.videoInfo;
+    // if (this.pollInfo != null) {
+    //   data['poll_info'] = this.pollInfo.toJson();
+    // }
+    if (this.content != null) {
+      data['content'] = this.content?.map((v) => v.toJson()).toList();
+    }
+    data['is_new_style'] = this.isNewStyle;
+    if (this.agree != null) {
+      data['agree'] = this.agree?.toJson();
+    }
+    data['reply_num'] = this.replyNum;
+    if (this.author != null) {
+      data['author'] = this.author?.toJson();
+    }
+    data['shared_num'] = this.sharedNum;
+    data['item_id'] = this.itemId;
+    // if (this.item != null) {
+    //   data['item'] = this.item.toJson();
+    // }
+    data['item_star'] = this.itemStar;
+    data['pb_link_info'] = this.pbLinkInfo;
+    data['is_frs_mask'] = this.isFrsMask;
+    data['rich_title'] = this.richTitle;
+    return data;
+  }
+}
 // class Author {
 //   String name;
 //   String nameShow;
