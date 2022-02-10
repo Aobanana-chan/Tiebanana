@@ -352,7 +352,7 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
                                   vcodesign: smsCodeSign,
                                   vcodestr: smsCodeStr,
                                   verifycode: controller.text);
-                              if (sendPass.errno == 0) {
+                              if (res.errno == 0) {
                                 smsSend = true;
                                 Fluttertoast.showToast(msg: "发送成功");
                                 return true;
@@ -361,7 +361,7 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
                                   smsCodeSign = res.vcodesign!;
                                   smsCodeStr = res.vcodestr!;
                                 }
-                                Fluttertoast.showToast(msg: "${sendPass.msg}");
+                                Fluttertoast.showToast(msg: "${res.msg}");
                                 return false;
                               }
                             },
