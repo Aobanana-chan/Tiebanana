@@ -380,6 +380,9 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
                 } catch (e) {
                   Fluttertoast.showToast(msg: e.toString().substring(11));
                 }
+              } else {
+                await Global.tiebaAPI
+                    .agreePost(widget.postID, widget.threadID, widget.objType);
               }
 
               if (!isLiked && dislike) {
@@ -420,6 +423,10 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
                 } catch (e) {
                   Fluttertoast.showToast(msg: e.toString().substring(11));
                 }
+              } else {
+                await Global.tiebaAPI.agreePost(
+                    widget.postID, widget.threadID, widget.objType,
+                    agreeType: 5);
               }
 
               if (!isLiked && like) {

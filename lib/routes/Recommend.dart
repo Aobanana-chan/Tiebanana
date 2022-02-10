@@ -90,6 +90,7 @@ class _RecommendPanState extends State<RecommendPan> {
                 triggerMode: RefreshIndicatorTriggerMode.anywhere,
                 onRefresh: refresh,
                 child: ListView(
+                  padding: EdgeInsets.zero,
                   controller: controller,
                   physics: BouncingScrollPhysics(),
                   children: threadwidgets,

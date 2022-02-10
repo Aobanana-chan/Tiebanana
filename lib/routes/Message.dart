@@ -151,6 +151,7 @@ class _MessagePanState extends State<MessagePan>
                         : false;
               }
               return ListView.builder(
+                  padding: EdgeInsets.zero,
                   controller: controllerReply,
                   itemCount: replyMessage.length,
                   physics: BouncingScrollPhysics(),
@@ -207,6 +208,7 @@ class _MessagePanState extends State<MessagePan>
               }
 
               return ListView.builder(
+                  padding: EdgeInsets.zero,
                   controller: controllerAtme,
                   itemCount: atMeMessage.length,
                   physics: BouncingScrollPhysics(),

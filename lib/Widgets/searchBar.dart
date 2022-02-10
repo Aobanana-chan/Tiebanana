@@ -56,65 +56,69 @@ class _SearchBarState extends State<SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return FloatingSearchAppBar(
-      color: Colors.white,
-      colorOnScroll: Colors.white,
-      controller: barController,
-      clearQueryOnClose: false,
-      onSubmitted: (searchText) {
-        if (searchText != "") {
-          search(context, searchText);
-        }
-      },
-      onQueryChanged: (str) => searchTXT = str,
-      // hideKeyboardOnDownScroll: true,
-      leadingActions: [
-        FloatingSearchBarAction.icon(
-            icon: Icon(Icons.search),
-            onTap: () {
-              if (searchTXT != "") {
-                search(context, searchTXT);
-              }
-            })
-      ],
-      hint: "搜索吧、贴、用户",
-      body: _buildBody(),
-      actions: [
-        RawMaterialButton(
-          shape: CircleBorder(),
-          onPressed: () async {
-            Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
-            await Global.tiebaAPI.signAll();
-            Provider.of<ForumState>(context, listen: false).refresh();
-          },
-          child: Stack(
-            alignment: AlignmentDirectional.center,
-            children: [
-              Icon(
-                Icons.circle_outlined,
-                size: 32,
-              ),
-              Center(
-                child: Text(
-                  "签",
-                  style: TextStyle(
-                      color: Colors.blueGrey.shade800,
-                      fontWeight: FontWeight.bold),
+    return Container(
+      margin: EdgeInsets.only(
+          top: showBody ? 0 : MediaQuery.of(context).viewPadding.top),
+      child: FloatingSearchAppBar(
+        color: Colors.white,
+        colorOnScroll: Colors.white,
+        controller: barController,
+        clearQueryOnClose: false,
+        onSubmitted: (searchText) {
+          if (searchText != "") {
+            search(context, searchText);
+          }
+        },
+        onQueryChanged: (str) => searchTXT = str,
+        // hideKeyboardOnDownScroll: true,
+        leadingActions: [
+          FloatingSearchBarAction.icon(
+              icon: Icon(Icons.search),
+              onTap: () {
+                if (searchTXT != "") {
+                  search(context, searchTXT);
+                }
+              })
+        ],
+        hint: "搜索吧、贴、用户",
+        body: _buildBody(),
+        actions: [
+          RawMaterialButton(
+            shape: CircleBorder(),
+            onPressed: () async {
+              Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
+              await Global.tiebaAPI.signAll();
+              Provider.of<ForumState>(context, listen: false).refresh();
+            },
+            child: Stack(
+              alignment: AlignmentDirectional.center,
+              children: [
+                Icon(
+                  Icons.circle_outlined,
+                  size: 32,
                 ),
-              ),
-            ],
-          ),
-        )
-      ],
+                Center(
+                  child: Text(
+                    "签",
+                    style: TextStyle(
+                        color: Colors.blueGrey.shade800,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
 
-      onFocusChanged: (focused) {
-        if (focused == true) {
-          showBody = true;
-        } else {
-          controller!.reverse();
-        }
-        setState(() {});
-      },
+        onFocusChanged: (focused) {
+          if (focused == true) {
+            showBody = true;
+          } else {
+            controller!.reverse();
+          }
+          setState(() {});
+        },
+      ),
     );
   }
 }

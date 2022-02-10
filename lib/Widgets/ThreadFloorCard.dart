@@ -387,25 +387,32 @@ class InnerPost extends StatelessWidget {
   const InnerPost({Key? key, required this.author, required this.posts})
       : super(key: key);
   List<Widget> buildContent() {
-    List<Widget> w = [];
+    List<TextSpan> w = [];
+    w.add(TextSpan(
+      text: "${author.nameShow} :",
+      style: TextStyle(color: Colors.blue),
+      //TODO:用户页面
+    ));
     for (Content content in posts) {
       //用户
       if ((content.uid != null || content.uid != null) && content.type == "0") {
-        w.add(Text(
-          "${content.text}",
+        w.add(TextSpan(
+          text: "${content.text}",
           style: TextStyle(color: Colors.blue),
         ));
       } else if (content.type == "0") {
-        w.add(Text(
-          "${content.text}",
-          softWrap: true,
-          maxLines: 100,
+        w.add(TextSpan(
+          text: "${content.text}",
         ));
       } else if (content.type == "2") {
         //TODO:表情包
       }
     }
-    return w;
+    return [
+      RichText(
+          text: TextSpan(
+              children: w, style: TextStyle(color: Colors.black, fontSize: 15)))
+    ];
   }
 
   @override
@@ -413,13 +420,7 @@ class InnerPost extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(3),
       child: Wrap(
-        children: <Widget>[
-              Text(
-                "${author.nameShow}: ",
-                style: TextStyle(color: Colors.blue),
-              ),
-            ] +
-            buildContent(),
+        children: buildContent(),
       ),
     );
   }

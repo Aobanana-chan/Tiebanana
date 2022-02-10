@@ -23,6 +23,7 @@ import 'package:tiebanana/common/API/Authverify.dart';
 import 'package:tiebanana/common/API/FUID.dart';
 import 'package:tiebanana/common/API/PassMachine.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:uuid/uuid.dart';
 import 'Constants.dart';
 
 class TiebaAPI {
@@ -274,10 +275,6 @@ class TiebaAPI {
     if (!cookies.contains("BAIDUID")) {
       await dio.get(BAIDU_URL);
     }
-    var verify = {
-      "smsvcodesign": smsvcodesign,
-      "smsvcodestr": smsvcodestr,
-    };
     //获取token
     var _token = await _getToken();
     //提交登陆POST
@@ -1157,18 +1154,43 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
+    // var args = {
+    //   "BDUSS": bduss,
+    //   "thread_id": threadID,
+    //   "post_id": postID,
+    //   "agreeType": agreeType,
+    //   "tbs": await tbsMagager.getTBS(),
+    //   "stoken": stoken,
+    //   "timestamp": DateTime.now().millisecondsSinceEpoch,
+    //   "_client_version": "8.2.2",
+    //   "op_type": opType,
+    //   "obj_type": objType,
+    //   "cuid": "F1C53BF4A9AE5E7AE6B2B8253A945E40|000000000000000",
+    //   "cuid_galaxy2": "F1C53BF4A9AE5E7AE6B2B8253A945E40|000000000000000",
+    //   "obj_source": "a005",
+    //   "from": "1015363f",
+    //   "_client_type": "2",
+    //   "cmode": "1"
+    // };
     var args = {
       "BDUSS": bduss,
-      "thread_id": threadID,
-      "post_id": postID,
-      "agreeType": agreeType,
-      "tbs": await tbsMagager.getTBS(),
-      "stoken": stoken,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
-      "_client_version": "8.2.2",
+      "_client_version": "12.15.1.0",
+      "_phone_imei": "000000000000000",
+      "agree_type": agreeType,
+      "c3_aid": "A00-QWRPV2AZVX52CX2PYSFMXZ3XDS2JLC6T-S6Y44B6U",
+      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid_galaxy2": "",
+      "cuid_gid": "",
+      "obj_type": objType,
       "op_type": opType,
-      "obj_type": objType
+      "post_id": postID,
+      "start_scheme": "",
+      "stoken": stoken,
+      "tbs": await tbsMagager.getTBS(),
+      "thread_id": threadID,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
+
     args['sign'] = _signArgs(args);
     var res = await dio.post(AgreeURL,
         data: args,
