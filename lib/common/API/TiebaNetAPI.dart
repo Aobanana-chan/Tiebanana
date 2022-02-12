@@ -479,11 +479,13 @@ class TiebaAPI {
       "username": phoneNumber,
     };
     var res = await dio.post(WAP_LOGIN_URL,
-        data: args, options: Options(responseType: ResponseType.plain));
+        data: args,
+        options: Options(
+            responseType: ResponseType.plain,
+            contentType: "application/x-www-form-urlencoded"));
     var resJson = json5Decode(res.data);
     return LoginErrCode(
-        errcode: (resJson["errInfo"]["no"] as num).toInt().toString(),
-        msg: resJson["errInfo"]["msg"]);
+        errcode: resJson["errInfo"]["no"], msg: resJson["errInfo"]["msg"]);
   }
 
   ///wap端account加密
