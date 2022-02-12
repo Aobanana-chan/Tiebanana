@@ -144,7 +144,7 @@ class _MessagePanState extends State<MessagePan>
           default:
             if (snapshot.hasData) {
               if (replyMessage.length == 0) {
-                replyMessage = ((snapshot.data as ReplyMessage).reply!);
+                replyMessage = ((snapshot.data as ReplyMessage).reply ?? []);
                 hasNextReply =
                     (snapshot.data as ReplyMessage).page!.hasMore == "1"
                         ? true
@@ -200,7 +200,7 @@ class _MessagePanState extends State<MessagePan>
           default:
             if (snapshot.hasData) {
               if (atMeMessage.length == 0) {
-                atMeMessage = ((snapshot.data as AtMeMessage).atMe!);
+                atMeMessage = ((snapshot.data as AtMeMessage).atMe ?? []);
                 hasNextAtMe =
                     (snapshot.data as AtMeMessage).messagePage!.hasMore == "1"
                         ? true

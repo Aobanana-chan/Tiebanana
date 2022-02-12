@@ -128,7 +128,7 @@ class AtMeMessage {
         : null;
     messagePage =
         json['page'] != null ? new MessagePage.fromJson(json['page']) : null;
-    if (json['at_list'] != null) {
+    if (json['at_list'] != null && json['at_list'] != "") {
       atMe = [];
       json['at_list'].forEach((v) {
         atMe?.add(new AtMe.fromJson(v));

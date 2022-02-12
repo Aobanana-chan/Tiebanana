@@ -119,6 +119,8 @@ const String LOGIN_SEND_PASS =
     "https://passport.baidu.com/v2/api/senddpass"; //短信登录发送短信API
 const String WORD_CAPTCHA_IMAGE =
     "https://passport.baidu.com/cgi-bin/genimage?"; //文字图片验证码，后加vcodestr
+const String WAP_ACCOUNT_CHECK =
+    "https://wappass.baidu.com/v3/login/api/check"; // WAP端账号状态检查
 
 ///不喜欢首页推荐贴 参数：
 ///
@@ -151,7 +153,7 @@ const webErrCode = {
   "120016": {"msg": "", "field": ""},
   "18": {"msg": "", "field": ""},
   "19": {"msg": "", "field": ""},
-  "20": {"msg": "", "field": ""},
+  "20": {"msg": "登录过于频繁,请24小时后再试", "field": ""},
   "21": {"msg": "没有登录权限", "field": ""},
   "22": {"msg": "", "field": ""},
   "23": {"msg": "", "field": ""},

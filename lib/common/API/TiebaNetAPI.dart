@@ -316,7 +316,7 @@ class TiebaAPI {
 
     var data = {
       "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
-      "charset": " UTF-8",
+      "charset": "UTF-8",
       "token": _token,
       "tpl": "mn",
       "subpro": "",
@@ -371,6 +371,212 @@ class TiebaAPI {
       isLogin = true;
     }
     return BaiduErroNo.parse(errNo!);
+  }
+
+  ///模拟WAP端的手机短信登陆
+  Future<LoginErrCode> wapLoginByPhone(String phoneNumber, String vCode) async {
+    if (isLogin) {
+      //删除cookie和token
+      await cookieJar.deleteAll();
+      token = "";
+      isLogin = false;
+    }
+    var cookies =
+        (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
+    //没有BAIDUID就浏览百度首页,以设置BAIDUID等Cookie
+    if (!cookies.contains("BAIDUID")) {
+      await dio.get(BAIDU_URL);
+    }
+    String baiduID = "";
+    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+      if (cookie.name.toUpperCase() == "BAIDUID") {
+        baiduID = cookie.value;
+        break;
+      }
+    }
+    //获取uid
+    var check = await checkAccount(phoneNumber, baiduID);
+    if (check.errno != 110000) {
+      throw Exception(check.errmsg ?? "登陆失败");
+    }
+    //提交登陆POST
+    var gid = _guideRandom();
+    var time = DateTime.now().millisecondsSinceEpoch;
+    var sigArgs = {
+      "adapter": "",
+      "alg": "v3",
+      "autoExecute": 0,
+      "baiduId": baiduID,
+      "client": "",
+      "clientfrom": ",",
+      "countrycode": "",
+      "encryptedId": check.data!.uid!,
+      "encryptedType": "living",
+      "extrajson": "",
+      "from": "sms",
+      "fuid": fuid.fuid,
+      "gid": gid,
+      "isVoiceSmsLogin": 0,
+      "lang": "zh-cn",
+      "liveAbility": "",
+      "loginFrom": "",
+      "loginmerge": "",
+      "passAppHash": "",
+      "passAppVersion": "",
+      "regfrom": "page",
+      "session_id": "$gid-v2-$time-insert_account",
+      "sms": 1,
+      "smsvc": vCode,
+      "subpro": "",
+      "supFaceLogin": "",
+      "suppWapFace": 1,
+      "suppcheck": "",
+      "supportCheck": "",
+      "time": time ~/ 1000,
+      "tpl": "pp_demo",
+      "tt": time,
+      "u": WAP_URL,
+      "username": phoneNumber,
+    };
+    var args = {
+      "adapter": "",
+      "alg": "v3",
+      "autoExecute": 0,
+      "baiduId": baiduID,
+      "client": "",
+      "clientfrom": ",",
+      "countrycode": "",
+      "elapsed": DateTime.now().millisecondsSinceEpoch - time,
+      "encryptedId": check.data!.uid!,
+      "encryptedType": "living",
+      "extrajson": "",
+      "from": "sms",
+      "fuid": fuid.fuid,
+      "gid": gid,
+      "isVoiceSmsLogin": 0,
+      "lang": "zh-cn",
+      "liveAbility": "",
+      "loginFrom": "",
+      "loginmerge": "",
+      "passAppHash": "",
+      "passAppVersion": "",
+      "regfrom": "page",
+      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"},
+      "session_id": "$gid-v2-$time-insert_account",
+      "shaOne": _getshaOne(time),
+      "sig": _getSig(_mapSrot(sigArgs)),
+      "sms": 1,
+      "smsvc": vCode,
+      "subpro": "",
+      "supFaceLogin": "",
+      "suppWapFace": 1,
+      "suppcheck": "",
+      "supportCheck": "",
+      "time": time ~/ 1000,
+      "tpl": "pp_demo",
+      "tt": time,
+      "u": WAP_URL,
+      "username": phoneNumber,
+    };
+    var res = await dio.post(WAP_LOGIN_URL,
+        data: args, options: Options(responseType: ResponseType.plain));
+    var resJson = json5Decode(res.data);
+    return LoginErrCode(
+        errcode: (resJson["errInfo"]["no"] as num).toInt().toString(),
+        msg: resJson["errInfo"]["msg"]);
+  }
+
+  ///wap端account加密
+  ///逆向于app.099ff655.js:formatted:761 B = function(e){}
+  ///vendor.4be91022.js:formatted: 13486 encrypt: function(t, e, n, r) {}
+  String _encryptedAccount(String phoneNumber) {
+    String front = ""; //加密向量
+    // var wordList = [
+    //   1298692218,
+    //   1265134637,
+    //   1885434739,
+    //   762343541,
+    //   1764583013,
+    //   761357683,
+    //   762013049,
+    //   758132785
+    // ];
+    var passWord = "MhxzKhl-pass-ppui-fe-aes-key-001"; //密码，由WordList转化
+    var n = "0123456789abcdef".split("");
+    for (var i = 0; i < 16; i++) {
+      front += n[Random().nextInt(15)];
+    }
+    var randomIV = IV.fromUtf8(front);
+    var phoneNumberEncrypted =
+        Encrypter(AES(Key.fromUtf8(passWord), mode: AESMode.ctr, padding: null))
+            .encrypt(phoneNumber, iv: randomIV)
+            .base64;
+    return base64Encode(utf8.encode(front + phoneNumberEncrypted));
+  }
+
+  ///WAP端，检查账号状态
+  Future<WapAccountCheck> checkAccount(String account, String baiduID) async {
+    var time = DateTime.now().millisecondsSinceEpoch;
+    var gid = _guideRandom();
+    var sigParams = {
+      "account": _encryptedAccount(account),
+      "acct_crypt": 20,
+      "adapter": "",
+      "alg": "v3",
+      "baiduId": baiduID,
+      "client": "",
+      "clientfrom": "",
+      "codeMobile": "",
+      "countryCode": "",
+      "extrajson": "",
+      "fuid": fuid.fuid,
+      "gid": gid,
+      "lang": "zh-cn",
+      "liveAbility": "",
+      "session_id": "$gid-v2-$time-insert_account",
+      "subpro": "",
+      "supFaceLogin": "",
+      "suppWapFace": 1,
+      "suppcheck": "",
+      "supportCheck": "",
+      "time": time ~/ 1000,
+      "tpl": "pp_demo",
+      "tt": time,
+      "u": WAP_URL
+    };
+    var args = {
+      "account": _encryptedAccount(account),
+      "acct_crypt": 20,
+      "adapter": "",
+      "alg": "v3",
+      "baiduId": baiduID,
+      "client": "",
+      "clientfrom": "",
+      "codeMobile": "",
+      "countryCode": "",
+      "elapsed": DateTime.now().millisecondsSinceEpoch - time,
+      "extrajson": "",
+      "fuid": fuid.fuid,
+      "gid": gid,
+      "lang": "zh-cn",
+      "liveAbility": "",
+      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"},
+      "session_id": "$gid-v2-$time-insert_account",
+      "shaOne": _getshaOne(time),
+      "sig": _getSig(_mapSrot(sigParams)),
+      "subpro": "",
+      "supFaceLogin": "",
+      "suppWapFace": 1,
+      "suppcheck": "",
+      "supportCheck": "",
+      "time": time ~/ 1000,
+      "tpl": "pp_demo",
+      "tt": time,
+      "u": WAP_URL
+    };
+    var res = await dio.post(WAP_ACCOUNT_CHECK,
+        data: args, options: Options(responseType: ResponseType.plain));
+    return WapAccountCheck.fromJson(json5Decode(res.data));
   }
 
   ///获取手机号码的状态(是否已经注册)
