@@ -52,6 +52,9 @@ class Global {
             iOS: initializationSettingsIOS,
             macOS: initializationSettingsMacOS);
     await localNotifications.initialize(initializationSettings);
+
+    //初始化贴吧API
+    await tiebaAPI.init();
   }
 
   ///保持用户APP设置

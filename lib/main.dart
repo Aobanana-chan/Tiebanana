@@ -10,7 +10,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Global.init();
-  await Global.tiebaAPI.init();
   runApp(App());
 }
 

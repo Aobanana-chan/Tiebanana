@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 ///主页搜索栏Widget
 class SearchBar extends StatefulWidget {
@@ -51,6 +52,7 @@ class _SearchBarState extends State<SearchBar> {
     Global.profile.setStringList("searchHistory", cache);
     //TODO:跳转到搜索页面
     // Navigator.push(context, route)
+    Navigator.pushNamed(context, PageRouter.search, arguments: searchTXT);
     setState(() {});
   }
 
@@ -277,6 +279,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
                 elevation: 4.0,
                 child: Listener(
                   child: ListView(
+                      padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       controller: scrollController,
                       physics: BouncingScrollPhysics(),

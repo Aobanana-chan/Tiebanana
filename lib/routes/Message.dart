@@ -96,8 +96,21 @@ class _MessagePanState extends State<MessagePan>
   }
 
   Future refresh() async {
-    //TODO:刷新+通知
+    if (_controller.index == 0) {
+      replypn = 1;
+      var message = await Global.tiebaAPI.getReply(replypn);
+      replyMessage = message.reply!;
+      hasNextReply = message.page!.hasMore == "1" ? true : false;
+      setState(() {});
+    } else if (_controller.index == 1) {
+      atMepn = 1;
+      var message = await Global.tiebaAPI.getAtMe(atMepn);
+      atMeMessage = message.atMe!;
+      hasNextAtMe = message.messagePage!.hasMore == "1" ? true : false;
+      setState(() {});
+    }
   }
+
   Future nextReply() async {
     if (hasNextReply == true) {
       hasNextReply = false;
@@ -150,14 +163,16 @@ class _MessagePanState extends State<MessagePan>
                         ? true
                         : false;
               }
-              return ListView.builder(
-                  padding: EdgeInsets.zero,
-                  controller: controllerReply,
-                  itemCount: replyMessage.length,
-                  physics: BouncingScrollPhysics(),
-                  itemBuilder: (itemBuilder, index) {
-                    return MessageCard(replyMe: replyMessage[index]);
-                  });
+              return RefreshIndicator(
+                  child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      controller: controllerReply,
+                      itemCount: replyMessage.length,
+                      physics: BouncingScrollPhysics(),
+                      itemBuilder: (itemBuilder, index) {
+                        return MessageCard(replyMe: replyMessage[index]);
+                      }),
+                  onRefresh: refresh);
             } else if (snapshot.hasError) {
               return GestureDetector(
                 onTap: () {
@@ -207,14 +222,16 @@ class _MessagePanState extends State<MessagePan>
                         : false;
               }
 
-              return ListView.builder(
-                  padding: EdgeInsets.zero,
-                  controller: controllerAtme,
-                  itemCount: atMeMessage.length,
-                  physics: BouncingScrollPhysics(),
-                  itemBuilder: (itemBuilder, index) {
-                    return MessageCard(atME: atMeMessage[index]);
-                  });
+              return RefreshIndicator(
+                  child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      controller: controllerAtme,
+                      itemCount: atMeMessage.length,
+                      physics: BouncingScrollPhysics(),
+                      itemBuilder: (itemBuilder, index) {
+                        return MessageCard(atME: atMeMessage[index]);
+                      }),
+                  onRefresh: refresh);
             } else if (snapshot.hasError) {
               return GestureDetector(
                 onTap: () {

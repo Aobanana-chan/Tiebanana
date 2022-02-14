@@ -415,24 +415,31 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
                   widget.phoneNumber.text, widget.verifyCode.text,
                   smsvcodesign: smsCodeSign, smsvcodestr: smsCodeStr);
               //是否成功登录
-              if (login.errcode == "0") {
+              if (await Global.tiebaAPI.checkLogin()) {
                 Fluttertoast.showToast(msg: "登录成功");
                 Provider.of<User>(context, listen: false).login();
                 Provider.of<ForumState>(context, listen: false).refresh();
-              } else if (login.errcode == "20") {
-                var wapLogin = await Global.tiebaAPI.wapLoginByPhone(
-                  widget.phoneNumber.text,
-                  widget.verifyCode.text,
-                );
-                if (wapLogin.errcode == "110000") {
-                  Fluttertoast.showToast(msg: "登录成功");
-                  Provider.of<User>(context, listen: false).login();
-                  Provider.of<ForumState>(context, listen: false).refresh();
-                } else {
-                  Fluttertoast.showToast(
-                      msg: "登录失败错误码(err:${wapLogin.errcode}\n${wapLogin.msg})");
-                }
-              } else {
+              }
+              // if (login.errcode == "0" || login.errcode == "20") {
+              //   Fluttertoast.showToast(msg: "登录成功");
+              //   Provider.of<User>(context, listen: false).login();
+              //   Provider.of<ForumState>(context, listen: false).refresh();
+              // }
+              // else if (login.errcode == "20") {
+              //   var wapLogin = await Global.tiebaAPI.wapLoginByPhone(
+              //     widget.phoneNumber.text,
+              //     widget.verifyCode.text,
+              //   );
+              //   if (wapLogin.errcode == "110000") {
+              //     Fluttertoast.showToast(msg: "登录成功");
+              //     Provider.of<User>(context, listen: false).login();
+              //     Provider.of<ForumState>(context, listen: false).refresh();
+              //   } else {
+              //     Fluttertoast.showToast(
+              //         msg: "登录失败错误码(err:${wapLogin.errcode}\n${wapLogin.msg})");
+              //   }
+              // }
+              else {
                 Fluttertoast.showToast(
                     msg: "登录失败错误码(err:${login.errcode}\n${login.msg})");
               }

@@ -31,17 +31,15 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
             child: Container(
               height: 32,
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(32),
-                  color: Colors.grey.shade200,
-                  border: Border.all(
-                    width: 0.1,
-                  )),
+                borderRadius: BorderRadius.circular(32),
+                color: Colors.grey.shade200,
+              ),
               padding: EdgeInsets.only(left: 10),
               margin: EdgeInsets.only(right: 10),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "我也来评论",
+                  "我来聊几句",
                   style: TextStyle(color: Colors.grey),
                 ),
               ),

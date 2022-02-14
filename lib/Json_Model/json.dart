@@ -10,6 +10,8 @@ part './Json/ForumPageData.dart';
 part './Json/PhoneNumberStatus.dart';
 part './Json/SendDPass.dart';
 part './Json/WapAccountCheck.dart';
+part './Json/SearchForumModel.dart';
+part './Json/SearchThreadModel.dart';
 //TODO:拆分
 
 ///TBS随机参数

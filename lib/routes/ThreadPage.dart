@@ -255,6 +255,7 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
               SliverAppBar(
                 //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
                 // expandedHeight: .00001,
+                elevation: 0.5,
                 pinned: true,
                 snap: true,
                 floating: true,

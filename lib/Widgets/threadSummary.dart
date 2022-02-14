@@ -389,14 +389,14 @@ class ThreadSummary extends StatelessWidget {
                       children: [
                         Text(
                           createText,
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         SizedBox(
                           width: 20,
                         ),
                         Text(
                           postText,
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         )
                       ],
                     )

@@ -217,7 +217,7 @@ class ThreadFloorComment extends StatelessWidget {
             children: [
               //作者
               Container(
-                padding: EdgeInsets.all(5),
+                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 7),
                 child: Avatar(
                   imgUrl: AUTHOR_AVATAR + author.portrait!,
                   height: 35,
@@ -258,7 +258,8 @@ class ThreadFloorComment extends StatelessWidget {
                               children: [
                                 Text(
                                   "${postMain.floor}楼",
-                                  style: TextStyle(color: Colors.grey),
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 14),
                                 ),
                                 SizedBox(
                                   width: 10,
@@ -266,7 +267,8 @@ class ThreadFloorComment extends StatelessWidget {
                                 //发帖时间
                                 Text(
                                   getPostTime(strTime: postMain.time),
-                                  style: TextStyle(color: Colors.grey),
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 14),
                                 ),
                                 SizedBox(
                                   width: 10,
@@ -280,8 +282,9 @@ class ThreadFloorComment extends StatelessWidget {
                                       visible: postMain.lbsInfo != null,
                                       child: Text("${postMain.lbsInfo?.name}",
                                           overflow: TextOverflow.ellipsis,
-                                          style:
-                                              TextStyle(color: Colors.grey))),
+                                          style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14))),
                                 ))
                               ],
                             )

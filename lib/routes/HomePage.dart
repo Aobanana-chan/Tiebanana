@@ -53,23 +53,23 @@ class _HomePageState extends State<HomePage> {
         bottomNavigationBar: BottomNavigationBar(
           items: [
             BottomNavigationBarItem(
-                backgroundColor: Colors.purpleAccent[700],
+                backgroundColor: Colors.white,
                 icon: Icon(Icons.home_outlined),
                 label: "首页",
                 activeIcon: Icon(Icons.home)),
             BottomNavigationBarItem(
-              backgroundColor: Colors.purpleAccent[700],
+              backgroundColor: Colors.white,
               icon: Icon(Icons.circle_notifications_outlined),
               activeIcon: Icon(Icons.circle_notifications_rounded),
               label: "动态",
             ),
             BottomNavigationBarItem(
-                backgroundColor: Colors.purpleAccent[700],
+                backgroundColor: Colors.white,
                 icon: Icon(Icons.reply),
                 activeIcon: Icon(Icons.reply_all),
                 label: "消息"),
             BottomNavigationBarItem(
-                backgroundColor: Colors.purpleAccent[700],
+                backgroundColor: Colors.white,
                 icon: Icon(Icons.person_outline),
                 activeIcon: Icon(Icons.person),
                 label: "个人")
@@ -82,7 +82,8 @@ class _HomePageState extends State<HomePage> {
                   duration: Duration(milliseconds: 200), curve: Curves.easeIn);
             });
           },
-          fixedColor: Colors.white,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey.shade800,
         ),
         body: ChangeNotifierProvider.value(
           value: forumState,

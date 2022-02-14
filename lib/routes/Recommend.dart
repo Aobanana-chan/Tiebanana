@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
@@ -16,15 +17,22 @@ class RecommendPan extends StatefulWidget {
 class _RecommendPanState extends State<RecommendPan> {
   List<ThreadRecommendSummary?> recommend = [];
   int pn = 1;
+  ScrollController controller = ScrollController();
   Future<void> refresh() async {
     if (recommend.length != 0) {
       recommend.remove(null);
       recommend.insert(0, null);
     }
 
-    var newThread = await Global.tiebaAPI.getRecommThread(15, pn);
+    var newThread = await Global.tiebaAPI.getRecommThread(15, 1);
     recommend.insertAll(0, newThread);
-    pn++;
+    // pn++;
+    setState(() {});
+  }
+
+  Future nextPage() async {
+    var newThread = await Global.tiebaAPI.getRecommThread(15, ++pn);
+    recommend.addAll(newThread);
     setState(() {});
   }
 
@@ -33,13 +41,19 @@ class _RecommendPanState extends State<RecommendPan> {
     super.initState();
     refresh();
 
-    //TODO:下滑加载
+    controller.addListener(() {
+      if (controller.position.pixels >
+          controller.position.maxScrollExtent -
+              controller.position.viewportDimension) {
+        Throttle.seconds(2, nextPage);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> threadwidgets = [];
-    ScrollController controller = ScrollController();
+
     for (var i = 0; i < recommend.length; i++) {
       if (recommend[i] != null) {
         threadwidgets.add(ThreadSummary(info: recommend[i]!));

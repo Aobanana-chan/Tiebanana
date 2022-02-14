@@ -263,7 +263,7 @@ class ThreadFirstComment extends StatelessWidget {
                       children: [
                         Text(
                           "${postMain.floor}楼",
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         SizedBox(
                           width: 10,
@@ -271,7 +271,7 @@ class ThreadFirstComment extends StatelessWidget {
                         //发帖时间
                         Text(
                           getPostTime(strTime: postMain.time),
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         SizedBox(
                           width: 10,
@@ -285,7 +285,8 @@ class ThreadFirstComment extends StatelessWidget {
                               visible: postMain.lbsInfo != null,
                               child: Text("${postMain.lbsInfo?.name}",
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: Colors.grey))),
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 14))),
                         ))
                       ],
                     )
@@ -469,7 +470,7 @@ class Rank extends StatelessWidget {
     [Color(0xFFFF8E31), Color(0xFF3D3B02)],
   ];
   List<Color> setColor() {
-    if (rank != null) {
+    if (rank != null && rank != "") {
       int r = int.parse(rank!);
       return _rankColor[r ~/ 3];
     } else {
@@ -488,7 +489,7 @@ class Rank extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              rank ?? "0",
+              rank == "" ? "1" : rank!,
               style: TextStyle(color: setColor()[0]),
             ),
           ],

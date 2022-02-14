@@ -1,7 +1,9 @@
+import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///主页贴合集
@@ -116,6 +118,73 @@ class ForumTag extends StatelessWidget {
               )
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+///搜索页面吧Tag部件
+class ForumTagBig extends StatelessWidget {
+  final SearchForumModelForum searchForumModelForum;
+  const ForumTagBig({Key? key, required this.searchForumModelForum})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+}
+
+///搜索页面吧Card部件
+class ForumCard extends StatelessWidget {
+  final SearchForumModelForum forum;
+  const ForumCard({Key? key, required this.forum}) : super(key: key);
+
+  String convertNumber(int number) {
+    if (number ~/ 10000000 > 0) {
+      return "${(number / 10000000).toStringAsFixed(1)}KW";
+    } else if (number ~/ 10000 > 0) {
+      return "${(number / 10000).toStringAsFixed(1)}W";
+    } else if (number ~/ 1000 > 0) {
+      return "${(number / 1000).toStringAsFixed(1)}K";
+    } else {
+      return number.toString();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Card(
+        margin: EdgeInsets.all(20),
+        color: Colors.green,
+        shadowColor: Colors.yellow.shade100,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Avatar(imgUrl: forum.img!),
+                Column(
+                  children: [
+                    Text(forum.name!),
+                    Visibility(
+                        visible: forum.brief != null,
+                        child: Text(forum.brief!)),
+                    Row(
+                      children: [
+                        Text("关注 ${convertNumber(forum.member!)}"),
+                        Text("贴子 ${convertNumber(forum.post!)}")
+                      ],
+                    ),
+                    GradientButton(
+                        onPressed: () {},
+                        child: forum.isLike! ? Text("已关注") : Text("关注"))
+                  ],
+                )
+              ],
+            )
+          ],
         ),
       ),
     );

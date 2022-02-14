@@ -172,6 +172,7 @@ class _ForumHomePageState extends State<ForumHomePage>
             value: APPBarTitle(),
             child: Scaffold(
               appBar: AppBar(
+                elevation: 0.5,
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
                 actions: appBarAction,

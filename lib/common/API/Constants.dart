@@ -121,6 +121,9 @@ const String WORD_CAPTCHA_IMAGE =
     "https://passport.baidu.com/cgi-bin/genimage?"; //文字图片验证码，后加vcodestr
 const String WAP_ACCOUNT_CHECK =
     "https://wappass.baidu.com/v3/login/api/check"; // WAP端账号状态检查
+const String SEARCH_FORUM = "https://tieba.baidu.com/mo/q/seekforum"; //搜索吧API
+const String SEARCH_THREAD =
+    "https://tieba.baidu.com/mo/q/seekcomposite"; //搜索贴API
 
 ///不喜欢首页推荐贴 参数：
 ///

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tiebanana/routes/ForumHomePage.dart';
 import 'package:tiebanana/routes/HomePage.dart';
 import 'package:tiebanana/routes/Login.dart';
+import 'package:tiebanana/routes/Search.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 
 ///命名路由表
@@ -13,17 +14,23 @@ class PageRouter {
         kw: ModalRoute.of(builder)!.settings.arguments as String,
       );
     },
-    "threadPage": (buidler) {
+    "threadPage": (builder) {
       return ThreadPageRoute(
-        kz: ModalRoute.of(buidler)!.settings.arguments as String,
+        kz: ModalRoute.of(builder)!.settings.arguments as String,
       );
     },
     "login": (builder) {
       return LoginPage();
-    }
+    },
+    "search": (builder) {
+      return SearchPage(
+        searchWords: ModalRoute.of(builder)!.settings.arguments as String,
+      );
+    },
   };
   static String home = "/";
   static String forumHome = "forumHome";
   static String threadPage = "threadPage";
   static String login = "login";
+  static String search = "search";
 }

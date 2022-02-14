@@ -121,14 +121,25 @@ class TiebaAPI {
       };
     }
     //判断是否已经登陆
-    Response res = await dio.get(TBS_URL);
-    var resJson = TBS.fromJson(jsonDecode(res.data));
-    if (resJson.isLogin == 1) {
+    if (await checkLogin()) {
       isLogin = true;
     } else {
       isLogin = false;
+
+      ///登陆之前需要初始化
+      await passMachine.init();
     }
-    await passMachine.init();
+  }
+
+  ///检查是否登录
+  Future<bool> checkLogin() async {
+    Response res = await dio.get(TBS_URL);
+    var resJson = TBS.fromJson(jsonDecode(res.data));
+    if (resJson.isLogin == 1) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   ///模拟web入口的账号密码登陆
@@ -1410,5 +1421,31 @@ class TiebaAPI {
     if (resJson["error_code"] != "0") {
       throw Exception(resJson["error_msg"]);
     }
+  }
+
+  ///搜索吧API
+  Future<SearchForumModel> searchForum(String keywords, int pn,
+      {int rn = 10}) async {
+    var params = {"pn": pn, "rn": rn, "is_ajax": 1, "word": keywords};
+    var res = await dio.get(SEARCH_FORUM,
+        queryParameters: params,
+        options: Options(responseType: ResponseType.plain));
+    return SearchForumModel.fromJson(json5Decode(res.data));
+  }
+
+  ///搜索贴API
+  Future<SearchThreadModel> searchThread(String keywords, int pn,
+      {int rn = 10, int sort = 1}) async {
+    var params = {
+      "pn": pn,
+      "rn": rn,
+      "is_ajax": 1,
+      "sort": sort,
+      "word": keywords
+    };
+    var res = await dio.get(SEARCH_THREAD,
+        queryParameters: params,
+        options: Options(responseType: ResponseType.plain));
+    return SearchThreadModel.fromJson(json5Decode(res.data));
   }
 }
