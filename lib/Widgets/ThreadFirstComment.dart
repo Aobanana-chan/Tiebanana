@@ -299,6 +299,7 @@ class ThreadFirstComment extends StatelessWidget {
                   postID: postMain.id!,
                   threadID: threadID,
                   objType: 3,
+                  hasAgree: postMain.agree!.hasAgree!,
                 )
               ],
             ),
@@ -323,6 +324,7 @@ class AgreeAndDisagreeBar extends StatefulWidget {
   final String postID;
   final String threadID;
   final int objType;
+  final String hasAgree;
   AgreeAndDisagreeBar(
       {Key? key,
       this.agreeNum = 0,
@@ -330,7 +332,8 @@ class AgreeAndDisagreeBar extends StatefulWidget {
       this.agreeType = 0,
       required this.postID,
       required this.threadID,
-      required this.objType})
+      required this.objType,
+      required this.hasAgree})
       : super(key: key);
 
   @override
@@ -350,10 +353,12 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
     super.initState();
     agreeNum = widget.agreeNum;
     disagreeNum = widget.disagreeNum;
-    if (widget.agreeType == 2) {
-      like = true;
-    } else if (widget.agreeType == 5) {
-      dislike = true;
+    if (widget.hasAgree == "1") {
+      if (widget.agreeType == 2) {
+        like = true;
+      } else if (widget.agreeType == 5) {
+        dislike = true;
+      }
     }
   }
 

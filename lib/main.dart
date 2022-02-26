@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_statusbar_manager/flutter_statusbar_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/common/Global.dart';

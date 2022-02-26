@@ -118,6 +118,7 @@ class TiebaAPI {
         //代理工具会提供一个抓包的自签名证书，会通不过证书校验，所以我们禁用证书校验
         client.badCertificateCallback =
             (X509Certificate cert, String host, int port) => true;
+        return null;
       };
     }
     //判断是否已经登陆
@@ -1361,6 +1362,7 @@ class TiebaAPI {
   ///点赞API
   ///
   ///[objType] = 1,给楼层点赞/踩
+  ///[objType] = 2,给楼中楼点赞/踩
   ///[objType] = 3,给贴点赞/踩
   ///
   ///[opType] = 0,点赞/踩
@@ -1373,30 +1375,12 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    // var args = {
-    //   "BDUSS": bduss,
-    //   "thread_id": threadID,
-    //   "post_id": postID,
-    //   "agreeType": agreeType,
-    //   "tbs": await tbsMagager.getTBS(),
-    //   "stoken": stoken,
-    //   "timestamp": DateTime.now().millisecondsSinceEpoch,
-    //   "_client_version": "8.2.2",
-    //   "op_type": opType,
-    //   "obj_type": objType,
-    //   "cuid": "F1C53BF4A9AE5E7AE6B2B8253A945E40|000000000000000",
-    //   "cuid_galaxy2": "F1C53BF4A9AE5E7AE6B2B8253A945E40|000000000000000",
-    //   "obj_source": "a005",
-    //   "from": "1015363f",
-    //   "_client_type": "2",
-    //   "cmode": "1"
-    // };
     var args = {
       "BDUSS": bduss,
       "_client_version": "12.15.1.0",
       "_phone_imei": "000000000000000",
       "agree_type": agreeType,
-      "c3_aid": "A00-QWRPV2AZVX52CX2PYSFMXZ3XDS2JLC6T-S6Y44B6U",
+      "c3_aid": "",
       "cuid": "baidutiebaapp" + Uuid().v4(),
       "cuid_galaxy2": "",
       "cuid_gid": "",
@@ -1447,5 +1431,164 @@ class TiebaAPI {
         queryParameters: params,
         options: Options(responseType: ResponseType.plain));
     return SearchThreadModel.fromJson(json5Decode(res.data));
+  }
+
+  ///WAP端-回帖API
+  Future<WAPTiebaBase> replyThread(
+      String content, String kw, String fid, String tid,
+      {List<String>? photos}) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    //获取baiduID
+    String baiduID = "";
+    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+      if (cookie.name.toUpperCase() == "BAIDUID") {
+        baiduID = cookie.value;
+        break;
+      }
+    }
+    var args = {
+      "BDUSS": bduss,
+      "_client_type": "2",
+      "_client_version": "12.15.1.0",
+      "_phone_imei": "000000000000000",
+      "active_timestamp": DateTime.now().millisecondsSinceEpoch,
+      "anonymous": "1",
+      "authsid": "null",
+      "baiduid": baiduID,
+      "barrage_time": "0",
+      "brand": "Android",
+      "c3_aid": "",
+      "can_no_forum": "0",
+      "cmode": "1",
+      "content": content,
+      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid_galaxy2": "",
+      "cuid_gid": "",
+      "entrance_type": "0",
+      "fid": fid,
+      "is_ad": "0",
+      "is_barrage": "0",
+      "is_feedback": "0",
+      "is_teenager": "0",
+      "kw": kw,
+      "reply_uid": "null",
+      "stoken": stoken,
+      "takephoto_num": photos == null ? 0 : photos.length,
+      "tbs": await tbsMagager.getTBS(),
+      "tid": tid,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "v_fid": "",
+      "v_fname": "",
+    };
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(WAP_POST_REPLY,
+        data: args,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    var result = json5Decode(res.data);
+    if (result["error_code"] != 0) {
+      return WAPTiebaBase(
+          errcode: result["error_code"], msg: result["error_msg"]);
+    }
+    return WAPTiebaBase.fromJson(result);
+  }
+
+  ///WAP端-回复楼层API
+  ///
+  ///[content] 回复用户格式 #(reply, [portrait]-头像地址, [name_show])
+  ///
+  ///表情包 #([emoji])
+  Future<WAPTiebaBase> replyFloor(
+      String content, String kw, String fid, String tid, String floorId,
+      {List<String>? photos, String replyUID = ""}) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    //获取baiduID
+    String baiduID = "";
+    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+      if (cookie.name.toUpperCase() == "BAIDUID") {
+        baiduID = cookie.value;
+        break;
+      }
+    }
+    var args = {
+      "BDUSS": bduss,
+      "_client_type": "2",
+      "_client_version": "12.15.1.0",
+      "_phone_imei": "000000000000000",
+      "active_timestamp": DateTime.now().millisecondsSinceEpoch,
+      "anonymous": "1",
+      "authsid": "null",
+      "baiduid": baiduID,
+      "brand": "Android",
+      "c3_aid": "",
+      "can_no_forum": "0",
+      "cmode": "1",
+      "content": content,
+      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid_galaxy2": "",
+      "cuid_gid": "",
+      "entrance_type": "0",
+      "fid": fid,
+      "is_ad": "0",
+      "is_twzhibo_thread": "0",
+      "is_giftpost": "0",
+      "is_addition": "0",
+      "is_feedback": "0",
+      "is_teenager": "0",
+      "kw": kw,
+      "reply_uid": replyUID,
+      "stoken": stoken,
+      "takephoto_num": photos == null ? 0 : photos.length,
+      "tbs": await tbsMagager.getTBS(),
+      "tid": tid,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "v_fid": "null",
+      "v_fname": "null",
+      "floor_num": "0",
+      "quote_id": floorId,
+      "repostid": floorId
+    };
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(WAP_POST_REPLY,
+        data: args,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    var result = json5Decode(res.data);
+    if (result["error_code"] != 0) {
+      return WAPTiebaBase(
+          errcode: result["error_code"], msg: result["error_msg"]);
+    }
+    return WAPTiebaBase.fromJson(result);
+  }
+
+  ///获取楼中楼内容
+  Future<InnerFloorModel> getInnerFloor(String kz, String pid,
+      {String spid = "", int pn = 1, int rn = 20}) async {
+    var args = {
+      "BDUSS": bduss,
+      "_client_version": "12.15.1.0",
+      "kz": kz,
+      "pn": pn,
+      "rn": rn,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "pid": pid,
+      "spid": spid
+    };
+    args['sign'] = _signArgs(args);
+    var res = await dio.post(FLOOR_POST_URL,
+        data: args,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    return InnerFloorModel.fromJson(json5Decode(res.data));
   }
 }

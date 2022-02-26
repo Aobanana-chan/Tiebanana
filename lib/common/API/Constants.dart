@@ -124,6 +124,10 @@ const String WAP_ACCOUNT_CHECK =
 const String SEARCH_FORUM = "https://tieba.baidu.com/mo/q/seekforum"; //搜索吧API
 const String SEARCH_THREAD =
     "https://tieba.baidu.com/mo/q/seekcomposite"; //搜索贴API
+const String TIEBA_ENMOJI =
+    "https://gsp0.baidu.com/5aAHeD3nKhI2p27j8IqW0jdnxx1xbK/tb/editor/images/client/"; //贴吧表情链接
+const String WAP_POST_REPLY =
+    "http://c.tieba.baidu.com/c/c/post/add"; // WAP端回帖API
 
 ///不喜欢首页推荐贴 参数：
 ///

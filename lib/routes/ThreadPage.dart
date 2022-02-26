@@ -235,6 +235,7 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
           postMain: floor,
           userList: userListSet,
           threadID: widget.initInfo.thread!.id!,
+          forum: widget.initInfo.forum!,
         ));
       }
     }
@@ -302,8 +303,13 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
               SliverList(delegate: SliverChildListDelegate(buildFloor()))
             ],
           )),
-          //回贴条
-          ThreadReplyBar()
+          //回复条
+          ThreadReplyBar(
+            fid: widget.initInfo.forum!.id!,
+            tid: widget.initInfo.thread!.id!,
+            kw: widget.initInfo.forum!.name!,
+            replyText: widget.initInfo.thread!.title!,
+          )
         ],
       ),
       // ExtendedNestedScrollViewEx(

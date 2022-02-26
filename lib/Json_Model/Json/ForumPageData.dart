@@ -611,16 +611,18 @@ class PostList {
     iosBimgFormat = json['ios_bimg_format'];
     addPostList = json['add_post_list'];
     hasSignature = json['has_signature'];
-    if (json['signature'] is Map) {
-      signature = json['signature'] != null
-          ? new Signature.fromJson(json['signature'])
-          : null;
-    } else if (json['signature'] is List) {
-      if (json['signature'].length == 0) {
-        signature = null;
+    if (json['signature'] != null) {
+      if (json['signature'] is Map) {
+        signature = json['signature'] != null
+            ? new Signature.fromJson(json['signature'])
+            : null;
+      } else if (json['signature'] is List) {
+        if (json['signature'].length == 0) {
+          signature = null;
+        }
+      } else {
+        throw Exception("未知数据类型");
       }
-    } else {
-      throw Exception("未知数据类型");
     }
 
     // if (json['tail_info'] != null) {

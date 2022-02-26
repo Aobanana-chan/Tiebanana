@@ -2510,7 +2510,12 @@ class UserList extends Author {
     isMem = json['is_mem'];
     fansNum = json['fans_num'];
     fansNickname = json['fans_nickname'];
-    godData = json['god_data'];
+    if (json['god_data'] is List && json['god_data'].length == 0) {
+      godData = "";
+    } else {
+      godData = json['god_data'];
+    }
+
     privSets = json['priv_sets'] != ""
         ? new ForumPrivSets.fromJson(json['priv_sets'])
         : null;
@@ -2526,7 +2531,12 @@ class UserList extends Author {
     levelID = json["level_id"];
     isBawu = json['is_bawu'];
     bawuType = json['bawu_type'];
-    baijiahaoInfo = json['baijiahao_info'];
+    if (json['baijiahao_info'] is Map) {
+      baijiahaoInfo = jsonEncode(json['baijiahao_info']);
+    } else {
+      baijiahaoInfo = json['baijiahao_info'];
+    }
+
     // pendant =
     //     json['pendant'] != null ? new Pendant.fromJson(json['pendant']) : null;
     // alaInfo = json['ala_info'] != null

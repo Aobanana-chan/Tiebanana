@@ -1,5 +1,11 @@
 library json_model;
 
+import 'dart:convert';
+
+import 'package:json5/json5.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/common/API/UserInfo.dart';
+
 part 'Json/ThreadRecommendSummary.dart';
 part 'Json/ReplyMe.dart';
 part 'Json/AtMe.dart';
@@ -12,7 +18,27 @@ part './Json/SendDPass.dart';
 part './Json/WapAccountCheck.dart';
 part './Json/SearchForumModel.dart';
 part './Json/SearchThreadModel.dart';
+part './Json/InnerFloorModel.dart';
 //TODO:拆分
+
+class WAPTiebaBase {
+  String? errcode;
+  String? msg;
+
+  WAPTiebaBase({this.errcode, this.msg});
+
+  WAPTiebaBase.fromJson(Map<String, dynamic> json) {
+    errcode = json['error_code'];
+    msg = json['msg'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['errcode'] = this.errcode;
+    data['msg'] = this.msg;
+    return data;
+  }
+}
 
 ///TBS随机参数
 class TBS {

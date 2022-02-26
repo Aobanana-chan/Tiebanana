@@ -272,10 +272,18 @@ class _MessagePanState extends State<MessagePan>
                             topConstraints.maxHeight, constraints.maxHeight),
                       ),
                       Expanded(
-                          child: TabBarView(
-                        controller: _controller,
-                        physics: BouncingScrollPhysics(),
-                        children: [buildReply(), buildAtMe()],
+                          child: NotificationListener<
+                              OverscrollIndicatorNotification>(
+                        onNotification:
+                            (OverscrollIndicatorNotification? overscroll) {
+                          overscroll!.disallowIndicator();
+                          return true;
+                        },
+                        child: TabBarView(
+                          controller: _controller,
+                          physics: ClampingScrollPhysics(),
+                          children: [buildReply(), buildAtMe()],
+                        ),
                       ))
                     ],
                   );

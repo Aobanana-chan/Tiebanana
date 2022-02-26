@@ -2,35 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
+import 'package:tiebanana/common/API/TiebaParser.dart';
 
 ///消息Widget
 class MessageCard extends StatelessWidget {
   final ReplyMe? replyMe;
   final AtMe? atME;
   const MessageCard({Key? key, this.replyMe, this.atME}) : super(key: key);
-  String getReplyTime() {
-    var time = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(
-        int.parse(replyMe?.time ?? atME!.time!) * 1000));
-    List<String> timeGranularity = ["天", "小时", "分钟", "秒"];
-    var f = 0;
-    late String text;
-    if (time.inDays > 30) {
-      var date = DateTime.fromMillisecondsSinceEpoch(
-          int.parse(replyMe?.time ?? atME!.time!) * 1000);
-      return "${date.year}年${date.month}月${date.day}日";
-    }
-    for (var t in [time.inDays, time.inHours, time.inMinutes, time.inSeconds]) {
-      if (t != 0) {
-        text = "$t${timeGranularity[f]}前";
-        break;
-      }
-      f++;
-    }
-    if (f == 4) {
-      text = "0秒前";
-    }
-    return text;
-  }
 
   Widget _buildBody() {
     String text = replyMe?.quoteContent ?? atME!.quoteContent!;
@@ -85,7 +63,7 @@ class MessageCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          getReplyTime(),
+                          TiebaParser.getPostTime(strTime: replyMe!.time!),
                           style: TextStyle(color: Colors.grey),
                         ),
                       ],
@@ -97,6 +75,7 @@ class MessageCard extends StatelessWidget {
 
             //引用信息
             Container(
+              width: double.infinity,
               margin: EdgeInsets.only(top: 5),
               padding: EdgeInsets.all(5),
               decoration: BoxDecoration(
