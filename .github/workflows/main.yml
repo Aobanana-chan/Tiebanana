@@ -27,7 +27,7 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v3.0.0
         with:
-          java-version: "17.x"
+          java-version: "17"
       # flutter env
       - name: Flutter action
         uses: subosito/flutter-action@v2.3.0
@@ -43,5 +43,5 @@ jobs:
       - name: releases-action
         uses: nickatnight/releases-action@v2
         with:
-          token: ${{ secrets.GITHUB_RElEASE_TOKEN }}
+          token: ${{ secrets.RElEASE_TOKEN }}
           artifacts: "build/app/outputs/apk/release/*.apk"
