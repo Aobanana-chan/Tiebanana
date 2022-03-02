@@ -1,0 +1,47 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build Release
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      # setup JDK
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.0.0
+        with:
+          java-version: "17.x"
+      # flutter env
+      - name: Flutter action
+        uses: subosito/flutter-action@v2.3.0
+        with:
+          channel: "stable"
+          flutter-version: "2.10.2"
+      # get dependence
+      - run: flutter pub get
+      # build
+      - run: flutter build apk
+      - run: flutter build apk --split-per-abi
+      # publish
+      - name: releases-action
+        uses: nickatnight/releases-action@v2
+        with:
+          token: ${{ secrets.GITHUB_RElEASE_TOKEN }}
+          artifacts: "build/app/outputs/apk/release/*.apk"
