@@ -167,16 +167,10 @@ class AtUserSpan extends TextSpan {
 
 abstract class TiebaSpecialText extends SpecialText {
   static const String flag = "#(";
-  late List<String> args;
+  List<String> get args => getContent().split(",");
   TiebaSpecialText(
       {String startFlag = "#(", String endFlag = ")", TextStyle? textStyle})
-      : super(startFlag, endFlag, textStyle) {
-    args = argParser();
-  }
-
-  List<String> argParser() {
-    return getContent().split(",");
-  }
+      : super(startFlag, endFlag, textStyle);
 }
 
 class TiebaRichTextSpecialText extends TiebaSpecialText {

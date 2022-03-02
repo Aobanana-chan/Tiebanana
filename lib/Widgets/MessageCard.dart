@@ -1,5 +1,7 @@
+import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
@@ -18,10 +20,13 @@ class MessageCard extends StatelessWidget {
     if (atME != null && atME!.quoteContent == "") {
       text = "回复我的主题: ${atME!.title!}";
     }
-    return Text(text,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: Colors.grey[600], fontSize: 16));
+    return ExtendedText(
+      text,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+      specialTextSpanBuilder: TiebaSpanBuilder(),
+    );
   }
 
   @override
@@ -88,7 +93,8 @@ class MessageCard extends StatelessWidget {
             //回复信息
             Container(
               padding: EdgeInsets.all(5),
-              child: Text(replyMe?.content ?? atME!.content!,
+              child: ExtendedText(replyMe?.content ?? atME!.content!,
+                  specialTextSpanBuilder: TiebaSpanBuilder(),
                   style: TextStyle(fontSize: 16)),
             ),
             //底部

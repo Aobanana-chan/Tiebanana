@@ -354,7 +354,17 @@ const Map<String, String> emojiFileMapping = {
   "image_emoticon101": "不跟丑人说话",
   "image_emoticon102": "么么哒",
   "image_emoticon103": "亲亲才能起来",
-  "image_emoticon104": "伦家只是宝宝"
+  "image_emoticon104": "伦家只是宝宝",
+  "image_emoticon36": "玫瑰",
+  "image_emoticon37": "礼物",
+  "image_emoticon38": "彩虹",
+  "image_emoticon40": "太阳",
+  "image_emoticon39": "星星月亮",
+  "image_emoticon41": "钱币",
+  "image_emoticon43": "茶杯",
+  "image_emoticon44": "蛋糕",
+  "image_emoticon48": "大拇指",
+  "image_emoticon47": "胜利"
 };
 
 const Map<String, String> emojiMapping = {
@@ -483,5 +493,15 @@ const Map<String, String> emojiMapping = {
   "不跟丑人说话": "image_emoticon101",
   "么么哒": "image_emoticon102",
   "亲亲才能起来": "image_emoticon103",
-  "伦家只是宝宝": "image_emoticon104"
+  "伦家只是宝宝": "image_emoticon104",
+  "玫瑰": "image_emoticon36",
+  "礼物": "image_emoticon37",
+  "彩虹": "image_emoticon38",
+  "太阳": "image_emoticon40",
+  "星星月亮": "image_emoticon39",
+  "钱币": "image_emoticon41",
+  "茶杯": "image_emoticon43",
+  "蛋糕": "image_emoticon44",
+  "大拇指": "image_emoticon48",
+  "胜利": "image_emoticon47"
 };
