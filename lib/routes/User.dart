@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/SettingPanel.dart';
 import 'package:tiebanana/Widgets/UserCard.dart';
@@ -7,7 +8,8 @@ import 'package:tiebanana/common/Global.dart';
 
 ///用户信息和设置界面
 class UserPage extends StatefulWidget {
-  UserPage({Key? key}) : super(key: key);
+  final FloatingSearchBarController controller;
+  UserPage({Key? key, required this.controller}) : super(key: key);
 
   @override
   _UserPageState createState() => _UserPageState();
@@ -50,18 +52,22 @@ class _UserPageState extends State<UserPage> {
                     children: [
                       SearchBar(
                         maxHeight: constraints.maxHeight,
+                        barController: widget.controller,
                       ),
                       Expanded(
-                          child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            UserCard(
-                              info: myInfo!,
-                            ),
-                            SettingPanel()
-                          ],
-                        ),
-                      ))
+                          child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: (() => widget.controller.close()),
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    UserCard(
+                                      info: myInfo!,
+                                    ),
+                                    SettingPanel()
+                                  ],
+                                ),
+                              )))
                     ],
                   );
                 } else if (snapshot.hasError) {

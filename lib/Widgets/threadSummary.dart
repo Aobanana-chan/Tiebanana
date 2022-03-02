@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/Widgets/ImgExplorer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
@@ -20,19 +21,20 @@ class ThreadSummary extends StatelessWidget {
     List<String>? imgsOriginSrc = [];
     List<String> videos = [];
     String text = "";
+    List<InlineSpan> richText = [];
     //统计与格式化
     for (FirstPostContent elem in info.firstPostContent ?? []) {
       if (elem.type == "0") //文字内容
       {
-        text += elem.text!;
+        richText.add(TextSpan(text: elem.text!));
       } else if (elem.type == "4" || elem.type == "3") {
         //图片
         switch (Global.setting.pictureLoadSetting) {
           case 0:
             if (elem.type == "4" && elem.originSrc == null) {
               //@用户
-              body.add(Text(
-                elem.text!,
+              richText.add(TextSpan(
+                text: elem.text!,
                 style: TextStyle(color: Colors.blue),
               ));
               break;
@@ -43,8 +45,8 @@ class ThreadSummary extends StatelessWidget {
           case 1:
             if (elem.type == "4" && elem.originSrc == null) {
               //@用户
-              body.add(Text(
-                elem.text!,
+              richText.add(TextSpan(
+                text: elem.text!,
                 style: TextStyle(color: Colors.blue),
               ));
               break;
@@ -58,8 +60,8 @@ class ThreadSummary extends StatelessWidget {
           case 2:
             if (elem.type == "4" && elem.originSrc == null) {
               //@用户
-              body.add(Text(
-                elem.text!,
+              richText.add(TextSpan(
+                text: elem.text!,
                 style: TextStyle(color: Colors.blue),
               ));
               break;
@@ -78,14 +80,22 @@ class ThreadSummary extends StatelessWidget {
         } else {
           videos.add(info.videoInfo!.videoUrl!);
         }
+      } else if (elem.type == "2") {
+        //表情包
+
+        richText.add(EmojiSpan("${elem.text}",
+            cache: true,
+            imageHeight: 18,
+            imageWidth: 18,
+            actualText: "#(${elem.c})"));
       }
     }
 
     //生成widget
     //文字内容
     body.add(
-      Text(
-        text,
+      Text.rich(
+        TextSpan(children: richText),
         style: TextStyle(fontSize: 16),
         overflow: TextOverflow.ellipsis,
         softWrap: true,
@@ -130,55 +140,13 @@ class ThreadSummary extends StatelessWidget {
         );
         break;
       }
-      // String heroTagSalt = Uuid().v4();
       bodyMedia.add(Expanded(
-              child: Thumbnail(
+          child: Thumbnail(
         imgs: imgs,
         controller: controller,
         img: img,
         imgsOriginSrc: imgsOriginSrc,
-      ))
-          // Expanded(child: Builder(
-          //   builder: (context) {
-          //     String salt = heroTagSalt;
-          //     return GestureDetector(
-          //         onTap: () {
-          //           Navigator.push(context, MaterialPageRoute(builder: (builder) {
-          //             return ZoomedImgExplorer(
-          //               imgUrls: imgs,
-          //               highQualityUrls: imgsOriginSrc,
-          //               pageController: controller,
-          //               heroTagSalt: salt,
-          //             );
-          //           }));
-          //         },
-          //         child: Padding(
-          //           padding: EdgeInsets.only(left: 2.5, right: 2.5),
-          //           child: ClipRRect(
-          //             borderRadius: BorderRadius.circular(5),
-          //             child: FadeIn(
-          //                 child: Hero(
-          //               tag: img + salt,
-          //               child: LayoutBuilder(
-          //                 builder:
-          //                     (BuildContext context, BoxConstraints constraints) {
-          //                   return Container(
-          //                     height: constraints.maxHeight,
-          //                     width: constraints.maxWidth,
-          //                     child: ExtendedImage.network(
-          //                       img,
-          //                       fit: BoxFit.cover,
-          //                       cache: true,
-          //                     ),
-          //                   );
-          //                 },
-          //               ),
-          //             )),
-          //           ),
-          //         ));
-          //   },
-          // )),
-          );
+      )));
       index++;
     }
     //视频
@@ -189,84 +157,6 @@ class ThreadSummary extends StatelessWidget {
         url: video,
       )));
     }
-
-    // for (FirstPostContent elem in info.firstPostContent ?? []) {
-    //   if (elem.type == "0") //文字内容
-    //   {
-    //     body.add(LimitedBox(
-    //       maxHeight: 260,
-    //       child: Text(
-    //         elem.text!,
-    //         style: TextStyle(fontSize: 16),
-    //         overflow: TextOverflow.ellipsis,
-    //       ),
-    //     ));
-    //   } else if (elem.type == "4" || elem.type == "3") {
-    //     //图片
-    //     switch (Global.setting.pictureLoadSetting) {
-    //       case 0:
-    //         bodyMedia.add(Expanded(
-    //             child: Padding(
-    //           padding: EdgeInsets.only(left: 2.5, right: 2.5),
-    //           child: ClipRRect(
-    //             borderRadius: BorderRadius.circular(5),
-    //             child: FadeIn(
-    //                 child: Hero(
-    //                     tag: elem.originSrc!,
-    //                     child: ExtendedImage.network(
-    //                       elem.bigCdnSrc!,
-    //                       fit: BoxFit.cover,
-    //                       cache: true,
-    //                     ))),
-    //           ),
-    //         )));
-    //         break;
-    //       case 1:
-    //         if (int.parse(elem.bsize!.replaceAll(",", "")) < 0x100000) {
-    //           //小于1mb就加载
-    //           bodyMedia.add(GestureDetector(
-    //             onTap: () {},
-    //             child: Expanded(
-    //                 child: Padding(
-    //                     padding: EdgeInsets.only(left: 2.5, right: 2.5),
-    //                     child: ClipRRect(
-    //                         borderRadius: BorderRadius.circular(5),
-    //                         child: FadeIn(
-    //                             child: Hero(
-    //                                 tag: elem.originSrc!,
-    //                                 child: ExtendedImage.network(
-    //                                   elem.bigCdnSrc!,
-    //                                   fit: BoxFit.cover,
-    //                                   cache: true,
-    //                                 )))))),
-    //           ));
-    //         }
-    //         break;
-    //       case 2:
-    //         bodyMedia.add(Expanded(
-    //             child: Padding(
-    //                 padding: EdgeInsets.only(left: 2.5, right: 2.5),
-    //                 child: ClipRRect(
-    //                   borderRadius: BorderRadius.circular(5),
-    //                   child: FadeIn(
-    //                       child: Hero(
-    //                           tag: elem.originSrc!,
-    //                           child: ExtendedImage.network(
-    //                             elem.originSrc!,
-    //                             fit: BoxFit.cover,
-    //                             cache: true,
-    //                           ))),
-    //                 ))));
-    //         break;
-
-    //       default:
-    //     }
-    //   } else if (elem.type == "5") {
-    //     //视频
-    //     print("find vedio");
-    //     print(elem);
-    //   }
-    // }
 
     body.add(LimitedBox(
         maxHeight: 160,
@@ -522,10 +412,6 @@ class _AvatarState extends State<Avatar> {
               widget.imgUrl,
               cache: true,
             ),
-            // child: FadeInImage(
-            //     placeholder:
-            //         NetworkImage("http://placehold.it/200&text=Avatar"),
-            //     image: NetworkImage(imgUrl)),
           ),
         ),
       ),

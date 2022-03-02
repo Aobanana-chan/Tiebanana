@@ -1395,7 +1395,7 @@ class TiebaAPI {
     };
 
     args['sign'] = _signArgs(args);
-    var res = await dio.post(AgreeURL,
+    var res = await dio.post(AGREE_URL,
         data: args,
         options: Options(
           responseType: ResponseType.plain,

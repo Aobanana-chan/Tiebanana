@@ -1,15 +1,9 @@
-import 'dart:ui';
-import 'dart:math' as math;
-import 'package:animate_do/animate_do.dart';
-import 'package:extended_image/extended_image.dart';
-import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadFirstComment.dart';
 import 'package:tiebanana/Widgets/ThreadReplyBar.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
-import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
@@ -306,10 +300,9 @@ class InnerPost extends StatelessWidget {
       : super(key: key);
   List<Widget> buildContent() {
     List<InlineSpan> w = [];
-    w.add(TextSpan(
+    w.add(AtUserSpan(
       text: "${author.nameShow} :",
       style: TextStyle(color: Colors.blue),
-      //TODO:打开用户页面
     ));
     for (Content content in posts) {
       //用户

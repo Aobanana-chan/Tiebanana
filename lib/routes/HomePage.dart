@@ -1,6 +1,7 @@
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/ForumTag.dart';
@@ -12,13 +13,6 @@ import 'package:tiebanana/routes/Recommend.dart';
 import 'package:tiebanana/routes/User.dart';
 
 ///首页
-var page = <Widget>[
-  KeepAliveWrapper(child: _Home()),
-  KeepAliveWrapper(child: _Recommand()),
-  KeepAliveWrapper(child: _Notifaction()),
-  KeepAliveWrapper(child: _UserAndSettings())
-];
-
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
 
@@ -27,14 +21,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  var page;
   var _currentPage = 0;
   late ForumState forumState;
   PageController controller = PageController();
   DateTime? lastPopTime;
+  late Future<bool> Function() onWillPop;
+  List<FloatingSearchBarController> barController = [];
   @override
   void initState() {
     super.initState();
     forumState = ForumState();
+    onWillPop = () async {
+      if (barController[_currentPage].isOpen) {
+        barController[_currentPage].close();
+        return false;
+      }
+      // 点击返回键的操作
+      if (lastPopTime == null ||
+          DateTime.now().difference(lastPopTime!) > Duration(seconds: 2)) {
+        lastPopTime = DateTime.now();
+        Fluttertoast.showToast(msg: '请再按一次退出！');
+        return false;
+      } else {
+        lastPopTime = DateTime.now();
+        // 退出app
+        return true;
+      }
+    };
+    for (var i = 0; i < 4; i++) {
+      barController.add(FloatingSearchBarController());
+    }
+    page = <Widget>[
+      KeepAliveWrapper(
+          child: _Home(
+        controller: barController[0],
+      )),
+      KeepAliveWrapper(
+          child: _Recommand(
+        controller: barController[1],
+      )),
+      KeepAliveWrapper(
+          child: _Notifaction(
+        controller: barController[2],
+      )),
+      KeepAliveWrapper(
+          child: _UserAndSettings(
+        controller: barController[3],
+      ))
+    ];
   }
 
   @override
@@ -95,27 +130,14 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-    return WillPopScope(
-        child: childpage,
-        onWillPop: () async {
-          // 点击返回键的操作
-          if (lastPopTime == null ||
-              DateTime.now().difference(lastPopTime!) > Duration(seconds: 2)) {
-            lastPopTime = DateTime.now();
-            Fluttertoast.showToast(msg: '请再按一次退出！');
-            return false;
-          } else {
-            lastPopTime = DateTime.now();
-            // 退出app
-            return true;
-          }
-        });
+    return WillPopScope(child: childpage, onWillPop: onWillPop);
   }
 }
 
 //Home界面
 class _Home extends StatefulWidget {
-  _Home({Key? key}) : super(key: key);
+  final FloatingSearchBarController controller;
+  _Home({Key? key, required this.controller}) : super(key: key);
 
   @override
   __HomeState createState() => __HomeState();
@@ -138,10 +160,14 @@ class __HomeState extends State<_Home> {
             children: [
               SearchBar(
                 maxHeight: constraints.maxHeight,
+                barController: widget.controller,
               ),
               Expanded(
+                  child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: (() => widget.controller.close()),
                 child: TagPan(),
-              )
+              )),
             ],
           );
         },
@@ -152,7 +178,8 @@ class __HomeState extends State<_Home> {
 
 //动态界面（推荐贴）
 class _Recommand extends StatefulWidget {
-  _Recommand({Key? key}) : super(key: key);
+  final FloatingSearchBarController controller;
+  _Recommand({Key? key, required this.controller}) : super(key: key);
 
   @override
   __RecommandState createState() => __RecommandState();
@@ -161,13 +188,16 @@ class _Recommand extends StatefulWidget {
 class __RecommandState extends State<_Recommand> {
   @override
   Widget build(BuildContext context) {
-    return RecommendPan();
+    return RecommendPan(
+      controller: widget.controller,
+    );
   }
 }
 
 //消息回复和@页
 class _Notifaction extends StatefulWidget {
-  _Notifaction({Key? key}) : super(key: key);
+  final FloatingSearchBarController controller;
+  _Notifaction({Key? key, required this.controller}) : super(key: key);
 
   @override
   __NotifactionState createState() => __NotifactionState();
@@ -176,13 +206,16 @@ class _Notifaction extends StatefulWidget {
 class __NotifactionState extends State<_Notifaction> {
   @override
   Widget build(BuildContext context) {
-    return MessagePan();
+    return MessagePan(
+      controller: widget.controller,
+    );
   }
 }
 
 //个人界面与软件设置
 class _UserAndSettings extends StatefulWidget {
-  _UserAndSettings({Key? key}) : super(key: key);
+  final FloatingSearchBarController controller;
+  _UserAndSettings({Key? key, required this.controller}) : super(key: key);
 
   @override
   __UserAndSettingsState createState() => __UserAndSettingsState();
@@ -191,6 +224,8 @@ class _UserAndSettings extends StatefulWidget {
 class __UserAndSettingsState extends State<_UserAndSettings> {
   @override
   Widget build(BuildContext context) {
-    return UserPage();
+    return UserPage(
+      controller: widget.controller,
+    );
   }
 }

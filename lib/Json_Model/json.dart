@@ -2,10 +2,6 @@ library json_model;
 
 import 'dart:convert';
 
-import 'package:json5/json5.dart';
-import 'package:tiebanana/Json_Model/provider.dart';
-import 'package:tiebanana/common/API/UserInfo.dart';
-
 part 'Json/ThreadRecommendSummary.dart';
 part 'Json/ReplyMe.dart';
 part 'Json/AtMe.dart';

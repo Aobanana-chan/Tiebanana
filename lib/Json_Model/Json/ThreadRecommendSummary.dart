@@ -311,6 +311,7 @@ class FirstPostContent {
   String? cdnSrcActive;
   String? bigCdnSrc;
   String? text;
+  String? c;
   FirstPostContent(
       {this.type,
       this.bsize,
@@ -322,7 +323,8 @@ class FirstPostContent {
       this.cdnSrc,
       this.cdnSrcActive,
       this.bigCdnSrc,
-      this.text});
+      this.text,
+      this.c});
 
   FirstPostContent.fromJson(Map<String, dynamic> json) {
     //0 - 文字
@@ -340,6 +342,7 @@ class FirstPostContent {
     cdnSrcActive = json['cdn_src_active'];
     bigCdnSrc = json['big_cdn_src'];
     text = json['text'];
+    c = json['c'];
   }
 
   Map<String, dynamic> toJson() {
@@ -355,6 +358,7 @@ class FirstPostContent {
     data['cdn_src_active'] = this.cdnSrcActive;
     data['big_cdn_src'] = this.bigCdnSrc;
     data['text'] = text;
+    data['c'] = c;
     return data;
   }
 }

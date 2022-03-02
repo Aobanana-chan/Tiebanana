@@ -1,9 +1,14 @@
+import 'dart:math';
+import 'package:extended_text/extended_text.dart';
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:like_button/like_button.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Widgets/EmojiPanel.dart';
+import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 
@@ -182,10 +187,25 @@ class ReplyBottomSheet extends StatefulWidget {
 class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
   TextEditingController controller =
       TextEditingController.fromValue(TextEditingValue.empty);
+  final FocusNode focusNode = FocusNode();
+  bool showEmojiInput = false;
+  bool emojiInputActive = false;
+  double _keyboardHeight = 267;
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    if (keyboardHeight > 0) {
+      emojiInputActive = false;
+    }
     return Container(
-      constraints: BoxConstraints(minHeight: 160, maxHeight: 200),
+      constraints: BoxConstraints(
+          maxHeight:
+              400 + (emojiInputActive ? _keyboardHeight : keyboardHeight)),
       padding: EdgeInsets.only(
         left: 20,
         top: 20,
@@ -199,97 +219,177 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
           ),
           color: Colors.white),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           //回复评论
           Container(
             margin: EdgeInsets.only(bottom: 5),
             child: Row(
               children: [
-                Text(
+                Expanded(
+                    child: ExtendedText(
                   "回复： ${widget.replyText}",
                   overflow: TextOverflow.ellipsis,
-                )
+                  specialTextSpanBuilder: TiebaSpanBuilder(),
+                ))
               ],
             ),
           ),
           //回复输入
-          Expanded(
-              child: Row(
-            children: [
-              Expanded(
-                  child: ExtendedTextField(
-                      controller: controller,
-                      expands: true,
-                      maxLines: null,
-                      minLines: null,
-                      decoration: InputDecoration(
-                        hintText: "我来聊几句",
-                        isCollapsed: true,
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                        filled: true,
-                        fillColor: Color(0xFFF5F5F5),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none),
-                      ))),
-              Container(
-                margin: EdgeInsets.only(left: 10),
-                alignment: Alignment.bottomCenter,
-                child: GradientButton(
-                  onPressed: () async {
-                    assert(!(widget.isReplyThread == false &&
-                        widget.floorId == null));
-                    late WAPTiebaBase msg;
-                    if (widget.isReplyThread == true) {
-                      msg = await Global.tiebaAPI.replyThread(
-                          controller.text, widget.kw, widget.fid, widget.tid);
-                    } else if (widget.isReplyThread == false) {
-                      if (widget.replyUser == null) {
-                        msg = await Global.tiebaAPI.replyFloor(
-                            "${controller.text}",
-                            widget.kw,
-                            widget.fid,
-                            widget.tid,
-                            widget.floorId!);
-                      } else {
-                        msg = await Global.tiebaAPI.replyFloor(
-                            "${TiebaParser.contentBuilder(ContentBuilderType.Reply, replyUser: widget.replyUser)}${controller.text}",
-                            widget.kw,
-                            widget.fid,
-                            widget.tid,
-                            widget.floorId!,
-                            replyUID: widget.replyUser!.id!);
+          Container(
+            constraints: BoxConstraints(minHeight: 80, maxHeight: 120),
+            child: Row(
+              children: [
+                Expanded(
+                    child: ExtendedTextField(
+                        specialTextSpanBuilder: TiebaSpanBuilder(),
+                        controller: controller,
+                        expands: true,
+                        maxLines: null,
+                        minLines: null,
+                        focusNode: focusNode,
+                        autofocus: true,
+                        onTap: () {
+                          showEmojiInput = false;
+                        },
+                        decoration: InputDecoration(
+                          hintText: "我来聊几句",
+                          isCollapsed: true,
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                          filled: true,
+                          fillColor: Color(0xFFF5F5F5),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none),
+                        ))),
+                Container(
+                  margin: EdgeInsets.only(left: 10),
+                  alignment: Alignment.bottomCenter,
+                  child: GradientButton(
+                    onPressed: () async {
+                      assert(!(widget.isReplyThread == false &&
+                          widget.floorId == null));
+                      late WAPTiebaBase msg;
+                      if (widget.isReplyThread == true) {
+                        msg = await Global.tiebaAPI.replyThread(
+                            controller.text, widget.kw, widget.fid, widget.tid);
+                      } else if (widget.isReplyThread == false) {
+                        if (widget.replyUser == null) {
+                          msg = await Global.tiebaAPI.replyFloor(
+                              "${controller.text}",
+                              widget.kw,
+                              widget.fid,
+                              widget.tid,
+                              widget.floorId!);
+                        } else {
+                          msg = await Global.tiebaAPI.replyFloor(
+                              "${TiebaParser.contentBuilder(ContentBuilderType.Reply, replyUser: widget.replyUser)}${controller.text}",
+                              widget.kw,
+                              widget.fid,
+                              widget.tid,
+                              widget.floorId!,
+                              replyUID: widget.replyUser!.id!);
+                        }
                       }
-                    }
 
-                    String message;
-                    if (msg.errcode == "0") {
-                      message = "发送成功";
-                      Fluttertoast.showToast(msg: message);
-                      Navigator.pop(context);
+                      String message;
+                      if (msg.errcode == "0") {
+                        message = "发送成功";
+                        Fluttertoast.showToast(msg: message);
+                        Navigator.pop(context);
+                      } else {
+                        message = "${msg.msg}";
+                        Fluttertoast.showToast(msg: message);
+                      }
+                    },
+                    child: Text(
+                      "发表",
+                    ),
+                    borderRadius: BorderRadius.circular(64),
+                  ),
+                )
+              ],
+            ),
+          ),
+
+          //媒体输入按钮
+          Container(
+            child: Row(
+              children: [
+                IconButton(
+                    onPressed: () {
+                      //TODO:选择图片上传
+                    },
+                    icon: Icon(Icons.photo)),
+                IconButton(
+                  onPressed: () {
+                    showEmojiInput = !showEmojiInput;
+                    if (emojiInputActive) {
+                      setState(() {
+                        if (showEmojiInput) {
+                          FocusScope.of(context).requestFocus(focusNode);
+                        }
+                        emojiInputActive = showEmojiInput;
+                      });
                     } else {
-                      message = "${msg.msg}";
-                      Fluttertoast.showToast(msg: message);
+                      SystemChannels.textInput
+                          .invokeListMethod("TextInput.hide")
+                          .whenComplete(() =>
+                              Future.delayed(Duration(milliseconds: 200))
+                                  .whenComplete(() => setState(() {
+                                        if (showEmojiInput) {
+                                          FocusScope.of(context)
+                                              .requestFocus(focusNode);
+                                        }
+                                        emojiInputActive = showEmojiInput;
+                                      })));
                     }
                   },
-                  child: Text(
-                    "发表",
-                  ),
-                  borderRadius: BorderRadius.circular(64),
+                  icon: Icon(Icons.emoji_emotions_outlined),
                 ),
-              )
-            ],
-          )),
-          //媒体输入按钮
-          Row(
-            children: [
-              IconButton(onPressed: () {}, icon: Icon(Icons.photo)),
-              IconButton(
-                  onPressed: () {}, icon: Icon(Icons.emoji_emotions_outlined)),
-              IconButton(onPressed: () {}, icon: Icon(Icons.clear_outlined))
-            ],
-          )
+                IconButton(
+                    onPressed: () async {
+                      bool? action = await showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                              title: Text('确认'),
+                              content: Text('是否清空输入?'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('取消'),
+                                  onPressed: () {
+                                    Navigator.pop(context, false);
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('确认'),
+                                  onPressed: () {
+                                    Navigator.pop(context, true);
+                                  },
+                                ),
+                              ],
+                            );
+                          });
+                      if (action == true) {
+                        controller.text = "";
+                      }
+                    },
+                    icon: Icon(Icons.clear_outlined))
+              ],
+            ),
+          ),
+          Container(
+            constraints: BoxConstraints(
+                maxHeight: emojiInputActive ? _keyboardHeight : 0),
+            child: EmojiPanel(
+              controller: controller,
+              height: emojiInputActive ? _keyboardHeight : 0,
+            ),
+          ),
         ],
       ),
     );

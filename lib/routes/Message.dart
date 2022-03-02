@@ -2,6 +2,7 @@ import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
+import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/Widgets/MessageCard.dart';
@@ -10,7 +11,8 @@ import 'package:tiebanana/common/Global.dart';
 
 ///消息页
 class MessagePan extends StatefulWidget {
-  MessagePan({Key? key}) : super(key: key);
+  final FloatingSearchBarController controller;
+  MessagePan({Key? key, required this.controller}) : super(key: key);
 
   @override
   _MessagePanState createState() => _MessagePanState();
@@ -261,34 +263,41 @@ class _MessagePanState extends State<MessagePan>
             children: [
               SearchBar(
                 maxHeight: topConstraints.maxHeight,
+                barController: widget.controller,
               ),
-              Expanded(child: LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  return Column(
-                    children: [
-                      LimitedBox(
-                        maxHeight: constraints.maxHeight,
-                        child: _tabBar(
-                            topConstraints.maxHeight, constraints.maxHeight),
-                      ),
-                      Expanded(
-                          child: NotificationListener<
-                              OverscrollIndicatorNotification>(
-                        onNotification:
-                            (OverscrollIndicatorNotification? overscroll) {
-                          overscroll!.disallowIndicator();
-                          return true;
+              Expanded(
+                  child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: (() => widget.controller.close()),
+                      child: LayoutBuilder(
+                        builder:
+                            (BuildContext context, BoxConstraints constraints) {
+                          return Column(
+                            children: [
+                              LimitedBox(
+                                maxHeight: constraints.maxHeight,
+                                child: _tabBar(topConstraints.maxHeight,
+                                    constraints.maxHeight),
+                              ),
+                              Expanded(
+                                  child: NotificationListener<
+                                      OverscrollIndicatorNotification>(
+                                onNotification:
+                                    (OverscrollIndicatorNotification?
+                                        overscroll) {
+                                  overscroll!.disallowIndicator();
+                                  return true;
+                                },
+                                child: TabBarView(
+                                  controller: _controller,
+                                  physics: ClampingScrollPhysics(),
+                                  children: [buildReply(), buildAtMe()],
+                                ),
+                              ))
+                            ],
+                          );
                         },
-                        child: TabBarView(
-                          controller: _controller,
-                          physics: ClampingScrollPhysics(),
-                          children: [buildReply(), buildAtMe()],
-                        ),
-                      ))
-                    ],
-                  );
-                },
-              )),
+                      ))),
             ],
           ),
         );

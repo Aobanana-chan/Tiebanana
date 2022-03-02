@@ -17,8 +17,6 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FlutterStatusbarManager.setHidden(true, animation: StatusBarAnimation.FADE);
-    // FlutterStatusbarManager.setColor(Color(0x0), animated: true);
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (BuildContext context) => User()),
@@ -36,6 +34,7 @@ class App extends StatelessWidget {
                           builder: (context) =>
                               PageRouter.routes[settings.name]!(context));
                     }
+                    return null;
                   },
                   theme: ThemeData(primaryColor: theme.theme),
                   darkTheme: Global.setting.darkModel == 0

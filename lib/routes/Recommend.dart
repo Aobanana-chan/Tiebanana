@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
+import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
@@ -8,7 +9,8 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
 
 class RecommendPan extends StatefulWidget {
-  RecommendPan({Key? key}) : super(key: key);
+  final FloatingSearchBarController controller;
+  RecommendPan({Key? key, required this.controller}) : super(key: key);
 
   @override
   _RecommendPanState createState() => _RecommendPanState();
@@ -96,21 +98,25 @@ class _RecommendPanState extends State<RecommendPan> {
           children: [
             SearchBar(
               maxHeight: constraints.maxHeight,
+              barController: widget.controller,
             ),
             Expanded(
-                child: Container(
-              padding: EdgeInsets.only(left: 5, right: 5),
-              child: RefreshIndicator(
-                triggerMode: RefreshIndicatorTriggerMode.anywhere,
-                onRefresh: refresh,
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  controller: controller,
-                  physics: BouncingScrollPhysics(),
-                  children: threadwidgets,
-                ),
-              ),
-            ))
+                child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: (() => widget.controller.close()),
+                    child: Container(
+                      padding: EdgeInsets.only(left: 5, right: 5),
+                      child: RefreshIndicator(
+                        triggerMode: RefreshIndicatorTriggerMode.anywhere,
+                        onRefresh: refresh,
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          controller: controller,
+                          physics: BouncingScrollPhysics(),
+                          children: threadwidgets,
+                        ),
+                      ),
+                    )))
           ],
         );
       },

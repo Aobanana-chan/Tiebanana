@@ -11,7 +11,9 @@ import 'package:tiebanana/routes/routes.dart';
 ///主页搜索栏Widget
 class SearchBar extends StatefulWidget {
   final double? maxHeight;
-  SearchBar({Key? key, this.maxHeight = double.infinity}) : super(key: key);
+  final FloatingSearchBarController? barController;
+  SearchBar({Key? key, this.maxHeight = double.infinity, this.barController})
+      : super(key: key);
 
   @override
   _SearchBarState createState() => _SearchBarState();
@@ -20,12 +22,13 @@ class SearchBar extends StatefulWidget {
 class _SearchBarState extends State<SearchBar> {
   bool isFocused = false;
   String searchTXT = "";
-  FloatingSearchBarController barController = FloatingSearchBarController();
+  late FloatingSearchBarController barController;
   bool showBody = false;
   AnimationController? controller;
   @override
   void initState() {
     super.initState();
+    barController = widget.barController ?? FloatingSearchBarController();
   }
 
   Widget? _buildBody() {
@@ -50,8 +53,6 @@ class _SearchBarState extends State<SearchBar> {
       }
     }
     Global.profile.setStringList("searchHistory", cache);
-    //TODO:跳转到搜索页面
-    // Navigator.push(context, route)
     Navigator.pushNamed(context, PageRouter.search, arguments: searchTXT);
     setState(() {});
   }

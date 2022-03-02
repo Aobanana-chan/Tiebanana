@@ -1,11 +1,12 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:ui' as ui show PlaceholderAlignment;
 
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/AssetList.dart';
+
+///富文本Span和构造
 
 class EmojiSpan extends ExtendedWidgetSpan {
   EmojiSpan(
@@ -133,7 +134,7 @@ class _EmojiLoader extends StatelessWidget {
       );
     } else {
       child = ExtendedImage.network(
-        "$TIEBA_ENMOJI$emoji.png",
+        "${emoji.contains("bearchildren") ? TIEBA_KUMA_EMOJI : TIEBA_EMOJI}$emoji.${emoji.contains("bearchildren") ? "gif" : "png"}",
         key: key,
         width: width,
         height: height,
@@ -155,5 +156,68 @@ class _EmojiLoader extends StatelessWidget {
     return Container(
       child: child,
     );
+  }
+}
+
+class AtUserSpan extends TextSpan {
+  //TODO:点击进入@的用户界面
+  AtUserSpan({required String text, TextStyle? style})
+      : super(text: text, style: style ?? TextStyle(color: Colors.blue));
+}
+
+abstract class TiebaSpecialText extends SpecialText {
+  static const String flag = "#(";
+  late List<String> args;
+  TiebaSpecialText(
+      {String startFlag = "#(", String endFlag = ")", TextStyle? textStyle})
+      : super(startFlag, endFlag, textStyle) {
+    args = argParser();
+  }
+
+  List<String> argParser() {
+    return getContent().split(",");
+  }
+}
+
+class TiebaRichTextSpecialText extends TiebaSpecialText {
+  final int start;
+  TiebaRichTextSpecialText(this.start);
+  @override
+  InlineSpan finishText() {
+    //单参数,表情包
+    if (args.length == 1) {
+      if (emojiMapping.containsKey(getContent())) {
+        return EmojiSpan(emojiMapping[getContent()]!,
+            start: start,
+            actualText: toString(),
+            imageWidth: 18,
+            imageHeight: 18);
+      } else {
+        return TextSpan(
+            text: startFlag,
+            children: [TiebaSpanBuilder().build(getContent() + endFlag)]);
+      }
+    } else {
+      return TextSpan();
+    }
+  }
+}
+
+class TiebaSpanBuilder extends SpecialTextSpanBuilder {
+  @override
+  SpecialText? createSpecialText(String flag,
+      {TextStyle? textStyle,
+      SpecialTextGestureTapCallback? onTap,
+      required int index}) {
+    if (flag == "") {
+      return null;
+    }
+
+    if (isStart(flag, TiebaSpecialText.flag)) {
+      var start = index - (TiebaSpecialText.flag.length - 1);
+      return TiebaRichTextSpecialText(start);
+    }
+
+    return null;
   }
 }

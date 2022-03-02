@@ -7,6 +7,7 @@ import 'package:tiebanana/Widgets/LikeButtonEx.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
+import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 
 ///帖子组件-楼主
@@ -28,181 +29,6 @@ class ThreadFirstComment extends StatelessWidget {
       required this.threadID,
       required this.thread})
       : super(key: key);
-
-  List<Widget>? processIcon() {
-    List<Widget>? icons = author.iconinfo?.map((e) {
-      return FadeIn(
-          child: ExtendedImage.network(
-        e.icon!,
-        width: 16,
-        height: 16,
-        cache: true,
-      ));
-    }).toList();
-    return icons;
-  }
-
-  String getPostTime({String? strTime, int? intTime}) {
-    DateTime time;
-    if (strTime != null) {
-      time = DateTime.fromMillisecondsSinceEpoch(int.parse(strTime) * 1000);
-    } else if (intTime != null) {
-      time = DateTime.fromMillisecondsSinceEpoch(intTime * 1000);
-    } else {
-      throw Exception("至少要有一个参数不为null");
-    }
-    var create = DateTime.now().difference(time);
-    Map timeGranularity = {0: "天", 1: "小时", 2: "分钟", 3: "秒"};
-    var f = 0;
-    late String createText;
-    if (create.inDays > 30) {
-      createText = "${time.year}年${time.month}月${time.day}日";
-    } else {
-      for (var t in [
-        create.inDays,
-        create.inHours,
-        create.inMinutes,
-        create.inSeconds
-      ]) {
-        if (t != 0) {
-          createText = "创建于$t${timeGranularity[f]}前";
-          break;
-        }
-        f++;
-      }
-      if (f == 4) {
-        createText = "创建于0秒前";
-      }
-    }
-    return createText;
-  }
-
-  //获取图片的index
-  int getImgIndex(String img) {
-    if (allImgs.length == 0) {
-      return 0;
-    }
-    for (var i = 0; i < allImgs.length; i++) {
-      if (img == allImgs[i]) {
-        return i;
-      }
-    }
-    return 0;
-  }
-
-  List<Widget> buildBody(BuildContext context) {
-    List<Widget> body = [];
-    List<String> imgs = [];
-    List<String>? imgsOriginSrc = [];
-    List<String> videos = [];
-    String text = "";
-    //统计与格式化
-    for (Content elem in postMain.content ?? []) {
-      if (elem.type == "0") //文字内容
-      {
-        text += elem.text!;
-      } else if (elem.type == "4" || elem.type == "3") {
-        //图片
-        switch (Global.setting.pictureLoadSetting) {
-          case 0:
-            if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
-              body.add(Text(
-                elem.text!,
-                style: TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            imgs.add(elem.bigCdnSrc ?? elem.originSrc!);
-            imgsOriginSrc!.add(elem.originSrc!);
-            break;
-          case 1:
-            if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
-              body.add(Text(
-                elem.text!,
-                style: TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            if (int.parse(elem.bsize!.replaceAll(",", "")) < 0x100000) {
-              //小于1mb就加载
-              imgs.add(elem.bigCdnSrc!);
-              imgsOriginSrc!.add(elem.originSrc!);
-            }
-            break;
-          case 2:
-            if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
-              body.add(Text(
-                elem.text!,
-                style: TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            imgs.add(elem.originSrc!);
-            imgsOriginSrc = null;
-            break;
-
-          default:
-        }
-      } else if (elem.type == "5") {
-        //视频
-        // print("find vedio");
-        if (videoInfo?.videoUrl == null) {
-          //TODO:外链视频
-        } else {
-          videos.add(videoInfo!.videoUrl!);
-        }
-      }
-    }
-
-    //生成widget
-    //文字内容
-    if (text != "") {
-      body.add(
-        SelectableText(
-          text,
-          style: TextStyle(fontSize: 16),
-          // softWrap: true,
-          maxLines: null,
-        ),
-      );
-    }
-
-    //图片
-    int offset = 0;
-    if (imgs.length > 0) {
-      offset = getImgIndex(imgs[0]);
-    }
-    int index = 0;
-    for (var img in imgs) {
-      ExtendedPageController controller =
-          ExtendedPageController(initialPage: index + offset);
-      body.add(Container(
-        margin: EdgeInsets.only(top: 3, bottom: 3),
-        child: Thumbnail(
-          imgs: allImgs,
-          controller: controller,
-          img: img,
-          imgsOriginSrc: allOrgImgs,
-          fit: BoxFit.fitWidth,
-        ),
-      ));
-      index++;
-    }
-    //视频
-    for (var video in videos) {
-      body.add(Container(
-        constraints: BoxConstraints(maxHeight: 200),
-        child: VideoPlayer(
-          cover: videoInfo!.thumbnailUrl!,
-          url: video,
-        ),
-      ));
-    }
-    return body;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +74,7 @@ class ThreadFirstComment extends StatelessWidget {
                               child: Text("${author.nameShow}"),
                             ),
                           ] +
-                          (processIcon() ?? <Widget>[]) +
+                          (TiebaParser.processIcon(author) ?? <Widget>[]) +
                           [
                             Container(
                               margin: EdgeInsets.only(left: 5),
@@ -270,7 +96,7 @@ class ThreadFirstComment extends StatelessWidget {
                         ),
                         //发帖时间
                         Text(
-                          getPostTime(strTime: postMain.time),
+                          TiebaParser.getPostTime(strTime: postMain.time),
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         SizedBox(
@@ -308,7 +134,8 @@ class ThreadFirstComment extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(5),
             child: Wrap(
-              children: buildBody(context),
+              children: TiebaParser.parserContent(
+                  postMain.content, allImgs, allOrgImgs),
             ),
           ),
         ],

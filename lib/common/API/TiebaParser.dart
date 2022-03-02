@@ -41,8 +41,7 @@ class TiebaParser {
         switch (Global.setting.pictureLoadSetting) {
           case 0:
             if (elem.type == "4" && elem.originSrc == null) {
-              //TODO:@用户
-              richText.add(TextSpan(
+              richText.add(AtUserSpan(
                 text: elem.text!,
                 style: TextStyle(color: Colors.blue),
               ));

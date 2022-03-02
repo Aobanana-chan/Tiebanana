@@ -134,6 +134,7 @@ class _ImgExplorerState extends State<ImgExplorer> {
                         );
                       default:
                     }
+                    return null;
                   },
                 ),
               ),
@@ -362,6 +363,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                               );
                             default:
                           }
+                          return null;
                         },
                       ));
                 },
