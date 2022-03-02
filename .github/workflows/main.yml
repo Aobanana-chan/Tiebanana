@@ -10,7 +10,8 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
+env:
+  PROPERTIES_PATH: "./android/key.properties"
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -35,6 +36,14 @@ jobs:
         with:
           channel: "stable"
           flutter-version: "2.10.2"
+      #setup key
+      - run: echo "${{ secrets.KEYSTORE2 }}" | base64 --decode > key.jks
+      # Creating the key.properties file
+      - run: |
+          echo keyPassword=\${{ secrets.KEY_STORE }} > ${{env.PROPERTIES_PATH}}
+          echo storePassword=\${{ secrets.KEY_PASSWORD }} >> ${{env.PROPERTIES_PATH}}
+          echo keyAlias=\${{ secrets.KEY_ALIAS }} >> ${{env.PROPERTIES_PATH}}
+          echo storeFile=../key.jks >> ${{env.PROPERTIES_PATH}}
       # get dependence
       - run: flutter pub get
       # build
