@@ -50,8 +50,8 @@ jobs:
       - run: flutter build apk
       - run: flutter build apk --split-per-abi
       # publish
-      - name: releases-action
-        uses: nickatnight/releases-action@v2
+      - name: Create Release
+        uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.RElEASE_TOKEN }}
           artifacts: "build/app/outputs/apk/release/*.apk"
