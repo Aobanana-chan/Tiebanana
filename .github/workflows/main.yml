@@ -48,7 +48,7 @@ jobs:
       # get dependence
       - run: flutter pub get
       # build
-      - run: flutter build apk
+      # - run: flutter build apk
       - run: flutter build apk --split-per-abi
       # publish
       - name: Create Release
