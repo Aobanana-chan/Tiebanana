@@ -1,6 +1,10 @@
+import 'dart:math';
+
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'dart:ui' as ui show PlaceholderAlignment;
 
 import 'package:tiebanana/common/API/Constants.dart';
@@ -175,7 +179,8 @@ abstract class TiebaSpecialText extends SpecialText {
 
 class TiebaRichTextSpecialText extends TiebaSpecialText {
   final int start;
-  TiebaRichTextSpecialText(this.start);
+  ImageUploadProviderModel? uploadImages;
+  TiebaRichTextSpecialText(this.start, {this.uploadImages});
   @override
   InlineSpan finishText() {
     //单参数,表情包
@@ -186,18 +191,39 @@ class TiebaRichTextSpecialText extends TiebaSpecialText {
             actualText: toString(),
             imageWidth: 18,
             imageHeight: 18);
-      } else {
-        return TextSpan(
-            text: startFlag,
-            children: [TiebaSpanBuilder().build(getContent() + endFlag)]);
       }
-    } else {
-      return TextSpan();
+    } else if (args.length == 4 && args[0] == "pic") {
+      //上传的图片
+      var imageID = args[1];
+      var width = int.tryParse(args[2]);
+      var height = int.tryParse(args[3]);
+
+      if (uploadImages != null && width != null && height != null) {
+        AssetEntity? file;
+        for (var key in uploadImages!.pictures.keys) {
+          if (key.picId == imageID) {
+            return ExtendedWidgetSpan(
+                start: start,
+                actualText: toString(),
+                child: Icon(
+                  Icons.image,
+                  size: 18,
+                ));
+          }
+        }
+        if (file != null) {}
+      }
     }
+    return TextSpan(
+        text: startFlag,
+        children: [TiebaSpanBuilder().build(getContent() + endFlag)]);
   }
 }
 
 class TiebaSpanBuilder extends SpecialTextSpanBuilder {
+  ImageUploadProviderModel? uploadImages;
+  TiebaSpanBuilder({this.uploadImages});
+
   @override
   SpecialText? createSpecialText(String flag,
       {TextStyle? textStyle,
@@ -209,7 +235,7 @@ class TiebaSpanBuilder extends SpecialTextSpanBuilder {
 
     if (isStart(flag, TiebaSpecialText.flag)) {
       var start = index - (TiebaSpecialText.flag.length - 1);
-      return TiebaRichTextSpecialText(start);
+      return TiebaRichTextSpecialText(start, uploadImages: uploadImages);
     }
 
     return null;

@@ -1,6 +1,8 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/AssetList.dart';
 
@@ -41,6 +43,7 @@ class _EmojiPanelState extends State<EmojiPanel> {
       (page + 1) * _crossAxisCount * _rowCount > emoji.length
           ? emoji.length
           : (page + 1) * _crossAxisCount * _rowCount);
+
   void insertText(String text) {
     final TextEditingValue value = textController.value;
     final int start = value.selection.baseOffset;
@@ -127,6 +130,68 @@ class _EmojiPanelState extends State<EmojiPanel> {
           ),
         )
       ]),
+    );
+  }
+}
+
+class ImagePanel extends StatelessWidget {
+  final Map<UploadImageModel, AssetEntity> uploaded;
+  final void Function()? onAddImage;
+  const ImagePanel({
+    Key? key,
+    required this.uploaded,
+    required this.onAddImage,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    var images = uploaded.values.toList();
+    return Container(
+      color: Colors.white,
+      constraints: BoxConstraints(maxHeight: 185),
+      child: ListView.builder(
+        physics: BouncingScrollPhysics(),
+        scrollDirection: Axis.horizontal,
+        itemCount: uploaded.length + 1,
+        itemBuilder: (BuildContext context, int index) {
+          if (index == uploaded.length) {
+            return UnconstrainedBox(
+              child: GestureDetector(
+                onTap: onAddImage,
+                child: ClipOval(
+                  child: Container(
+                    height: 64,
+                    width: 64,
+                    color: Colors.amber.shade100,
+                    child: Icon(
+                      Icons.add,
+                      size: 36,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return Container(
+            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+            child: FutureBuilder(
+              future: images[index].file,
+              initialData: null,
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                if (snapshot.hasData) {
+                  return ExtendedImage.file(
+                    snapshot.data,
+                    fit: BoxFit.contain,
+                  );
+                } else {
+                  return Container();
+                }
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/Global.dart';
 
@@ -100,5 +101,30 @@ class GoodClassifyProviderModel with ChangeNotifier {
   set changeClassify(int c) {
     _goodClassify = c;
     notifyListeners();
+  }
+}
+
+///图片上传notify
+class ImageUploadProviderModel with ChangeNotifier {
+  ImageUploadProviderModel(this._forumnName);
+  late String _forumnName;
+  Map<UploadImageModel, AssetEntity> _picture = {};
+  void addPicture(AssetEntity file, UploadImageModel pic) {
+    _picture[pic] = file;
+    notifyListeners();
+  }
+
+  Map<UploadImageModel, AssetEntity> get pictures => _picture;
+
+  Future<List<dynamic>?> uploadPicture(AssetEntity pic, bool saveOrigin) {
+    return Global.tiebaAPI
+        .uploadPicture(_forumnName, saveOrigin, pic)
+        .then((value) {
+      if (value.errorCode == "0") {
+        addPicture(pic, value);
+        return [pic, value];
+      }
+      return null;
+    });
   }
 }

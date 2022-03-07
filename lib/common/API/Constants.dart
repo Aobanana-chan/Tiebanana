@@ -130,6 +130,8 @@ const String TIEBA_KUMA_EMOJI =
     "https://gsp0.baidu.com/5aAHeD3nKhI2p27j8IqW0jdnxx1xbK/tb/editor/images/bearchildren/"; //贴吧熊GIF表情链接
 const String WAP_POST_REPLY =
     "http://c.tieba.baidu.com/c/c/post/add"; // WAP端回帖API
+const String WAP_UPLOAD_PICTURE =
+    "http://c.tieba.baidu.com/c/s/uploadPicture"; //WAP端传图API
 
 ///不喜欢首页推荐贴 参数：
 ///

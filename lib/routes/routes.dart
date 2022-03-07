@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/routes/ForumHomePage.dart';
 import 'package:tiebanana/routes/HomePage.dart';
+import 'package:tiebanana/routes/ImagePicker.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Search.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
@@ -27,10 +28,14 @@ class PageRouter {
         searchWords: ModalRoute.of(builder)!.settings.arguments as String,
       );
     },
+    "imagePicker": (builder) {
+      return ImagePickerRoute();
+    }
   };
   static String home = "/";
   static String forumHome = "forumHome";
   static String threadPage = "threadPage";
   static String login = "login";
   static String search = "search";
+  static String imagePicker = "imagePicker";
 }

@@ -232,14 +232,17 @@ class TiebaParser {
     return text;
   }
 
-  static String contentBuilder(ContentBuilderType type, {Author? replyUser}) {
+  static String contentBuilder(ContentBuilderType type,
+      {Author? replyUser, UploadImageModel? image}) {
     switch (type) {
       case ContentBuilderType.Reply:
         return "回复 #(reply, ${replyUser!.portrait}, ${replyUser.nameShow ?? replyUser.name}) :";
+      case ContentBuilderType.Picture:
+        return "#(pic,${image!.picId},${image.picInfo!.originPic!.width},${image.picInfo!.originPic!.height})";
       default:
     }
     return "";
   }
 }
 
-enum ContentBuilderType { Emoji, Reply }
+enum ContentBuilderType { Emoji, Reply, Picture }

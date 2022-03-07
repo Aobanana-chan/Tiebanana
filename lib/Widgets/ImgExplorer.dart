@@ -1,6 +1,7 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 class ImgExplorer extends StatefulWidget {
   final String heroTagSalt;
@@ -67,9 +68,9 @@ class _ImgExplorerState extends State<ImgExplorer> {
           backgroundColor: Colors.transparent,
           actions: [
             IconButton(
-                onPressed: () {
-                  //TODO:保存图片
-                  // getCachedImageFile(url)
+                onPressed: () async {
+                  PhotoManager.editor.saveImageWithPath(
+                      (await getCachedImageFile(qualitySelect()))?.path ?? "");
                 },
                 icon: Icon(Icons.save))
           ],
@@ -273,9 +274,12 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
           actions: [
             IconButton(
                 padding: EdgeInsets.all(3),
-                onPressed: () {
+                onPressed: () async {
                   //TODO:保存图片
-                  // getCachedImageFile(url)
+                  PhotoManager.editor.saveImageWithPath(
+                      (await getCachedImageFile(qualitySelect(currentIndex)))
+                              ?.path ??
+                          "");
                 },
                 icon: Icon(Icons.save))
           ],

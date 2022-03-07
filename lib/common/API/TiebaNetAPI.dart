@@ -15,6 +15,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/LG_DV_ARG.dart';
 import 'package:tiebanana/common/API/TBSManager.dart';
@@ -1502,6 +1503,7 @@ class TiebaAPI {
   ///[content] 回复用户格式 #(reply, [portrait]-头像地址, [name_show])
   ///
   ///表情包 #([emoji])
+  ///图片 #(pic,图片ID,宽，高)
   Future<WAPTiebaBase> replyFloor(
       String content, String kw, String fid, String tid, String floorId,
       {List<String>? photos, String replyUID = ""}) async {
@@ -1590,5 +1592,59 @@ class TiebaAPI {
           contentType: "application/x-www-form-urlencoded",
         ));
     return InnerFloorModel.fromJson(json5Decode(res.data));
+  }
+
+  ///上传图片
+  Future<UploadImageModel> uploadPicture(
+      String forumName, bool saveOrigin, AssetEntity file) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    //获取baiduID
+    String baiduID = "";
+    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+      if (cookie.name.toUpperCase() == "BAIDUID") {
+        baiduID = cookie.value;
+        break;
+      }
+    }
+    var args = {
+      "BDUSS": bduss,
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.15.1.0",
+      "_phone_imei": "000000000000000",
+      "active_timestamp": DateTime.now().millisecondsSinceEpoch,
+      "alt": "json",
+      // "android_id": "", //
+      "baiduid": baiduID,
+      "brand": "Android",
+      "c3_aid": "",
+      "chunkNo": "1",
+      "cmode": "1",
+      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid_galaxy2": "",
+      "cuid_gid": "",
+      // "event_day": "", //
+      "forum_name": forumName,
+      "height": file.height,
+      "width": file.width,
+      "isFinish": "1",
+      "is_bjh": "0",
+      "pic_water_type": 2,
+      "resourceId": file.id,
+      "saveOrigin": saveOrigin ? "1" : "0",
+      "size": await (await file.file)!.length(),
+      "small_flow_fname": forumName,
+      "stoken": stoken,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+    args['sign'] = _signArgs(args);
+    args["chunk"] =
+        await MultipartFile.fromFile((await file.file)!.path, filename: "file");
+    var data = FormData.fromMap(args);
+    var res = await dio.post(WAP_UPLOAD_PICTURE, data: data);
+
+    return UploadImageModel.fromJson(json5Decode(res.data));
   }
 }
