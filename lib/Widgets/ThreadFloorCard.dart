@@ -626,6 +626,28 @@ class InnerFloorCard extends StatelessWidget {
       required this.floorId})
       : super(key: key);
 
+  List<String> _imgCollect() {
+    List<String> l = [];
+    for (var content in postMain.content ?? []) {
+      if (content.type == "3" ||
+          (content.type == "4" && content.originSrc != null)) {
+        l.add(content.bigCdnSrc!);
+      }
+    }
+    return l;
+  }
+
+  List<String> _originImgCollect() {
+    List<String> l = [];
+    for (var content in postMain.content ?? []) {
+      if (content.type == "3" ||
+          (content.type == "4" && content.originSrc != null)) {
+        l.add(content.originSrc!);
+      }
+    }
+    return l;
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -736,7 +758,9 @@ class InnerFloorCard extends StatelessWidget {
                           padding: EdgeInsets.all(5),
                           child: Wrap(
                             children: TiebaParser.parserContent(
-                                postMain.content, [], [],
+                                postMain.content,
+                                _imgCollect(),
+                                _originImgCollect(),
                                 selectable: true),
                           ),
                         ),

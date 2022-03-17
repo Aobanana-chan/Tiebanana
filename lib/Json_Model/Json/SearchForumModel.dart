@@ -10,7 +10,7 @@ class SearchForumModel {
   SearchForumModel.fromJson(Map<String, dynamic> json) {
     no = json['no'];
     forumList = json['forum_list'];
-    data = json['data'] != null
+    data = json['data'] != null && json['data'].length != 0
         ? new SearchForumModelData.fromJson(json['data'])
         : null;
   }
@@ -85,8 +85,8 @@ class SearchForumModelMainData {
         forum?.add(new SearchForumModelForum.fromJson(v));
       });
     }
-    regNum = json['reg_num'];
-    searchTime = json['search_time'];
+    regNum = (json['reg_num'] as num).toInt();
+    searchTime = (json['search_time'] as num).toInt();
     searchKey = json['search_key'];
     page = json['page'] != null
         ? new SearchForumModelPage.fromJson(json['page'])
@@ -137,14 +137,14 @@ class SearchForumModelForum {
       this.isLike});
 
   SearchForumModelForum.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = (json['id'] as num).toInt();
     name = json['name'];
     img = json['img'];
     brief = json['brief'];
-    hotValue = json['hot_value'];
+    hotValue = (json['hot_value'] as num).toInt();
     dir = json['dir'] != null ? new Dir.fromJson(json['dir']) : null;
-    member = json['member'];
-    post = json['post'];
+    member = (json['member'] as num).toInt();
+    post = (json['post'] as num).toInt();
     if (json['tags'] != null) {
       tags = [];
       json['tags'].forEach((v) {
@@ -222,10 +222,19 @@ class SearchForumModelPage {
       {this.curPage, this.totalPage, this.totalNum, this.pageSize});
 
   SearchForumModelPage.fromJson(Map<String, dynamic> json) {
-    curPage = json['cur_page'];
-    totalPage = json['total_page'];
-    totalNum = json['total_num'];
-    pageSize = json['page_size'];
+    if (json['cur_page'] is String) {
+      curPage = json['cur_page'];
+    } else {
+      curPage = (json['cur_page'] as num).toInt().toString();
+    }
+
+    totalPage = (json['total_page'] as num).toInt();
+    totalNum = (json['total_num'] as num).toInt();
+    if (json['page_size'] is String) {
+      pageSize = json['page_size'];
+    } else {
+      pageSize = (json['page_size'] as num).toInt().toString();
+    }
   }
 
   Map<String, dynamic> toJson() {

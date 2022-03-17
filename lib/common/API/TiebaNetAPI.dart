@@ -1320,7 +1320,7 @@ class TiebaAPI {
             headers: {"Content-Type": "application/x-www-form-urlencoded"}));
     var resJson = json5Decode(String.fromCharCodes(res.data));
     if (resJson['error_code'] != "0") {
-      throw Exception("获取失败");
+      throw Exception("获取失败,${resJson["error_msg"]}");
     }
     return ForumHomeInfo.fromJson(resJson);
   }
@@ -1418,7 +1418,9 @@ class TiebaAPI {
     return SearchForumModel.fromJson(json5Decode(res.data));
   }
 
-  ///搜索贴API
+  @deprecated
+
+  ///网页端,搜索贴API,用起来会有网页的转义字符，author值为null等问题,建议使用searchPost
   Future<SearchThreadModel> searchThread(String keywords, int pn,
       {int rn = 10, int sort = 1}) async {
     var params = {
@@ -1432,6 +1434,25 @@ class TiebaAPI {
         queryParameters: params,
         options: Options(responseType: ResponseType.plain));
     return SearchThreadModel.fromJson(json5Decode(res.data));
+  }
+
+  ///网页端搜索贴API
+  ///[order] = 0，旧贴在前排序, = 1新贴在前排序, = 2 相关度排序
+  ///
+  ///[filter] = 1,只看主题帖, = 0 查看全部贴
+  Future<SearchPostModel> searchPost(String keywords,
+      {int pn = 1, int order = 0, int filter = 1, int ct = 2}) async {
+    var args = {
+      "word": keywords,
+      "pn": pn,
+      "st": order,
+      "tt": filter,
+      "ct": ct
+    };
+    var res = await dio.get(WEB_SEARCH_POST,
+        queryParameters: args,
+        options: Options(responseType: ResponseType.plain));
+    return SearchPostModel.fromJson(json5Decode(res.data));
   }
 
   ///WAP端-回帖API

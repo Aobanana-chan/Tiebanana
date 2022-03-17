@@ -125,14 +125,87 @@ class ForumTag extends StatelessWidget {
 }
 
 ///搜索页面吧Tag部件
-class ForumTagBig extends StatelessWidget {
+class ForumCardRelated extends StatelessWidget {
   final SearchForumModelForum searchForumModelForum;
-  const ForumTagBig({Key? key, required this.searchForumModelForum})
+  const ForumCardRelated({Key? key, required this.searchForumModelForum})
       : super(key: key);
+  String convertNumber(int number) {
+    if (number ~/ 10000000 > 0) {
+      return "${(number / 10000000).toStringAsFixed(1)}KW";
+    } else if (number ~/ 10000 > 0) {
+      return "${(number / 10000).toStringAsFixed(1)}W";
+    } else if (number ~/ 1000 > 0) {
+      return "${(number / 1000).toStringAsFixed(1)}K";
+    } else {
+      return number.toString();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, PageRouter.forumHome,
+            arguments: searchForumModelForum.name);
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(5),
+              child: Avatar(
+                imgUrl: searchForumModelForum.img!,
+                width: 48,
+                height: 48,
+              ),
+            ),
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${searchForumModelForum.name}吧",
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Visibility(
+                    visible: searchForumModelForum.brief != null,
+                    child: Text(
+                      "简介:${searchForumModelForum.brief}",
+                      style: TextStyle(color: Colors.black),
+                      overflow: TextOverflow.ellipsis,
+                    )),
+                Row(
+                  children: [
+                    Text(
+                      "关注 ${convertNumber(searchForumModelForum.member!)}",
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      "贴子 ${convertNumber(searchForumModelForum.post!)}",
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.black),
+                    )
+                  ],
+                ),
+              ],
+            )),
+            GradientButton(
+                onPressed: () {},
+                borderRadius: BorderRadius.circular(64),
+                child: searchForumModelForum.isLike! ? Text("已关注") : Text("关注"))
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -155,37 +228,75 @@ class ForumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Card(
-        margin: EdgeInsets.all(20),
-        color: Colors.green,
-        shadowColor: Colors.yellow.shade100,
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Avatar(imgUrl: forum.img!),
-                Column(
-                  children: [
-                    Text(forum.name!),
-                    Visibility(
-                        visible: forum.brief != null,
-                        child: Text(forum.brief!)),
-                    Row(
-                      children: [
-                        Text("关注 ${convertNumber(forum.member!)}"),
-                        Text("贴子 ${convertNumber(forum.post!)}")
-                      ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, PageRouter.forumHome,
+            arguments: forum.name);
+      },
+      child: Container(
+        child: Card(
+            margin: EdgeInsets.all(5),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            color: Colors.black87,
+            shadowColor: Colors.yellow.shade100,
+            child: Container(
+              padding: EdgeInsets.all(5),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(5),
+                    child: Avatar(
+                      imgUrl: forum.img!,
+                      width: 48,
+                      height: 48,
                     ),
-                    GradientButton(
-                        onPressed: () {},
-                        child: forum.isLike! ? Text("已关注") : Text("关注"))
-                  ],
-                )
-              ],
-            )
-          ],
-        ),
+                  ),
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${forum.name}吧",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Visibility(
+                          visible: forum.brief != null,
+                          child: Text(
+                            "简介:${forum.brief}",
+                            style: TextStyle(color: Colors.white),
+                            overflow: TextOverflow.ellipsis,
+                          )),
+                      Row(
+                        children: [
+                          Text(
+                            "关注 ${convertNumber(forum.member!)}",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "贴子 ${convertNumber(forum.post!)}",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.white),
+                          )
+                        ],
+                      ),
+                    ],
+                  )),
+                  GradientButton(
+                      onPressed: () {},
+                      borderRadius: BorderRadius.circular(64),
+                      child: forum.isLike! ? Text("已关注") : Text("关注"))
+                ],
+              ),
+            )),
       ),
     );
   }

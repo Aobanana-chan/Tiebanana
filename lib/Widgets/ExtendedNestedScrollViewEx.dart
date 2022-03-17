@@ -804,7 +804,7 @@ class ExtendedNestedScrollViewEx extends StatefulWidget {
   final ScrollBehavior? scrollBehavior;
 
   ///修改过的地方,提供state以供方便监听
-  final void Function(ExtendedNestedScrollViewState)? initStateCallback;
+  final void Function(ExtendedNestedScrollViewState state)? initStateCallback;
 
   /// Returns the [SliverOverlapAbsorberHandle] of the nearest ancestor
   /// [ExtendedNestedScrollView].

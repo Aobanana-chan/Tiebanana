@@ -132,6 +132,8 @@ const String WAP_POST_REPLY =
     "http://c.tieba.baidu.com/c/c/post/add"; // WAP端回帖API
 const String WAP_UPLOAD_PICTURE =
     "http://c.tieba.baidu.com/c/s/uploadPicture"; //WAP端传图API
+const String WEB_SEARCH_POST =
+    "https://tieba.baidu.com/mo/q/search/thread"; // WEB端搜贴API
 
 ///不喜欢首页推荐贴 参数：
 ///
