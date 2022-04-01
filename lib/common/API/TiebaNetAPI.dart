@@ -1337,22 +1337,34 @@ class TiebaAPI {
     }
     var args = {
       "BDUSS": bduss,
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "9.9.8.32",
+      "_phone_imei": "000000000000000",
+      "back": "0",
+      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid_galaxy2": "",
+      "cuid_gid": "",
+      "floor_rn": "3",
       "kz": kz,
+      "lz": onlyLz ? "1" : "0",
+      "mark": "0",
+      "net_type": "1",
       "pn": pn,
       "rn": rn,
-      "with_floor": "1",
-      "lz": onlyLz ? "1" : "0",
+      "st_type": "tb_frslist",
       "timestamp": DateTime.now().millisecondsSinceEpoch,
-      "_client_version": "9.9.2",
+      "with_floor": "1",
     };
-
     args['sign'] = _signArgs(args);
     var res = await dio.post(F_PAGE,
         data: args,
         options: Options(
-          responseType: ResponseType.plain,
-          contentType: "application/x-www-form-urlencoded",
-        ));
+            responseType: ResponseType.plain,
+            contentType: "application/x-www-form-urlencoded",
+            headers: {
+              "User-Agent": "bdtb for Android 9.9.8.32",
+            }));
     var resJson = json5Decode(res.data);
     if (resJson["error_code"] != "0") {
       throw Exception(resJson["error_msg"]);
@@ -1667,5 +1679,17 @@ class TiebaAPI {
     var res = await dio.post(WAP_UPLOAD_PICTURE, data: data);
 
     return UploadImageModel.fromJson(json5Decode(res.data));
+  }
+
+  Future<SearchUserModel> searchUser(String keyword) async {
+    var args = {
+      "_client_version": "12.15.1.0",
+      "word": keyword,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+
+    var res = await dio.get(WEB_SEARCH_USER, queryParameters: args);
+
+    return SearchUserModel.fromJson(res.data);
   }
 }

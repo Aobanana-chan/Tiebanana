@@ -312,7 +312,7 @@ class SearchPostModelPostList {
   String? content;
   String? time;
   SearchPostModelUser? user;
-  int? postNum;
+  String? postNum;
   List<SearchPostModelMedia>? media;
   int? threadTypes;
   int? likeNum;
@@ -368,7 +368,12 @@ class SearchPostModelPostList {
     user = json['user'] != null
         ? new SearchPostModelUser.fromJson(json['user'])
         : null;
-    postNum = (json['post_num'] as num).toInt();
+    if (json['post_num'] is String) {
+      postNum = json['post_num'];
+    } else if (json['post_num'] is num) {
+      postNum = (json['post_num'] as num).toString();
+    }
+
     if (json['media'] != null) {
       media = [];
       json['media'].forEach((v) {
