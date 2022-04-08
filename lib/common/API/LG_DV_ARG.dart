@@ -71,8 +71,12 @@ class WindowsDv {
   //移植于g.min,js
   List _getDvo(dynamic e) {
     var t = [];
-    for (var n = 0; n < e.length; n++)
-      for (var r = e[n][0]; r <= e[n][1]; r++) t.add(String.fromCharCode(r));
+    for (var n = 0; n < e.length; n++) {
+      for (var r = e[n][0]; r <= e[n][1]; r++) {
+        t.add(String.fromCharCode(r));
+      }
+    }
+
     return t;
   }
 

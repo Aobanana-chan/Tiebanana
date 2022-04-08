@@ -8,7 +8,7 @@ import 'package:tiebanana/routes/routes.dart';
 
 ///主页贴合集
 class TagPan extends StatefulWidget {
-  TagPan({Key? key}) : super(key: key);
+  const TagPan({Key? key}) : super(key: key);
 
   @override
   _TagPanState createState() => _TagPanState();
@@ -39,14 +39,14 @@ class _TagPanState extends State<TagPan> {
             },
             child: Consumer<ForumState>(builder: (builder, forumState, _) {
               return CustomScrollView(
-                physics: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 slivers: <Widget>[
                   SliverToBoxAdapter(
                     child: LimitedBox(
                       maxHeight: constraints.maxHeight,
                       child: Container(
-                        padding: EdgeInsets.only(left: 10),
-                        child: IntrinsicHeight(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: const IntrinsicHeight(
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -61,18 +61,17 @@ class _TagPanState extends State<TagPan> {
                   ),
                   SliverGrid(
                       delegate: SliverChildBuilderDelegate((builder, index) {
-                        return Container(
-                          child: ForumTag(
-                            info: forumState.forums[index],
-                          ),
+                        return ForumTag(
+                          info: forumState.forums[index],
                         );
                       }, childCount: forumState.forums.length),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          mainAxisExtent: 50,
-                          crossAxisCount: 2,
-                          childAspectRatio: 2.5,
-                          mainAxisSpacing: 5,
-                          crossAxisSpacing: 5))
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              mainAxisExtent: 50,
+                              crossAxisCount: 2,
+                              childAspectRatio: 2.5,
+                              mainAxisSpacing: 5,
+                              crossAxisSpacing: 5))
                 ],
               );
             }));
@@ -84,40 +83,38 @@ class _TagPanState extends State<TagPan> {
 ///主页贴吧tag部件
 class ForumTag extends StatelessWidget {
   final LikeForumInfo info;
-  ForumTag({Key? key, required this.info}) : super(key: key);
+  const ForumTag({Key? key, required this.info}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(width: 0.1),
-            borderRadius: BorderRadius.circular(8)),
-        child: MaterialButton(
-          onPressed: () {
-            Navigator.pushNamed(context, PageRouter.forumHome,
-                arguments: info.forumName);
-          },
-          onLongPress: () {
-            //TODO:弹出贴吧操作菜单
-          },
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded(
-                  child: Text(
-                info.forumName!,
-                overflow: TextOverflow.ellipsis,
-              )),
-              _Rank(
-                rank: info.levelId!,
-                isSigned: info.isSign == "0" ? false : true,
-              )
-            ],
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(width: 0.1),
+          borderRadius: BorderRadius.circular(8)),
+      child: MaterialButton(
+        onPressed: () {
+          Navigator.pushNamed(context, PageRouter.forumHome,
+              arguments: info.forumName);
+        },
+        onLongPress: () {
+          //TODO:弹出贴吧操作菜单
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+                child: Text(
+              info.forumName!,
+              overflow: TextOverflow.ellipsis,
+            )),
+            _Rank(
+              rank: info.levelId!,
+              isSigned: info.isSign == "0" ? false : true,
+            )
+          ],
         ),
       ),
     );
@@ -149,11 +146,11 @@ class ForumCardRelated extends StatelessWidget {
             arguments: searchForumModelForum.name);
       },
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 5),
+        padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               child: Avatar(
                 imgUrl: searchForumModelForum.img!,
                 width: 48,
@@ -166,7 +163,7 @@ class ForumCardRelated extends StatelessWidget {
               children: [
                 Text(
                   "${searchForumModelForum.name}吧",
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.black),
@@ -176,7 +173,7 @@ class ForumCardRelated extends StatelessWidget {
                     visible: searchForumModelForum.brief != null,
                     child: Text(
                       "简介:${searchForumModelForum.brief}",
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                       overflow: TextOverflow.ellipsis,
                     )),
                 Row(
@@ -184,15 +181,15 @@ class ForumCardRelated extends StatelessWidget {
                     Text(
                       "关注 ${convertNumber(searchForumModelForum.member!)}",
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     Text(
                       "贴子 ${convertNumber(searchForumModelForum.post!)}",
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                     )
                   ],
                 ),
@@ -201,7 +198,9 @@ class ForumCardRelated extends StatelessWidget {
             GradientButton(
                 onPressed: () {},
                 borderRadius: BorderRadius.circular(64),
-                child: searchForumModelForum.isLike! ? Text("已关注") : Text("关注"))
+                child: searchForumModelForum.isLike!
+                    ? const Text("已关注")
+                    : const Text("关注"))
           ],
         ),
       ),
@@ -233,71 +232,68 @@ class ForumCard extends StatelessWidget {
         Navigator.pushNamed(context, PageRouter.forumHome,
             arguments: forum.name);
       },
-      child: Container(
-        child: Card(
-            margin: EdgeInsets.all(5),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            color: Colors.black87,
-            shadowColor: Colors.yellow.shade100,
-            child: Container(
-              padding: EdgeInsets.all(5),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(5),
-                    child: Avatar(
-                      imgUrl: forum.img!,
-                      width: 48,
-                      height: 48,
-                    ),
+      child: Card(
+          margin: const EdgeInsets.all(5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          color: Colors.black87,
+          shadowColor: Colors.yellow.shade100,
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  child: Avatar(
+                    imgUrl: forum.img!,
+                    width: 48,
+                    height: 48,
                   ),
-                  Expanded(
-                      child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "${forum.name}吧",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Visibility(
-                          visible: forum.brief != null,
-                          child: Text(
-                            "简介:${forum.brief}",
-                            style: TextStyle(color: Colors.white),
-                            overflow: TextOverflow.ellipsis,
-                          )),
-                      Row(
-                        children: [
-                          Text(
-                            "关注 ${convertNumber(forum.member!)}",
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Text(
-                            "贴子 ${convertNumber(forum.post!)}",
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: Colors.white),
-                          )
-                        ],
-                      ),
-                    ],
-                  )),
-                  GradientButton(
-                      onPressed: () {},
-                      borderRadius: BorderRadius.circular(64),
-                      child: forum.isLike! ? Text("已关注") : Text("关注"))
-                ],
-              ),
-            )),
-      ),
+                ),
+                Expanded(
+                    child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${forum.name}吧",
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Visibility(
+                        visible: forum.brief != null,
+                        child: Text(
+                          "简介:${forum.brief}",
+                          style: const TextStyle(color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        )),
+                    Row(
+                      children: [
+                        Text(
+                          "关注 ${convertNumber(forum.member!)}",
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          "贴子 ${convertNumber(forum.post!)}",
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
+                  ],
+                )),
+                GradientButton(
+                    onPressed: () {},
+                    borderRadius: BorderRadius.circular(64),
+                    child: forum.isLike! ? const Text("已关注") : const Text("关注"))
+              ],
+            ),
+          )),
     );
   }
 }
@@ -309,12 +305,12 @@ class _Rank extends StatelessWidget {
       : super(key: key);
   //[字体,背景色]
   final List<List<Color>> _rankColor = [
-    [Color(0xFF6F6F6F), Color(0xFFFFFFFF)],
-    [Color(0xFFFFFFFF), Color(0xFF6F6F6F)],
-    [Color(0xFF3AFF44), Color(0xFF553626)],
-    [Color(0xFF281DCF), Color(0xFFFFE7B8)],
-    [Color(0xFF753771), Color(0xFFFDE9D6)],
-    [Color(0xFFFF8E31), Color(0xFF3D3B02)],
+    [const Color(0xFF6F6F6F), const Color(0xFFFFFFFF)],
+    [const Color(0xFFFFFFFF), const Color(0xFF6F6F6F)],
+    [const Color(0xFF3AFF44), const Color(0xFF553626)],
+    [const Color(0xFF281DCF), const Color(0xFFFFE7B8)],
+    [const Color(0xFF753771), const Color(0xFFFDE9D6)],
+    [const Color(0xFFFF8E31), const Color(0xFF3D3B02)],
   ];
   List<Color> setColor() {
     int r = int.parse(rank);
@@ -324,7 +320,7 @@ class _Rank extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(left: 5, right: 5),
+      padding: const EdgeInsets.only(left: 5, right: 5),
       decoration: BoxDecoration(
           color: setColor()[1], borderRadius: BorderRadius.circular(16)),
       child: ClipRRect(
@@ -337,11 +333,11 @@ class _Rank extends StatelessWidget {
             ),
             Visibility(
                 visible: isSigned,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 10,
                 )),
             AnimatedSwitcher(
-              duration: Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 200),
               child: Visibility(
                 visible: isSigned,
                 child: Icon(

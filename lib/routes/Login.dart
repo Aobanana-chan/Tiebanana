@@ -10,7 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 ///暂时为测试用登录界面,到时候会大改(应该)
 class LoginPage extends StatefulWidget {
-  LoginPage({Key? key}) : super(key: key);
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage>
   late TabController _tabController;
   List tabs = ["账号密码登录", "短信登录"];
   TextEditingController user =
-      TextEditingController.fromValue(TextEditingValue(text: ""));
+      TextEditingController.fromValue(const TextEditingValue(text: ""));
   TextEditingController pwd =
       TextEditingController.fromValue(TextEditingValue.empty);
   TextEditingController phoneNumber =
@@ -38,7 +38,7 @@ class _LoginPageState extends State<LoginPage>
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
           gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment(0, -0.2),
@@ -54,10 +54,10 @@ class _LoginPageState extends State<LoginPage>
         children: [
           Container(
             // color: Colors.blue,
-            padding: EdgeInsets.only(top: 50),
+            padding: const EdgeInsets.only(top: 50),
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
+                children: const <Widget>[
                   Text(
                     "登录百度帐号",
                     textAlign: TextAlign.right,
@@ -71,10 +71,10 @@ class _LoginPageState extends State<LoginPage>
           ),
           Container(
             // color: Colors.blue,
-            padding: EdgeInsets.only(bottom: 30),
+            padding: const EdgeInsets.only(bottom: 30),
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
+                children: const <Widget>[
                   Text(
                     "精彩永相随",
                     textAlign: TextAlign.right,
@@ -90,13 +90,13 @@ class _LoginPageState extends State<LoginPage>
           Container(
               decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(32)),
-              padding: EdgeInsets.all(20),
-              margin: EdgeInsets.only(left: 10, right: 10),
-              constraints: BoxConstraints(maxHeight: 300),
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(left: 10, right: 10),
+              constraints: const BoxConstraints(maxHeight: 300),
               child: Column(
                 children: [
                   Container(
-                    margin: EdgeInsets.only(bottom: 10),
+                    margin: const EdgeInsets.only(bottom: 10),
                     child: TabBar(
                       tabs: tabs
                           .map((e) => Tab(
@@ -105,11 +105,11 @@ class _LoginPageState extends State<LoginPage>
                           .toList(),
                       indicator: CustomUnderlineTabIndicator(
                           wantWidth: 36,
-                          insets: EdgeInsets.only(left: 15, right: 15),
+                          insets: const EdgeInsets.only(left: 15, right: 15),
                           borderSide:
-                              BorderSide(width: 4, color: Colors.green)),
+                              const BorderSide(width: 4, color: Colors.green)),
                       labelColor: Colors.black,
-                      labelStyle: TextStyle(
+                      labelStyle: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage>
                   ),
                   Expanded(
                       child: TabBarView(
-                          physics: NeverScrollableScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           controller: _tabController,
                           children: [
                         _PasswordLogin(user: user, pwd: pwd),
@@ -146,18 +146,19 @@ class _PasswordLogin extends StatelessWidget {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.only(bottom: 20),
           child: TextField(
             autofocus: false,
             decoration: InputDecoration(
               hintText: "手机号/用户名/邮箱",
-              prefixIcon: Icon(
+              prefixIcon: const Icon(
                 Icons.person,
               ),
               isCollapsed: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               filled: true,
-              fillColor: Color(0xFFF5F5F5),
+              fillColor: const Color(0xFFF5F5F5),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(64),
                   borderSide: BorderSide.none),
@@ -166,17 +167,18 @@ class _PasswordLogin extends StatelessWidget {
           ),
         ),
         Container(
-          padding: EdgeInsets.only(bottom: 30),
+          padding: const EdgeInsets.only(bottom: 30),
           child: TextField(
             autofocus: false,
             decoration: InputDecoration(
               // labelText: "密码",
               hintText: "密码",
-              prefixIcon: Icon(Icons.lock),
+              prefixIcon: const Icon(Icons.lock),
               isCollapsed: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               filled: true,
-              fillColor: Color(0xFFF5F5F5),
+              fillColor: const Color(0xFFF5F5F5),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(64),
                   borderSide: BorderSide.none),
@@ -185,66 +187,62 @@ class _PasswordLogin extends StatelessWidget {
             obscureText: true,
           ),
         ),
-        Container(
-          // margin: EdgeInsets.only(left: 20, right: 20),
-          child: GradientButton(
-            padding: const EdgeInsets.all(16.0),
-            borderRadius: BorderRadius.circular(64),
-            child: Center(
-              child: Text(
-                "登录",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+        GradientButton(
+          padding: const EdgeInsets.all(16.0),
+          borderRadius: BorderRadius.circular(64),
+          child: const Center(
+            child: Text(
+              "登录",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            onPressed: () async {
-              if (user.text == "") {
-                Fluttertoast.showToast(msg: "请输入用户名");
-                return;
-              } else if (pwd.text == "") {
-                Fluttertoast.showToast(msg: "密码不能为空");
-                return;
-              }
-              Fluttertoast.showToast(msg: "正在登陆...");
-              //登录
-              var loginres =
-                  await Global.tiebaAPI.loginByPassword(user.text, pwd.text);
-              //验证码
-              while (loginres.errcode == "6") {
-                Fluttertoast.showToast(msg: "需要输入验证码");
-                bool? verify = await showDialog<bool>(
-                    context: context,
-                    builder: (builder) => PassMachineWidget());
-                if (verify == true) {
-                  loginres = await Global.tiebaAPI
-                      .loginByPassword(user.text, pwd.text);
-                } else if (verify == null) {
-                  return;
-                }
-              }
-              //短信验证码(触发条件不明,猜测应该是fuid或者是dv值变动)
-              while (loginres.errcode == "120021") {
-                Fluttertoast.showToast(msg: "需要进行安全验证");
-                bool? safeVerify = await showDialog(
-                    context: context, builder: (builder) => Authwidgetverify());
-                if (safeVerify == true) {
-                  loginres = await Global.tiebaAPI
-                      .loginByPassword(user.text, pwd.text);
-                }
-                if (safeVerify == null) {
-                  return;
-                }
-              }
-              //是否成功登录
-              if (loginres.errcode == "0") {
-                Fluttertoast.showToast(msg: "登录成功");
-                Provider.of<User>(context, listen: false).login();
-                Provider.of<ForumState>(context, listen: false).refresh();
-              } else {
-                Fluttertoast.showToast(
-                    msg: "登录失败错误码(err:${loginres.errcode}\n${loginres.msg})");
-              }
-            },
           ),
+          onPressed: () async {
+            if (user.text == "") {
+              Fluttertoast.showToast(msg: "请输入用户名");
+              return;
+            } else if (pwd.text == "") {
+              Fluttertoast.showToast(msg: "密码不能为空");
+              return;
+            }
+            Fluttertoast.showToast(msg: "正在登陆...");
+            //登录
+            var loginres =
+                await Global.tiebaAPI.loginByPassword(user.text, pwd.text);
+            //验证码
+            while (loginres.errcode == "6") {
+              Fluttertoast.showToast(msg: "需要输入验证码");
+              bool? verify = await showDialog<bool>(
+                  context: context, builder: (builder) => PassMachineWidget());
+              if (verify == true) {
+                loginres =
+                    await Global.tiebaAPI.loginByPassword(user.text, pwd.text);
+              } else if (verify == null) {
+                return;
+              }
+            }
+            //短信验证码(触发条件不明,猜测应该是fuid或者是dv值变动)
+            while (loginres.errcode == "120021") {
+              Fluttertoast.showToast(msg: "需要进行安全验证");
+              bool? safeVerify = await showDialog(
+                  context: context, builder: (builder) => Authwidgetverify());
+              if (safeVerify == true) {
+                loginres =
+                    await Global.tiebaAPI.loginByPassword(user.text, pwd.text);
+              }
+              if (safeVerify == null) {
+                return;
+              }
+            }
+            //是否成功登录
+            if (loginres.errcode == "0") {
+              Fluttertoast.showToast(msg: "登录成功");
+              Provider.of<User>(context, listen: false).login();
+              Provider.of<ForumState>(context, listen: false).refresh();
+            } else {
+              Fluttertoast.showToast(
+                  msg: "登录失败错误码(err:${loginres.errcode}\n${loginres.msg})");
+            }
+          },
         )
       ],
     );
@@ -254,7 +252,7 @@ class _PasswordLogin extends StatelessWidget {
 class _PhoneNumberLogin extends StatefulWidget {
   final TextEditingController phoneNumber;
   final TextEditingController verifyCode;
-  _PhoneNumberLogin(
+  const _PhoneNumberLogin(
       {Key? key, required this.phoneNumber, required this.verifyCode})
       : super(key: key);
 
@@ -271,18 +269,19 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.only(bottom: 20),
           child: TextField(
             autofocus: false,
             decoration: InputDecoration(
               hintText: "请输入手机号",
-              prefixIcon: Icon(
+              prefixIcon: const Icon(
                 Icons.phone_android,
               ),
               isCollapsed: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               filled: true,
-              fillColor: Color(0xFFF5F5F5),
+              fillColor: const Color(0xFFF5F5F5),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(64),
                   borderSide: BorderSide.none),
@@ -291,28 +290,26 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
           ),
         ),
         Container(
-          padding: EdgeInsets.only(bottom: 30),
+          padding: const EdgeInsets.only(bottom: 30),
           child: LeftRightBox(
-            left: Container(
-              child: TextField(
-                autofocus: false,
-                decoration: InputDecoration(
-                  hintText: "验证码",
-                  prefixIcon: Icon(Icons.lock),
-                  isCollapsed: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  filled: true,
-                  fillColor: Color(0xFFF5F5F5),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(64),
-                      borderSide: BorderSide.none),
-                ),
-                controller: widget.verifyCode,
+            left: TextField(
+              autofocus: false,
+              decoration: InputDecoration(
+                hintText: "验证码",
+                prefixIcon: const Icon(Icons.lock),
+                isCollapsed: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                filled: true,
+                fillColor: const Color(0xFFF5F5F5),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(64),
+                    borderSide: BorderSide.none),
               ),
+              controller: widget.verifyCode,
             ),
             right: Container(
-                margin: EdgeInsets.only(left: 20, right: 20),
+                margin: const EdgeInsets.only(left: 20, right: 20),
                 child: SendVerifyButton(
                   sendVerify: () async {
                     if (widget.phoneNumber.text == "") {
@@ -389,62 +386,60 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
         //     style: TextStyle(color: Colors.grey),
         //   ),
         // ),
-        Container(
-          child: GradientButton(
-            padding: const EdgeInsets.all(16.0),
-            borderRadius: BorderRadius.circular(64),
-            child: Center(
-              child: Text(
-                "登录",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+        GradientButton(
+          padding: const EdgeInsets.all(16.0),
+          borderRadius: BorderRadius.circular(64),
+          child: const Center(
+            child: Text(
+              "登录",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            onPressed: () async {
-              if (widget.phoneNumber.text == "") {
-                Fluttertoast.showToast(msg: "请输入用户名");
-                return;
-              } else if (widget.verifyCode.text == "") {
-                Fluttertoast.showToast(msg: "请输入验证码");
-                return;
-              }
-              if (!smsSend) {
-                Fluttertoast.showToast(msg: "请先获取验证码");
-                return;
-              }
-              var login = await Global.tiebaAPI.loginByPhone(
-                  widget.phoneNumber.text, widget.verifyCode.text,
-                  smsvcodesign: smsCodeSign, smsvcodestr: smsCodeStr);
-              //是否成功登录
-              if (await Global.tiebaAPI.checkLogin()) {
-                Fluttertoast.showToast(msg: "登录成功");
-                Provider.of<User>(context, listen: false).login();
-                Provider.of<ForumState>(context, listen: false).refresh();
-              }
-              // if (login.errcode == "0" || login.errcode == "20") {
-              //   Fluttertoast.showToast(msg: "登录成功");
-              //   Provider.of<User>(context, listen: false).login();
-              //   Provider.of<ForumState>(context, listen: false).refresh();
-              // }
-              // else if (login.errcode == "20") {
-              //   var wapLogin = await Global.tiebaAPI.wapLoginByPhone(
-              //     widget.phoneNumber.text,
-              //     widget.verifyCode.text,
-              //   );
-              //   if (wapLogin.errcode == "110000") {
-              //     Fluttertoast.showToast(msg: "登录成功");
-              //     Provider.of<User>(context, listen: false).login();
-              //     Provider.of<ForumState>(context, listen: false).refresh();
-              //   } else {
-              //     Fluttertoast.showToast(
-              //         msg: "登录失败错误码(err:${wapLogin.errcode}\n${wapLogin.msg})");
-              //   }
-              // }
-              else {
-                Fluttertoast.showToast(
-                    msg: "登录失败错误码(err:${login.errcode}\n${login.msg})");
-              }
-            },
           ),
+          onPressed: () async {
+            if (widget.phoneNumber.text == "") {
+              Fluttertoast.showToast(msg: "请输入用户名");
+              return;
+            } else if (widget.verifyCode.text == "") {
+              Fluttertoast.showToast(msg: "请输入验证码");
+              return;
+            }
+            if (!smsSend) {
+              Fluttertoast.showToast(msg: "请先获取验证码");
+              return;
+            }
+            var login = await Global.tiebaAPI.loginByPhone(
+                widget.phoneNumber.text, widget.verifyCode.text,
+                smsvcodesign: smsCodeSign, smsvcodestr: smsCodeStr);
+            //是否成功登录
+            if (await Global.tiebaAPI.checkLogin()) {
+              Fluttertoast.showToast(msg: "登录成功");
+              Provider.of<User>(context, listen: false).login();
+              Provider.of<ForumState>(context, listen: false).refresh();
+            }
+            // if (login.errcode == "0" || login.errcode == "20") {
+            //   Fluttertoast.showToast(msg: "登录成功");
+            //   Provider.of<User>(context, listen: false).login();
+            //   Provider.of<ForumState>(context, listen: false).refresh();
+            // }
+            // else if (login.errcode == "20") {
+            //   var wapLogin = await Global.tiebaAPI.wapLoginByPhone(
+            //     widget.phoneNumber.text,
+            //     widget.verifyCode.text,
+            //   );
+            //   if (wapLogin.errcode == "110000") {
+            //     Fluttertoast.showToast(msg: "登录成功");
+            //     Provider.of<User>(context, listen: false).login();
+            //     Provider.of<ForumState>(context, listen: false).refresh();
+            //   } else {
+            //     Fluttertoast.showToast(
+            //         msg: "登录失败错误码(err:${wapLogin.errcode}\n${wapLogin.msg})");
+            //   }
+            // }
+            else {
+              Fluttertoast.showToast(
+                  msg: "登录失败错误码(err:${login.errcode}\n${login.msg})");
+            }
+          },
         )
       ],
     );

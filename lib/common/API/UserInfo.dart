@@ -73,9 +73,9 @@ class UserInfomation {
         throw Exception(
             "error_code:${dataJson['error_code']}\n${dataJson['error_msg']}");
       }
-      this._likes = [];
+      _likes = [];
       for (var like in dataJson['like_forum']) {
-        this._likes!.add(LikeForumInfo.fromJson(like));
+        _likes!.add(LikeForumInfo.fromJson(like));
       }
     } catch (e) {
       Fluttertoast.showToast(msg: "获取用户信息失败\n$e");
@@ -93,14 +93,16 @@ class UserInfomation {
         if (bl.length <= i) return 1;
         if (al[i] > bl[i]) {
           return 1;
-        } else if (al[i] < bl[i]) return -1;
+        } else if (al[i] < bl[i]) {
+          return -1;
+        }
       }
       return 0;
     });
-    var sortedMap = Map<String, dynamic>();
-    keys.forEach((element) {
+    var sortedMap = <String, dynamic>{};
+    for (var element in keys) {
       sortedMap[element] = map[element];
-    });
+    }
     return sortedMap;
   }
 

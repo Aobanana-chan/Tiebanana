@@ -12,7 +12,8 @@ import 'package:tiebanana/routes/routes.dart';
 class SearchBar extends StatefulWidget {
   final double? maxHeight;
   final FloatingSearchBarController? barController;
-  SearchBar({Key? key, this.maxHeight = double.infinity, this.barController})
+  const SearchBar(
+      {Key? key, this.maxHeight = double.infinity, this.barController})
       : super(key: key);
 
   @override
@@ -76,7 +77,7 @@ class _SearchBarState extends State<SearchBar> {
         // hideKeyboardOnDownScroll: true,
         leadingActions: [
           FloatingSearchBarAction.icon(
-              icon: Icon(Icons.search),
+              icon: const Icon(Icons.search),
               onTap: () {
                 if (searchTXT != "") {
                   search(context, searchTXT);
@@ -87,7 +88,7 @@ class _SearchBarState extends State<SearchBar> {
         body: _buildBody(),
         actions: [
           RawMaterialButton(
-            shape: CircleBorder(),
+            shape: const CircleBorder(),
             onPressed: () async {
               Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
               await Global.tiebaAPI.signAll();
@@ -96,7 +97,7 @@ class _SearchBarState extends State<SearchBar> {
             child: Stack(
               alignment: AlignmentDirectional.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.circle_outlined,
                   size: 32,
                 ),
@@ -129,7 +130,7 @@ class _SearchBarState extends State<SearchBar> {
 class AnimatedDropDown extends StatefulWidget {
   final Duration duration;
   final double barHeight;
-  AnimatedDropDown(
+  const AnimatedDropDown(
       {Key? key,
       this.duration = const Duration(milliseconds: 400),
       this.barHeight = 56})
@@ -192,7 +193,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
     //获取历史记录添加到列表
     List<Widget> historyWidgetList = history.map((item) {
       return MaterialButton(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         onPressed: () {
           bar!.barController.query = item;
           // bar!.barController.close();
@@ -215,7 +216,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
                     Global.profile.setStringList("searchHistory", history);
                     setState(() {});
                   },
-                  child: Align(
+                  child: const Align(
                     alignment: Alignment.centerLeft,
                     child: Text("删除"),
                   ),
@@ -226,16 +227,16 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
           alignment: Alignment.centerLeft,
           child: Text(
             item,
-            style: TextStyle(fontSize: 18),
+            style: const TextStyle(fontSize: 18),
             overflow: TextOverflow.ellipsis,
           ),
         ),
       );
     }).toList();
     //若有历史记录，添加清除历史记录按钮
-    if (historyWidgetList.length != 0) {
+    if (historyWidgetList.isNotEmpty) {
       historyWidgetList.add(MaterialButton(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         onPressed: () {
           Global.profile.setStringList("searchHistory", []);
           setState(() {
@@ -243,7 +244,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
             getHistory();
           });
         },
-        child: Align(
+        child: const Align(
           alignment: Alignment.center,
           child: Text(
             "清除历史搜索记录",
@@ -283,7 +284,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       controller: scrollController,
-                      physics: BouncingScrollPhysics(),
+                      physics: const BouncingScrollPhysics(),
                       children: getListWidget()),
                   onPointerDown: (e) => tapPoint = e,
                 )

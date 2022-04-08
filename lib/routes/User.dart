@@ -9,7 +9,7 @@ import 'package:tiebanana/common/Global.dart';
 ///用户信息和设置界面
 class UserPage extends StatefulWidget {
   final FloatingSearchBarController controller;
-  UserPage({Key? key, required this.controller}) : super(key: key);
+  const UserPage({Key? key, required this.controller}) : super(key: key);
 
   @override
   _UserPageState createState() => _UserPageState();
@@ -26,7 +26,7 @@ class _UserPageState extends State<UserPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(child: LayoutBuilder(
+    return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         return FutureBuilder(
           future: _myInfo,
@@ -34,16 +34,12 @@ class _UserPageState extends State<UserPage> {
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.none:
-                return Container(
-                  child: Center(
-                    child: Text("初始化中..."),
-                  ),
+                return const Center(
+                  child: Text("初始化中..."),
                 );
               case ConnectionState.active:
-                return Container(
-                  child: Center(
-                    child: Text("加载中..."),
-                  ),
+                return const Center(
+                  child: Text("加载中..."),
                 );
               default:
                 if (snapshot.hasData) {
@@ -77,10 +73,8 @@ class _UserPageState extends State<UserPage> {
                         _myInfo = Global.tiebaAPI.getMyInfo();
                       });
                     },
-                    child: Container(
-                      child: Center(
-                        child: Text("发生了错误...点击重试"),
-                      ),
+                    child: const Center(
+                      child: Text("发生了错误...点击重试"),
                     ),
                   );
                 }
@@ -89,6 +83,6 @@ class _UserPageState extends State<UserPage> {
           },
         );
       },
-    ));
+    );
   }
 }

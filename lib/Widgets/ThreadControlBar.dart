@@ -17,7 +17,7 @@ class ThreadControlBar extends StatefulWidget {
   final bool showClass;
   final int sortType;
   final void Function(int) changeSortType;
-  ThreadControlBar(
+  const ThreadControlBar(
       {Key? key,
       required this.controller,
       required this.tabs,
@@ -70,19 +70,20 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
           //贴控制
 
           LeftRightBox(
-            left: Container(
+            left: SizedBox(
               width: 150,
               child: TabBar(
                 controller: widget.controller,
-                labelStyle: TextStyle(
+                labelStyle: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
                 labelColor: Colors.blue,
                 indicator: CustomUnderlineTabIndicator(
                     wantWidth: 36,
-                    insets: EdgeInsets.only(left: 15, right: 15),
-                    borderSide: BorderSide(width: 4, color: Colors.green)),
+                    insets: const EdgeInsets.only(left: 15, right: 15),
+                    borderSide:
+                        const BorderSide(width: 4, color: Colors.green)),
                 tabs: widget.tabs
                     .map((e) => Tab(
                           text: e,
@@ -90,45 +91,43 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
                     .toList(),
               ),
             ),
-            right: Container(
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  canvasColor: Colors.white,
-                ),
-                child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                  items: buildSortItem(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      for (var i = 0; i < sortType.length; i++) {
-                        if (value == sortType[i]) {
-                          widget.changeSortType(i);
-                          break;
-                        }
-                      }
-                      setState(() {
-                        dropDownValue = value;
-                      });
-                    }
-                  },
-                  value: dropDownValue,
-                  borderRadius: BorderRadius.circular(8),
-                )),
+            right: Theme(
+              data: Theme.of(context).copyWith(
+                canvasColor: Colors.white,
               ),
+              child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                items: buildSortItem(),
+                onChanged: (value) {
+                  if (value != null) {
+                    for (var i = 0; i < sortType.length; i++) {
+                      if (value == sortType[i]) {
+                        widget.changeSortType(i);
+                        break;
+                      }
+                    }
+                    setState(() {
+                      dropDownValue = value;
+                    });
+                  }
+                },
+                value: dropDownValue,
+                borderRadius: BorderRadius.circular(8),
+              )),
             ),
           ),
           //精品贴分类控制
           AnimatedContainer(
-            duration: Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 200),
             constraints: widget.showClass
-                ? BoxConstraints(maxHeight: 128)
-                : BoxConstraints(maxHeight: 0),
+                ? const BoxConstraints(maxHeight: 128)
+                : const BoxConstraints(maxHeight: 0),
             child: AnimatedOpacity(
               opacity: widget.showClass ? 1 : 0,
-              duration: Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 200),
               curve: Curves.easeIn,
               child: SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: _buildClassify(),
@@ -159,7 +158,7 @@ class ClassifyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // padding: EdgeInsets.all(10),
-      margin: EdgeInsets.all(3),
+      margin: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: seleted ? Colors.blue : Colors.white,
         border: Border.all(width: 0.1),

@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
@@ -11,7 +13,7 @@ import 'package:tiebanana/common/Global.dart';
 class TiebaParser {
   //获取图片的index
   static int _getImgIndex(String img, List<String> allImgs) {
-    if (allImgs.length == 0) {
+    if (allImgs.isEmpty) {
       return 0;
     }
     for (var i = 0; i < allImgs.length; i++) {
@@ -34,7 +36,7 @@ class TiebaParser {
       {
         richText.add(TextSpan(
           text: elem.text!,
-          style: TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 16),
         ));
       } else if (elem.type == "4" || elem.type == "3") {
         //图片
@@ -43,18 +45,16 @@ class TiebaParser {
             if (elem.type == "4" && elem.originSrc == null) {
               richText.add(AtUserSpan(
                 text: elem.text!,
-                style: TextStyle(color: Colors.blue),
+                style: const TextStyle(color: Colors.blue),
               ));
               break;
             }
-            if (offset == null) {
-              offset = _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
-            }
+            offset ??= _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
             ExtendedPageController controller =
                 ExtendedPageController(initialPage: index + offset);
             richText.add(ExtendedWidgetSpan(
                 child: Container(
-                  margin: EdgeInsets.only(top: 3, bottom: 3),
+                  margin: const EdgeInsets.only(top: 3, bottom: 3),
                   child: Thumbnail(
                     imgs: allImgs,
                     controller: controller,
@@ -71,20 +71,18 @@ class TiebaParser {
               //@用户
               richText.add(TextSpan(
                 text: elem.text!,
-                style: TextStyle(color: Colors.blue),
+                style: const TextStyle(color: Colors.blue),
               ));
               break;
             }
-            if (offset == null) {
-              offset = _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
-            }
+            offset ??= _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
             if (int.parse(elem.bsize!.replaceAll(",", "")) < 0x100000) {
               //小于1mb就加载
               ExtendedPageController controller =
                   ExtendedPageController(initialPage: index + offset);
               richText.add(ExtendedWidgetSpan(
                   child: Container(
-                    margin: EdgeInsets.only(top: 3, bottom: 3),
+                    margin: const EdgeInsets.only(top: 3, bottom: 3),
                     child: Thumbnail(
                       imgs: allImgs,
                       controller: controller,
@@ -102,18 +100,16 @@ class TiebaParser {
               //@用户
               richText.add(TextSpan(
                 text: elem.text!,
-                style: TextStyle(color: Colors.blue),
+                style: const TextStyle(color: Colors.blue),
               ));
               break;
             }
-            if (offset == null) {
-              offset = _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
-            }
+            offset ??= _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
             ExtendedPageController controller =
                 ExtendedPageController(initialPage: index + offset);
             richText.add(ExtendedWidgetSpan(
                 child: Container(
-                  margin: EdgeInsets.only(top: 3, bottom: 3),
+                  margin: const EdgeInsets.only(top: 3, bottom: 3),
                   child: Thumbnail(
                     imgs: allImgs,
                     controller: controller,

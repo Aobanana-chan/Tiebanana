@@ -10,7 +10,7 @@ import 'package:tiebanana/common/Global.dart';
 
 class RecommendPan extends StatefulWidget {
   final FloatingSearchBarController controller;
-  RecommendPan({Key? key, required this.controller}) : super(key: key);
+  const RecommendPan({Key? key, required this.controller}) : super(key: key);
 
   @override
   _RecommendPanState createState() => _RecommendPanState();
@@ -21,7 +21,7 @@ class _RecommendPanState extends State<RecommendPan> {
   int pn = 1;
   ScrollController controller = ScrollController();
   Future<void> refresh() async {
-    if (recommend.length != 0) {
+    if (recommend.isNotEmpty) {
       recommend.remove(null);
       recommend.insert(0, null);
     }
@@ -66,7 +66,8 @@ class _RecommendPanState extends State<RecommendPan> {
             onTap: () async {
               refresh();
               controller.animateTo(0,
-                  duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut);
             },
             child: Container(
               height: 40,
@@ -76,7 +77,7 @@ class _RecommendPanState extends State<RecommendPan> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                children: const [
                   Icon(
                     Icons.refresh,
                     color: Colors.white,
@@ -105,14 +106,14 @@ class _RecommendPanState extends State<RecommendPan> {
                     behavior: HitTestBehavior.translucent,
                     onTap: (() => widget.controller.close()),
                     child: Container(
-                      padding: EdgeInsets.only(left: 5, right: 5),
+                      padding: const EdgeInsets.only(left: 5, right: 5),
                       child: RefreshIndicator(
                         triggerMode: RefreshIndicatorTriggerMode.anywhere,
                         onRefresh: refresh,
                         child: ListView(
                           padding: EdgeInsets.zero,
                           controller: controller,
-                          physics: BouncingScrollPhysics(),
+                          physics: const BouncingScrollPhysics(),
                           children: threadwidgets,
                         ),
                       ),

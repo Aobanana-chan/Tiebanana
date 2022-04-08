@@ -85,7 +85,7 @@ class AuthVerifyManager {
           "lstr": lstr,
           "ltoken": ltoken,
           "tpl": "mn",
-          "secret": secret == null ? "" : secret,
+          "secret": secret ?? "",
           "winsdk": "",
           "authAction": "",
           "traceid": Global.tiebaAPI.getTraceID()
@@ -116,7 +116,7 @@ class AuthVerifyManager {
           "lstr": lstr,
           "ltoken": ltoken,
           "tpl": "mn",
-          "secret": secret == null ? "" : secret,
+          "secret": secret ?? "",
           "winsdk": "",
           "authAction": "",
           "traceid": Global.tiebaAPI.getTraceID()

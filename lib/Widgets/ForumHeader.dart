@@ -9,7 +9,7 @@ import 'package:tiebanana/common/Global.dart';
 class ForumHeader extends StatefulWidget {
   final Forum info;
 
-  ForumHeader({
+  const ForumHeader({
     Key? key,
     required this.info,
   }) : super(key: key);
@@ -32,7 +32,7 @@ class _ForumHeaderState extends State<ForumHeader> {
         return GradientButton(
             borderRadius: BorderRadius.circular(18),
             onPressed: null,
-            child: Text("已签到"));
+            child: const Text("已签到"));
       }
       return GradientButton(
           borderRadius: BorderRadius.circular(18),
@@ -51,68 +51,65 @@ class _ForumHeaderState extends State<ForumHeader> {
             }
             setState(() {});
           },
-          child: Text("签到"));
+          child: const Text("签到"));
     } else {
       return GradientButton(
           borderRadius: BorderRadius.circular(18),
           onPressed: () {
             //TODO:关注吧
           },
-          child: Text("关注"));
+          child: const Text("关注"));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // height: widget.maxheight,
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        color: Colors.white,
-        padding: EdgeInsets.all(5),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(2),
-              child: Avatar(
-                imgUrl: widget.info.avatar ?? widget.info.fShareImg!,
-                height: 50,
-                width: 50,
-              ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      color: Colors.white,
+      padding: const EdgeInsets.all(5),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2),
+            child: Avatar(
+              imgUrl: widget.info.avatar ?? widget.info.fShareImg!,
+              height: 50,
+              width: 50,
             ),
-            SizedBox(
-              width: 5,
-            ),
-            SingleChildScrollView(
-              physics: NeverScrollableScrollPhysics(),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "${widget.info.name}吧",
-                    overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(
+            width: 5,
+          ),
+          SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "${widget.info.name}吧",
+                  overflow: TextOverflow.ellipsis,
+                ),
+                LimitedBox(
+                  maxWidth: 100,
+                  child: LinearProgressIndicator(
+                    value: int.parse(widget.info.curScore!) /
+                        int.parse(widget.info.levelupScore!),
                   ),
-                  LimitedBox(
-                    maxWidth: 100,
-                    child: LinearProgressIndicator(
-                      value: int.parse(widget.info.curScore!) /
-                          int.parse(widget.info.levelupScore!),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text("LV${widget.info.levelId}"),
-                      SizedBox(width: 5),
-                      Text(widget.info.levelName!)
-                    ],
-                  )
-                ],
-              ),
+                ),
+                Row(
+                  children: [
+                    Text("LV${widget.info.levelId}"),
+                    const SizedBox(width: 5),
+                    Text(widget.info.levelName!)
+                  ],
+                )
+              ],
             ),
-            Spacer(),
-            buildButton()
-          ],
-        ),
+          ),
+          const Spacer(),
+          buildButton()
+        ],
       ),
     );
   }

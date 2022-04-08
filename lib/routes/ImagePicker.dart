@@ -3,15 +3,12 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/json.dart';
-import 'package:tiebanana/Json_Model/provider.dart';
 import 'dart:math' as math;
 import 'package:uuid/uuid.dart';
 
 ///图片选择和上传路由
 class ImagePickerRoute extends StatefulWidget {
-  ImagePickerRoute({Key? key}) : super(key: key);
+  const ImagePickerRoute({Key? key}) : super(key: key);
 
   @override
   State<ImagePickerRoute> createState() => _ImagePickerRouteState();
@@ -27,14 +24,14 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
   List<Future<File?>> imageFileList = [];
   List<AssetEntity> imageEntityList = [];
   bool _sendOriginImg = false;
-  Set<AssetEntity> fileSelected = Set();
+  Set<AssetEntity> fileSelected = {};
   late Future<PermissionState> permission;
   @override
   void initState() {
     super.initState();
     permission = PhotoManager.requestPermissionExtend();
     animationController = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 2000));
+        vsync: this, duration: const Duration(milliseconds: 2000));
     animation =
         CurvedAnimation(parent: animationController, curve: Curves.bounceOut);
     animation = Tween<double>(begin: 0, end: 2).animate(animation);
@@ -81,6 +78,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
           pathSelected = pathSelectItems?.first.value;
         }
       }
+      // ignore: empty_catches
     } catch (e) {}
 
     //读取图片
@@ -109,27 +107,25 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
             if (pathes == null) {
               initloadPhotos();
             }
-            body = Container(
-              child: GridView.builder(
-                physics: BouncingScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3, mainAxisSpacing: 5, crossAxisSpacing: 3),
-                itemCount: imageFileList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return KeepAliveWrapper(
-                      child: LocalImageWidget(
-                    index: index,
-                    fileList: imageFileList,
-                    addFunction: addSelected,
-                    removeFunction: removeSelected,
-                    entity: imageEntityList[index],
-                    selectList: fileSelected.toList(),
-                  ));
-                },
-              ),
+            body = GridView.builder(
+              physics: const BouncingScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3, mainAxisSpacing: 5, crossAxisSpacing: 3),
+              itemCount: imageFileList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return KeepAliveWrapper(
+                    child: LocalImageWidget(
+                  index: index,
+                  fileList: imageFileList,
+                  addFunction: addSelected,
+                  removeFunction: removeSelected,
+                  entity: imageEntityList[index],
+                  selectList: fileSelected.toList(),
+                ));
+              },
             );
           } else {
-            body = Center(
+            body = const Center(
               child: Text("没有访问权限"),
             );
           }
@@ -170,7 +166,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
                 },
                 icon: AnimatedBuilder(
                   animation: animation,
-                  child: Icon(Icons.refresh),
+                  child: const Icon(Icons.refresh),
                   builder: (BuildContext context, Widget? child) {
                     return Transform.rotate(
                       angle: math.pi * animation.value,
@@ -184,7 +180,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
           body: body,
           bottomNavigationBar: Container(
             color: Colors.white,
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: LeftRightBox(
               verticalAlign: VerticalAlign.center,
               left: _OriginButton(
@@ -197,7 +193,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
                     Navigator.pop(context, [fileSelected, _sendOriginImg]);
                   },
                   borderRadius: BorderRadius.circular(64),
-                  child: Text("提交")),
+                  child: const Text("提交")),
             ),
           ),
         );
@@ -213,7 +209,7 @@ class LocalImageWidget extends StatefulWidget {
   final List<AssetEntity> selectList;
   final Future<void> Function(int index) addFunction;
   final Future<void> Function(int index) removeFunction;
-  LocalImageWidget(
+  const LocalImageWidget(
       {Key? key,
       required this.index,
       required this.fileList,
@@ -229,7 +225,7 @@ class LocalImageWidget extends StatefulWidget {
 
 class _LocalImageWidgetState extends State<LocalImageWidget> {
   bool selected = false;
-  String heroTag = Uuid().v4();
+  String heroTag = const Uuid().v4();
 
   void changeSelect({int? index}) {
     if (index != null) {
@@ -308,7 +304,7 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
                       SizedBox.expand(
                         child: Container(
                           alignment: Alignment.topRight,
-                          padding: EdgeInsets.all(3),
+                          padding: const EdgeInsets.all(3),
                           child: GestureDetector(
                             onTap: () {
                               changeSelect();
@@ -317,18 +313,18 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
                               });
                             },
                             child: selected
-                                ? Icon(
+                                ? const Icon(
                                     Icons.check_circle,
                                     color: Colors.green,
                                   )
-                                : Icon(Icons.circle_outlined),
+                                : const Icon(Icons.circle_outlined),
                           ),
                         ),
                       ),
                     ],
                   ));
             } else {
-              return Icon(
+              return const Icon(
                 Icons.close,
                 color: Colors.red,
               );
@@ -349,7 +345,7 @@ class ZoomedLocalImage extends StatefulWidget {
   final ExtendedPageController controller;
   final int index;
   final String heroTag;
-  ZoomedLocalImage(
+  const ZoomedLocalImage(
       {Key? key,
       required this.file,
       required this.controller,
@@ -387,21 +383,21 @@ class _ZoomedLocalImageState extends State<ZoomedLocalImage> {
           backgroundColor: Colors.transparent,
           actions: [
             IconButton(
-                padding: EdgeInsets.all(3),
+                padding: const EdgeInsets.all(3),
                 onPressed: () async {
                   Navigator.pop(context, currentIndex);
                 },
-                icon: Icon(Icons.check))
+                icon: const Icon(Icons.check))
           ],
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_sharp),
+            icon: const Icon(Icons.arrow_back_sharp),
             onPressed: () {
               Navigator.pop(context);
             },
           ),
         ),
         body: Container(
-          padding: EdgeInsets.all(5),
+          padding: const EdgeInsets.all(5),
           child: ExtendedImageGesturePageView.builder(
             canScrollPage: (gestureDetails) {
               if (gestureDetails!.totalScale! > 1.0 &&
@@ -434,7 +430,7 @@ class _ZoomedLocalImageState extends State<ZoomedLocalImage> {
               currentIndex = index;
               setState(() {});
             },
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             pageSnapping: true,
           ),
         ),
@@ -455,20 +451,18 @@ class _OriginButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              selected ? Icons.check_circle : Icons.circle_outlined,
-              color: selected ? Colors.blue : Colors.black,
-            ),
-            Text(
-              text,
-              style: TextStyle(color: selected ? Colors.blue : Colors.black),
-            )
-          ],
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            selected ? Icons.check_circle : Icons.circle_outlined,
+            color: selected ? Colors.blue : Colors.black,
+          ),
+          Text(
+            text,
+            style: TextStyle(color: selected ? Colors.blue : Colors.black),
+          )
+        ],
       ),
     );
   }

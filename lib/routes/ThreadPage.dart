@@ -13,7 +13,7 @@ import 'package:tiebanana/routes/routes.dart';
 
 class ThreadPageRoute extends StatefulWidget {
   final String kz;
-  ThreadPageRoute({Key? key, required this.kz}) : super(key: key);
+  const ThreadPageRoute({Key? key, required this.kz}) : super(key: key);
 
   @override
   _ThreadPageState createState() => _ThreadPageState();
@@ -34,28 +34,26 @@ class _ThreadPageState extends State<ThreadPageRoute> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: FutureBuilder(
-        future: initThread,
-        initialData: null,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            return Scaffold(
-              body: ThreadPageMain(kz: widget.kz, initInfo: snapshot.data),
-            );
-          } else if (snapshot.hasError) {
-            //TODO:以后添加收藏贴缓存
-            Fluttertoast.showToast(msg: snapshot.error.toString());
-            Navigator.pop(context);
-          }
-          return Container(
-            color: Colors.white,
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+    return FutureBuilder(
+      future: initThread,
+      initialData: null,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.hasData) {
+          return Scaffold(
+            body: ThreadPageMain(kz: widget.kz, initInfo: snapshot.data),
           );
-        },
-      ),
+        } else if (snapshot.hasError) {
+          //TODO:以后添加收藏贴缓存
+          Fluttertoast.showToast(msg: snapshot.error.toString());
+          Navigator.pop(context);
+        }
+        return Container(
+          color: Colors.white,
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
     );
   }
 }
@@ -63,7 +61,7 @@ class _ThreadPageState extends State<ThreadPageRoute> {
 class ThreadPageMain extends StatefulWidget {
   final String kz;
   final ThreadPageData initInfo;
-  ThreadPageMain({Key? key, required this.kz, required this.initInfo})
+  const ThreadPageMain({Key? key, required this.kz, required this.initInfo})
       : super(key: key);
 
   @override
@@ -72,7 +70,7 @@ class ThreadPageMain extends StatefulWidget {
 
 class _ThreadPageMainState extends State<ThreadPageMain> {
   late List<Widget> appBarAction;
-  ScrollController _controller = ScrollController();
+  final ScrollController _controller = ScrollController();
 
   bool lz = false; //只看楼主
   late List<PostList> postList;
@@ -94,7 +92,7 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
       StatefulBuilder(
         builder: (BuildContext context, setState) {
           return IconButton(
-              padding: EdgeInsets.all(6),
+              padding: const EdgeInsets.all(6),
               onPressed: () {
                 //TODO:只看楼主
                 setState(() {
@@ -102,7 +100,7 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
                 });
               },
               icon: Container(
-                padding: EdgeInsets.all(1),
+                padding: const EdgeInsets.all(1),
                 decoration: BoxDecoration(
                   border: Border.all(
                       width: 2, color: lz ? Colors.blue : Colors.black),
@@ -122,7 +120,7 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
           onPressed: () {
             //TODO:更多菜单
           },
-          icon: Icon(Icons.more_vert)),
+          icon: const Icon(Icons.more_vert)),
     ];
     postList = widget.initInfo.postList ?? [];
     title = widget.initInfo.thread!.title!;
@@ -242,12 +240,12 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Color(0xFFF2F2F5),
+      color: const Color(0xFFF2F2F5),
       child: Column(
         children: [
           Expanded(
               child: CustomScrollView(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             controller: _controller,
             slivers: <Widget>[
               SliverAppBar(
@@ -263,17 +261,17 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
                 title: AnimatedOpacity(
                   alwaysIncludeSemantics: true,
                   opacity: scrollOffset < 36 ? 0 : 1,
-                  duration: Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 200),
                   child: GestureDetector(
                       onTap: () {
                         _controller.animateTo(0,
-                            duration: Duration(milliseconds: 200),
+                            duration: const Duration(milliseconds: 200),
                             curve: Curves.easeIn);
                       },
                       child: Text(
                         widget.initInfo.thread!.title!,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 17),
                       )),
                 ),
@@ -368,7 +366,7 @@ class FourmBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 5, bottom: 5),
+      margin: const EdgeInsets.only(top: 5, bottom: 5),
       color: Colors.white,
       child: MaterialButton(
         padding: EdgeInsets.zero,
@@ -378,7 +376,7 @@ class FourmBar extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              margin: EdgeInsets.all(5),
+              margin: const EdgeInsets.all(5),
               height: 40,
               width: 40,
               child: ClipOval(
@@ -386,10 +384,10 @@ class FourmBar extends StatelessWidget {
               ),
             ),
             Container(
-              margin: EdgeInsets.only(left: 5),
+              margin: const EdgeInsets.only(left: 5),
               child: Text(
                 "$name吧",
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
             )
           ],

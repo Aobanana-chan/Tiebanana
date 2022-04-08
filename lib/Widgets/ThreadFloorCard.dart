@@ -53,10 +53,10 @@ class ThreadFloorComment extends StatelessWidget {
             });
       },
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
         ),
-        padding: EdgeInsets.only(left: 8, right: 8),
+        padding: const EdgeInsets.only(left: 8, right: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +66,8 @@ class ThreadFloorComment extends StatelessWidget {
               children: [
                 //作者
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 0, vertical: 7),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 0, vertical: 7),
                   child: Avatar(
                     imgUrl: AUTHOR_AVATAR + author.portrait!,
                     height: 35,
@@ -78,7 +79,7 @@ class ThreadFloorComment extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(5),
                       child: Row(
                         children: [
                           Expanded(
@@ -96,7 +97,7 @@ class ThreadFloorComment extends StatelessWidget {
                                         <Widget>[]) +
                                     [
                                       Container(
-                                        margin: EdgeInsets.only(left: 5),
+                                        margin: const EdgeInsets.only(left: 5),
                                         child: Rank(
                                           rank: author.levelID,
                                         ),
@@ -108,32 +109,32 @@ class ThreadFloorComment extends StatelessWidget {
                                 children: [
                                   Text(
                                     "${postMain.floor}楼",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.grey, fontSize: 14),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 10,
                                   ),
                                   //发帖时间
                                   Text(
                                     TiebaParser.getPostTime(
                                         strTime: postMain.time),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.grey, fontSize: 14),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 10,
                                   ),
 
                                   Expanded(
                                       child: Container(
-                                    constraints: BoxConstraints(
+                                    constraints: const BoxConstraints(
                                         maxHeight: 1000, maxWidth: 1000),
                                     child: Visibility(
                                         visible: postMain.lbsInfo != null,
                                         child: Text("${postMain.lbsInfo?.name}",
                                             overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                                 color: Colors.grey,
                                                 fontSize: 14))),
                                   ))
@@ -159,7 +160,7 @@ class ThreadFloorComment extends StatelessWidget {
                       children: [
                         //正文
                         Container(
-                          padding: EdgeInsets.all(5),
+                          padding: const EdgeInsets.all(5),
                           child: Wrap(
                             children: TiebaParser.parserContent(
                                 postMain.content, allImgs, allOrgImgs,
@@ -171,20 +172,18 @@ class ThreadFloorComment extends StatelessWidget {
                             child: Row(
                               children: [
                                 Expanded(
-                                    child: Container(
-                                  child: InnerFloor(
-                                    subPostList: postMain.subPostList ?? [],
-                                    userlist: userList,
-                                    subPostNumber: postMain.subPostNumber!,
-                                    floorNum: postMain.floor!,
-                                    kz: threadID,
-                                    pid: postMain.id!,
-                                    forum: forum,
-                                  ),
+                                    child: InnerFloor(
+                                  subPostList: postMain.subPostList ?? [],
+                                  userlist: userList,
+                                  subPostNumber: postMain.subPostNumber!,
+                                  floorNum: postMain.floor!,
+                                  kz: threadID,
+                                  pid: postMain.id!,
+                                  forum: forum,
                                 ))
                               ],
                             )),
-                        Divider()
+                        const Divider()
                       ],
                     )
                   ],
@@ -253,10 +252,11 @@ class InnerFloor extends StatelessWidget {
         },
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(5),
+          padding: const EdgeInsets.all(5),
           child: Text(
             "查看剩余${int.parse(subPostNumber) - subPostList.length}条回复",
-            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Colors.blue, fontWeight: FontWeight.bold),
           ),
         ),
       ));
@@ -267,11 +267,11 @@ class InnerFloor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(3),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-          color: Color(0xFFF7F8FA),
+          color: const Color(0xFFF7F8FA),
           borderRadius: BorderRadius.circular(5),
-          border: Border.all(color: Color(0xFFF0F1F2))),
+          border: Border.all(color: const Color(0xFFF0F1F2))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: buildSubPost(context),
@@ -302,14 +302,14 @@ class InnerPost extends StatelessWidget {
     List<InlineSpan> w = [];
     w.add(AtUserSpan(
       text: "${author.nameShow} :",
-      style: TextStyle(color: Colors.blue),
+      style: const TextStyle(color: Colors.blue),
     ));
     for (Content content in posts) {
       //用户
       if ((content.uid != null || content.uid != null) && content.type == "0") {
         w.add(TextSpan(
           text: "${content.text}",
-          style: TextStyle(color: Colors.blue),
+          style: const TextStyle(color: Colors.blue),
         ));
       } else if (content.type == "0") {
         w.add(TextSpan(
@@ -326,7 +326,8 @@ class InnerPost extends StatelessWidget {
     return [
       RichText(
           text: TextSpan(
-              children: w, style: TextStyle(color: Colors.black, fontSize: 15)))
+              children: w,
+              style: const TextStyle(color: Colors.black, fontSize: 15)))
     ];
   }
 
@@ -349,7 +350,7 @@ class InnerPost extends StatelessWidget {
           );
         },
         child: Container(
-          padding: EdgeInsets.all(3),
+          padding: const EdgeInsets.all(3),
           child: Row(
             children: [
               Expanded(
@@ -370,7 +371,7 @@ class InnerFloorBottomSheet extends StatefulWidget {
   final String spid;
   final int pn;
   final Forum forum;
-  InnerFloorBottomSheet(
+  const InnerFloorBottomSheet(
       {Key? key,
       required this.floorNum,
       required this.kz,
@@ -402,7 +403,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
         vsync: this,
         value: 0,
         upperBound: double.infinity,
-        duration: Duration(milliseconds: 100));
+        duration: const Duration(milliseconds: 100));
 
     //TODO:连续加载下/上一页
   }
@@ -411,7 +412,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
     //只刷新未加载的页面和头(非第一页)/尾
     if (!floorPages.containsKey(pageNum) ||
         (floorPages.keys.toSet().last == pageNum) ||
-        (floorPages.keys.toSet().first == pageNum && pageNum != 1))
+        (floorPages.keys.toSet().first == pageNum && pageNum != 1)) {
       dataLoader = Global.tiebaAPI
           .getInnerFloor(widget.kz, widget.pid, spid: widget.spid, pn: pn)
           .then((value) {
@@ -419,15 +420,16 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
         floorPages[pn] = value;
         return value;
       });
+    }
   }
 
   List<Widget> buildFloor() {
     List<Widget> w = [];
     floorPages.forEach((key, value) {
-      if (w.length == 0) {
+      if (w.isEmpty) {
         w.add(
           Container(
-              padding: EdgeInsets.only(left: 10, right: 10),
+              padding: const EdgeInsets.only(left: 10, right: 10),
               child: InnerFloorCard(
                 author: value.post!.author!,
                 postMain: value.post!,
@@ -439,28 +441,26 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
         );
         w.add(Container(
           height: 10,
-          color: Color.fromARGB(15, 185, 185, 185),
+          color: const Color.fromARGB(15, 185, 185, 185),
         ));
         w.add(Container(
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
           alignment: Alignment.centerLeft,
           child: Text("${value.subpostList!.length}条回复"),
         ));
       }
       for (SubpostList subpost in value.subpostList ?? []) {
         w.add(
-          Container(
-              // padding: EdgeInsets.only(left: 10, right: 10),
-              child: InnerFloorCard(
+          InnerFloorCard(
             author: subpost.author!,
             postMain: subpost,
             threadID: value.thread!.id!,
             isSpid: subpost.id == widget.spid,
             forum: widget.forum,
             floorId: value.post!.id!,
-          )),
+          ),
         );
-        w.add(Divider());
+        w.add(const Divider());
       }
     });
     return w;
@@ -479,10 +479,10 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
           ),
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
               borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20.0),
-                topRight: const Radius.circular(20.0),
+                topLeft: Radius.circular(20.0),
+                topRight: Radius.circular(20.0),
               ),
               color: Colors.white),
           child: child,
@@ -492,8 +492,8 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
         children: [
           //头部
           Container(
-            margin: EdgeInsets.only(bottom: 5),
-            padding: EdgeInsets.only(
+            margin: const EdgeInsets.only(bottom: 5),
+            padding: const EdgeInsets.only(
               left: 20,
               top: 20,
               right: 20,
@@ -508,7 +508,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
                       onTap: () {
                         Navigator.pop(context);
                       },
-                      child: Icon(Icons.close),
+                      child: const Icon(Icons.close),
                     ),
                     Container(
                       alignment: Alignment.center,
@@ -522,7 +522,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
               ],
             ),
           ),
-          Divider(),
+          const Divider(),
           //主体
           Expanded(
             child: FutureBuilder(
@@ -563,8 +563,8 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
                           child: ListView.builder(
                             controller: controller,
                             physics: animationcontroller.value > 0
-                                ? NeverScrollableScrollPhysics()
-                                : ClampingScrollPhysics(),
+                                ? const NeverScrollableScrollPhysics()
+                                : const ClampingScrollPhysics(),
                             itemCount: floors.length,
                             itemBuilder: (BuildContext context, int index) {
                               return floors[index];
@@ -574,7 +574,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
                       ),
                     )),
                     //底部回复条
-                    Container(child: Builder(
+                    Builder(
                       builder: (context) {
                         if (snapshot.hasData) {
                           late UserList author;
@@ -596,7 +596,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
                           return Container();
                         }
                       },
-                    ))
+                    )
                   ],
                 );
               },
@@ -673,7 +673,7 @@ class InnerFloorCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSpid ? Colors.amber.shade100 : Colors.white,
         ),
-        padding: EdgeInsets.only(left: 18, right: 18),
+        padding: const EdgeInsets.only(left: 18, right: 18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -683,7 +683,8 @@ class InnerFloorCard extends StatelessWidget {
               children: [
                 //作者
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 0, vertical: 7),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 0, vertical: 7),
                   child: Avatar(
                     imgUrl: AUTHOR_AVATAR + author.portrait!,
                     height: 35,
@@ -695,7 +696,7 @@ class InnerFloorCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(5),
                       child: Row(
                         children: [
                           Expanded(
@@ -713,7 +714,7 @@ class InnerFloorCard extends StatelessWidget {
                                         <Widget>[]) +
                                     [
                                       Container(
-                                        margin: EdgeInsets.only(left: 5),
+                                        margin: const EdgeInsets.only(left: 5),
                                         child: Rank(
                                           rank: author.levelID,
                                         ),
@@ -727,10 +728,10 @@ class InnerFloorCard extends StatelessWidget {
                                   Text(
                                     TiebaParser.getPostTime(
                                         strTime: postMain.time),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.grey, fontSize: 14),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 10,
                                   ),
                                 ],
@@ -755,7 +756,7 @@ class InnerFloorCard extends StatelessWidget {
                       children: [
                         //正文
                         Container(
-                          padding: EdgeInsets.all(5),
+                          padding: const EdgeInsets.all(5),
                           child: Wrap(
                             children: TiebaParser.parserContent(
                                 postMain.content,

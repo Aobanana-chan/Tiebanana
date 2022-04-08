@@ -31,7 +31,7 @@ class PassMachine {
   final _cv = "submit"; //固定值
   late String backstr; //从getstyle请求中获取
 
-  String _nameR = "appsapi0"; //用于加密sb->fs的密钥的一部分
+  final String _nameR = "appsapi0"; //用于加密sb->fs的密钥的一部分
 
   PassMachine(this.dio);
   Map<String, int> _setCr() {

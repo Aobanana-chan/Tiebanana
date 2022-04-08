@@ -7,7 +7,7 @@ import 'package:tiebanana/common/API/Constants.dart';
 class TBSMagager {
   late Dio dio;
   var _tbs = "";
-  var _maxlifetime = Duration(seconds: 10); //tbs有效期，暂定为10秒
+  final _maxlifetime = const Duration(seconds: 10); //tbs有效期，暂定为10秒
   DateTime? _time; //最近一次获取的时间
 
   TBSMagager(this.dio);

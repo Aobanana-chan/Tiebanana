@@ -35,7 +35,7 @@ class ThreadSummary extends StatelessWidget {
               //@用户
               richText.add(TextSpan(
                 text: elem.text!,
-                style: TextStyle(color: Colors.blue),
+                style: const TextStyle(color: Colors.blue),
               ));
               break;
             }
@@ -47,7 +47,7 @@ class ThreadSummary extends StatelessWidget {
               //@用户
               richText.add(TextSpan(
                 text: elem.text!,
-                style: TextStyle(color: Colors.blue),
+                style: const TextStyle(color: Colors.blue),
               ));
               break;
             }
@@ -62,7 +62,7 @@ class ThreadSummary extends StatelessWidget {
               //@用户
               richText.add(TextSpan(
                 text: elem.text!,
-                style: TextStyle(color: Colors.blue),
+                style: const TextStyle(color: Colors.blue),
               ));
               break;
             }
@@ -96,7 +96,7 @@ class ThreadSummary extends StatelessWidget {
     body.add(
       Text.rich(
         TextSpan(children: richText),
-        style: TextStyle(fontSize: 16),
+        style: const TextStyle(fontSize: 16),
         overflow: TextOverflow.ellipsis,
         softWrap: true,
         maxLines: 12,
@@ -105,7 +105,7 @@ class ThreadSummary extends StatelessWidget {
 
     //图片
     int index = 0;
-    Widget imgLeft = Container(
+    Widget imgLeft = const SizedBox(
       height: 0,
       width: 0,
     );
@@ -115,23 +115,23 @@ class ThreadSummary extends StatelessWidget {
       //最多一次显示三张图片
       if (index >= 3) {
         imgLeft = Container(
-          padding: EdgeInsets.all(5),
+          padding: const EdgeInsets.all(5),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: Container(
-              padding: EdgeInsets.all(2),
-              decoration: BoxDecoration(color: Color(0x8E8E8E8E)),
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(color: Color(0x8E8E8E8E)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.photo_size_select_actual_rounded,
                     size: 14,
                     color: Colors.white,
                   ),
                   Text(
                     "${imgs.length}",
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   )
                 ],
               ),
@@ -244,14 +244,14 @@ class ThreadSummary extends StatelessWidget {
           color: Colors.white,
           border: Border.all(width: 0.05)),
       // padding: EdgeInsets.all(5),
-      margin: EdgeInsets.only(top: 3, bottom: 3),
+      margin: const EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(
         onPressed: () async {
           Navigator.pushNamed(context, PageRouter.threadPage,
               arguments: info.tid!);
           // await Global.tiebaAPI.getThreadPage(info.tid!);
         },
-        padding: EdgeInsets.all(5),
+        padding: const EdgeInsets.all(5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -279,49 +279,50 @@ class ThreadSummary extends StatelessWidget {
                       children: [
                         Text(
                           createText,
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 20,
                         ),
                         Text(
                           postText,
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 14),
                         )
                       ],
                     )
                   ],
                 ),
-                Spacer(),
-                Container(
-                  child: IconButton(
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      onPressed: () {
-                        //TODO:不感兴趣
-                      },
-                      icon: Icon(
-                        Icons.close,
-                        size: 16,
-                      )),
-                )
+                const Spacer(),
+                IconButton(
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onPressed: () {
+                      //TODO:不感兴趣
+                    },
+                    icon: const Icon(
+                      Icons.close,
+                      size: 16,
+                    ))
               ],
             ),
             //标题
             Container(
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               child: Column(
                 children: [
                   Text(
                     info.title!,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
                   )
                 ],
               ),
             ),
             //正文
             Container(
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               child: Wrap(
                 // crossAxisAlignment: CrossAxisAlignment.start,
                 children: buildBody(context),
@@ -329,7 +330,7 @@ class ThreadSummary extends StatelessWidget {
             ),
             //底部
             Container(
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               child: Row(
                 children: [
                   Expanded(
@@ -342,27 +343,27 @@ class ThreadSummary extends StatelessWidget {
                     ),
                   )),
                   // Spacer(),
-                  Icon(Icons.remove_red_eye),
-                  SizedBox(width: 2),
+                  const Icon(Icons.remove_red_eye),
+                  const SizedBox(width: 2),
                   Text(info.viewNum ?? "0"),
-                  SizedBox(width: 5),
-                  Icon(Icons.thumb_up),
-                  SizedBox(width: 2),
+                  const SizedBox(width: 5),
+                  const Icon(Icons.thumb_up),
+                  const SizedBox(width: 2),
                   Text(info.agree?.agreeNum ?? "0"),
-                  SizedBox(width: 5),
+                  const SizedBox(width: 5),
                   Visibility(
                     visible: info.agree?.disagreeNum != null,
-                    child: Icon(Icons.thumb_down),
+                    child: const Icon(Icons.thumb_down),
                   ),
                   Visibility(
                       visible: info.agree?.disagreeNum != null,
-                      child: SizedBox(width: 2)),
+                      child: const SizedBox(width: 2)),
                   Visibility(
                       visible: info.agree?.disagreeNum != null,
                       child: Text(info.agree?.disagreeNum ?? "0")),
-                  SizedBox(width: 5),
-                  Icon(Icons.speaker_notes),
-                  SizedBox(width: 2),
+                  const SizedBox(width: 5),
+                  const Icon(Icons.speaker_notes),
+                  const SizedBox(width: 2),
                   Text(info.replyNum!)
                 ],
               ),
@@ -388,7 +389,7 @@ class Avatar extends StatefulWidget {
 }
 
 class _AvatarState extends State<Avatar> {
-  String heroTagSalt = Uuid().v4();
+  String heroTagSalt = const Uuid().v4();
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -404,7 +405,7 @@ class _AvatarState extends State<Avatar> {
       child: Container(
         height: widget.height,
         width: widget.width,
-        margin: EdgeInsets.only(right: 5),
+        margin: const EdgeInsets.only(right: 5),
         child: ClipOval(
           child: Hero(
             tag: widget.imgUrl + heroTagSalt,
@@ -425,7 +426,7 @@ class Thumbnail extends StatefulWidget {
   final ExtendedPageController controller;
   final String img;
   final BoxFit fit;
-  Thumbnail(
+  const Thumbnail(
       {Key? key,
       required this.imgs,
       this.imgsOriginSrc,
@@ -439,7 +440,7 @@ class Thumbnail extends StatefulWidget {
 }
 
 class _ThumbnailState extends State<Thumbnail> {
-  String heroTagSalt = Uuid().v4();
+  String heroTagSalt = const Uuid().v4();
   @override
   Widget build(BuildContext context) {
     return Builder(
@@ -456,7 +457,7 @@ class _ThumbnailState extends State<Thumbnail> {
               }));
             },
             child: Padding(
-              padding: EdgeInsets.only(left: 2.5, right: 2.5),
+              padding: const EdgeInsets.only(left: 2.5, right: 2.5),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(5),
                 child: FadeIn(

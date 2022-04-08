@@ -9,7 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Global.init();
-  runApp(App());
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
@@ -42,13 +42,13 @@ class App extends StatelessWidget {
                           brightness: Brightness.dark,
                         )
                       : null,
-                  localizationsDelegates: [
+                  localizationsDelegates: const [
                     GlobalMaterialLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
                   ],
-                  supportedLocales: [
-                    const Locale('zh', 'CN'),
-                    const Locale('en', 'US'),
+                  supportedLocales: const [
+                    Locale('zh', 'CN'),
+                    Locale('en', 'US'),
                   ],
                 );
               },

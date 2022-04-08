@@ -1,11 +1,8 @@
-import 'package:animate_do/animate_do.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/LikeButtonEx.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
-import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
@@ -39,13 +36,13 @@ class ThreadFirstComment extends StatelessWidget {
         children: [
           //标题
           Container(
-            margin: EdgeInsets.only(top: 5),
-            padding: EdgeInsets.all(5),
+            margin: const EdgeInsets.only(top: 5),
+            padding: const EdgeInsets.all(5),
             child: Column(
               children: [
                 SelectableText(
                   postMain.title!,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.w600),
@@ -55,7 +52,7 @@ class ThreadFirstComment extends StatelessWidget {
           ),
           //作者
           Container(
-            padding: EdgeInsets.all(5),
+            padding: const EdgeInsets.all(5),
             child: Row(
               children: [
                 Avatar(
@@ -77,7 +74,7 @@ class ThreadFirstComment extends StatelessWidget {
                           (TiebaParser.processIcon(author) ?? <Widget>[]) +
                           [
                             Container(
-                              margin: EdgeInsets.only(left: 5),
+                              margin: const EdgeInsets.only(left: 5),
                               child: Rank(
                                 rank: author.levelID,
                               ),
@@ -89,29 +86,31 @@ class ThreadFirstComment extends StatelessWidget {
                       children: [
                         Text(
                           "${postMain.floor}楼",
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 10,
                         ),
                         //发帖时间
                         Text(
                           TiebaParser.getPostTime(strTime: postMain.time),
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 10,
                         ),
 
                         Expanded(
                             child: Container(
-                          constraints:
-                              BoxConstraints(maxHeight: 1000, maxWidth: 1000),
+                          constraints: const BoxConstraints(
+                              maxHeight: 1000, maxWidth: 1000),
                           child: Visibility(
                               visible: postMain.lbsInfo != null,
                               child: Text("${postMain.lbsInfo?.name}",
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Colors.grey, fontSize: 14))),
                         ))
                       ],
@@ -132,7 +131,7 @@ class ThreadFirstComment extends StatelessWidget {
           ),
           //正文
           Container(
-            padding: EdgeInsets.all(5),
+            padding: const EdgeInsets.all(5),
             child: Wrap(
               children: TiebaParser.parserContent(
                   postMain.content, allImgs, allOrgImgs),
@@ -152,7 +151,7 @@ class AgreeAndDisagreeBar extends StatefulWidget {
   final String threadID;
   final int objType;
   final String hasAgree;
-  AgreeAndDisagreeBar(
+  const AgreeAndDisagreeBar(
       {Key? key,
       this.agreeNum = 0,
       this.disagreeNum = 0,
@@ -191,97 +190,95 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        children: [
-          LikeButtonEx(
-            key: likeKey,
-            onTap: (isLiked) async {
-              like = !isLiked;
-              if (!dislike) {
-                try {
-                  if (like) {
-                    //点赞
-                    await Global.tiebaAPI.agreePost(
-                        widget.postID, widget.threadID, widget.objType);
-                  } else {
-                    //取消点赞
-                    await Global.tiebaAPI.agreePost(
-                        widget.postID, widget.threadID, widget.objType,
-                        opType: 1);
-                  }
-                } catch (e) {
-                  Fluttertoast.showToast(msg: e.toString().substring(11));
+    return Row(
+      children: [
+        LikeButtonEx(
+          key: likeKey,
+          onTap: (isLiked) async {
+            like = !isLiked;
+            if (!dislike) {
+              try {
+                if (like) {
+                  //点赞
+                  await Global.tiebaAPI.agreePost(
+                      widget.postID, widget.threadID, widget.objType);
+                } else {
+                  //取消点赞
+                  await Global.tiebaAPI.agreePost(
+                      widget.postID, widget.threadID, widget.objType,
+                      opType: 1);
                 }
-              } else {
-                await Global.tiebaAPI
-                    .agreePost(widget.postID, widget.threadID, widget.objType);
+              } catch (e) {
+                Fluttertoast.showToast(msg: e.toString().substring(11));
               }
+            } else {
+              await Global.tiebaAPI
+                  .agreePost(widget.postID, widget.threadID, widget.objType);
+            }
 
-              if (!isLiked && dislike) {
-                dislikeKey.currentState?.onTap();
-              }
-              return !isLiked;
-            },
-            likeBuilder: (isLiked) {
-              if (!isLiked) {
-                return Icon(
-                  Icons.thumb_up_alt_outlined,
-                  color: Colors.black,
-                );
-              } else {
-                return Icon(Icons.thumb_up_alt, color: Colors.blue);
-              }
-            },
-            likeCount: agreeNum,
-            isLiked: like,
-          ),
-          LikeButtonEx(
-            key: dislikeKey,
-            onTap: (isLiked) async {
-              dislike = !isLiked;
-              if (!like) {
-                try {
-                  if (dislike) {
-                    //点踩
-                    await Global.tiebaAPI.agreePost(
-                        widget.postID, widget.threadID, widget.objType,
-                        agreeType: 5);
-                  } else {
-                    //取消点踩
-                    await Global.tiebaAPI.agreePost(
-                        widget.postID, widget.threadID, widget.objType,
-                        opType: 1, agreeType: 5);
-                  }
-                } catch (e) {
-                  Fluttertoast.showToast(msg: e.toString().substring(11));
+            if (!isLiked && dislike) {
+              dislikeKey.currentState?.onTap();
+            }
+            return !isLiked;
+          },
+          likeBuilder: (isLiked) {
+            if (!isLiked) {
+              return const Icon(
+                Icons.thumb_up_alt_outlined,
+                color: Colors.black,
+              );
+            } else {
+              return const Icon(Icons.thumb_up_alt, color: Colors.blue);
+            }
+          },
+          likeCount: agreeNum,
+          isLiked: like,
+        ),
+        LikeButtonEx(
+          key: dislikeKey,
+          onTap: (isLiked) async {
+            dislike = !isLiked;
+            if (!like) {
+              try {
+                if (dislike) {
+                  //点踩
+                  await Global.tiebaAPI.agreePost(
+                      widget.postID, widget.threadID, widget.objType,
+                      agreeType: 5);
+                } else {
+                  //取消点踩
+                  await Global.tiebaAPI.agreePost(
+                      widget.postID, widget.threadID, widget.objType,
+                      opType: 1, agreeType: 5);
                 }
-              } else {
-                await Global.tiebaAPI.agreePost(
-                    widget.postID, widget.threadID, widget.objType,
-                    agreeType: 5);
+              } catch (e) {
+                Fluttertoast.showToast(msg: e.toString().substring(11));
               }
+            } else {
+              await Global.tiebaAPI.agreePost(
+                  widget.postID, widget.threadID, widget.objType,
+                  agreeType: 5);
+            }
 
-              if (!isLiked && like) {
-                likeKey.currentState?.onTap();
-              }
-              return !isLiked;
-            },
-            likeBuilder: (isLiked) {
-              if (!isLiked) {
-                return Icon(
-                  Icons.thumb_down_alt_outlined,
-                  color: Colors.black,
-                );
-              } else {
-                return Icon(Icons.thumb_down_alt, color: Colors.blue);
-              }
-            },
-            likeCount: disagreeNum,
-            isLiked: dislike,
-          )
-        ],
-      ),
+            if (!isLiked && like) {
+              likeKey.currentState?.onTap();
+            }
+            return !isLiked;
+          },
+          likeBuilder: (isLiked) {
+            if (!isLiked) {
+              return const Icon(
+                Icons.thumb_down_alt_outlined,
+                color: Colors.black,
+              );
+            } else {
+              return const Icon(Icons.thumb_down_alt, color: Colors.blue);
+            }
+          },
+          likeCount: disagreeNum,
+          isLiked: dislike,
+        )
+      ],
     );
   }
 }
@@ -294,12 +291,12 @@ class Rank extends StatelessWidget {
   }) : super(key: key);
   //[字体,背景色]
   final List<List<Color>> _rankColor = [
-    [Color(0xFFFFFFFF), Color(0xFFFFCCE2)],
-    [Color(0xFFFFFFFF), Color(0xFF6F6F6F)],
-    [Color(0xFF3AFF44), Color(0xFF553626)],
-    [Color(0xFF281DCF), Color(0xFFFFE7B8)],
-    [Color(0xFF753771), Color(0xFFFDE9D6)],
-    [Color(0xFFFF8E31), Color(0xFF3D3B02)],
+    [const Color(0xFFFFFFFF), const Color(0xFFFFCCE2)],
+    [const Color(0xFFFFFFFF), const Color(0xFF6F6F6F)],
+    [const Color(0xFF3AFF44), const Color(0xFF553626)],
+    [const Color(0xFF281DCF), const Color(0xFFFFE7B8)],
+    [const Color(0xFF753771), const Color(0xFFFDE9D6)],
+    [const Color(0xFFFF8E31), const Color(0xFF3D3B02)],
   ];
   List<Color> setColor() {
     if (rank != null && rank != "") {
@@ -313,7 +310,7 @@ class Rank extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(left: 5, right: 5),
+      padding: const EdgeInsets.only(left: 5, right: 5),
       decoration: BoxDecoration(
           color: setColor()[1], borderRadius: BorderRadius.circular(10)),
       child: ClipRRect(

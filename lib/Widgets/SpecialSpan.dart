@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
@@ -165,8 +163,8 @@ class _EmojiLoader extends StatelessWidget {
 
 class AtUserSpan extends TextSpan {
   //TODO:点击进入@的用户界面
-  AtUserSpan({required String text, TextStyle? style})
-      : super(text: text, style: style ?? TextStyle(color: Colors.blue));
+  const AtUserSpan({required String text, TextStyle? style})
+      : super(text: text, style: style ?? const TextStyle(color: Colors.blue));
 }
 
 abstract class TiebaSpecialText extends SpecialText {
@@ -205,7 +203,7 @@ class TiebaRichTextSpecialText extends TiebaSpecialText {
             return ExtendedWidgetSpan(
                 start: start,
                 actualText: toString(),
-                child: Icon(
+                child: const Icon(
                   Icons.image,
                   size: 18,
                 ));

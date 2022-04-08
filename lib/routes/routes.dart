@@ -9,7 +9,7 @@ import 'package:tiebanana/routes/ThreadPage.dart';
 ///命名路由表
 class PageRouter {
   static Map<String, WidgetBuilder> routes = {
-    "/": (builder) => HomePage(),
+    "/": (builder) => const HomePage(),
     "forumHome": (builder) {
       return ForumHomePage(
         kw: ModalRoute.of(builder)!.settings.arguments as String,
@@ -21,7 +21,7 @@ class PageRouter {
       );
     },
     "login": (builder) {
-      return LoginPage();
+      return const LoginPage();
     },
     "search": (builder) {
       return SearchPage(
@@ -29,7 +29,7 @@ class PageRouter {
       );
     },
     "imagePicker": (builder) {
-      return ImagePickerRoute();
+      return const ImagePickerRoute();
     }
   };
   static String home = "/";

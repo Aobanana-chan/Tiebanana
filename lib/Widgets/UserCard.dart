@@ -8,7 +8,8 @@ class UserCard extends StatefulWidget {
   //控制器回调
   final TabController? controllerl;
   final MyUserData info;
-  UserCard({Key? key, required this.info, this.controllerl}) : super(key: key);
+  const UserCard({Key? key, required this.info, this.controllerl})
+      : super(key: key);
 
   @override
   _UserCardState createState() => _UserCardState();
@@ -55,49 +56,45 @@ class _UserCardState extends State<UserCard> {
       //没有控制器则构建按钮
       for (var i in bodyinfo) {
         body.add(Expanded(
-            child: Container(
-          // alignment: Alignment.center,
-          // margin: EdgeInsets.only(right: 5, left: 5),
-          child: MaterialButton(
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: EdgeInsets.all(8),
-              onPressed: i["onPress"],
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                          child: Center(
-                        child: Text(
-                          i["text"],
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ))
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Center(
+            child: MaterialButton(
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.all(8),
+                onPressed: i["onPress"],
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                            child: Center(
                           child: Text(
-                            i["num"].toString(),
+                            i["text"],
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
-                        ),
-                      )
-                    ],
-                  )
-                ],
-              )),
-        )));
+                        ))
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              i["num"].toString(),
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                ))));
       }
     } else {
       body.add(TabBar(
           controller: widget.controllerl,
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -105,11 +102,11 @@ class _UserCardState extends State<UserCard> {
           unselectedLabelColor: Colors.black26,
           indicator: CustomUnderlineTabIndicator(
               wantWidth: 36,
-              insets: EdgeInsets.only(
+              insets: const EdgeInsets.only(
                 left: 15,
                 right: 15,
               ),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 width: 4,
                 color: Colors.white,
               )),
@@ -126,7 +123,7 @@ class _UserCardState extends State<UserCard> {
   Widget build(BuildContext context) {
     return Card(
       elevation: 5,
-      margin: EdgeInsets.all(20),
+      margin: const EdgeInsets.all(20),
       color: Colors.green,
       shadowColor: Colors.yellow.shade100,
       child: Column(
@@ -135,7 +132,7 @@ class _UserCardState extends State<UserCard> {
             children: [
               //头像
               Container(
-                padding: EdgeInsets.all(5),
+                padding: const EdgeInsets.all(5),
                 child: Avatar(
                   imgUrl: widget.info.portraitUrl!,
                   height: 45,
@@ -148,35 +145,31 @@ class _UserCardState extends State<UserCard> {
                   //用户名
                   Row(
                     children: [
-                      Container(
-                        child: Text(
-                          widget.info.name!,
-                          style: TextStyle(color: Colors.white),
-                        ),
+                      Text(
+                        widget.info.name!,
+                        style: const TextStyle(color: Colors.white),
                       )
                     ],
                   ),
                   Row(
                     children: [
-                      Container(
-                        child: Text(
-                          widget.info.intro!,
-                          style: TextStyle(color: Colors.white),
-                        ),
+                      Text(
+                        widget.info.intro!,
+                        style: const TextStyle(color: Colors.white),
                       )
                     ],
                   ),
                 ],
               ),
-              Spacer(),
-              Icon(
+              const Spacer(),
+              const Icon(
                 Icons.chevron_right_outlined,
                 color: Colors.white,
               )
             ],
           ),
           Container(
-            padding: EdgeInsets.only(left: 10, right: 10),
+            padding: const EdgeInsets.only(left: 10, right: 10),
             child: Row(
               children: buildButton(context),
             ),

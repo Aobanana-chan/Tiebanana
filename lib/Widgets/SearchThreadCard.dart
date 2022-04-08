@@ -2,7 +2,6 @@ import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
-import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/routes/routes.dart';
 
@@ -22,14 +21,14 @@ class SearchThreadCard extends StatelessWidget {
         }
       },
       child: Container(
-        margin: EdgeInsets.all(5),
-        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+        margin: const EdgeInsets.all(5),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
         decoration: BoxDecoration(
             color: Colors.white, borderRadius: BorderRadius.circular(8)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           //作者
           Container(
-            padding: EdgeInsets.all(0),
+            padding: const EdgeInsets.all(0),
             child: Row(
               children: [
                 Avatar(
@@ -57,18 +56,18 @@ class SearchThreadCard extends StatelessWidget {
           ),
           //标题
           Container(
-            padding: EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: 10),
             child: Text(
               post.title!,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ),
           //主要内容
           Container(
-            padding: EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: 10),
             child: Text(
               post.mainPost?.content ?? post.content ?? "",
-              style: TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 17),
             ),
           ),
           //底部

@@ -9,7 +9,7 @@ import 'package:tiebanana/common/AssetList.dart';
 class EmojiPanel extends StatefulWidget {
   final TextEditingController controller;
   final double height;
-  EmojiPanel({Key? key, required this.controller, required this.height})
+  const EmojiPanel({Key? key, required this.controller, required this.height})
       : super(key: key);
 
   @override
@@ -81,8 +81,8 @@ class _EmojiPanelState extends State<EmojiPanel> {
       constraints: BoxConstraints(maxHeight: widget.height),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          constraints: BoxConstraints(
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          constraints: const BoxConstraints(
               maxHeight: (_mainAxisExtent + _mainAxisSpacing) * _rowCount),
           child: PageView.builder(
             itemCount: (emoji.length / (_crossAxisCount * _rowCount)).ceil(),
@@ -113,13 +113,14 @@ class _EmojiPanelState extends State<EmojiPanel> {
           ),
         ),
         Container(
-          margin: EdgeInsets.only(bottom: 20),
+          margin: const EdgeInsets.only(bottom: 20),
           child: SmoothPageIndicator(
             controller: controller,
             count: (emoji.length / (_crossAxisCount * _rowCount)).ceil(),
             onDotClicked: (index) {
               controller.animateToPage(index,
-                  duration: Duration(milliseconds: 200), curve: Curves.easeOut);
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut);
             },
             effect: WormEffect(
                 spacing: 20,
@@ -148,9 +149,9 @@ class ImagePanel extends StatelessWidget {
     var images = uploaded.values.toList();
     return Container(
       color: Colors.white,
-      constraints: BoxConstraints(maxHeight: 185),
+      constraints: const BoxConstraints(maxHeight: 185),
       child: ListView.builder(
-        physics: BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         scrollDirection: Axis.horizontal,
         itemCount: uploaded.length + 1,
         itemBuilder: (BuildContext context, int index) {
@@ -163,7 +164,7 @@ class ImagePanel extends StatelessWidget {
                     height: 64,
                     width: 64,
                     color: Colors.amber.shade100,
-                    child: Icon(
+                    child: const Icon(
                       Icons.add,
                       size: 36,
                     ),
@@ -174,7 +175,7 @@ class ImagePanel extends StatelessWidget {
           }
 
           return Container(
-            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
             child: FutureBuilder(
               future: images[index].file,
               initialData: null,

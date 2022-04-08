@@ -22,7 +22,7 @@ import 'package:tiebanana/common/Global.dart';
 class ForumHomePage extends StatefulWidget {
   ///吧名
   final String kw;
-  ForumHomePage({Key? key, required this.kw}) : super(key: key);
+  const ForumHomePage({Key? key, required this.kw}) : super(key: key);
 
   @override
   _ForumHomePageState createState() => _ForumHomePageState();
@@ -34,7 +34,7 @@ class _ForumHomePageState extends State<ForumHomePage>
   late ScrollController innerController;
   late ScrollController outerController;
   late TabController tabbarController;
-  List _tab = ["看帖", "精品"];
+  final List _tab = ["看帖", "精品"];
 
   late List<Widget> appBarAction;
   void Function(void Function())? threadState;
@@ -64,12 +64,12 @@ class _ForumHomePageState extends State<ForumHomePage>
           onPressed: () {
             //TODO:进入吧内搜索界面
           },
-          icon: Icon(Icons.search)),
+          icon: const Icon(Icons.search)),
       IconButton(
           onPressed: () {
             //TODO:更多菜单
           },
-          icon: Icon(Icons.more_vert)),
+          icon: const Icon(Icons.more_vert)),
     ];
     init();
     //进入精品贴后加载精品贴页面
@@ -165,9 +165,7 @@ class _ForumHomePageState extends State<ForumHomePage>
       initialData: null,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         if (snapshot.hasData) {
-          if (forumThreadList == null) {
-            forumThreadList = (snapshot.data as ForumHomeInfo).threadList;
-          }
+          forumThreadList ??= (snapshot.data as ForumHomeInfo).threadList;
           return ChangeNotifierProvider.value(
             value: APPBarTitle(),
             child: Scaffold(
@@ -181,11 +179,11 @@ class _ForumHomePageState extends State<ForumHomePage>
                     return AnimatedOpacity(
                       alwaysIncludeSemantics: true,
                       opacity: value.getTitle == "" ? 0 : 1,
-                      duration: Duration(milliseconds: 200),
+                      duration: const Duration(milliseconds: 200),
                       child: GestureDetector(
                           onTap: () {
                             outerController.animateTo(0,
-                                duration: Duration(milliseconds: 200),
+                                duration: const Duration(milliseconds: 200),
                                 curve: Curves.easeIn);
                           },
                           child: Text("${widget.kw}吧",
@@ -201,7 +199,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                     onPressed: () {
                       //TODO:发帖
                     },
-                    icon: Icon(Icons.edit),
+                    icon: const Icon(Icons.edit),
                     color: Colors.white,
                   ),
                 ),
@@ -210,7 +208,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                 builder: (BuildContext context, setState) {
                   threadState = setState;
                   return Container(
-                    color: Color(0xFFF2F2F5),
+                    color: const Color(0xFFF2F2F5),
                     child: ChangeNotifierProvider.value(
                       value: goodClassify,
                       child: KeepAliveWrapper(
@@ -229,10 +227,10 @@ class _ForumHomePageState extends State<ForumHomePage>
                             PullToRefreshContainer((info) {
                               final double offset = info?.dragOffset ?? 0.0;
                               double width = min(48, offset);
-                              return Container(
+                              return SizedBox(
                                 height: offset,
                                 width: width,
-                                child: Center(
+                                child: const Center(
                                   child: RefreshProgressIndicator(
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                         Colors.blue),
@@ -243,7 +241,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                             }),
                             Expanded(
                                 child: CustomScrollView(
-                              physics: BouncingScrollPhysics(),
+                              physics: const BouncingScrollPhysics(),
                               slivers: <Widget>[
                                 SliverList(
                                     delegate: SliverChildBuilderDelegate(
@@ -378,7 +376,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                               ];
                             },
                             body: TabBarView(
-                              physics: BouncingScrollPhysics(),
+                              physics: const BouncingScrollPhysics(),
                               controller: tabbarController,
                               children: [
                                 //普通帖列表
@@ -406,10 +404,10 @@ class _ForumHomePageState extends State<ForumHomePage>
                                         final double offset =
                                             info?.dragOffset ?? 0.0;
                                         double width = min(48, offset);
-                                        return Container(
+                                        return SizedBox(
                                           height: offset,
                                           width: width,
-                                          child: Center(
+                                          child: const Center(
                                             child: RefreshProgressIndicator(
                                               valueColor:
                                                   AlwaysStoppedAnimation<Color>(
@@ -423,7 +421,8 @@ class _ForumHomePageState extends State<ForumHomePage>
                                           Consumer<ThreadListProviderModel>(
                                         builder: (context, value, child) {
                                           return CustomScrollView(
-                                            physics: BouncingScrollPhysics(),
+                                            physics:
+                                                const BouncingScrollPhysics(),
                                             slivers: <Widget>[
                                               SliverList(
                                                   delegate:
@@ -468,7 +467,7 @@ class _ForumHomePageState extends State<ForumHomePage>
         }
         return Container(
           color: Colors.white,
-          child: Center(
+          child: const Center(
             child: CircularProgressIndicator(),
           ),
         );

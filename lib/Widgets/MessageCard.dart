@@ -37,9 +37,9 @@ class MessageCard extends StatelessWidget {
           color: Colors.white,
           border: Border.all(width: 0.05)),
       // padding: EdgeInsets.all(5),
-      margin: EdgeInsets.only(top: 3, bottom: 3),
+      margin: const EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(
-        padding: EdgeInsets.all(5),
+        padding: const EdgeInsets.all(5),
         onPressed: () {},
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +69,7 @@ class MessageCard extends StatelessWidget {
                       children: [
                         Text(
                           TiebaParser.getPostTime(strTime: replyMe!.time!),
-                          style: TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),
@@ -81,10 +81,10 @@ class MessageCard extends StatelessWidget {
             //引用信息
             Container(
               width: double.infinity,
-              margin: EdgeInsets.only(top: 5),
-              padding: EdgeInsets.all(5),
+              margin: const EdgeInsets.only(top: 5),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
-                  color: Color(0xFFF0F3F5),
+                  color: const Color(0xFFF0F3F5),
                   borderRadius: BorderRadius.circular(3)),
               child: Wrap(
                 children: [_buildBody()],
@@ -92,14 +92,14 @@ class MessageCard extends StatelessWidget {
             ),
             //回复信息
             Container(
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               child: ExtendedText(replyMe?.content ?? atME!.content!,
                   specialTextSpanBuilder: TiebaSpanBuilder(),
-                  style: TextStyle(fontSize: 16)),
+                  style: const TextStyle(fontSize: 16)),
             ),
             //底部
             Container(
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               child: Text(
                 "来自${replyMe?.fname ?? atME!.fname}吧",
                 style: TextStyle(

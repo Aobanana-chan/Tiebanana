@@ -107,8 +107,8 @@ class GoodClassifyProviderModel with ChangeNotifier {
 ///图片上传notify
 class ImageUploadProviderModel with ChangeNotifier {
   ImageUploadProviderModel(this._forumnName);
-  late String _forumnName;
-  Map<UploadImageModel, AssetEntity> _picture = {};
+  late final String _forumnName;
+  final Map<UploadImageModel, AssetEntity> _picture = {};
   void addPicture(AssetEntity file, UploadImageModel pic) {
     _picture[pic] = file;
     notifyListeners();

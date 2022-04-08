@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SettingPanel extends StatefulWidget {
-  SettingPanel({Key? key}) : super(key: key);
+  const SettingPanel({Key? key}) : super(key: key);
 
   @override
   _SettingPanelState createState() => _SettingPanelState();
@@ -25,7 +25,7 @@ class _SettingPanelState extends State<SettingPanel> {
             onPressed: () {},
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: const [
                 Icon(Icons.star),
                 SizedBox(
                   width: 5,
@@ -45,7 +45,7 @@ class _SettingPanelState extends State<SettingPanel> {
             onPressed: () {},
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: const [
                 Icon(Icons.history),
                 SizedBox(
                   width: 5,
@@ -65,7 +65,7 @@ class _SettingPanelState extends State<SettingPanel> {
             onPressed: () {},
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: const [
                 Icon(Icons.brush),
                 SizedBox(
                   width: 5,
@@ -85,7 +85,7 @@ class _SettingPanelState extends State<SettingPanel> {
             onPressed: () {},
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: const [
                 Icon(Icons.home_repair_service_rounded),
                 SizedBox(
                   width: 5,
@@ -105,7 +105,7 @@ class _SettingPanelState extends State<SettingPanel> {
             onPressed: () {},
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: const [
                 Icon(Icons.settings),
                 SizedBox(
                   width: 5,

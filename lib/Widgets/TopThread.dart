@@ -10,22 +10,22 @@ class TopThread extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(0),
-      padding: EdgeInsets.all(0),
-      decoration: BoxDecoration(color: Colors.white),
+      margin: const EdgeInsets.all(0),
+      padding: const EdgeInsets.all(0),
+      decoration: const BoxDecoration(color: Colors.white),
       child: MaterialButton(
         onPressed: () {
           Navigator.pushNamed(context, PageRouter.threadPage,
               arguments: info.tid!);
         },
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         child: Row(
           children: [
             ClipOval(
               child: Container(
                 color: Colors.blue,
-                child: Icon(
+                child: const Icon(
                   Icons.arrow_drop_up_rounded,
                   color: Colors.white,
                 ),
@@ -33,10 +33,10 @@ class TopThread extends StatelessWidget {
             ),
             Expanded(
                 child: Container(
-              padding: EdgeInsets.only(left: 5),
+              padding: const EdgeInsets.only(left: 5),
               child: Text(
                 info.title!,
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: const TextStyle(fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
               ),
             )),

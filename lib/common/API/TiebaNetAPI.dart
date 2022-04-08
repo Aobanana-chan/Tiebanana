@@ -1533,7 +1533,7 @@ class TiebaAPI {
 
   ///WAP端-回复楼层API
   ///
-  ///[content] 回复用户格式 #(reply, [portrait]-头像地址, [name_show])
+  ///[content] 回复用户格式 #(reply, [portrait]-头像地址, [name_show]) 若使用回复用户，必须填写replyUID参数
   ///
   ///表情包 #([emoji])
   ///图片 #(pic,图片ID,宽，高)

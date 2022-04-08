@@ -14,14 +14,14 @@ import 'package:tiebanana/routes/User.dart';
 
 ///首页
 class HomePage extends StatefulWidget {
-  HomePage({Key? key}) : super(key: key);
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  var page;
+  late List<Widget> page;
   var _currentPage = 0;
   late ForumState forumState;
   PageController controller = PageController();
@@ -39,7 +39,8 @@ class _HomePageState extends State<HomePage> {
       }
       // 点击返回键的操作
       if (lastPopTime == null ||
-          DateTime.now().difference(lastPopTime!) > Duration(seconds: 2)) {
+          DateTime.now().difference(lastPopTime!) >
+              const Duration(seconds: 2)) {
         lastPopTime = DateTime.now();
         Fluttertoast.showToast(msg: '请再按一次退出！');
         return false;
@@ -86,7 +87,7 @@ class _HomePageState extends State<HomePage> {
       childpage = Scaffold(
         resizeToAvoidBottomInset: false,
         bottomNavigationBar: BottomNavigationBar(
-          items: [
+          items: const [
             BottomNavigationBarItem(
                 backgroundColor: Colors.white,
                 icon: Icon(Icons.home_outlined),
@@ -114,7 +115,8 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               _currentPage = index;
               controller.animateToPage(_currentPage,
-                  duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeIn);
             });
           },
           selectedItemColor: Colors.blue,
@@ -123,7 +125,7 @@ class _HomePageState extends State<HomePage> {
         body: ChangeNotifierProvider.value(
           value: forumState,
           builder: (context, child) => PageView(
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             controller: controller,
             children: page,
           ),
@@ -137,7 +139,7 @@ class _HomePageState extends State<HomePage> {
 //Home界面
 class _Home extends StatefulWidget {
   final FloatingSearchBarController controller;
-  _Home({Key? key, required this.controller}) : super(key: key);
+  const _Home({Key? key, required this.controller}) : super(key: key);
 
   @override
   __HomeState createState() => __HomeState();
@@ -152,7 +154,7 @@ class __HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: Color(0xFFF2F2F5)),
+      decoration: const BoxDecoration(color: Color(0xFFF2F2F5)),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           return Column(
@@ -179,7 +181,7 @@ class __HomeState extends State<_Home> {
 //动态界面（推荐贴）
 class _Recommand extends StatefulWidget {
   final FloatingSearchBarController controller;
-  _Recommand({Key? key, required this.controller}) : super(key: key);
+  const _Recommand({Key? key, required this.controller}) : super(key: key);
 
   @override
   __RecommandState createState() => __RecommandState();
@@ -197,7 +199,7 @@ class __RecommandState extends State<_Recommand> {
 //消息回复和@页
 class _Notifaction extends StatefulWidget {
   final FloatingSearchBarController controller;
-  _Notifaction({Key? key, required this.controller}) : super(key: key);
+  const _Notifaction({Key? key, required this.controller}) : super(key: key);
 
   @override
   __NotifactionState createState() => __NotifactionState();
@@ -215,7 +217,8 @@ class __NotifactionState extends State<_Notifaction> {
 //个人界面与软件设置
 class _UserAndSettings extends StatefulWidget {
   final FloatingSearchBarController controller;
-  _UserAndSettings({Key? key, required this.controller}) : super(key: key);
+  const _UserAndSettings({Key? key, required this.controller})
+      : super(key: key);
 
   @override
   __UserAndSettingsState createState() => __UserAndSettingsState();

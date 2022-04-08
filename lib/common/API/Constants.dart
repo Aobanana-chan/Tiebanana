@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:tiebanana/Json_Model/json.dart';
 
 const String ChromeUA =

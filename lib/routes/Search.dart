@@ -1,10 +1,7 @@
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
-import 'package:tiebanana/Widgets/ExtendedNestedScrollViewEx.dart';
 import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchThreadCard.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
@@ -13,7 +10,7 @@ import 'package:tiebanana/common/Global.dart';
 ///搜索页面
 class SearchPage extends StatefulWidget {
   final String searchWords;
-  SearchPage({Key? key, required this.searchWords}) : super(key: key);
+  const SearchPage({Key? key, required this.searchWords}) : super(key: key);
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -21,7 +18,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage>
     with SingleTickerProviderStateMixin {
-  List<String> _tab = ["吧", "贴", "用户"];
+  final List<String> _tab = ["吧", "贴", "用户"];
   late TabController controller;
   late TextEditingController textEditingController;
   @override
@@ -41,11 +38,11 @@ class _SearchPageState extends State<SearchPage>
               onPressed: () {
                 setState(() {});
               },
-              icon: Icon(Icons.search))
+              icon: const Icon(Icons.search))
         ],
         title: TextField(
           controller: textEditingController,
-          decoration: InputDecoration(border: InputBorder.none),
+          decoration: const InputDecoration(border: InputBorder.none),
           onSubmitted: (value) {},
         ),
         backgroundColor: Colors.white,
@@ -56,15 +53,15 @@ class _SearchPageState extends State<SearchPage>
         children: [
           TabBar(
             controller: controller,
-            labelStyle: TextStyle(
+            labelStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
             labelColor: Colors.blue,
             indicator: CustomUnderlineTabIndicator(
                 wantWidth: 36,
-                insets: EdgeInsets.only(left: 15, right: 15),
-                borderSide: BorderSide(width: 4, color: Colors.green)),
+                insets: const EdgeInsets.only(left: 15, right: 15),
+                borderSide: const BorderSide(width: 4, color: Colors.green)),
             tabs: _tab
                 .map((e) => Tab(
                       text: e,
@@ -73,7 +70,7 @@ class _SearchPageState extends State<SearchPage>
           ),
           Expanded(
               child: TabBarView(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             children: [
               KeepAliveWrapper(
                   child: FourmSearch(
@@ -98,7 +95,7 @@ class _SearchPageState extends State<SearchPage>
 
 class FourmSearch extends StatefulWidget {
   final String keyword;
-  FourmSearch({Key? key, required this.keyword}) : super(key: key);
+  const FourmSearch({Key? key, required this.keyword}) : super(key: key);
 
   @override
   State<FourmSearch> createState() => _FourmSearchState();
@@ -164,8 +161,7 @@ class _FourmSearchState extends State<FourmSearch> {
     }
 
     if (f != null) {
-      child = Container(
-          child: NestedScrollView(
+      child = NestedScrollView(
         // initStateCallback: (state) {
         //   state.innerController.addListener(() {
         //     if (state.innerController.offset >
@@ -181,19 +177,19 @@ class _FourmSearchState extends State<FourmSearch> {
           )
         ],
         body: Container(
-          padding: EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8), color: Colors.white),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 "相关吧",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               Expanded(
                   child: ListView(
-                physics: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 children: related
                     .map((e) => ForumCardRelated(
                           searchForumModelForum: e,
@@ -203,17 +199,15 @@ class _FourmSearchState extends State<FourmSearch> {
             ],
           ),
         ),
-      ));
+      );
     } else {
-      child = Container(
-        child: ListView(
-          physics: BouncingScrollPhysics(),
-          children: related
-              .map((e) => ForumCardRelated(
-                    searchForumModelForum: e,
-                  ))
-              .toList(),
-        ),
+      child = ListView(
+        physics: const BouncingScrollPhysics(),
+        children: related
+            .map((e) => ForumCardRelated(
+                  searchForumModelForum: e,
+                ))
+            .toList(),
       );
     }
 
@@ -228,7 +222,7 @@ class _FourmSearchState extends State<FourmSearch> {
 
 class ThreadSearch extends StatefulWidget {
   final String keyword;
-  ThreadSearch({Key? key, required this.keyword}) : super(key: key);
+  const ThreadSearch({Key? key, required this.keyword}) : super(key: key);
 
   @override
   State<ThreadSearch> createState() => _ThreadSearchState();
@@ -326,82 +320,81 @@ class _ThreadSearchState extends State<ThreadSearch> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          child: CustomScrollView(
-            physics: BouncingScrollPhysics(),
-            controller: controller,
-            slivers: <Widget>[
-              //控制器
-              SliverToBoxAdapter(
-                child: Container(
-                    constraints: BoxConstraints(maxHeight: 48),
-                    padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                    color: Colors.white,
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    if (filter == 1) {
-                                      filter = 0;
-                                    } else {
-                                      filter = 1;
-                                    }
-                                    Global.tiebaAPI
-                                        .searchPost(keyword,
-                                            pn: pn,
-                                            order: threadSortType[
-                                                threadSortSelected]!,
-                                            filter: filter)
-                                        .then((value) {
-                                      setState(() {
-                                        thread = value.data?.postList ?? [];
-                                        hasMore = value.data?.hasMore == 1
-                                            ? true
-                                            : false;
-                                      });
+        CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          controller: controller,
+          slivers: <Widget>[
+            //控制器
+            SliverToBoxAdapter(
+              child: Container(
+                  constraints: const BoxConstraints(maxHeight: 48),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                  color: Colors.white,
+                  child: Row(
+                    children: [
+                      Expanded(
+                          child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (filter == 1) {
+                                    filter = 0;
+                                  } else {
+                                    filter = 1;
+                                  }
+                                  Global.tiebaAPI
+                                      .searchPost(keyword,
+                                          pn: pn,
+                                          order: threadSortType[
+                                              threadSortSelected]!,
+                                          filter: filter)
+                                      .then((value) {
+                                    setState(() {
+                                      thread = value.data?.postList ?? [];
+                                      hasMore = value.data?.hasMore == 1
+                                          ? true
+                                          : false;
                                     });
                                   });
-                                },
-                                child: Center(
-                                  child: Text(
-                                    "仅看主题帖",
-                                    style: TextStyle(
-                                        color: filter == 1
-                                            ? Colors.blue
-                                            : Colors.black),
-                                  ),
-                                ))),
-                        Expanded(
-                            child: Center(
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              items: buildSortItem(),
-                              value: threadSortSelected,
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    threadSortSelected = value;
-                                  });
-                                }
+                                });
                               },
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                              child: Center(
+                                child: Text(
+                                  "仅看主题帖",
+                                  style: TextStyle(
+                                      color: filter == 1
+                                          ? Colors.blue
+                                          : Colors.black),
+                                ),
+                              ))),
+                      Expanded(
+                          child: Center(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            items: buildSortItem(),
+                            value: threadSortSelected,
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  threadSortSelected = value;
+                                });
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ))
-                      ],
-                    )),
-              ),
-              SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                      (BuildContext context, int index) {
-                return SearchThreadCard(
-                  post: thread[index],
-                );
-              }, childCount: thread.length))
-            ],
-          ),
+                        ),
+                      ))
+                    ],
+                  )),
+            ),
+            SliverList(
+                delegate: SliverChildBuilderDelegate(
+                    (BuildContext context, int index) {
+              return SearchThreadCard(
+                post: thread[index],
+              );
+            }, childCount: thread.length))
+          ],
         ),
         //TODO:浮游按钮返回顶部
       ],
@@ -411,7 +404,7 @@ class _ThreadSearchState extends State<ThreadSearch> {
 
 class UserSearch extends StatefulWidget {
   final String keyWord;
-  UserSearch({Key? key, required this.keyWord}) : super(key: key);
+  const UserSearch({Key? key, required this.keyWord}) : super(key: key);
 
   @override
   State<UserSearch> createState() => _UserSearchState();
@@ -453,14 +446,12 @@ class _UserSearchState extends State<UserSearch> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: ListView.builder(
-        physics: BouncingScrollPhysics(),
-        itemCount: users.length,
-        itemBuilder: (BuildContext context, int index) {
-          return _UserListItem(user: users[index]);
-        },
-      ),
+    return ListView.builder(
+      physics: const BouncingScrollPhysics(),
+      itemCount: users.length,
+      itemBuilder: (BuildContext context, int index) {
+        return _UserListItem(user: users[index]);
+      },
     );
   }
 }
@@ -476,11 +467,11 @@ class _UserListItem extends StatelessWidget {
         //TODO:进入用户界面
       },
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 2),
-        padding: EdgeInsets.all(5),
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.all(5),
         child: Row(children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 5),
             child: Avatar(
               imgUrl: user.portrait!,
               height: 48,
@@ -496,7 +487,7 @@ class _UserListItem extends StatelessWidget {
               ),
               Text(
                 user.intro ?? "",
-                style: TextStyle(overflow: TextOverflow.ellipsis),
+                style: const TextStyle(overflow: TextOverflow.ellipsis),
                 maxLines: 2,
               )
             ],

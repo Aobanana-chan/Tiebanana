@@ -18,7 +18,7 @@ const _themes = <MaterialColor>[
 class Global {
   static TiebaAPI tiebaAPI = TiebaAPI();
   //判断是否是Release版
-  static bool get isRelease => bool.fromEnvironment("dart.vm.product");
+  static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
   // 可选的主题列表
   static List<MaterialColor> get themes => _themes;
@@ -42,11 +42,11 @@ class Global {
     //通知栏消息插件初始化
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    final IOSInitializationSettings initializationSettingsIOS =
+    const IOSInitializationSettings initializationSettingsIOS =
         IOSInitializationSettings();
-    final MacOSInitializationSettings initializationSettingsMacOS =
+    const MacOSInitializationSettings initializationSettingsMacOS =
         MacOSInitializationSettings();
-    final InitializationSettings initializationSettings =
+    const InitializationSettings initializationSettings =
         InitializationSettings(
             android: initializationSettingsAndroid,
             iOS: initializationSettingsIOS,
@@ -69,7 +69,7 @@ class Global {
         AndroidNotificationDetails(id.toString(), 'Tiebanana',
             channelDescription: 'Tiebanana notification', playSound: false);
     IOSNotificationDetails iOSPlatformChannelSpecifics =
-        IOSNotificationDetails();
+        const IOSNotificationDetails();
     NotificationDetails platformChannelSpecifics = NotificationDetails(
         android: androidPlatformChannelSpecifics,
         iOS: iOSPlatformChannelSpecifics);

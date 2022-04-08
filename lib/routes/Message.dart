@@ -12,7 +12,7 @@ import 'package:tiebanana/common/Global.dart';
 ///消息页
 class MessagePan extends StatefulWidget {
   final FloatingSearchBarController controller;
-  MessagePan({Key? key, required this.controller}) : super(key: key);
+  const MessagePan({Key? key, required this.controller}) : super(key: key);
 
   @override
   _MessagePanState createState() => _MessagePanState();
@@ -72,7 +72,7 @@ class _MessagePanState extends State<MessagePan>
       color: Colors.white,
       child: TabBar(
           controller: _controller,
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -80,7 +80,7 @@ class _MessagePanState extends State<MessagePan>
           unselectedLabelColor: Colors.black26,
           indicator: CustomUnderlineTabIndicator(
               wantWidth: 36,
-              insets: EdgeInsets.only(
+              insets: const EdgeInsets.only(
                 left: 15,
                 right: 15,
               ),
@@ -145,20 +145,18 @@ class _MessagePanState extends State<MessagePan>
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         switch (snapshot.connectionState) {
           case ConnectionState.none:
-            return Container(
-              child: Center(
-                child: Text("初始化中..."),
-              ),
+            return const Center(
+              child: Text("初始化中..."),
             );
           case ConnectionState.active:
             return Container(
-              child: Center(
+              child: const Center(
                 child: Text("加载中..."),
               ),
             );
           default:
             if (snapshot.hasData) {
-              if (replyMessage.length == 0) {
+              if (replyMessage.isEmpty) {
                 replyMessage = ((snapshot.data as ReplyMessage).reply ?? []);
                 hasNextReply =
                     (snapshot.data as ReplyMessage).page!.hasMore == "1"
@@ -170,7 +168,7 @@ class _MessagePanState extends State<MessagePan>
                       padding: EdgeInsets.zero,
                       controller: controllerReply,
                       itemCount: replyMessage.length,
-                      physics: BouncingScrollPhysics(),
+                      physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
                         return MessageCard(replyMe: replyMessage[index]);
                       }),
@@ -183,7 +181,7 @@ class _MessagePanState extends State<MessagePan>
                   });
                 },
                 child: Container(
-                  child: Center(
+                  child: const Center(
                     child: Text("发生了错误...点击重试"),
                   ),
                 ),
@@ -203,20 +201,16 @@ class _MessagePanState extends State<MessagePan>
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         switch (snapshot.connectionState) {
           case ConnectionState.none:
-            return Container(
-              child: Center(
-                child: Text("初始化中..."),
-              ),
+            return const Center(
+              child: Text("初始化中..."),
             );
           case ConnectionState.active:
-            return Container(
-              child: Center(
-                child: Text("加载中..."),
-              ),
+            return const Center(
+              child: Text("加载中..."),
             );
           default:
             if (snapshot.hasData) {
-              if (atMeMessage.length == 0) {
+              if (atMeMessage.isEmpty) {
                 atMeMessage = ((snapshot.data as AtMeMessage).atMe ?? []);
                 hasNextAtMe =
                     (snapshot.data as AtMeMessage).messagePage!.hasMore == "1"
@@ -229,7 +223,7 @@ class _MessagePanState extends State<MessagePan>
                       padding: EdgeInsets.zero,
                       controller: controllerAtme,
                       itemCount: atMeMessage.length,
-                      physics: BouncingScrollPhysics(),
+                      physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
                         return MessageCard(atME: atMeMessage[index]);
                       }),
@@ -241,10 +235,8 @@ class _MessagePanState extends State<MessagePan>
                     _initAtMe = Global.tiebaAPI.getAtMe(1);
                   });
                 },
-                child: Container(
-                  child: Center(
-                    child: Text("发生了错误...点击重试"),
-                  ),
+                child: const Center(
+                  child: Text("发生了错误...点击重试"),
                 ),
               );
             }
@@ -258,48 +250,45 @@ class _MessagePanState extends State<MessagePan>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints topConstraints) {
-        return Container(
-          child: Column(
-            children: [
-              SearchBar(
-                maxHeight: topConstraints.maxHeight,
-                barController: widget.controller,
-              ),
-              Expanded(
-                  child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: (() => widget.controller.close()),
-                      child: LayoutBuilder(
-                        builder:
-                            (BuildContext context, BoxConstraints constraints) {
-                          return Column(
-                            children: [
-                              LimitedBox(
-                                maxHeight: constraints.maxHeight,
-                                child: _tabBar(topConstraints.maxHeight,
-                                    constraints.maxHeight),
+        return Column(
+          children: [
+            SearchBar(
+              maxHeight: topConstraints.maxHeight,
+              barController: widget.controller,
+            ),
+            Expanded(
+                child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: (() => widget.controller.close()),
+                    child: LayoutBuilder(
+                      builder:
+                          (BuildContext context, BoxConstraints constraints) {
+                        return Column(
+                          children: [
+                            LimitedBox(
+                              maxHeight: constraints.maxHeight,
+                              child: _tabBar(topConstraints.maxHeight,
+                                  constraints.maxHeight),
+                            ),
+                            Expanded(
+                                child: NotificationListener<
+                                    OverscrollIndicatorNotification>(
+                              onNotification: (OverscrollIndicatorNotification?
+                                  overscroll) {
+                                overscroll!.disallowIndicator();
+                                return true;
+                              },
+                              child: TabBarView(
+                                controller: _controller,
+                                physics: const ClampingScrollPhysics(),
+                                children: [buildReply(), buildAtMe()],
                               ),
-                              Expanded(
-                                  child: NotificationListener<
-                                      OverscrollIndicatorNotification>(
-                                onNotification:
-                                    (OverscrollIndicatorNotification?
-                                        overscroll) {
-                                  overscroll!.disallowIndicator();
-                                  return true;
-                                },
-                                child: TabBarView(
-                                  controller: _controller,
-                                  physics: ClampingScrollPhysics(),
-                                  children: [buildReply(), buildAtMe()],
-                                ),
-                              ))
-                            ],
-                          );
-                        },
-                      ))),
-            ],
-          ),
+                            ))
+                          ],
+                        );
+                      },
+                    ))),
+          ],
         );
       },
     );

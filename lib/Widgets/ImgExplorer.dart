@@ -7,7 +7,7 @@ class ImgExplorer extends StatefulWidget {
   final String heroTagSalt;
   final String imgUrl;
   final String? highQualityUrl;
-  ImgExplorer(
+  const ImgExplorer(
       {Key? key,
       required this.imgUrl,
       this.highQualityUrl,
@@ -72,10 +72,10 @@ class _ImgExplorerState extends State<ImgExplorer> {
                   PhotoManager.editor.saveImageWithPath(
                       (await getCachedImageFile(qualitySelect()))?.path ?? "");
                 },
-                icon: Icon(Icons.save))
+                icon: const Icon(Icons.save))
           ],
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_sharp),
+            icon: const Icon(Icons.arrow_back_sharp),
             onPressed: () {
               Navigator.pop(context);
             },
@@ -147,32 +147,30 @@ class _ImgExplorerState extends State<ImgExplorer> {
                   child: FractionallySizedBox(
                       alignment: Alignment.bottomCenter,
                       heightFactor: 0.2,
-                      child: Container(
-                        child: FractionallySizedBox(
-                          heightFactor: 0.3,
-                          widthFactor: 0.5,
-                          child: Container(
-                            decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 0.3,
-                                ),
-                                borderRadius: BorderRadius.circular(10)),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: MaterialButton(
-                                onPressed: () {
-                                  shouldShowOriginSrc = true;
-                                  setState(() {
-                                    highQualityCacheCheck();
-                                  });
-                                },
-                                child: Text(
-                                  shouldShowOriginSrc == false
-                                      ? "查看原图"
-                                      : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
-                                  style: TextStyle(color: Colors.white),
-                                ),
+                      child: FractionallySizedBox(
+                        heightFactor: 0.3,
+                        widthFactor: 0.5,
+                        child: Container(
+                          decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 0.3,
+                              ),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: MaterialButton(
+                              onPressed: () {
+                                shouldShowOriginSrc = true;
+                                setState(() {
+                                  highQualityCacheCheck();
+                                });
+                              },
+                              child: Text(
+                                shouldShowOriginSrc == false
+                                    ? "查看原图"
+                                    : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
+                                style: const TextStyle(color: Colors.white),
                               ),
                             ),
                           ),
@@ -192,7 +190,7 @@ class ZoomedImgExplorer extends StatefulWidget {
   final ExtendedPageController? pageController;
   final int index;
   final String heroTagSalt;
-  ZoomedImgExplorer(
+  const ZoomedImgExplorer(
       {Key? key,
       required this.imgUrls,
       this.pageController,
@@ -273,7 +271,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
           backgroundColor: Colors.transparent,
           actions: [
             IconButton(
-                padding: EdgeInsets.all(3),
+                padding: const EdgeInsets.all(3),
                 onPressed: () async {
                   //TODO:保存图片
                   PhotoManager.editor.saveImageWithPath(
@@ -281,10 +279,10 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                               ?.path ??
                           "");
                 },
-                icon: Icon(Icons.save))
+                icon: const Icon(Icons.save))
           ],
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_sharp),
+            icon: const Icon(Icons.arrow_back_sharp),
             onPressed: () {
               Navigator.pop(context);
             },
@@ -294,7 +292,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
         body: Stack(
           children: [
             Container(
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               child: ExtendedImageGesturePageView.builder(
                 canScrollPage: (gestureDetails) {
                   if (gestureDetails!.totalScale! > 1.0 &&
@@ -377,7 +375,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                   currentIndex = index;
                   setState(() {});
                 },
-                physics: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 pageSnapping: true,
               ),
             ),
@@ -387,32 +385,30 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                   child: FractionallySizedBox(
                       alignment: Alignment.bottomCenter,
                       heightFactor: 0.2,
-                      child: Container(
-                        child: FractionallySizedBox(
-                          heightFactor: 0.3,
-                          widthFactor: 0.5,
-                          child: Container(
-                            decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 0.3,
-                                ),
-                                borderRadius: BorderRadius.circular(10)),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: MaterialButton(
-                                onPressed: () {
-                                  wantShowScrImg[currentIndex] = true;
-                                  setState(() {
-                                    highQualityCacheCheck();
-                                  });
-                                },
-                                child: Text(
-                                  wantShowScrImg[currentIndex] == false
-                                      ? "查看原图"
-                                      : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
-                                  style: TextStyle(color: Colors.white),
-                                ),
+                      child: FractionallySizedBox(
+                        heightFactor: 0.3,
+                        widthFactor: 0.5,
+                        child: Container(
+                          decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 0.3,
+                              ),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: MaterialButton(
+                              onPressed: () {
+                                wantShowScrImg[currentIndex] = true;
+                                setState(() {
+                                  highQualityCacheCheck();
+                                });
+                              },
+                              child: Text(
+                                wantShowScrImg[currentIndex] == false
+                                    ? "查看原图"
+                                    : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
+                                style: const TextStyle(color: Colors.white),
                               ),
                             ),
                           ),

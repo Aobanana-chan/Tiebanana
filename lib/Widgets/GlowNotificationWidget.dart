@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class GlowNotificationWidget extends StatelessWidget {
   const GlowNotificationWidget(this.child,
-      {this.showGlowLeading = false, this.showGlowTrailing = false});
+      {Key? key, this.showGlowLeading = false, this.showGlowTrailing = false})
+      : super(key: key);
 
   /// Whether to show the overscroll glow on the side with negative scroll
   /// offsets.
