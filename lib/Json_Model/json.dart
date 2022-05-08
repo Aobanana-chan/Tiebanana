@@ -17,6 +17,8 @@ part './Json/SearchThreadModel.dart';
 part './Json/InnerFloorModel.dart';
 part './Json/UploadImage.dart';
 part './Json/SearchUser.dart';
+part './Json/UserProfile.dart';
+part './Json/UserPostModel.dart';
 //TODO:拆分
 
 class WAPTiebaBase {

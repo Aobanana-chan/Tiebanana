@@ -259,6 +259,10 @@ class ThreadSummary extends StatelessWidget {
             Row(
               children: [
                 Avatar(
+                  onTap: () {
+                    Navigator.pushNamed(context, PageRouter.user,
+                        arguments: info.author!.id!);
+                  },
                   imgUrl: AUTHOR_AVATAR + info.author!.portrait!,
                   height: 45,
                   width: 45,

@@ -45,6 +45,7 @@ class WindowsDv {
     for (var i in e.keys) {
       var d = e[i];
       if (d != null && o[i] != null) {
+        // ignore: prefer_typing_uninitialized_variables
         var c;
         if (d is num) {
           c = d >= 0 ? 1 : 2;

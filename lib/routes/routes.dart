@@ -5,6 +5,7 @@ import 'package:tiebanana/routes/ImagePicker.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Search.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
+import 'package:tiebanana/routes/UserVisitor.dart';
 
 ///命名路由表
 class PageRouter {
@@ -30,6 +31,10 @@ class PageRouter {
     },
     "imagePicker": (builder) {
       return const ImagePickerRoute();
+    },
+    "user": (builder) {
+      return UserVisitor(
+          uid: ModalRoute.of(builder)!.settings.arguments as String);
     }
   };
   static String home = "/";
@@ -38,4 +43,5 @@ class PageRouter {
   static String login = "login";
   static String search = "search";
   static String imagePicker = "imagePicker";
+  static String user = "user";
 }

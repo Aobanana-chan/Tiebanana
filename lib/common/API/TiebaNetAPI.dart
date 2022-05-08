@@ -28,7 +28,7 @@ import 'package:uuid/uuid.dart';
 import 'Constants.dart';
 
 class TiebaAPI {
-  static Dio dio = new Dio(BaseOptions(
+  static Dio dio = Dio(BaseOptions(
     headers: {
       "User-Agent": ChromeUA,
 
@@ -114,7 +114,7 @@ class TiebaAPI {
       (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
           (client) {
         client.findProxy = (uri) {
-          return "PROXY 10.0.2.2:8888";
+          return "PROXY 10.0.2.2:10888";
         };
         //代理工具会提供一个抓包的自签名证书，会通不过证书校验，所以我们禁用证书校验
         client.badCertificateCallback =
@@ -255,7 +255,7 @@ class TiebaAPI {
           "shaOne": _getshaOne(time),
           "elapsed": DateTime.now().millisecondsSinceEpoch - time,
           "rinfo": {
-            "fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"
+            "fuid": md5.convert(utf8.encode(fuid.fuid)).toString()
           } //这里的fuid是上面的fuid的md5值
         },
         options: Options(headers: {
@@ -355,7 +355,7 @@ class TiebaAPI {
       "shaOne": _getshaOne(time),
       "elapsed": DateTime.now().millisecondsSinceEpoch - time,
       "rinfo": {
-        "fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"
+        "fuid": md5.convert(utf8.encode(fuid.fuid)).toString()
       } //这里的fuid是上面的fuid的md5值
       ,
       "isdpass": 1,
@@ -474,7 +474,7 @@ class TiebaAPI {
       "passAppHash": "",
       "passAppVersion": "",
       "regfrom": "page",
-      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"},
+      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()},
       "session_id": "$gid-v2-$time-insert_account",
       "shaOne": _getshaOne(time),
       "sig": _getSig(_mapSrot(sigArgs)),
@@ -575,7 +575,7 @@ class TiebaAPI {
       "gid": gid,
       "lang": "zh-cn",
       "liveAbility": "",
-      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"},
+      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()},
       "session_id": "$gid-v2-$time-insert_account",
       "shaOne": _getshaOne(time),
       "sig": _getSig(_mapSrot(sigParams)),
@@ -631,7 +631,7 @@ class TiebaAPI {
       "sig": _getSig(_mapSrot(sigParams)),
       "elapsed": DateTime.now().millisecondsSinceEpoch - time,
       "shaOne": _getshaOne(time),
-      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"}
+      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()}
     };
     var res = await dio.get(GET_PHONE_NUMBER_STATUS,
         queryParameters: args,
@@ -714,7 +714,7 @@ class TiebaAPI {
       "sig": _getSig(_mapSrot(sigParams)),
       "elapsed": DateTime.now().millisecondsSinceEpoch - time,
       "shaOne": _getshaOne(time),
-      "rinfo": {"fuid": "${md5.convert(utf8.encode(fuid.fuid)).toString()}"}
+      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()}
     };
     if (needVerify) {
       verify.forEach(((key, value) {
@@ -735,7 +735,7 @@ class TiebaAPI {
     if (token != "") {
       return token;
     }
-    var time = new DateTime.now().millisecondsSinceEpoch;
+    var time = DateTime.now().millisecondsSinceEpoch;
     var gid = _guideRandom();
     var shaOne = _getshaOne(time);
     //参数的顺序要按照字典顺序排列
@@ -766,8 +766,7 @@ class TiebaAPI {
           'alg': 'v3',
           'sig': _getSig(signParams),
           'shaOne': shaOne,
-          'elapsed':
-              (new DateTime.now().millisecondsSinceEpoch - time).toString(),
+          'elapsed': (DateTime.now().millisecondsSinceEpoch - time).toString(),
           //'callback': 加上callback参数会返回jsonp格式的数据，不加直接返回json格式(用了单引号，不标准)的数据，这里不需要
         },
         options: Options(headers: {
@@ -829,11 +828,12 @@ class TiebaAPI {
     for (var i = 0x0; i < A.length; i += 0x10) {
       var H = C, I = D, J = E, K = F, L = G;
       for (var j = 0x0; j < 0x50; j++) {
-        if (j < 0x10)
+        if (j < 0x10) {
           B[j] = A[i + j];
-        else
+        } else {
           B[j] = _baiduSha1Dependence1(
               B[j - 0x3] ^ B[j - 0x8] ^ B[j - 0xe] ^ B[j - 0x10], 0x1);
+        }
         var M = _baiduSha1Dependence2(
             _baiduSha1Dependence2(_baiduSha1Dependence1(C, 0x5),
                 _baiduSha1Dependence3(j, D, E, F)),
@@ -985,7 +985,7 @@ class TiebaAPI {
   }
 
   Future<RSAKEY> _getRSAKey() async {
-    var time = new DateTime.now().millisecondsSinceEpoch;
+    var time = DateTime.now().millisecondsSinceEpoch;
     var gid = _guideRandom();
     var shaOne = _getshaOne(time);
     //参数的顺序要按照字典顺序排列
@@ -1016,8 +1016,7 @@ class TiebaAPI {
           'alg': 'v3',
           'sig': _getSig(signParams),
           'shaOne': shaOne,
-          'elapsed':
-              (new DateTime.now().millisecondsSinceEpoch - time).toString(),
+          'elapsed': (DateTime.now().millisecondsSinceEpoch - time).toString(),
           //'callback': 加上callback参数会返回jsonp格式的数据，不加直接返回json格式(用了单引号，不标准)的数据，这里不需要
         },
         options: Options(
@@ -1053,14 +1052,16 @@ class TiebaAPI {
         if (bl.length <= i) return 1;
         if (al[i] > bl[i]) {
           return 1;
-        } else if (al[i] < bl[i]) return -1;
+        } else if (al[i] < bl[i]) {
+          return -1;
+        }
       }
       return 0;
     });
-    var sortedMap = Map<String, dynamic>();
-    keys.forEach((element) {
+    var sortedMap = <String, dynamic>{};
+    for (var element in keys) {
       sortedMap[element] = map[element];
-    });
+    }
     return sortedMap;
   }
 
@@ -1110,7 +1111,7 @@ class TiebaAPI {
           var reslut = await signOneForum(forum.forumName!);
           await Global.showNotification(
               0, "正在一键签到中...($totalSigned/$totoal)", reslut["TiebananaMsg"]);
-          await Future.delayed(Duration(seconds: 1));
+          await Future.delayed(const Duration(seconds: 1));
         }
       }
     }
@@ -1342,7 +1343,7 @@ class TiebaAPI {
       "_client_version": "9.9.8.32",
       "_phone_imei": "000000000000000",
       "back": "0",
-      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid": "baidutiebaapp" + const Uuid().v4(),
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "floor_rn": "3",
@@ -1394,7 +1395,7 @@ class TiebaAPI {
       "_phone_imei": "000000000000000",
       "agree_type": agreeType,
       "c3_aid": "",
-      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid": "baidutiebaapp" + const Uuid().v4(),
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "obj_type": objType,
@@ -1430,9 +1431,9 @@ class TiebaAPI {
     return SearchForumModel.fromJson(json5Decode(res.data));
   }
 
-  @deprecated
+  @Deprecated("用起来会有网页的转义字符，author值为null等问题,建议使用searchPost")
 
-  ///网页端,搜索贴API,用起来会有网页的转义字符，author值为null等问题,建议使用searchPost
+  ///网页端,搜索贴API
   Future<SearchThreadModel> searchThread(String keywords, int pn,
       {int rn = 10, int sort = 1}) async {
     var params = {
@@ -1497,7 +1498,7 @@ class TiebaAPI {
       "can_no_forum": "0",
       "cmode": "1",
       "content": content,
-      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid": "baidutiebaapp" + const Uuid().v4(),
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "entrance_type": "0",
@@ -1565,7 +1566,7 @@ class TiebaAPI {
       "can_no_forum": "0",
       "cmode": "1",
       "content": content,
-      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid": "baidutiebaapp" + const Uuid().v4(),
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "entrance_type": "0",
@@ -1655,7 +1656,7 @@ class TiebaAPI {
       "c3_aid": "",
       "chunkNo": "1",
       "cmode": "1",
-      "cuid": "baidutiebaapp" + Uuid().v4(),
+      "cuid": "baidutiebaapp" + const Uuid().v4(),
       "cuid_galaxy2": "",
       "cuid_gid": "",
       // "event_day": "", //
@@ -1691,5 +1692,71 @@ class TiebaAPI {
     var res = await dio.get(WEB_SEARCH_USER, queryParameters: args);
 
     return SearchUserModel.fromJson(res.data);
+  }
+
+  ///获取用户post
+  Future<UserPostModel> getUserPost(
+      {required String uid,
+      bool isThread = false,
+      int pn = 1,
+      int rn = 20}) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var arg = {
+      "BDUSS": bduss,
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.15.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "baidutiebaapp" + const Uuid().v4(),
+      "cuid_galaxy2": "",
+      "is_thread": isThread ? "1" : "0",
+      "need_content": "1",
+      "pn": pn,
+      "rn": rn,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "uid": uid,
+    };
+    arg['sign'] = _signArgs(arg);
+    var res = await dio.post(WAP_USER_POST,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    var resJson = UserPostModel.fromJson(jsonDecode(res.data));
+    return resJson;
+  }
+
+  ///获取用户信息
+  Future<UserProfileModel> getUserInfo(
+      {required String uid, int pn = 1}) async {
+    var arg = {
+      "BDUSS": bduss,
+      "stoken": stoken,
+      "tbs": await _getTBS(),
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.15.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "",
+      "cuid_galaxy2": "",
+      "page": pn,
+      "pn": pn,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "uid": uid,
+      "need_post_count": "1",
+      "q_type": "80",
+      "is_from_usercenter": "0"
+    };
+    arg['sign'] = _signArgs(arg);
+    var res = await dio.post(USER_PROFILE,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    return UserProfileModel.fromJson(jsonDecode(res.data));
   }
 }

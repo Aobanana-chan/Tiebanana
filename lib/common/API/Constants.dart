@@ -138,6 +138,10 @@ const String WEB_SEARCH_POST =
     "https://tieba.baidu.com/mo/q/search/thread"; // WEB端搜贴API
 const String WEB_SEARCH_USER =
     "https://tieba.baidu.com/mo/q/search/user"; //WEB端搜索用户API
+const String WAP_USER_POST =
+    "http://c.tieba.baidu.com/c/u/feed/userpost"; //WAP端获取用户post
+const String WAP_USER_FORUM_LIKE =
+    "http://c.tieba.baidu.com/c/f/forum/like"; //WAP端获取用户关注贴
 
 ///不喜欢首页推荐贴 参数：
 ///

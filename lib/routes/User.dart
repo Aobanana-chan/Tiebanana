@@ -60,7 +60,7 @@ class _UserPageState extends State<UserPage> {
                                     UserCard(
                                       info: myInfo!,
                                     ),
-                                    SettingPanel()
+                                    const SettingPanel()
                                   ],
                                 ),
                               )))
