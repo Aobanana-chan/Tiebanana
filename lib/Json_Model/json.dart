@@ -19,6 +19,7 @@ part './Json/UploadImage.dart';
 part './Json/SearchUser.dart';
 part './Json/UserProfile.dart';
 part './Json/UserPostModel.dart';
+
 //TODO:拆分
 
 class WAPTiebaBase {
@@ -33,9 +34,9 @@ class WAPTiebaBase {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['errcode'] = this.errcode;
-    data['msg'] = this.msg;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['errcode'] = errcode;
+    data['msg'] = msg;
     return data;
   }
 }
@@ -53,9 +54,9 @@ class TBS {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tbs'] = this.tbs;
-    data['is_login'] = this.isLogin;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tbs'] = tbs;
+    data['is_login'] = isLogin;
     return data;
   }
 }
@@ -79,12 +80,12 @@ class RSAKEY {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['errno'] = this.errno;
-    data['msg'] = this.msg;
-    data['pubkey'] = this.pubkey;
-    data['key'] = this.key;
-    data['traceid'] = this.traceid;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['errno'] = errno;
+    data['msg'] = msg;
+    data['pubkey'] = pubkey;
+    data['key'] = key;
+    data['traceid'] = traceid;
     return data;
   }
 }
@@ -98,12 +99,12 @@ class ViewlogData {
 
   ViewlogData.fromJson(Map<String, dynamic> json) {
     code = json['code'];
-    data = json['data'] != null ? new Data.fromJson(json['data']) : null;
+    data = json['data'] != null ? Data.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['code'] = this.code;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['code'] = code;
     if (this.data != null) {
       data['data'] = this.data!.toJson();
     }
@@ -123,18 +124,17 @@ class Data {
     tk = json['tk'];
     as = json['as'];
     ds = json['ds'];
-    feedback = json['feedback'] != null
-        ? new Feedback.fromJson(json['feedback'])
-        : null;
+    feedback =
+        json['feedback'] != null ? Feedback.fromJson(json['feedback']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tk'] = this.tk;
-    data['as'] = this.as;
-    data['ds'] = this.ds;
-    if (this.feedback != null) {
-      data['feedback'] = this.feedback!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tk'] = tk;
+    data['as'] = as;
+    data['ds'] = ds;
+    if (feedback != null) {
+      data['feedback'] = feedback!.toJson();
     }
     return data;
   }
@@ -152,9 +152,9 @@ class Feedback {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['wap'] = this.wap;
-    data['pc'] = this.pc;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['wap'] = wap;
+    data['pc'] = pc;
     return data;
   }
 }
@@ -174,10 +174,10 @@ class ClickActionData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['x'] = this.x;
-    data['y'] = this.y;
-    data['t'] = this.t;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['x'] = x;
+    data['y'] = y;
+    data['t'] = t;
     return data;
   }
 }
@@ -196,10 +196,10 @@ class MoveActionData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['fx'] = this.fx;
-    data['fy'] = this.fy;
-    data['t'] = this.t;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['fx'] = fx;
+    data['fy'] = fy;
+    data['t'] = t;
     return data;
   }
 }
@@ -214,14 +214,14 @@ class Getstyle {
   Getstyle.fromJson(Map<String, dynamic> json) {
     code = json['code'];
     getstyleData =
-        json['data'] != null ? new GetstyleData.fromJson(json['data']) : null;
+        json['data'] != null ? GetstyleData.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['code'] = this.code;
-    if (this.getstyleData != null) {
-      data['data'] = this.getstyleData!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['code'] = code;
+    if (getstyleData != null) {
+      data['data'] = getstyleData!.toJson();
     }
     return data;
   }
@@ -237,15 +237,15 @@ class GetstyleData {
   GetstyleData.fromJson(Map<String, dynamic> json) {
     type = json['type'];
     backstr = json['backstr'];
-    ext = json['ext'] != null ? new Ext.fromJson(json['ext']) : null;
+    ext = json['ext'] != null ? Ext.fromJson(json['ext']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['type'] = this.type;
-    data['backstr'] = this.backstr;
-    if (this.ext != null) {
-      data['ext'] = this.ext!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['type'] = type;
+    data['backstr'] = backstr;
+    if (ext != null) {
+      data['ext'] = ext!.toJson();
     }
     return data;
   }
@@ -265,10 +265,10 @@ class Ext {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['img'] = this.img;
-    data['info'] = this.info;
-    data['sup'] = this.sup;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['img'] = img;
+    data['info'] = info;
+    data['sup'] = sup;
     return data;
   }
 }
@@ -281,14 +281,14 @@ class ViewlogVerify {
 
   ViewlogVerify.fromJson(Map<String, dynamic> json) {
     code = json['code'];
-    dsdata = json['data'] != null ? new Dsdata.fromJson(json['data']) : null;
+    dsdata = json['data'] != null ? Dsdata.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['code'] = this.code;
-    if (this.dsdata != null) {
-      data['data'] = this.dsdata!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['code'] = code;
+    if (dsdata != null) {
+      data['data'] = dsdata!.toJson();
     }
     return data;
   }
@@ -310,11 +310,11 @@ class Dsdata {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tk'] = this.tk;
-    data['as'] = this.as;
-    data['ds'] = this.ds;
-    data['op'] = this.op;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tk'] = tk;
+    data['as'] = as;
+    data['ds'] = ds;
+    data['op'] = op;
     return data;
   }
 }
@@ -331,9 +331,9 @@ class LoginErrCode {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['errcode'] = this.errcode;
-    data['msg'] = this.msg;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['errcode'] = errcode;
+    data['msg'] = msg;
     return data;
   }
 }
@@ -398,16 +398,16 @@ class APPSetting {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['theme'] = this.theme;
-    data['pictureLoadSetting'] = this.pictureLoadSetting;
-    data['MarkedCache'] = this.markedCache;
-    data['darkModel'] = this.darkModel;
-    data['signAllsinceOpen'] = this.signAllsinceOpen;
-    data['useBuildinBrowser'] = this.useBuildinBrowser;
-    data['checkUpdateAutomaticlly'] = this.checkUpdateAutomaticlly;
-    data['usePostTail'] = this.usePostTail;
-    data['postTail'] = this.postTail;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['theme'] = theme;
+    data['pictureLoadSetting'] = pictureLoadSetting;
+    data['MarkedCache'] = markedCache;
+    data['darkModel'] = darkModel;
+    data['signAllsinceOpen'] = signAllsinceOpen;
+    data['useBuildinBrowser'] = useBuildinBrowser;
+    data['checkUpdateAutomaticlly'] = checkUpdateAutomaticlly;
+    data['usePostTail'] = usePostTail;
+    data['postTail'] = postTail;
     return data;
   }
 }
@@ -421,15 +421,15 @@ class WAPLoginResponse {
 
   WAPLoginResponse.fromJson(Map<String, dynamic> json) {
     errInfo =
-        json['errInfo'] != null ? new ErrInfo.fromJson(json['errInfo']) : null;
-    data = (json['data'] != null ? new Data.fromJson(json['data']) : null)
-        as WAPData?;
+        json['errInfo'] != null ? ErrInfo.fromJson(json['errInfo']) : null;
+    data =
+        (json['data'] != null ? Data.fromJson(json['data']) : null) as WAPData?;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.errInfo != null) {
-      data['errInfo'] = this.errInfo!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (errInfo != null) {
+      data['errInfo'] = errInfo!.toJson();
     }
     if (this.data != null) {
       data['data'] = this.data!.toJson();
@@ -450,9 +450,9 @@ class ErrInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
-    data['msg'] = this.msg;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
+    data['msg'] = msg;
     return data;
   }
 }
@@ -678,78 +678,78 @@ class WAPData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['u'] = this.u;
-    data['serverTime'] = this.serverTime;
-    data['codeString'] = this.codeString;
-    data['bduss'] = this.bduss;
-    data['ptoken'] = this.ptoken;
-    data['bcsn'] = this.bcsn;
-    data['bcsync'] = this.bcsync;
-    data['bcchecksum'] = this.bcchecksum;
-    data['bctime'] = this.bctime;
-    data['gotoUrl'] = this.gotoUrl;
-    data['userid'] = this.userid;
-    data['phone'] = this.phone;
-    data['appealurl'] = this.appealurl;
-    data['second_u'] = this.secondU;
-    data['ppU'] = this.ppU;
-    data['realnameswitch'] = this.realnameswitch;
-    data['appealcode'] = this.appealcode;
-    data['ppDatau'] = this.ppDatau;
-    data['livinguname'] = this.livinguname;
-    data['liveSecurity'] = this.liveSecurity;
-    data['xml'] = this.xml;
-    data['username'] = this.username;
-    data['realName'] = this.realName;
-    data['bdstoken'] = this.bdstoken;
-    data['bdstokenback'] = this.bdstokenback;
-    data['authsid'] = this.authsid;
-    data['authsidback'] = this.authsidback;
-    data['authtoken'] = this.authtoken;
-    data['lstr'] = this.lstr;
-    data['ltoken'] = this.ltoken;
-    data['isChangePwd'] = this.isChangePwd;
-    data['isSilenceAccount'] = this.isSilenceAccount;
-    data['jumpset'] = this.jumpset;
-    data['secstate'] = this.secstate;
-    data['ori_u'] = this.oriU;
-    data['showType'] = this.showType;
-    data['email'] = this.email;
-    data['realnameverifyemail'] = this.realnameverifyemail;
-    data['mobile'] = this.mobile;
-    data['mobileHidden'] = this.mobileHidden;
-    data['countrycode'] = this.countrycode;
-    data['idcard'] = this.idcard;
-    data['liveUsername'] = this.liveUsername;
-    data['loginProxy'] = this.loginProxy;
-    data['verifyUrl'] = this.verifyUrl;
-    data['hasGuideFaceLogin'] = this.hasGuideFaceLogin;
-    data['guideFaceAuthsid'] = this.guideFaceAuthsid;
-    data['isFinanceTpl'] = this.isFinanceTpl;
-    data['openSwitchType'] = this.openSwitchType;
-    data['authtokenFaceLogin'] = this.authtokenFaceLogin;
-    data['guidefrom'] = this.guidefrom;
-    data['isFinance'] = this.isFinance;
-    data['headImage'] = this.headImage;
-    data['defaultUserName'] = this.defaultUserName;
-    data['isslide'] = this.isslide;
-    data['ppIsUpgradeMobile'] = this.ppIsUpgradeMobile;
-    data['ppEncryptUserid'] = this.ppEncryptUserid;
-    data['hasRealName'] = this.hasRealName;
-    data['scscene'] = this.scscene;
-    data['scnewuser'] = this.scnewuser;
-    data['degradeUpSms'] = this.degradeUpSms;
-    data['needDelayHint'] = this.needDelayHint;
-    data['portraitSign'] = this.portraitSign;
-    data['portrait'] = this.portrait;
-    data['isReg'] = this.isReg;
-    data['guide_set_pwd_uname'] = this.guideSetPwdUname;
-    data['secauthsid'] = this.secauthsid;
-    data['secbdstoken'] = this.secbdstoken;
-    data['switchJsonSec'] = this.switchJsonSec;
-    data['switchJsonRealName'] = this.switchJsonRealName;
-    data['target'] = this.target;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['u'] = u;
+    data['serverTime'] = serverTime;
+    data['codeString'] = codeString;
+    data['bduss'] = bduss;
+    data['ptoken'] = ptoken;
+    data['bcsn'] = bcsn;
+    data['bcsync'] = bcsync;
+    data['bcchecksum'] = bcchecksum;
+    data['bctime'] = bctime;
+    data['gotoUrl'] = gotoUrl;
+    data['userid'] = userid;
+    data['phone'] = phone;
+    data['appealurl'] = appealurl;
+    data['second_u'] = secondU;
+    data['ppU'] = ppU;
+    data['realnameswitch'] = realnameswitch;
+    data['appealcode'] = appealcode;
+    data['ppDatau'] = ppDatau;
+    data['livinguname'] = livinguname;
+    data['liveSecurity'] = liveSecurity;
+    data['xml'] = xml;
+    data['username'] = username;
+    data['realName'] = realName;
+    data['bdstoken'] = bdstoken;
+    data['bdstokenback'] = bdstokenback;
+    data['authsid'] = authsid;
+    data['authsidback'] = authsidback;
+    data['authtoken'] = authtoken;
+    data['lstr'] = lstr;
+    data['ltoken'] = ltoken;
+    data['isChangePwd'] = isChangePwd;
+    data['isSilenceAccount'] = isSilenceAccount;
+    data['jumpset'] = jumpset;
+    data['secstate'] = secstate;
+    data['ori_u'] = oriU;
+    data['showType'] = showType;
+    data['email'] = email;
+    data['realnameverifyemail'] = realnameverifyemail;
+    data['mobile'] = mobile;
+    data['mobileHidden'] = mobileHidden;
+    data['countrycode'] = countrycode;
+    data['idcard'] = idcard;
+    data['liveUsername'] = liveUsername;
+    data['loginProxy'] = loginProxy;
+    data['verifyUrl'] = verifyUrl;
+    data['hasGuideFaceLogin'] = hasGuideFaceLogin;
+    data['guideFaceAuthsid'] = guideFaceAuthsid;
+    data['isFinanceTpl'] = isFinanceTpl;
+    data['openSwitchType'] = openSwitchType;
+    data['authtokenFaceLogin'] = authtokenFaceLogin;
+    data['guidefrom'] = guidefrom;
+    data['isFinance'] = isFinance;
+    data['headImage'] = headImage;
+    data['defaultUserName'] = defaultUserName;
+    data['isslide'] = isslide;
+    data['ppIsUpgradeMobile'] = ppIsUpgradeMobile;
+    data['ppEncryptUserid'] = ppEncryptUserid;
+    data['hasRealName'] = hasRealName;
+    data['scscene'] = scscene;
+    data['scnewuser'] = scnewuser;
+    data['degradeUpSms'] = degradeUpSms;
+    data['needDelayHint'] = needDelayHint;
+    data['portraitSign'] = portraitSign;
+    data['portrait'] = portrait;
+    data['isReg'] = isReg;
+    data['guide_set_pwd_uname'] = guideSetPwdUname;
+    data['secauthsid'] = secauthsid;
+    data['secbdstoken'] = secbdstoken;
+    data['switchJsonSec'] = switchJsonSec;
+    data['switchJsonRealName'] = switchJsonRealName;
+    data['target'] = target;
     return data;
   }
 }
@@ -788,26 +788,26 @@ class AuthwidgetverifyRespone {
     ppNewAuthName = json['ppNewAuthName'];
     ppBindAction = json['ppBindAction'];
     data = json['data'] != null
-        ? new AuthwidgetverifyResponeData.fromJson(json['data'])
+        ? AuthwidgetverifyResponeData.fromJson(json['data'])
         : null;
     countrycode = json['countrycode'];
     traceid = json['traceid'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['errno'] = this.errno;
-    data['msg'] = this.msg;
-    data['forgot'] = this.forgot;
-    data['ppEncryptuid'] = this.ppEncryptuid;
-    data['ppAuthName'] = this.ppAuthName;
-    data['ppNewAuthName'] = this.ppNewAuthName;
-    data['ppBindAction'] = this.ppBindAction;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['errno'] = errno;
+    data['msg'] = msg;
+    data['forgot'] = forgot;
+    data['ppEncryptuid'] = ppEncryptuid;
+    data['ppAuthName'] = ppAuthName;
+    data['ppNewAuthName'] = ppNewAuthName;
+    data['ppBindAction'] = ppBindAction;
     if (this.data != null) {
       data['data'] = this.data!.toJson();
     }
-    data['countrycode'] = this.countrycode;
-    data['traceid'] = this.traceid;
+    data['countrycode'] = countrycode;
+    data['traceid'] = traceid;
     return data;
   }
 }
@@ -861,22 +861,22 @@ class AuthwidgetverifyResponeData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['mobile'] = this.mobile;
-    data['verifymobile'] = this.verifymobile;
-    data['email'] = this.email;
-    data['softtoken'] = this.softtoken;
-    data['password'] = this.password;
-    data['isUc'] = this.isUc;
-    data['history_password'] = this.historyPassword;
-    data['original_mobile'] = this.originalMobile;
-    if (this.originalBankcard != null) {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['mobile'] = mobile;
+    data['verifymobile'] = verifymobile;
+    data['email'] = email;
+    data['softtoken'] = softtoken;
+    data['password'] = password;
+    data['isUc'] = isUc;
+    data['history_password'] = historyPassword;
+    data['original_mobile'] = originalMobile;
+    if (originalBankcard != null) {
       data['original_bankcard'] =
-          this.originalBankcard!.map((v) => v.toJson()).toList();
+          originalBankcard!.map((v) => v.toJson()).toList();
     }
-    data['original_idcard'] = this.originalIdcard;
-    data['username'] = this.username;
-    data['original_email'] = this.originalEmail;
+    data['original_idcard'] = originalIdcard;
+    data['username'] = username;
+    data['original_email'] = originalEmail;
     return data;
   }
 }
@@ -900,7 +900,7 @@ class GetForumHomeData {
 
   GetForumHomeData.fromJson(Map<String, dynamic> json) {
     data = json['data'] != null
-        ? new GetForumHomeMainData.fromJson(json['data'])
+        ? GetForumHomeMainData.fromJson(json['data'])
         : null;
     errmsg = json['errmsg'];
     errno = json['errno'];
@@ -910,15 +910,15 @@ class GetForumHomeData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     if (this.data != null) {
       data['data'] = this.data!.toJson();
     }
-    data['errmsg'] = this.errmsg;
-    data['errno'] = this.errno;
-    data['logid'] = this.logid;
-    data['server_time'] = this.serverTime;
-    data['time'] = this.time;
+    data['errmsg'] = errmsg;
+    data['errno'] = errno;
+    data['logid'] = logid;
+    data['server_time'] = serverTime;
+    data['time'] = time;
     return data;
   }
 }
@@ -939,37 +939,35 @@ class GetForumHomeMainData {
 
   GetForumHomeMainData.fromJson(Map<String, dynamic> json) {
     likeForum = json['like_forum'] != null
-        ? new LikeForum.fromJson(json['like_forum'])
+        ? LikeForum.fromJson(json['like_forum'])
         : null;
-    tokens =
-        json['tokens'] != null ? new Tokens.fromJson(json['tokens']) : null;
+    tokens = json['tokens'] != null ? Tokens.fromJson(json['tokens']) : null;
     if (json['ubs_abtest_config'] != null) {
       ubsAbtestConfig = <UbsAbtestConfig>[];
       json['ubs_abtest_config'].forEach((v) {
-        ubsAbtestConfig!.add(new UbsAbtestConfig.fromJson(v));
+        ubsAbtestConfig!.add(UbsAbtestConfig.fromJson(v));
       });
     }
     ubsSampleIds = json['ubs_sample_ids'];
-    userInfo = json['user_info'] != null
-        ? new UserInfo.fromJson(json['user_info'])
-        : null;
+    userInfo =
+        json['user_info'] != null ? UserInfo.fromJson(json['user_info']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.likeForum != null) {
-      data['like_forum'] = this.likeForum!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (likeForum != null) {
+      data['like_forum'] = likeForum!.toJson();
     }
-    if (this.tokens != null) {
-      data['tokens'] = this.tokens!.toJson();
+    if (tokens != null) {
+      data['tokens'] = tokens!.toJson();
     }
-    if (this.ubsAbtestConfig != null) {
+    if (ubsAbtestConfig != null) {
       data['ubs_abtest_config'] =
-          this.ubsAbtestConfig!.map((v) => v.toJson()).toList();
+          ubsAbtestConfig!.map((v) => v.toJson()).toList();
     }
-    data['ubs_sample_ids'] = this.ubsSampleIds;
-    if (this.userInfo != null) {
-      data['user_info'] = this.userInfo!.toJson();
+    data['ubs_sample_ids'] = ubsSampleIds;
+    if (userInfo != null) {
+      data['user_info'] = userInfo!.toJson();
     }
     return data;
   }
@@ -985,19 +983,19 @@ class LikeForum {
     if (json['list'] != null) {
       list = <TiebaList>[];
       json['list'].forEach((v) {
-        list!.add(new TiebaList.fromJson(v));
+        list!.add(TiebaList.fromJson(v));
       });
     }
-    page = json['page'] != null ? new Page.fromJson(json['page']) : null;
+    page = json['page'] != null ? Page.fromJson(json['page']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.list != null) {
-      data['list'] = this.list!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (list != null) {
+      data['list'] = list!.map((v) => v.toJson()).toList();
     }
-    if (this.page != null) {
-      data['page'] = this.page!.toJson();
+    if (page != null) {
+      data['page'] = page!.toJson();
     }
     return data;
   }
@@ -1029,13 +1027,13 @@ class TiebaList {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['avatar'] = this.avatar;
-    data['forum_id'] = this.forumId;
-    data['forum_name'] = this.forumName;
-    data['hot_num'] = this.hotNum;
-    data['is_brand_forum'] = this.isBrandForum;
-    data['level_id'] = this.levelId;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['avatar'] = avatar;
+    data['forum_id'] = forumId;
+    data['forum_name'] = forumName;
+    data['hot_num'] = hotNum;
+    data['is_brand_forum'] = isBrandForum;
+    data['level_id'] = levelId;
     return data;
   }
 }
@@ -1052,9 +1050,9 @@ class Page {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['cur_page'] = this.curPage;
-    data['total_page'] = this.totalPage;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['cur_page'] = curPage;
+    data['total_page'] = totalPage;
     return data;
   }
 }
@@ -1079,11 +1077,11 @@ class Tokens {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['bottom_banner'] = this.bottomBanner;
-    data['bottom_layer'] = this.bottomLayer;
-    data['index_footer_client_down'] = this.indexFooterClientDown;
-    data['index_message_icon'] = this.indexMessageIcon;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['bottom_banner'] = bottomBanner;
+    data['bottom_layer'] = bottomLayer;
+    data['index_footer_client_down'] = indexFooterClientDown;
+    data['index_message_icon'] = indexMessageIcon;
     return data;
   }
 }
@@ -1098,8 +1096,8 @@ class UbsAbtestConfig {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['sid'] = this.sid;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['sid'] = sid;
     return data;
   }
 }
@@ -1116,9 +1114,9 @@ class UserInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['is_login'] = this.isLogin;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['is_login'] = isLogin;
     return data;
   }
 }
@@ -1174,22 +1172,22 @@ class LikeForumInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['forum_id'] = this.forumId;
-    data['avatar'] = this.avatar;
-    data['is_sign'] = this.isSign;
-    data['is_top'] = this.isTop;
-    data['in_time'] = this.inTime;
-    data['forum_name'] = this.forumName;
-    data['level_id'] = this.levelId;
-    data['is_brand_forum'] = this.isBrandForum;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['forum_id'] = forumId;
+    data['avatar'] = avatar;
+    data['is_sign'] = isSign;
+    data['is_top'] = isTop;
+    data['in_time'] = inTime;
+    data['forum_name'] = forumName;
+    data['level_id'] = levelId;
+    data['is_brand_forum'] = isBrandForum;
     // if (this.themeColor != null) {
     //   data['theme_color'] = this.themeColor.toJson();
     // }
-    data['content'] = this.content;
-    data['need_trans'] = this.needTrans;
-    if (this.tabInfo != null) {
-      data['tab_info'] = this.tabInfo!.map((v) => v.toJson()).toList();
+    data['content'] = content;
+    data['need_trans'] = needTrans;
+    if (tabInfo != null) {
+      data['tab_info'] = tabInfo!.map((v) => v.toJson()).toList();
     }
     return data;
   }

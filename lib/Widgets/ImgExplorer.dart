@@ -70,7 +70,8 @@ class _ImgExplorerState extends State<ImgExplorer> {
             IconButton(
                 onPressed: () async {
                   PhotoManager.editor.saveImageWithPath(
-                      (await getCachedImageFile(qualitySelect()))?.path ?? "");
+                      (await getCachedImageFile(qualitySelect()))?.path ?? "",
+                      title: DateTime.now().toString());
                 },
                 icon: const Icon(Icons.save))
           ],
@@ -277,7 +278,8 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                   PhotoManager.editor.saveImageWithPath(
                       (await getCachedImageFile(qualitySelect(currentIndex)))
                               ?.path ??
-                          "");
+                          "",
+                      title: DateTime.now().toString());
                 },
                 icon: const Icon(Icons.save))
           ],

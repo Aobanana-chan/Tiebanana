@@ -33,9 +33,9 @@ class AtMe {
 
   AtMe.fromJson(Map<String, dynamic> json) {
     replyer =
-        json['replyer'] != null ? new Replyer.fromJson(json['replyer']) : null;
+        json['replyer'] != null ? Replyer.fromJson(json['replyer']) : null;
     quoteUser = json['quote_user'] != null
-        ? new QuoteUser.fromJson(json['quote_user'])
+        ? QuoteUser.fromJson(json['quote_user'])
         : null;
     title = json['title'];
     content = json['content'];
@@ -51,24 +51,24 @@ class AtMe {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.replyer != null) {
-      data['replyer'] = this.replyer?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (replyer != null) {
+      data['replyer'] = replyer?.toJson();
     }
-    if (this.quoteUser != null) {
-      data['quote_user'] = this.quoteUser?.toJson();
+    if (quoteUser != null) {
+      data['quote_user'] = quoteUser?.toJson();
     }
-    data['title'] = this.title;
-    data['content'] = this.content;
-    data['thread_id'] = this.threadId;
-    data['post_id'] = this.postId;
-    data['time'] = this.time;
-    data['quote_content'] = this.quoteContent;
-    data['fname'] = this.fname;
-    data['is_floor'] = this.isFloor;
-    data['thread_type'] = this.threadType;
-    data['is_bjh'] = this.isBjh;
-    data['baijiahao'] = this.baijiahao;
+    data['title'] = title;
+    data['content'] = content;
+    data['thread_id'] = threadId;
+    data['post_id'] = postId;
+    data['time'] = time;
+    data['quote_content'] = quoteContent;
+    data['fname'] = fname;
+    data['is_floor'] = isFloor;
+    data['thread_type'] = threadType;
+    data['is_bjh'] = isBjh;
+    data['baijiahao'] = baijiahao;
     return data;
   }
 }

@@ -5,6 +5,7 @@ import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/Widgets/ThreadFloorCard.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
+import 'package:tiebanana/Widgets/UserPostWidget.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:uuid/uuid.dart';
@@ -210,7 +211,6 @@ class _BottomViewState extends State<_BottomView>
     with SingleTickerProviderStateMixin {
   late List _tab;
   late TabController _controller;
-  Future? post;
   @override
   void initState() {
     super.initState();
@@ -220,7 +220,7 @@ class _BottomViewState extends State<_BottomView>
       "关注的吧 ${widget.myLikeNum}"
     ];
     _controller = TabController(length: _tab.length, vsync: this);
-    post = Global.tiebaAPI.getUserPost(uid: widget.uid);
+    // post = Global.tiebaAPI.getUserPost(uid: widget.uid);
   }
 
   @override
@@ -251,6 +251,12 @@ class _BottomViewState extends State<_BottomView>
               insets: const EdgeInsets.only(left: 15, right: 15),
               borderSide: const BorderSide(width: 4, color: Colors.green)),
         ),
+        Expanded(
+            child: TabBarView(controller: _controller, children: [
+          _ThreadView(uid: widget.uid),
+          _Postview(),
+          _ForumView()
+        ]))
       ]),
     );
   }
@@ -267,18 +273,34 @@ class _ThreadView extends StatefulWidget {
 
 class __ThreadViewState extends State<_ThreadView> {
   UserPostModel? info;
-  List<PostList> posts = [];
+  List<UserPostPostList> posts = [];
   int pn = 1;
+  late final String? username;
   void init() async {
     info = await Global.tiebaAPI
         .getUserPost(uid: widget.uid, isThread: true, pn: pn);
-
+    posts.addAll(info?.postList ?? []);
     setState(() {});
+  }
+
+  void _loadPage(int pn) async {
+    this.pn = pn;
+    info = await Global.tiebaAPI
+        .getUserPost(uid: widget.uid, isThread: true, pn: pn);
+    posts.addAll(info?.postList ?? []);
+    setState(() {});
+  }
+
+  void _loadNextPage() {
+    _loadPage(++pn);
   }
 
   @override
   void initState() {
     init();
+    var userinfo =
+        context.findAncestorStateOfType<_UserVisitorState>()?.userinfo;
+    username = "${userinfo?.user?.nameShow ?? userinfo?.user?.name}";
     super.initState();
   }
 
@@ -292,8 +314,11 @@ class __ThreadViewState extends State<_ThreadView> {
     return ListView.builder(
       itemCount: posts.length,
       itemBuilder: (BuildContext context, int index) {
-        return Container();
-        // return ThreadSummary(info: info);
+        // return Container();
+        return UserPostWidget(
+          info: posts[index],
+          username: username,
+        );
       },
     );
   }

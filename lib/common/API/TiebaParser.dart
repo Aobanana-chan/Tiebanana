@@ -26,11 +26,13 @@ class TiebaParser {
 
   static List<Widget> parserContent(
       List<Content>? contents, List<String> allImgs, List<String> allOrgImgs,
-      {VideoInfo? videoInfo, bool selectable = false}) {
+      {VideoInfo? videoInfo,
+      bool selectable = false,
+      int mediaLimit = 0x7FFFFFFFFFFFFFFF}) {
     List<InlineSpan> richText = [];
     int index = 0;
     int? offset;
-
+    int mediaNum = 0;
     for (Content elem in contents ?? []) {
       if (elem.type == "0") //文字内容
       {
@@ -39,6 +41,11 @@ class TiebaParser {
           style: const TextStyle(fontSize: 16),
         ));
       } else if (elem.type == "4" || elem.type == "3") {
+        //媒体数量限制
+        if (mediaNum >= mediaLimit) {
+          continue;
+        }
+        mediaNum++;
         //图片
         switch (Global.setting.pictureLoadSetting) {
           case 0:

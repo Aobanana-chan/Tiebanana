@@ -76,21 +76,20 @@ class ThreadPageData {
         newsInfo?.add(v);
       });
     }
-    forum = json['forum'] != null ? new Forum.fromJson(json['forum']) : null;
+    forum = json['forum'] != null ? Forum.fromJson(json['forum']) : null;
     displayForum = json['display_forum'] != null
-        ? new DisplayForum.fromJson(json['display_forum'])
+        ? DisplayForum.fromJson(json['display_forum'])
         : null;
-    user = json['user'] != null ? new ThreadUser.fromJson(json['user']) : null;
-    anti = json['anti'] != null ? new Anti.fromJson(json['anti']) : null;
-    page = json['page'] != null ? new ThreadPage.fromJson(json['page']) : null;
+    user = json['user'] != null ? ThreadUser.fromJson(json['user']) : null;
+    anti = json['anti'] != null ? Anti.fromJson(json['anti']) : null;
+    page = json['page'] != null ? ThreadPage.fromJson(json['page']) : null;
     if (json['post_list'] != null) {
       postList = [];
       json['post_list'].forEach((v) {
-        postList?.add(new PostList.fromJson(v));
+        postList?.add(PostList.fromJson(v));
       });
     }
-    thread =
-        json['thread'] != null ? new Thread.fromJson(json['thread']) : null;
+    thread = json['thread'] != null ? Thread.fromJson(json['thread']) : null;
     if (json['ala_info'] != null) {
       alaInfo = [];
       json['ala_info'].forEach((v) {
@@ -100,7 +99,7 @@ class ThreadPageData {
     if (json['user_list'] != null) {
       userList = [];
       json['user_list'].forEach((v) {
-        userList?.add(new UserList.fromJson(v));
+        userList?.add(UserList.fromJson(v));
       });
     }
     // businessPromotInfo = json['business_promot_info'] != null
@@ -121,7 +120,7 @@ class ThreadPageData {
     showAdsense = json['show_adsense'];
     isBlackWhite = json['is_black_white'];
     bannerList = json['banner_list'] != null
-        ? new BannerList.fromJson(json['banner_list'])
+        ? BannerList.fromJson(json['banner_list'])
         : null;
     hasFoldComment = json['has_fold_comment'];
     partialVisibleToast = json['partial_visible_toast'];
@@ -130,80 +129,80 @@ class ThreadPageData {
     if (json['pb_sort_info'] != null) {
       pbSortInfo = [];
       json['pb_sort_info'].forEach((v) {
-        pbSortInfo?.add(new PbSortInfo.fromJson(v));
+        pbSortInfo?.add(PbSortInfo.fromJson(v));
       });
     }
     serverTime = json['server_time'];
-    time = (json['time'] as double).toInt();
+    time = (json['time'] as num).toInt();
     ctime = json['ctime'];
-    logid = (json['logid'] as double).toInt();
+    logid = (json['logid'] as num).toInt();
     errorCode = json['error_code'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['has_floor'] = this.hasFloor;
-    data['is_new_url'] = this.isNewUrl;
-    if (this.newsInfo != null) {
-      data['news_info'] = this.newsInfo?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['has_floor'] = hasFloor;
+    data['is_new_url'] = isNewUrl;
+    if (newsInfo != null) {
+      data['news_info'] = newsInfo?.map((v) => v.toJson()).toList();
     }
-    if (this.forum != null) {
-      data['forum'] = this.forum?.toJson();
+    if (forum != null) {
+      data['forum'] = forum?.toJson();
     }
-    if (this.displayForum != null) {
-      data['display_forum'] = this.displayForum?.toJson();
+    if (displayForum != null) {
+      data['display_forum'] = displayForum?.toJson();
     }
-    if (this.user != null) {
-      data['user'] = this.user?.toJson();
+    if (user != null) {
+      data['user'] = user?.toJson();
     }
-    if (this.anti != null) {
-      data['anti'] = this.anti?.toJson();
+    if (anti != null) {
+      data['anti'] = anti?.toJson();
     }
-    if (this.page != null) {
-      data['page'] = this.page?.toJson();
+    if (page != null) {
+      data['page'] = page?.toJson();
     }
-    if (this.postList != null) {
-      data['post_list'] = this.postList?.map((v) => v.toJson()).toList();
+    if (postList != null) {
+      data['post_list'] = postList?.map((v) => v.toJson()).toList();
     }
-    if (this.thread != null) {
-      data['thread'] = this.thread?.toJson();
+    if (thread != null) {
+      data['thread'] = thread?.toJson();
     }
-    if (this.alaInfo != null) {
-      data['ala_info'] = this.alaInfo?.map((v) => v.toJson()).toList();
+    if (alaInfo != null) {
+      data['ala_info'] = alaInfo?.map((v) => v.toJson()).toList();
     }
-    if (this.userList != null) {
-      data['user_list'] = this.userList?.map((v) => v.toJson()).toList();
+    if (userList != null) {
+      data['user_list'] = userList?.map((v) => v.toJson()).toList();
     }
     // if (this.businessPromotInfo != null) {
     //   data['business_promot_info'] = this.businessPromotInfo.toJson();
     // }
-    data['switch_read_open'] = this.switchReadOpen;
-    data['is_official_forum'] = this.isOfficialForum;
-    data['is_purchase'] = this.isPurchase;
+    data['switch_read_open'] = switchReadOpen;
+    data['is_official_forum'] = isOfficialForum;
+    data['is_purchase'] = isPurchase;
     // if (this.twzhiboAnti != null) {
     //   data['twzhibo_anti'] = this.twzhiboAnti.toJson();
     // }
-    if (this.sampleSidsTemp != null) {
+    if (sampleSidsTemp != null) {
       data['sample_sids_temp'] =
-          this.sampleSidsTemp?.map((v) => v.toJson()).toList();
+          sampleSidsTemp?.map((v) => v.toJson()).toList();
     }
-    data['show_adsense'] = this.showAdsense;
-    data['is_black_white'] = this.isBlackWhite;
-    if (this.bannerList != null) {
-      data['banner_list'] = this.bannerList?.toJson();
+    data['show_adsense'] = showAdsense;
+    data['is_black_white'] = isBlackWhite;
+    if (bannerList != null) {
+      data['banner_list'] = bannerList?.toJson();
     }
-    data['has_fold_comment'] = this.hasFoldComment;
-    data['partial_visible_toast'] = this.partialVisibleToast;
-    data['fold_tip'] = this.foldTip;
-    data['sort_type'] = this.sortType;
-    if (this.pbSortInfo != null) {
-      data['pb_sort_info'] = this.pbSortInfo?.map((v) => v.toJson()).toList();
+    data['has_fold_comment'] = hasFoldComment;
+    data['partial_visible_toast'] = partialVisibleToast;
+    data['fold_tip'] = foldTip;
+    data['sort_type'] = sortType;
+    if (pbSortInfo != null) {
+      data['pb_sort_info'] = pbSortInfo?.map((v) => v.toJson()).toList();
     }
-    data['server_time'] = this.serverTime;
-    data['time'] = this.time;
-    data['ctime'] = this.ctime;
-    data['logid'] = this.logid;
-    data['error_code'] = this.errorCode;
+    data['server_time'] = serverTime;
+    data['time'] = time;
+    data['ctime'] = ctime;
+    data['logid'] = logid;
+    data['error_code'] = errorCode;
     return data;
   }
 }
@@ -281,15 +280,15 @@ class DisplayForum {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['is_exists'] = this.isExists;
-    data['avatar'] = this.avatar;
-    data['first_class'] = this.firstClass;
-    data['second_class'] = this.secondClass;
-    data['is_liked'] = this.isLiked;
-    data['is_brand_forum'] = this.isBrandForum;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['is_exists'] = isExists;
+    data['avatar'] = avatar;
+    data['first_class'] = firstClass;
+    data['second_class'] = secondClass;
+    data['is_liked'] = isLiked;
+    data['is_brand_forum'] = isBrandForum;
     return data;
   }
 }
@@ -328,17 +327,17 @@ class ThreadUser {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_manager'] = this.isManager;
-    data['bimg_end_time'] = this.bimgEndTime;
-    data['is_select_tail'] = this.isSelectTail;
-    data['mute_user'] = this.muteUser;
-    data['left_call_num'] = this.leftCallNum;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_manager'] = isManager;
+    data['bimg_end_time'] = bimgEndTime;
+    data['is_select_tail'] = isSelectTail;
+    data['mute_user'] = muteUser;
+    data['left_call_num'] = leftCallNum;
     // if (this.callFansInfo != null) {
     //   data['call_fans_info'] = this.callFansInfo?.toJson();
     // }
-    data['forum_tool_auth'] = this.forumToolAuth;
-    data['show_pb_private_flag'] = this.showPbPrivateFlag;
+    data['forum_tool_auth'] = forumToolAuth;
+    data['show_pb_private_flag'] = showPbPrivateFlag;
     return data;
   }
 }
@@ -483,18 +482,18 @@ class ThreadPage {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['req_num'] = this.reqNum;
-    data['page_size'] = this.pageSize;
-    data['offset'] = this.offset;
-    data['current_page'] = this.currentPage;
-    data['total_page'] = this.totalPage;
-    data['total_num'] = this.totalNum;
-    data['pnum'] = this.pnum;
-    data['tnum'] = this.tnum;
-    data['new_total_page'] = this.newTotalPage;
-    data['has_more'] = this.hasMore;
-    data['has_prev'] = this.hasPrev;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['req_num'] = reqNum;
+    data['page_size'] = pageSize;
+    data['offset'] = offset;
+    data['current_page'] = currentPage;
+    data['total_page'] = totalPage;
+    data['total_num'] = totalNum;
+    data['pnum'] = pnum;
+    data['tnum'] = tnum;
+    data['new_total_page'] = newTotalPage;
+    data['has_more'] = hasMore;
+    data['has_prev'] = hasPrev;
     return data;
   }
 }
@@ -591,7 +590,7 @@ class PostList {
     if (json['content'] != null) {
       content = [];
       json['content'].forEach((v) {
-        content?.add(new Content.fromJson(v));
+        content?.add(Content.fromJson(v));
       });
     }
     subPostNumber = json['sub_post_number'];
@@ -614,7 +613,7 @@ class PostList {
     if (json['signature'] != null) {
       if (json['signature'] is Map) {
         signature = json['signature'] != null
-            ? new Signature.fromJson(json['signature'])
+            ? Signature.fromJson(json['signature'])
             : null;
       } else if (json['signature'] is List) {
         if (json['signature'].length == 0) {
@@ -648,7 +647,7 @@ class PostList {
     extTails = json['ext_tails'];
     pbDealInfo = json['pb_deal_info'];
     skinInfo = json['skin_info'];
-    agree = json['agree'] != null ? new Agree.fromJson(json['agree']) : null;
+    agree = json['agree'] != null ? Agree.fromJson(json['agree']) : null;
     fromForum = json['from_forum'];
     isPostVisible = json['is_post_visible'];
     isFirstFloor = json['is_first_floor'];
@@ -669,59 +668,59 @@ class PostList {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['title'] = this.title;
-    data['floor'] = this.floor;
-    data['time'] = this.time;
-    if (this.content != null) {
-      data['content'] = this.content?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['title'] = title;
+    data['floor'] = floor;
+    data['time'] = time;
+    if (content != null) {
+      data['content'] = content?.map((v) => v.toJson()).toList();
     }
-    data['sub_post_number'] = this.subPostNumber;
-    if (this.subPostList != null) {
-      data['sub_post_list'] = this.subPostList?.map((v) => v.toJson()).toList();
+    data['sub_post_number'] = subPostNumber;
+    if (subPostList != null) {
+      data['sub_post_list'] = subPostList?.map((v) => v.toJson()).toList();
     }
-    data['bimg_url'] = this.bimgUrl;
-    data['ios_bimg_format'] = this.iosBimgFormat;
-    data['add_post_list'] = this.addPostList;
-    data['has_signature'] = this.hasSignature;
-    if (this.signature != null) {
-      data['signature'] = this.signature?.toJson();
+    data['bimg_url'] = bimgUrl;
+    data['ios_bimg_format'] = iosBimgFormat;
+    data['add_post_list'] = addPostList;
+    data['has_signature'] = hasSignature;
+    if (signature != null) {
+      data['signature'] = signature?.toJson();
     }
     // if (this.tailInfo != null) {
     //   // data['tail_info'] = this.tailInfo?.map((v) => v.toJson()).toList();
     // }
-    if (this.lbsInfo != null) {
-      data['lbs_info'] = this.lbsInfo!.toJson();
+    if (lbsInfo != null) {
+      data['lbs_info'] = lbsInfo!.toJson();
     }
-    data['zan'] = this.zan;
-    data['is_giftpost'] = this.isGiftpost;
-    data['tpoint_post'] = this.tpointPost;
-    data['act_post'] = this.actPost;
-    data['present'] = this.present;
-    data['ext_tails'] = this.extTails;
-    data['pb_deal_info'] = this.pbDealInfo;
-    data['skin_info'] = this.skinInfo;
-    if (this.agree != null) {
-      data['agree'] = this.agree?.toJson();
+    data['zan'] = zan;
+    data['is_giftpost'] = isGiftpost;
+    data['tpoint_post'] = tpointPost;
+    data['act_post'] = actPost;
+    data['present'] = present;
+    data['ext_tails'] = extTails;
+    data['pb_deal_info'] = pbDealInfo;
+    data['skin_info'] = skinInfo;
+    if (agree != null) {
+      data['agree'] = agree?.toJson();
     }
-    data['from_forum'] = this.fromForum;
-    data['is_post_visible'] = this.isPostVisible;
-    data['is_first_floor'] = this.isFirstFloor;
-    data['need_log'] = this.needLog;
-    data['is_fold'] = this.isFold;
-    data['is_top_agree_post'] = this.isTopAgreePost;
-    data['show_squared'] = this.showSquared;
-    data['is_wonderful_post'] = this.isWonderfulPost;
-    data['item'] = this.item;
-    data['outer_item'] = this.outerItem;
-    data['item_star'] = this.itemStar;
+    data['from_forum'] = fromForum;
+    data['is_post_visible'] = isPostVisible;
+    data['is_first_floor'] = isFirstFloor;
+    data['need_log'] = needLog;
+    data['is_fold'] = isFold;
+    data['is_top_agree_post'] = isTopAgreePost;
+    data['show_squared'] = showSquared;
+    data['is_wonderful_post'] = isWonderfulPost;
+    data['item'] = item;
+    data['outer_item'] = outerItem;
+    data['item_star'] = itemStar;
     // data['advertisement'] = this.advertisement;
-    data['fold_comment_status'] = this.foldCommentStatus;
-    data['fold_comment_apply_url'] = this.foldCommentApplyUrl;
-    data['novel_info'] = this.novelInfo;
-    data['author_id'] = this.authorId;
-    data['fold_tip'] = this.foldTip;
+    data['fold_comment_status'] = foldCommentStatus;
+    data['fold_comment_apply_url'] = foldCommentApplyUrl;
+    data['novel_info'] = novelInfo;
+    data['author_id'] = authorId;
+    data['fold_tip'] = foldTip;
     return data;
   }
 }
@@ -794,25 +793,25 @@ class Content {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['type'] = this.type;
-    data['bsize'] = this.bsize;
-    data['size'] = this.size;
-    data['origin_src'] = this.originSrc;
-    data['origin_size'] = this.originSize;
-    data['is_long_pic'] = this.isLongPic;
-    data['show_original_btn'] = this.showOriginalBtn;
-    data['cdn_src'] = this.cdnSrc;
-    data['cdn_src_active'] = this.cdnSrcActive;
-    data['big_cdn_src'] = this.bigCdnSrc;
-    data['is_native_app'] = this.isNativeApp;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['type'] = type;
+    data['bsize'] = bsize;
+    data['size'] = size;
+    data['origin_src'] = originSrc;
+    data['origin_size'] = originSize;
+    data['is_long_pic'] = isLongPic;
+    data['show_original_btn'] = showOriginalBtn;
+    data['cdn_src'] = cdnSrc;
+    data['cdn_src_active'] = cdnSrcActive;
+    data['big_cdn_src'] = bigCdnSrc;
+    data['is_native_app'] = isNativeApp;
     data["uid"] = uid;
     data["uname"] = uname;
-    if (this.nativeApp != null) {
+    if (nativeApp != null) {
       // data['native_app'] = this.nativeApp.map((v) => v.toJson()).toList();
     }
-    data['text'] = this.text;
-    data['c'] = this.c;
+    data['text'] = text;
+    data['c'] = c;
     return data;
   }
 }
@@ -829,7 +828,7 @@ class Signature {
     if (json['content'] != null) {
       content = [];
       json['content'].forEach((v) {
-        content?.add(new Content.fromJson(v));
+        content?.add(Content.fromJson(v));
       });
     }
     signatureId = json['signature_id'];
@@ -838,13 +837,13 @@ class Signature {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.content != null) {
-      data['content'] = this.content?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (content != null) {
+      data['content'] = content?.map((v) => v.toJson()).toList();
     }
-    data['signature_id'] = this.signatureId;
-    data['fontKeyName'] = this.fontKeyName;
-    data['fontColor'] = this.fontColor;
+    data['signature_id'] = signatureId;
+    data['fontKeyName'] = fontKeyName;
+    data['fontColor'] = fontColor;
     return data;
   }
 }
@@ -1019,12 +1018,11 @@ class Thread {
     replyNum = json['reply_num'];
     collectStatus = json['collect_status'];
     collectMarkPid = json['collect_mark_pid'];
-    author =
-        json['author'] != null ? new Author.fromJson(json['author']) : null;
+    author = json['author'] != null ? Author.fromJson(json['author']) : null;
     isGood = json['is_good'];
     isTop = json['is_top'];
-    topic = json['topic'] != null ? new Topic.fromJson(json['topic']) : null;
-    zan = json['zan'] != null ? new Zan.fromJson(json['zan']) : null;
+    topic = json['topic'] != null ? Topic.fromJson(json['topic']) : null;
+    zan = json['zan'] != null ? Zan.fromJson(json['zan']) : null;
     postId = json['post_id'];
     createTime = json['create_time'];
     isNtitle = json['is_ntitle'];
@@ -1067,7 +1065,7 @@ class Thread {
     isShareThread = json['is_share_thread'];
     richAbstract = json['rich_abstract'];
     declareList = json['declare_list'];
-    agree = json['agree'] != null ? new Agree.fromJson(json['agree']) : null;
+    agree = json['agree'] != null ? Agree.fromJson(json['agree']) : null;
     isMultiforumThread = json['is_multiforum_thread'];
     isLinkThread = json['is_link_thread'];
     linkInfo = json['link_info'];
@@ -1088,75 +1086,75 @@ class Thread {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['title'] = this.title;
-    data['reply_num'] = this.replyNum;
-    data['collect_status'] = this.collectStatus;
-    data['collect_mark_pid'] = this.collectMarkPid;
-    if (this.author != null) {
-      data['author'] = this.author?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['title'] = title;
+    data['reply_num'] = replyNum;
+    data['collect_status'] = collectStatus;
+    data['collect_mark_pid'] = collectMarkPid;
+    if (author != null) {
+      data['author'] = author?.toJson();
     }
-    data['is_good'] = this.isGood;
-    data['is_top'] = this.isTop;
-    if (this.topic != null) {
-      data['topic'] = this.topic?.toJson();
+    data['is_good'] = isGood;
+    data['is_top'] = isTop;
+    if (topic != null) {
+      data['topic'] = topic?.toJson();
     }
-    if (this.zan != null) {
-      data['zan'] = this.zan?.toJson();
+    if (zan != null) {
+      data['zan'] = zan?.toJson();
     }
-    data['post_id'] = this.postId;
-    data['create_time'] = this.createTime;
-    data['is_ntitle'] = this.isNtitle;
-    if (this.location != null) {
-      data['location'] = this.location?.map((v) => v.toJson()).toList();
+    data['post_id'] = postId;
+    data['create_time'] = createTime;
+    data['is_ntitle'] = isNtitle;
+    if (location != null) {
+      data['location'] = location?.map((v) => v.toJson()).toList();
     }
-    data['act_info'] = this.actInfo;
-    data['is_activity'] = this.isActivity;
-    data['last_time_int'] = this.lastTimeInt;
-    data['storecount'] = this.storecount;
-    data['livecover_src'] = this.livecoverSrc;
+    data['act_info'] = actInfo;
+    data['is_activity'] = isActivity;
+    data['last_time_int'] = lastTimeInt;
+    data['storecount'] = storecount;
+    data['livecover_src'] = livecoverSrc;
     // if (this.twzhiboInfo != null) {
     //   data['twzhibo_info'] = this.twzhiboInfo?.toJson();
     // }
-    data['poll_info'] = this.pollInfo;
-    data['video_info'] = this.videoInfo;
-    data['video_channel_info'] = this.videoChannelInfo;
-    data['thread_type'] = this.threadType;
-    data['task_info'] = this.taskInfo;
-    data['jid'] = this.jid;
-    data['category_name'] = this.categoryName;
-    data['yule_post_activity'] = this.yulePostActivity;
-    data['ext_tails'] = this.extTails;
-    data['push_status'] = this.pushStatus;
-    data['cartoon_info'] = this.cartoonInfo;
-    data['rich_title'] = this.richTitle;
+    data['poll_info'] = pollInfo;
+    data['video_info'] = videoInfo;
+    data['video_channel_info'] = videoChannelInfo;
+    data['thread_type'] = threadType;
+    data['task_info'] = taskInfo;
+    data['jid'] = jid;
+    data['category_name'] = categoryName;
+    data['yule_post_activity'] = yulePostActivity;
+    data['ext_tails'] = extTails;
+    data['push_status'] = pushStatus;
+    data['cartoon_info'] = cartoonInfo;
+    data['rich_title'] = richTitle;
     // if (this.originThreadInfo != null) {
     //   data['origin_thread_info'] = this.originThreadInfo?.toJson();
     // }
-    data['is_share_thread'] = this.isShareThread;
-    data['rich_abstract'] = this.richAbstract;
-    data['declare_list'] = this.declareList;
-    if (this.agree != null) {
-      data['agree'] = this.agree?.toJson();
+    data['is_share_thread'] = isShareThread;
+    data['rich_abstract'] = richAbstract;
+    data['declare_list'] = declareList;
+    if (agree != null) {
+      data['agree'] = agree?.toJson();
     }
-    data['is_multiforum_thread'] = this.isMultiforumThread;
-    data['is_link_thread'] = this.isLinkThread;
-    data['link_info'] = this.linkInfo;
-    data['share_num'] = this.shareNum;
-    data['is_called'] = this.isCalled;
-    data['swan_info'] = this.swanInfo;
-    data['no_smart_pb'] = this.noSmartPb;
-    data['t_share_img'] = this.tShareImg;
-    data['is_bazhu_apply'] = this.isBazhuApply;
-    data['thread_share_link'] = this.threadShareLink;
-    data['nid'] = this.nid;
-    data['pb_link_info'] = this.pbLinkInfo;
-    data['pb_goods_info'] = this.pbGoodsInfo;
-    data['works_info'] = this.worksInfo;
-    data['collect_num'] = this.collectNum;
-    data['is_frs_mask'] = this.isFrsMask;
-    data['is_partial_visible'] = this.isPartialVisible;
+    data['is_multiforum_thread'] = isMultiforumThread;
+    data['is_link_thread'] = isLinkThread;
+    data['link_info'] = linkInfo;
+    data['share_num'] = shareNum;
+    data['is_called'] = isCalled;
+    data['swan_info'] = swanInfo;
+    data['no_smart_pb'] = noSmartPb;
+    data['t_share_img'] = tShareImg;
+    data['is_bazhu_apply'] = isBazhuApply;
+    data['thread_share_link'] = threadShareLink;
+    data['nid'] = nid;
+    data['pb_link_info'] = pbLinkInfo;
+    data['pb_goods_info'] = pbGoodsInfo;
+    data['works_info'] = worksInfo;
+    data['collect_num'] = collectNum;
+    data['is_frs_mask'] = isFrsMask;
+    data['is_partial_visible'] = isPartialVisible;
     return data;
   }
 }
@@ -1224,20 +1222,19 @@ class OriginThreadInfo {
     if (json['media'] != null) {
       media = [];
       json['media'].forEach((v) {
-        media?.add(new Media.fromJson(v));
+        media?.add(Media.fromJson(v));
       });
     }
     if (json['abstract'] != null) {
       abstract = [];
       json['abstract'].forEach((v) {
-        abstract?.add(new Abstract.fromJson(v));
+        abstract?.add(Abstract.fromJson(v));
       });
     }
     fname = json['fname'];
     tid = json['tid'];
-    alaInfo = json['ala_info'] != null
-        ? new AlaInfo.fromJson(json['ala_info'])
-        : null;
+    alaInfo =
+        json['ala_info'] != null ? AlaInfo.fromJson(json['ala_info']) : null;
     fid = json['fid'];
     threadType = json['thread_type'];
     isDeleted = json['is_deleted'];
@@ -1254,14 +1251,13 @@ class OriginThreadInfo {
     if (json['content'] != null) {
       content = [];
       json['content'].forEach((v) {
-        content?.add(new Content.fromJson(v));
+        content?.add(Content.fromJson(v));
       });
     }
     isNewStyle = json['is_new_style'];
-    agree = json['agree'] != null ? new Agree.fromJson(json['agree']) : null;
+    agree = json['agree'] != null ? Agree.fromJson(json['agree']) : null;
     replyNum = json['reply_num'];
-    author =
-        json['author'] != null ? new Author.fromJson(json['author']) : null;
+    author = json['author'] != null ? Author.fromJson(json['author']) : null;
     sharedNum = json['shared_num'];
     itemId = json['item_id'];
     // item = json['item'] != null ? new Item.fromJson(json['item']) : null;
@@ -1272,52 +1268,52 @@ class OriginThreadInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['title'] = this.title;
-    if (this.media != null) {
-      data['media'] = this.media?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['title'] = title;
+    if (media != null) {
+      data['media'] = media?.map((v) => v.toJson()).toList();
     }
-    if (this.abstract != null) {
-      data['abstract'] = this.abstract?.map((v) => v.toJson()).toList();
+    if (abstract != null) {
+      data['abstract'] = abstract?.map((v) => v.toJson()).toList();
     }
-    data['fname'] = this.fname;
-    data['tid'] = this.tid;
-    if (this.alaInfo != null) {
-      data['ala_info'] = this.alaInfo?.toJson();
+    data['fname'] = fname;
+    data['tid'] = tid;
+    if (alaInfo != null) {
+      data['ala_info'] = alaInfo?.toJson();
     }
-    data['fid'] = this.fid;
-    data['thread_type'] = this.threadType;
-    data['is_deleted'] = this.isDeleted;
-    data['is_blocked'] = this.isBlocked;
-    data['is_ucg'] = this.isUcg;
+    data['fid'] = fid;
+    data['thread_type'] = threadType;
+    data['is_deleted'] = isDeleted;
+    data['is_blocked'] = isBlocked;
+    data['is_ucg'] = isUcg;
     // if (this.oriUgcInfo != null) {
     //   data['ori_ugc_info'] = this.oriUgcInfo.toJson();
     // }
-    data['voice_info'] = this.voiceInfo;
-    data['video_info'] = this.videoInfo;
+    data['voice_info'] = voiceInfo;
+    data['video_info'] = videoInfo;
     // if (this.pollInfo != null) {
     //   data['poll_info'] = this.pollInfo.toJson();
     // }
-    if (this.content != null) {
-      data['content'] = this.content?.map((v) => v.toJson()).toList();
+    if (content != null) {
+      data['content'] = content?.map((v) => v.toJson()).toList();
     }
-    data['is_new_style'] = this.isNewStyle;
-    if (this.agree != null) {
-      data['agree'] = this.agree?.toJson();
+    data['is_new_style'] = isNewStyle;
+    if (agree != null) {
+      data['agree'] = agree?.toJson();
     }
-    data['reply_num'] = this.replyNum;
-    if (this.author != null) {
-      data['author'] = this.author?.toJson();
+    data['reply_num'] = replyNum;
+    if (author != null) {
+      data['author'] = author?.toJson();
     }
-    data['shared_num'] = this.sharedNum;
-    data['item_id'] = this.itemId;
+    data['shared_num'] = sharedNum;
+    data['item_id'] = itemId;
     // if (this.item != null) {
     //   data['item'] = this.item.toJson();
     // }
-    data['item_star'] = this.itemStar;
-    data['pb_link_info'] = this.pbLinkInfo;
-    data['is_frs_mask'] = this.isFrsMask;
-    data['rich_title'] = this.richTitle;
+    data['item_star'] = itemStar;
+    data['pb_link_info'] = pbLinkInfo;
+    data['is_frs_mask'] = isFrsMask;
+    data['rich_title'] = richTitle;
     return data;
   }
 }
@@ -1624,11 +1620,11 @@ class Position {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['frs'] = this.frs;
-    data['pb'] = this.pb;
-    data['home'] = this.home;
-    data['card'] = this.card;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['frs'] = frs;
+    data['pb'] = pb;
+    data['home'] = home;
+    data['card'] = card;
     return data;
   }
 }
@@ -1649,11 +1645,11 @@ class Sprite {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['1'] = this.s1;
-    data['2'] = this.s2;
-    data['3'] = this.s3;
-    data['4'] = this.s4;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['1'] = s1;
+    data['2'] = s2;
+    data['3'] = s3;
+    data['4'] = s4;
     return data;
   }
 }
@@ -1672,10 +1668,10 @@ class TshowIcon {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['icon'] = this.icon;
-    data['name'] = this.name;
-    data['url'] = this.url;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['icon'] = icon;
+    data['name'] = name;
+    data['url'] = url;
     return data;
   }
 }
@@ -1692,9 +1688,9 @@ class Pendant {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['props_id'] = this.propsId;
-    data['img_url'] = this.imgUrl;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['props_id'] = propsId;
+    data['img_url'] = imgUrl;
     return data;
   }
 }
@@ -1713,10 +1709,10 @@ class AlaInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['anchor_live'] = this.anchorLive;
-    data['location'] = this.location;
-    data['show_name'] = this.showName;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['anchor_live'] = anchorLive;
+    data['location'] = location;
+    data['show_name'] = showName;
     return data;
   }
 }
@@ -1771,9 +1767,9 @@ class Topic {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_lpost'] = this.isLpost;
-    data['link'] = this.link;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_lpost'] = isLpost;
+    data['link'] = link;
     return data;
   }
 }
@@ -1792,10 +1788,10 @@ class Zan {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['num'] = this.num;
-    data['last_time'] = this.lastTime;
-    data['is_liked'] = this.isLiked;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['num'] = num;
+    data['last_time'] = lastTime;
+    data['is_liked'] = isLiked;
     return data;
   }
 }
@@ -2263,9 +2259,9 @@ class PbSortInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['sort_name'] = this.sortName;
-    data['sort_type'] = this.sortType;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['sort_name'] = sortName;
+    data['sort_type'] = sortType;
     return data;
   }
 }
@@ -2295,7 +2291,7 @@ class SubPostList {
     if (json['content'] != null) {
       content = [];
       json['content'].forEach((v) {
-        content?.add(new Content.fromJson(v));
+        content?.add(Content.fromJson(v));
       });
     }
     time = json['time'];
@@ -2307,17 +2303,17 @@ class SubPostList {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.content != null) {
-      data['content'] = this.content?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    if (content != null) {
+      data['content'] = content?.map((v) => v.toJson()).toList();
     }
-    data['time'] = this.time;
-    data['ptype'] = this.ptype;
-    data['floor'] = this.floor;
-    data['title'] = this.title;
-    data['is_voice'] = this.isVoice;
-    data['author_id'] = this.authorId;
+    data['time'] = time;
+    data['ptype'] = ptype;
+    data['floor'] = floor;
+    data['title'] = title;
+    data['is_voice'] = isVoice;
+    data['author_id'] = authorId;
     return data;
   }
 }
@@ -2333,8 +2329,8 @@ class LbsInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['name'] = this.name;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['name'] = name;
     return data;
   }
 }

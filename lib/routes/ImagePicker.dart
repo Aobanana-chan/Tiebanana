@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flukit/flukit.dart';
@@ -38,12 +40,16 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
   }
 
   Future<void> addSelected(int index) async {
-    fileSelected.add((await pathSelected?.assetList ?? [])[index]);
+    fileSelected.add(
+        (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF) ??
+            [])[index]);
     setState(() {});
   }
 
   Future<void> removeSelected(int index) async {
-    fileSelected.remove((await pathSelected?.assetList ?? [])[index]);
+    fileSelected.remove(
+        (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF) ??
+            [])[index]);
     setState(() {});
   }
 
@@ -88,11 +94,14 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
 
   Future<List<AssetEntity>> loadImage() async {
     imageFileList.clear();
-    for (AssetEntity entity in (await pathSelected?.assetList) ?? []) {
+    for (AssetEntity entity
+        in (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF)) ??
+            []) {
       var file = entity.file;
       imageFileList.add(file);
     }
-    return (await pathSelected?.assetList ?? []);
+    return (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF) ??
+        []);
   }
 
   @override

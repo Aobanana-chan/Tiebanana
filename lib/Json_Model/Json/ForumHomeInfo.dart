@@ -101,14 +101,14 @@ class ForumHomeInfo {
     if (json['thread_list'] != null) {
       threadList = [];
       json['thread_list'].forEach((v) {
-        threadList?.add(new ForumThreadList.fromJson(v));
+        threadList?.add(ForumThreadList.fromJson(v));
       });
     }
-    forum = json['forum'] != null ? new Forum.fromJson(json['forum']) : null;
+    forum = json['forum'] != null ? Forum.fromJson(json['forum']) : null;
     fortuneBag = json['fortune_bag'];
     fortuneDesc = json['fortune_desc'];
     userExtend = json['user_extend'] != null
-        ? new UserExtend.fromJson(json['user_extend'])
+        ? UserExtend.fromJson(json['user_extend'])
         : null;
     videoAutoPlay = json['video_auto_play'];
     filterSwanThread = json['filter_swan_thread'];
@@ -126,27 +126,26 @@ class ForumHomeInfo {
     //   });
     // }
     hotUserEntry = json['hot_user_entry'] != null
-        ? new HotUserEntry.fromJson(json['hot_user_entry'])
+        ? HotUserEntry.fromJson(json['hot_user_entry'])
         : null;
     voiceRoomList = json['voice_room_list'];
     gconAccount = json['gcon_account'] != null
-        ? new GconAccount.fromJson(json['gcon_account'])
+        ? GconAccount.fromJson(json['gcon_account'])
         : null;
-    anti = json['anti'] != null ? new Anti.fromJson(json['anti']) : null;
-    user = json['user'] != null ? new ForumUser.fromJson(json['user']) : null;
+    anti = json['anti'] != null ? Anti.fromJson(json['anti']) : null;
+    user = json['user'] != null ? ForumUser.fromJson(json['user']) : null;
     // businessPromot = json['business_promot'] != null
     //     ? new BusinessPromot.fromJson(json['business_promot'])
     //     : null;
     // itemInfo = json['item_info'] != null
     //     ? new ItemInfo.fromJson(json['item_info'])
     //     : null;
-    page = json['page'] != null ? new ForumPage.fromJson(json['page']) : null;
+    page = json['page'] != null ? ForumPage.fromJson(json['page']) : null;
     privateForumActiveInfo = json['private_forum_active_info'] != null
-        ? new PrivateForumActiveInfo.fromJson(json['private_forum_active_info'])
+        ? PrivateForumActiveInfo.fromJson(json['private_forum_active_info'])
         : null;
-    frsStar = json['frs_star'] != null
-        ? new FrsStar.fromJson(json['frs_star'])
-        : null;
+    frsStar =
+        json['frs_star'] != null ? FrsStar.fromJson(json['frs_star']) : null;
     gameDefaultTabId = json['game_default_tab_id'];
     if (json['thread_id_list'] != null) {
       threadIdList = [];
@@ -175,11 +174,11 @@ class ForumHomeInfo {
       //json['frs_tab_info']有时是Map有时是List，加一个判断
       if (json['frs_tab_info'] is List) {
         (json['frs_tab_info']).forEach((v) {
-          frsTabInfo?.add(new FrsTabInfo.fromJson(v));
+          frsTabInfo?.add(FrsTabInfo.fromJson(v));
         });
       } else if (json['frs_tab_info'] is Map) {
         (json['frs_tab_info']).forEach((v, f) {
-          frsTabInfo?.add(new FrsTabInfo.fromJson(f));
+          frsTabInfo?.add(FrsTabInfo.fromJson(f));
         });
       } else {
         throw Exception("未知形态frs_tab_info");
@@ -214,7 +213,7 @@ class ForumHomeInfo {
     if (json['user_list'] != null) {
       userList = [];
       json['user_list'].forEach((v) {
-        userList?.add(new UserList.fromJson(v));
+        userList?.add(UserList.fromJson(v));
       });
     }
     if (json['frs_game_tab_info'] != null) {
@@ -239,41 +238,41 @@ class ForumHomeInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['third_statistics_param'] = this.thirdStatisticsParam;
-    if (this.threadList != null) {
-      data['thread_list'] = this.threadList?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['third_statistics_param'] = thirdStatisticsParam;
+    if (threadList != null) {
+      data['thread_list'] = threadList?.map((v) => v.toJson()).toList();
     }
-    if (this.forum != null) {
-      data['forum'] = this.forum?.toJson();
+    if (forum != null) {
+      data['forum'] = forum?.toJson();
     }
-    data['fortune_bag'] = this.fortuneBag;
-    data['fortune_desc'] = this.fortuneDesc;
-    if (this.userExtend != null) {
-      data['user_extend'] = this.userExtend?.toJson();
+    data['fortune_bag'] = fortuneBag;
+    data['fortune_desc'] = fortuneDesc;
+    if (userExtend != null) {
+      data['user_extend'] = userExtend?.toJson();
     }
-    data['video_auto_play'] = this.videoAutoPlay;
-    data['filter_swan_thread'] = this.filterSwanThread;
-    if (this.smartAppAvatar != null) {
+    data['video_auto_play'] = videoAutoPlay;
+    data['filter_swan_thread'] = filterSwanThread;
+    if (smartAppAvatar != null) {
       data['smart_app_avatar'] =
-          this.smartAppAvatar?.map((v) => v.toJson()).toList();
+          smartAppAvatar?.map((v) => v.toJson()).toList();
     }
-    data['voice_room_config'] = this.voiceRoomConfig;
-    if (this.starEnter != null) {
-      data['star_enter'] = this.starEnter?.map((v) => v.toJson()).toList();
+    data['voice_room_config'] = voiceRoomConfig;
+    if (starEnter != null) {
+      data['star_enter'] = starEnter?.map((v) => v.toJson()).toList();
     }
-    if (this.hotUserEntry != null) {
-      data['hot_user_entry'] = this.hotUserEntry?.toJson();
+    if (hotUserEntry != null) {
+      data['hot_user_entry'] = hotUserEntry?.toJson();
     }
-    data['voice_room_list'] = this.voiceRoomList;
-    if (this.gconAccount != null) {
-      data['gcon_account'] = this.gconAccount?.toJson();
+    data['voice_room_list'] = voiceRoomList;
+    if (gconAccount != null) {
+      data['gcon_account'] = gconAccount?.toJson();
     }
-    if (this.anti != null) {
-      data['anti'] = this.anti?.toJson();
+    if (anti != null) {
+      data['anti'] = anti?.toJson();
     }
-    if (this.user != null) {
-      data['user'] = this.user?.toJson();
+    if (user != null) {
+      data['user'] = user?.toJson();
     }
     // if (this.businessPromot != null) {
     //   data['business_promot'] = this.businessPromot.toJson();
@@ -281,66 +280,64 @@ class ForumHomeInfo {
     // if (this.itemInfo != null) {
     //   data['item_info'] = this.itemInfo.toJson();
     // }
-    if (this.page != null) {
-      data['page'] = this.page?.toJson();
+    if (page != null) {
+      data['page'] = page?.toJson();
     }
-    if (this.privateForumActiveInfo != null) {
-      data['private_forum_active_info'] = this.privateForumActiveInfo?.toJson();
+    if (privateForumActiveInfo != null) {
+      data['private_forum_active_info'] = privateForumActiveInfo?.toJson();
     }
-    if (this.frsStar != null) {
-      data['frs_star'] = this.frsStar?.toJson();
+    if (frsStar != null) {
+      data['frs_star'] = frsStar?.toJson();
     }
-    data['game_default_tab_id'] = this.gameDefaultTabId;
-    if (this.threadIdList != null) {
-      data['thread_id_list'] =
-          this.threadIdList?.map((v) => v.toJson()).toList();
+    data['game_default_tab_id'] = gameDefaultTabId;
+    if (threadIdList != null) {
+      data['thread_id_list'] = threadIdList?.map((v) => v.toJson()).toList();
     }
-    data['is_new_url'] = this.isNewUrl;
-    if (this.userPolledRecord != null) {
+    data['is_new_url'] = isNewUrl;
+    if (userPolledRecord != null) {
       data['user_polled_record'] =
-          this.userPolledRecord?.map((v) => v.toJson()).toList();
+          userPolledRecord?.map((v) => v.toJson()).toList();
     }
-    if (this.activityhead != null) {
-      data['activityhead'] = this.activityhead?.map((v) => v.toJson()).toList();
+    if (activityhead != null) {
+      data['activityhead'] = activityhead?.map((v) => v.toJson()).toList();
     }
     // if (this.agreeBanner != null) {
     //   data['agree_banner'] = this.agreeBanner.toJson();
     // }
-    if (this.frsTabInfo != null) {
-      data['frs_tab_info'] = this.frsTabInfo?.map((v) => v.toJson()).toList();
+    if (frsTabInfo != null) {
+      data['frs_tab_info'] = frsTabInfo?.map((v) => v.toJson()).toList();
     }
-    data['frs_tab_default'] = this.frsTabDefault;
-    data['ala_live_count'] = this.alaLiveCount;
-    if (this.recomPostTopic != null) {
+    data['frs_tab_default'] = frsTabDefault;
+    data['ala_live_count'] = alaLiveCount;
+    if (recomPostTopic != null) {
       data['recom_post_topic'] =
-          this.recomPostTopic?.map((v) => v.toJson()).toList();
+          recomPostTopic?.map((v) => v.toJson()).toList();
     }
-    if (this.alaStageList != null) {
-      data['ala_stage_list'] =
-          this.alaStageList?.map((v) => v.toJson()).toList();
+    if (alaStageList != null) {
+      data['ala_stage_list'] = alaStageList?.map((v) => v.toJson()).toList();
     }
-    if (this.bannerThreadList != null) {
+    if (bannerThreadList != null) {
       data['banner_thread_list'] =
-          this.bannerThreadList?.map((v) => v.toJson()).toList();
+          bannerThreadList?.map((v) => v.toJson()).toList();
     }
-    data['show_adsense'] = this.showAdsense;
-    data['asp_shown_info'] = this.aspShownInfo;
-    data['twzhibo_pos'] = this.twzhiboPos;
-    data['sort_type'] = this.sortType;
-    data['need_log'] = this.needLog;
-    data['partial_visible_toast'] = this.partialVisibleToast;
-    if (this.userList != null) {
-      data['user_list'] = this.userList?.map((v) => v.toJson()).toList();
+    data['show_adsense'] = showAdsense;
+    data['asp_shown_info'] = aspShownInfo;
+    data['twzhibo_pos'] = twzhiboPos;
+    data['sort_type'] = sortType;
+    data['need_log'] = needLog;
+    data['partial_visible_toast'] = partialVisibleToast;
+    if (userList != null) {
+      data['user_list'] = userList?.map((v) => v.toJson()).toList();
     }
-    if (this.frsGameTabInfo != null) {
+    if (frsGameTabInfo != null) {
       data['frs_game_tab_info'] =
-          this.frsGameTabInfo?.map((v) => v.toJson()).toList();
+          frsGameTabInfo?.map((v) => v.toJson()).toList();
     }
-    data['server_time'] = this.serverTime;
-    data['time'] = this.time;
-    data['ctime'] = this.ctime;
-    data['logid'] = this.logid;
-    data['error_code'] = this.errorCode;
+    data['server_time'] = serverTime;
+    data['time'] = time;
+    data['ctime'] = ctime;
+    data['logid'] = logid;
+    data['error_code'] = errorCode;
     return data;
   }
 }
@@ -476,7 +473,7 @@ class ForumThreadList extends ThreadRecommendSummary {
     if (json['first_post_content'] != "") {
       firstPostContent = [];
       json['first_post_content'].forEach((v) {
-        firstPostContent?.add(new FirstPostContent.fromJson(v));
+        firstPostContent?.add(FirstPostContent.fromJson(v));
       });
     }
     topAgreePostId = json['top_agree_post_id'];
@@ -504,13 +501,13 @@ class ForumThreadList extends ThreadRecommendSummary {
     if (json['media'] != "") {
       media = [];
       json['media'].forEach((v) {
-        media?.add(new Media.fromJson(v));
+        media?.add(Media.fromJson(v));
       });
     }
     if (json['abstract'] != null) {
       abstract = [];
       json['abstract'].forEach((v) {
-        abstract?.add(new Abstract.fromJson(v));
+        abstract?.add(Abstract.fromJson(v));
       });
     }
     firstPostId = json['first_post_id'];
@@ -530,14 +527,14 @@ class ForumThreadList extends ThreadRecommendSummary {
       });
     }
     isActivity = json['is_activity'];
-    agree = json['agree'] != "" ? new Agree.fromJson(json['agree']) : null;
+    agree = json['agree'] != "" ? Agree.fromJson(json['agree']) : null;
     fid = json['fid'];
     postList = json['post_list'];
     authorId = json['author_id'];
     tabId = json['tab_id'];
     tabName = json['tab_name'];
     videoInfo = json['video_info'] != ""
-        ? new VideoInfo.fromJson(json['video_info'])
+        ? VideoInfo.fromJson(json['video_info'])
         : null;
     userId = json['user_id'];
     fname = json['fname'];
@@ -546,74 +543,74 @@ class ForumThreadList extends ThreadRecommendSummary {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['tid'] = this.tid;
-    data['nid'] = this.nid;
-    data['thread_id'] = this.threadId;
-    data['original_tid'] = this.originalTid;
-    data['title'] = this.title;
-    data['reply_num'] = this.replyNum;
-    data['view_num'] = this.viewNum;
-    data['last_time'] = this.lastTime;
-    data['last_time_int'] = this.lastTimeInt;
-    data['thread_types'] = this.threadTypes;
-    data['create_time'] = this.createTime;
-    data['t_share_img'] = this.tShareImg;
-    data['agree_num'] = this.agreeNum;
-    data['disagree_num'] = this.disagreeNum;
-    data['is_partial_visible'] = this.isPartialVisible;
-    data['share_num'] = this.shareNum;
-    data['is_pro_thread'] = this.isProThread;
-    data['tiebaplus_cant_delete'] = this.tiebaplusCantDelete;
-    if (this.firstPostContent != null) {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['tid'] = tid;
+    data['nid'] = nid;
+    data['thread_id'] = threadId;
+    data['original_tid'] = originalTid;
+    data['title'] = title;
+    data['reply_num'] = replyNum;
+    data['view_num'] = viewNum;
+    data['last_time'] = lastTime;
+    data['last_time_int'] = lastTimeInt;
+    data['thread_types'] = threadTypes;
+    data['create_time'] = createTime;
+    data['t_share_img'] = tShareImg;
+    data['agree_num'] = agreeNum;
+    data['disagree_num'] = disagreeNum;
+    data['is_partial_visible'] = isPartialVisible;
+    data['share_num'] = shareNum;
+    data['is_pro_thread'] = isProThread;
+    data['tiebaplus_cant_delete'] = tiebaplusCantDelete;
+    if (firstPostContent != null) {
       data['first_post_content'] =
-          this.firstPostContent?.map((v) => v.toJson()).toList();
+          firstPostContent?.map((v) => v.toJson()).toList();
     }
-    data['top_agree_post_id'] = this.topAgreePostId;
-    data['is_top'] = this.isTop;
-    data['is_good'] = this.isGood;
-    data['is_ntitle'] = this.isNtitle;
-    data['is_membertop'] = this.isMembertop;
-    data['is_novel'] = this.isNovel;
-    data['is_novel_thank'] = this.isNovelThank;
-    data['is_novel_reward'] = this.isNovelReward;
-    data['is_book_chapter'] = this.isBookChapter;
+    data['top_agree_post_id'] = topAgreePostId;
+    data['is_top'] = isTop;
+    data['is_good'] = isGood;
+    data['is_ntitle'] = isNtitle;
+    data['is_membertop'] = isMembertop;
+    data['is_novel'] = isNovel;
+    data['is_novel_thank'] = isNovelThank;
+    data['is_novel_reward'] = isNovelReward;
+    data['is_book_chapter'] = isBookChapter;
     // if (this.bookChapter != null) {
     //   data['book_chapter'] = this.bookChapter.map((v) => v.toJson()).toList();
     // }
-    data['is_notice'] = this.isNotice;
-    data['comment_num'] = this.commentNum;
-    data['is_protal'] = this.isProtal;
-    data['is_bakan'] = this.isBakan;
-    data['is_vote'] = this.isVote;
-    data['media_num'] = this.mediaNum;
-    data['meizhi_pic'] = this.meizhiPic;
-    if (this.media != null) {
-      data['media'] = this.media?.map((v) => v.toJson()).toList();
+    data['is_notice'] = isNotice;
+    data['comment_num'] = commentNum;
+    data['is_protal'] = isProtal;
+    data['is_bakan'] = isBakan;
+    data['is_vote'] = isVote;
+    data['media_num'] = mediaNum;
+    data['meizhi_pic'] = meizhiPic;
+    if (media != null) {
+      data['media'] = media?.map((v) => v.toJson()).toList();
     }
-    if (this.abstract != null) {
-      data['abstract'] = this.abstract?.map((v) => v.toJson()).toList();
+    if (abstract != null) {
+      data['abstract'] = abstract?.map((v) => v.toJson()).toList();
     }
-    data['first_post_id'] = this.firstPostId;
+    data['first_post_id'] = firstPostId;
     // data['zan'] = this.zan;
     // if (this.location != null) {
     //   data['location'] = this.location.map((v) => v.toJson()).toList();
     // }
-    data['is_voice_thread'] = this.isVoiceThread;
-    data['thread_type'] = this.threadType;
-    if (this.voiceInfo != null) {
-      data['voice_info'] = this.voiceInfo?.map((v) => v.toJson()).toList();
+    data['is_voice_thread'] = isVoiceThread;
+    data['thread_type'] = threadType;
+    if (voiceInfo != null) {
+      data['voice_info'] = voiceInfo?.map((v) => v.toJson()).toList();
     }
-    data['is_activity'] = this.isActivity;
-    if (this.agree != null) {
-      data['agree'] = this.agree?.toJson();
+    data['is_activity'] = isActivity;
+    if (agree != null) {
+      data['agree'] = agree?.toJson();
     }
-    data['fid'] = this.fid;
-    data['post_list'] = this.postList;
-    data['author_id'] = this.authorId;
-    data['tab_id'] = this.tabId;
-    data['tab_name'] = this.tabName;
+    data['fid'] = fid;
+    data['post_list'] = postList;
+    data['author_id'] = authorId;
+    data['tab_id'] = tabId;
+    data['tab_name'] = tabName;
     return data;
   }
 }
@@ -630,9 +627,9 @@ class Abstract {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['type'] = this.type;
-    data['text'] = this.text;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['type'] = type;
+    data['text'] = text;
     return data;
   }
 }
@@ -755,24 +752,24 @@ class Forum {
     if (json['good_classify'] != null) {
       goodClassify = [];
       json['good_classify'].forEach((v) {
-        goodClassify?.add(new GoodClassify.fromJson(v));
+        goodClassify?.add(GoodClassify.fromJson(v));
       });
     }
     if (json['managers'] != null) {
       managers = [];
       json['managers'].forEach((v) {
-        managers?.add(new Managers.fromJson(v));
+        managers?.add(Managers.fromJson(v));
       });
     }
     signInInfo = json['sign_in_info'] != null
-        ? new SignInInfo.fromJson(json['sign_in_info'])
+        ? SignInInfo.fromJson(json['sign_in_info'])
         : null;
     albumOpenPhotoFrs = json['album_open_photo_frs'];
     isReadonly = json['is_readonly'];
     isSearchPeople = json['is_search_people'];
     isStageForum = json['is_stage_forum'];
     forumvipShowIcon = json['forumvip_show_icon'] != null
-        ? new ForumvipShowIcon.fromJson(json['forumvip_show_icon'])
+        ? ForumvipShowIcon.fromJson(json['forumvip_show_icon'])
         : null;
     isLiveGameForum = json['is_live_game_forum'];
     isNewGameForum = json['is_new_game_forum'];
@@ -803,66 +800,65 @@ class Forum {
     //   });
     // }
     tagInfo = (json['tag_info'] != "" && json['tag_info'] != null)
-        ? new TagInfo.fromJson(json['tag_info'])
+        ? TagInfo.fromJson(json['tag_info'])
         : null;
     // banner =
     //     json['banner'] != null ? new Banner.fromJson(json['banner']) : null;
     isShowAllTopThread = json['is_show_all_top_thread'];
     bannerList = json['banner_list'] != null
-        ? new BannerList.fromJson(json['banner_list'])
+        ? BannerList.fromJson(json['banner_list'])
         : null;
     tids = json['tids'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     // if (this.badges != null) {
     //   data['badges'] = this.badges.map((v) => v.toJson()).toList();
     // }
-    data['accelerate_cotent'] = this.accelerateCotent;
-    data['can_use_accelerate'] = this.canUseAccelerate;
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['f_share_img'] = this.fShareImg;
-    data['first_class'] = this.firstClass;
-    data['second_class'] = this.secondClass;
-    data['is_like'] = this.isLike;
-    data['user_level'] = this.userLevel;
-    data['level_id'] = this.levelId;
-    data['level_name'] = this.levelName;
-    data['cur_score'] = this.curScore;
-    data['levelup_score'] = this.levelupScore;
-    data['member_num'] = this.memberNum;
-    data['is_exists'] = this.isExists;
-    data['thread_num'] = this.threadNum;
-    data['post_num'] = this.postNum;
-    if (this.goodClassify != null) {
-      data['good_classify'] =
-          this.goodClassify?.map((v) => v.toJson()).toList();
+    data['accelerate_cotent'] = accelerateCotent;
+    data['can_use_accelerate'] = canUseAccelerate;
+    data['id'] = id;
+    data['name'] = name;
+    data['f_share_img'] = fShareImg;
+    data['first_class'] = firstClass;
+    data['second_class'] = secondClass;
+    data['is_like'] = isLike;
+    data['user_level'] = userLevel;
+    data['level_id'] = levelId;
+    data['level_name'] = levelName;
+    data['cur_score'] = curScore;
+    data['levelup_score'] = levelupScore;
+    data['member_num'] = memberNum;
+    data['is_exists'] = isExists;
+    data['thread_num'] = threadNum;
+    data['post_num'] = postNum;
+    if (goodClassify != null) {
+      data['good_classify'] = goodClassify?.map((v) => v.toJson()).toList();
     }
-    if (this.managers != null) {
-      data['managers'] = this.managers?.map((v) => v.toJson()).toList();
+    if (managers != null) {
+      data['managers'] = managers?.map((v) => v.toJson()).toList();
     }
-    if (this.signInInfo != null) {
-      data['sign_in_info'] = this.signInInfo?.toJson();
+    if (signInInfo != null) {
+      data['sign_in_info'] = signInInfo?.toJson();
     }
-    data['album_open_photo_frs'] = this.albumOpenPhotoFrs;
-    data['is_readonly'] = this.isReadonly;
-    data['is_search_people'] = this.isSearchPeople;
-    data['is_stage_forum'] = this.isStageForum;
-    if (this.forumvipShowIcon != null) {
-      data['forumvip_show_icon'] = this.forumvipShowIcon?.toJson();
+    data['album_open_photo_frs'] = albumOpenPhotoFrs;
+    data['is_readonly'] = isReadonly;
+    data['is_search_people'] = isSearchPeople;
+    data['is_stage_forum'] = isStageForum;
+    if (forumvipShowIcon != null) {
+      data['forumvip_show_icon'] = forumvipShowIcon?.toJson();
     }
-    data['is_live_game_forum'] = this.isLiveGameForum;
-    data['is_new_game_forum'] = this.isNewGameForum;
-    data['forum_game_label'] = this.forumGameLabel;
+    data['is_live_game_forum'] = isLiveGameForum;
+    data['is_new_game_forum'] = isNewGameForum;
+    data['forum_game_label'] = forumGameLabel;
     // if (this.topNotice != null) {
     //   data['top_notice'] = this.topNotice.map((v) => v.toJson()).toList();
     // }
-    data['slogan'] = this.slogan;
-    data['avatar'] = this.avatar;
-    data['has_game'] = this.hasGame;
-    data['has_frs_star'] = this.hasFrsStar;
+    data['slogan'] = slogan;
+    data['avatar'] = avatar;
+    data['has_game'] = hasGame;
+    data['has_frs_star'] = hasFrsStar;
     // if (this.themeColor != null) {
     //   data['theme_color'] = this.themeColor?.toJson();
     // }
@@ -876,17 +872,17 @@ class Forum {
     //   data['forum_sign_calendar'] =
     //       this.forumSignCalendar.map((v) => v.toJson()).toList();
     // }
-    if (this.tagInfo != null) {
-      data['tag_info'] = this.tagInfo?.toJson();
+    if (tagInfo != null) {
+      data['tag_info'] = tagInfo?.toJson();
     }
     // if (this.banner != null) {
     //   data['banner'] = this.banner?.toJson();
     // }
-    data['is_show_all_top_thread'] = this.isShowAllTopThread;
-    if (this.bannerList != null) {
-      data['banner_list'] = this.bannerList?.toJson();
+    data['is_show_all_top_thread'] = isShowAllTopThread;
+    if (bannerList != null) {
+      data['banner_list'] = bannerList?.toJson();
     }
-    data['tids'] = this.tids;
+    data['tids'] = tids;
     return data;
   }
 }
@@ -903,9 +899,9 @@ class GoodClassify {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['class_id'] = this.classId;
-    data['class_name'] = this.className;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['class_id'] = classId;
+    data['class_name'] = className;
     return data;
   }
 }
@@ -926,11 +922,11 @@ class Managers {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['show_name'] = this.showName;
-    data['portrait'] = this.portrait;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['show_name'] = showName;
+    data['portrait'] = portrait;
     return data;
   }
 }
@@ -943,20 +939,20 @@ class SignInInfo {
 
   SignInInfo.fromJson(Map<String, dynamic> json) {
     userInfo = json['user_info'] != null
-        ? new ForumUserInfo.fromJson(json['user_info'])
+        ? ForumUserInfo.fromJson(json['user_info'])
         : null;
     forumInfo = json['forum_info'] != null
-        ? new ForumInfo.fromJson(json['forum_info'])
+        ? ForumInfo.fromJson(json['forum_info'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.userInfo != null) {
-      data['user_info'] = this.userInfo?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (userInfo != null) {
+      data['user_info'] = userInfo?.toJson();
     }
-    if (this.forumInfo != null) {
-      data['forum_info'] = this.forumInfo?.toJson();
+    if (forumInfo != null) {
+      data['forum_info'] = forumInfo?.toJson();
     }
     return data;
   }
@@ -1003,18 +999,18 @@ class ForumUserInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['user_id'] = this.userId;
-    data['is_sign_in'] = this.isSignIn;
-    data['user_sign_rank'] = this.userSignRank;
-    data['sign_time'] = this.signTime;
-    data['cont_sign_num'] = this.contSignNum;
-    data['cout_total_sing_num'] = this.coutTotalSingNum;
-    data['hun_sign_num'] = this.hunSignNum;
-    data['total_resign_num'] = this.totalResignNum;
-    data['is_org_disabled'] = this.isOrgDisabled;
-    data['c_sign_num'] = this.cSignNum;
-    data['miss_sign_num'] = this.missSignNum;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['user_id'] = userId;
+    data['is_sign_in'] = isSignIn;
+    data['user_sign_rank'] = userSignRank;
+    data['sign_time'] = signTime;
+    data['cont_sign_num'] = contSignNum;
+    data['cout_total_sing_num'] = coutTotalSingNum;
+    data['hun_sign_num'] = hunSignNum;
+    data['total_resign_num'] = totalResignNum;
+    data['is_org_disabled'] = isOrgDisabled;
+    data['c_sign_num'] = cSignNum;
+    data['miss_sign_num'] = missSignNum;
     return data;
   }
 }
@@ -1030,16 +1026,16 @@ class ForumInfo {
     isOn = json['is_on'];
     isFilter = json['is_filter'];
     currentRankInfo = json['current_rank_info'] != null
-        ? new CurrentRankInfo.fromJson(json['current_rank_info'])
+        ? CurrentRankInfo.fromJson(json['current_rank_info'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_on'] = this.isOn;
-    data['is_filter'] = this.isFilter;
-    if (this.currentRankInfo != null) {
-      data['current_rank_info'] = this.currentRankInfo?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_on'] = isOn;
+    data['is_filter'] = isFilter;
+    if (currentRankInfo != null) {
+      data['current_rank_info'] = currentRankInfo?.toJson();
     }
     return data;
   }
@@ -1057,9 +1053,9 @@ class CurrentRankInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['sign_count'] = this.signCount;
-    data['sign_rank'] = this.signRank;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['sign_count'] = signCount;
+    data['sign_rank'] = signRank;
     return data;
   }
 }
@@ -1078,10 +1074,10 @@ class ForumvipShowIcon {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['icon'] = this.icon;
-    data['name'] = this.name;
-    data['url'] = this.url;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['icon'] = icon;
+    data['name'] = name;
+    data['url'] = url;
     return data;
   }
 }
@@ -1196,10 +1192,10 @@ class TagInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tag_id'] = this.tagId;
-    data['tag_name'] = this.tagName;
-    data['color'] = this.color;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tag_id'] = tagId;
+    data['tag_name'] = tagName;
+    data['color'] = color;
     return data;
   }
 }
@@ -1232,15 +1228,15 @@ class BannerList {
     if (json['app'] != null) {
       app = [];
       json['app'].forEach((v) {
-        app?.add(new App.fromJson(v));
+        app?.add(App.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.app != null) {
-      data['app'] = this.app?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (app != null) {
+      data['app'] = app?.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -1314,7 +1310,7 @@ class App {
     if (json['goods_info'] != null) {
       goodsInfo = [];
       json['goods_info'].forEach((v) {
-        goodsInfo?.add(new GoodsInfo.fromJson(v));
+        goodsInfo?.add(GoodsInfo.fromJson(v));
       });
     }
     locCode = json['loc_code'];
@@ -1322,30 +1318,30 @@ class App {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['url_type'] = this.urlType;
-    data['url'] = this.url;
-    data['ios_url'] = this.iosUrl;
-    data['apk_url'] = this.apkUrl;
-    data['deep_url'] = this.deepUrl;
-    data['apk_name'] = this.apkName;
-    data['pos_name'] = this.posName;
-    data['first_name'] = this.firstName;
-    data['second_name'] = this.secondName;
-    data['cpid'] = this.cpid;
-    data['abtest'] = this.abtest;
-    data['plan_id'] = this.planId;
-    data['user_id'] = this.userId;
-    data['price'] = this.price;
-    data['verify'] = this.verify;
-    data['ext_info'] = this.extInfo;
-    if (this.goodsInfo != null) {
-      data['goods_info'] = this.goodsInfo?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['url_type'] = urlType;
+    data['url'] = url;
+    data['ios_url'] = iosUrl;
+    data['apk_url'] = apkUrl;
+    data['deep_url'] = deepUrl;
+    data['apk_name'] = apkName;
+    data['pos_name'] = posName;
+    data['first_name'] = firstName;
+    data['second_name'] = secondName;
+    data['cpid'] = cpid;
+    data['abtest'] = abtest;
+    data['plan_id'] = planId;
+    data['user_id'] = userId;
+    data['price'] = price;
+    data['verify'] = verify;
+    data['ext_info'] = extInfo;
+    if (goodsInfo != null) {
+      data['goods_info'] = goodsInfo?.map((v) => v.toJson()).toList();
     }
-    data['loc_code'] = this.locCode;
-    data['app_time'] = this.appTime;
+    data['loc_code'] = locCode;
+    data['app_time'] = appTime;
     return data;
   }
 }
@@ -1421,35 +1417,35 @@ class GoodsInfo {
     tagNameUrl = json['tag_name_url'];
     tagNameWh = json['tag_name_wh'];
     closeInfo = json['close_info'] != null
-        ? new CloseInfo.fromJson(json['close_info'])
+        ? CloseInfo.fromJson(json['close_info'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['user_name'] = this.userName;
-    data['user_portrait'] = this.userPortrait;
-    data['thread_title'] = this.threadTitle;
-    data['thread_pic'] = this.threadPic;
-    data['pop_window_text'] = this.popWindowText;
-    data['goods_style'] = this.goodsStyle;
-    data['label_visible'] = this.labelVisible;
-    data['label_text'] = this.labelText;
-    data['button_text'] = this.buttonText;
-    data['button_url'] = this.buttonUrl;
-    data['ad_source'] = this.adSource;
-    data['lego_card'] = this.legoCard;
-    data['card_desc'] = this.cardDesc;
-    data['card_tag'] = this.cardTag;
-    data['width'] = this.width;
-    data['height'] = this.height;
-    data['label_measure'] = this.labelMeasure;
-    data['tag_name'] = this.tagName;
-    data['tag_name_url'] = this.tagNameUrl;
-    data['tag_name_wh'] = this.tagNameWh;
-    if (this.closeInfo != null) {
-      data['close_info'] = this.closeInfo?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['user_name'] = userName;
+    data['user_portrait'] = userPortrait;
+    data['thread_title'] = threadTitle;
+    data['thread_pic'] = threadPic;
+    data['pop_window_text'] = popWindowText;
+    data['goods_style'] = goodsStyle;
+    data['label_visible'] = labelVisible;
+    data['label_text'] = labelText;
+    data['button_text'] = buttonText;
+    data['button_url'] = buttonUrl;
+    data['ad_source'] = adSource;
+    data['lego_card'] = legoCard;
+    data['card_desc'] = cardDesc;
+    data['card_tag'] = cardTag;
+    data['width'] = width;
+    data['height'] = height;
+    data['label_measure'] = labelMeasure;
+    data['tag_name'] = tagName;
+    data['tag_name_url'] = tagNameUrl;
+    data['tag_name_wh'] = tagNameWh;
+    if (closeInfo != null) {
+      data['close_info'] = closeInfo?.toJson();
     }
     return data;
   }
@@ -1466,16 +1462,16 @@ class CloseInfo {
     supportClose = json['support_close'];
     reasons = json['reasons'].cast<String>();
     actionControl = json['action_control'] != null
-        ? new ActionControl.fromJson(json['action_control'])
+        ? ActionControl.fromJson(json['action_control'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['support_close'] = this.supportClose;
-    data['reasons'] = this.reasons;
-    if (this.actionControl != null) {
-      data['action_control'] = this.actionControl?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['support_close'] = supportClose;
+    data['reasons'] = reasons;
+    if (actionControl != null) {
+      data['action_control'] = actionControl?.toJson();
     }
     return data;
   }
@@ -1497,11 +1493,11 @@ class ActionControl {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['url'] = this.url;
-    data['name'] = this.name;
-    data['text_color'] = this.textColor;
-    data['text_color_pressed'] = this.textColorPressed;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['url'] = url;
+    data['name'] = name;
+    data['text_color'] = textColor;
+    data['text_color_pressed'] = textColorPressed;
     return data;
   }
 }
@@ -1529,9 +1525,9 @@ class UserExtend {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tips'] = this.tips;
-    data['user_extend_storey'] = this.userExtendStorey;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tips'] = tips;
+    data['user_extend_storey'] = userExtendStorey;
     // if (this.data != null) {
     //   data['data'] = this.data.map((v) => v.toJson()).toList();
     // }
@@ -1549,18 +1545,18 @@ class HotUserEntry {
     if (json['hot_user'] != null) {
       hotUser = [];
       json['hot_user'].forEach((v) {
-        hotUser?.add(new HotUser.fromJson(v));
+        hotUser?.add(HotUser.fromJson(v));
       });
     }
     moduleName = json['module_name'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.hotUser != null) {
-      data['hot_user'] = this.hotUser?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (hotUser != null) {
+      data['hot_user'] = hotUser?.map((v) => v.toJson()).toList();
     }
-    data['module_name'] = this.moduleName;
+    data['module_name'] = moduleName;
     return data;
   }
 }
@@ -1577,9 +1573,9 @@ class HotUser {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['user_id'] = this.userId;
-    data['portrait'] = this.portrait;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['user_id'] = userId;
+    data['portrait'] = portrait;
     return data;
   }
 }
@@ -1596,9 +1592,9 @@ class GconAccount {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['has_account'] = this.hasAccount;
-    data['menu_name'] = this.menuName;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['has_account'] = hasAccount;
+    data['menu_name'] = menuName;
     return data;
   }
 }
@@ -1666,12 +1662,12 @@ class Anti {
     pollLevel = json['poll_level'];
     blockStat = json['block_stat'];
     blockPopInfo = json['block_pop_info'] != null
-        ? new BlockPopInfo.fromJson(json['block_pop_info'])
+        ? BlockPopInfo.fromJson(json['block_pop_info'])
         : null;
     if (json['del_thread_text'] != null) {
       delThreadText = [];
       json['del_thread_text'].forEach((v) {
-        delThreadText?.add(new DelThreadText.fromJson(v));
+        delThreadText?.add(DelThreadText.fromJson(v));
       });
     }
     multiDelthread = json['multi_delthread'];
@@ -1681,33 +1677,32 @@ class Anti {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tbs'] = this.tbs;
-    data['ifpost'] = this.ifpost;
-    data['ifposta'] = this.ifposta;
-    data['forbid_flag'] = this.forbidFlag;
-    data['forbid_info'] = this.forbidInfo;
-    data['hide_stat'] = this.hideStat;
-    data['vcode_stat'] = this.vcodeStat;
-    data['days_tofree'] = this.daysTofree;
-    data['has_chance'] = this.hasChance;
-    data['ifxiaoying'] = this.ifxiaoying;
-    data['poll_message'] = this.pollMessage;
-    data['video_message'] = this.videoMessage;
-    data['video_local_message'] = this.videoLocalMessage;
-    data['poll_level'] = this.pollLevel;
-    data['block_stat'] = this.blockStat;
-    if (this.blockPopInfo != null) {
-      data['block_pop_info'] = this.blockPopInfo?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tbs'] = tbs;
+    data['ifpost'] = ifpost;
+    data['ifposta'] = ifposta;
+    data['forbid_flag'] = forbidFlag;
+    data['forbid_info'] = forbidInfo;
+    data['hide_stat'] = hideStat;
+    data['vcode_stat'] = vcodeStat;
+    data['days_tofree'] = daysTofree;
+    data['has_chance'] = hasChance;
+    data['ifxiaoying'] = ifxiaoying;
+    data['poll_message'] = pollMessage;
+    data['video_message'] = videoMessage;
+    data['video_local_message'] = videoLocalMessage;
+    data['poll_level'] = pollLevel;
+    data['block_stat'] = blockStat;
+    if (blockPopInfo != null) {
+      data['block_pop_info'] = blockPopInfo?.toJson();
     }
-    if (this.delThreadText != null) {
-      data['del_thread_text'] =
-          this.delThreadText?.map((v) => v.toJson()).toList();
+    if (delThreadText != null) {
+      data['del_thread_text'] = delThreadText?.map((v) => v.toJson()).toList();
     }
-    data['multi_delthread'] = this.multiDelthread;
-    data['ifvoice'] = this.ifvoice;
-    data['voice_message'] = this.voiceMessage;
-    data['can_goods'] = this.canGoods;
+    data['multi_delthread'] = multiDelthread;
+    data['ifvoice'] = ifvoice;
+    data['voice_message'] = voiceMessage;
+    data['can_goods'] = canGoods;
     return data;
   }
 }
@@ -1744,15 +1739,15 @@ class BlockPopInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['can_post'] = this.canPost;
-    data['block_info'] = this.blockInfo;
-    data['ahead_info'] = this.aheadInfo;
-    data['ahead_url'] = this.aheadUrl;
-    data['ok_info'] = this.okInfo;
-    data['ahead_type'] = this.aheadType;
-    data['appeal_status'] = this.appealStatus;
-    data['appeal_msg'] = this.appealMsg;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['can_post'] = canPost;
+    data['block_info'] = blockInfo;
+    data['ahead_info'] = aheadInfo;
+    data['ahead_url'] = aheadUrl;
+    data['ok_info'] = okInfo;
+    data['ahead_type'] = aheadType;
+    data['appeal_status'] = appealStatus;
+    data['appeal_msg'] = appealMsg;
     return data;
   }
 }
@@ -1769,9 +1764,9 @@ class DelThreadText {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['text_id'] = this.textId;
-    data['text_info'] = this.textInfo;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['text_id'] = textId;
+    data['text_info'] = textInfo;
     return data;
   }
 }
@@ -1827,7 +1822,7 @@ class ForumUser {
     isManager = json['is_manager'];
     type = json['type'];
     userhide = json['userhide'];
-    balv = json['balv'] != null ? new Balv.fromJson(json['balv']) : null;
+    balv = json['balv'] != null ? Balv.fromJson(json['balv']) : null;
     isBawu = json['is_bawu'];
     bawuType = json['bawu_type'];
     bimgUrl = json['bimg_url'];
@@ -1844,26 +1839,26 @@ class ForumUser {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_login'] = this.isLogin;
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['name_show'] = this.nameShow;
-    data['portrait'] = this.portrait;
-    data['no_un'] = this.noUn;
-    data['is_manager'] = this.isManager;
-    data['type'] = this.type;
-    data['userhide'] = this.userhide;
-    if (this.balv != null) {
-      data['balv'] = this.balv?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_login'] = isLogin;
+    data['id'] = id;
+    data['name'] = name;
+    data['name_show'] = nameShow;
+    data['portrait'] = portrait;
+    data['no_un'] = noUn;
+    data['is_manager'] = isManager;
+    data['type'] = type;
+    data['userhide'] = userhide;
+    if (balv != null) {
+      data['balv'] = balv?.toJson();
     }
-    data['is_bawu'] = this.isBawu;
-    data['bawu_type'] = this.bawuType;
-    data['bimg_url'] = this.bimgUrl;
-    data['ios_bimg_format'] = this.iosBimgFormat;
-    data['is_mem'] = this.isMem;
-    data['is_select_tail'] = this.isSelectTail;
-    data['priv_thread'] = this.privThread;
+    data['is_bawu'] = isBawu;
+    data['bawu_type'] = bawuType;
+    data['bimg_url'] = bimgUrl;
+    data['ios_bimg_format'] = iosBimgFormat;
+    data['is_mem'] = isMem;
+    data['is_select_tail'] = isSelectTail;
+    data['priv_thread'] = privThread;
     // if (this.businessAccountInfo != null) {
     //   data['business_account_info'] =
     //       this.businessAccountInfo.map((v) => v.toJson()).toList();
@@ -1886,10 +1881,10 @@ class Balv {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_block'] = this.isBlock;
-    data['is_black'] = this.isBlack;
-    data['days_tofree'] = this.daysTofree;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_block'] = isBlock;
+    data['is_black'] = isBlack;
+    data['days_tofree'] = daysTofree;
     return data;
   }
 }
@@ -2048,14 +2043,14 @@ class ItemOptions {
 
   ItemOptions.fromJson(Map<String, dynamic> json) {
     key = json['key'];
-    value = json['value'] != null ? new Value.fromJson(json['value']) : null;
+    value = json['value'] != null ? Value.fromJson(json['value']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['key'] = this.key;
-    if (this.value != null) {
-      data['value'] = this.value?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['key'] = key;
+    if (value != null) {
+      data['value'] = value?.toJson();
     }
     return data;
   }
@@ -2098,11 +2093,11 @@ class Value {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['publish_time'] = this.publishTime;
-    data['category2'] = this.category2;
-    data['category3'] = this.category3;
-    data['price'] = this.price;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['publish_time'] = publishTime;
+    data['category2'] = category2;
+    data['category3'] = category3;
+    data['price'] = price;
     // if (this.image != null) {
     //   data['image'] = this.image?.map((v) => v.toJson()).toList();
     // }
@@ -2151,7 +2146,7 @@ class Score {
     if (json['item_point'] != null) {
       itemPoint = [];
       json['item_point'].forEach((v) {
-        itemPoint?.add(new ItemPoint.fromJson(v));
+        itemPoint?.add(ItemPoint.fromJson(v));
       });
     }
     // if (json['item_plot'] != null) {
@@ -2163,10 +2158,10 @@ class Score {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['total_point_num'] = this.totalPointNum;
-    if (this.itemPoint != null) {
-      data['item_point'] = this.itemPoint?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['total_point_num'] = totalPointNum;
+    if (itemPoint != null) {
+      data['item_point'] = itemPoint?.map((v) => v.toJson()).toList();
     }
     // if (this.itemPlot != null) {
     //   data['item_plot'] = this.itemPlot.map((v) => v.toJson()).toList();
@@ -2187,9 +2182,9 @@ class ItemPoint {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['time_intval'] = this.timeIntval;
-    data['point'] = this.point;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['time_intval'] = timeIntval;
+    data['point'] = point;
     return data;
   }
 }
@@ -2226,15 +2221,15 @@ class ForumPage {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['page_size'] = this.pageSize;
-    data['offset'] = this.offset;
-    data['current_page'] = this.currentPage;
-    data['total_count'] = this.totalCount;
-    data['total_page'] = this.totalPage;
-    data['has_more'] = this.hasMore;
-    data['has_prev'] = this.hasPrev;
-    data['cur_good_id'] = this.curGoodId;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['page_size'] = pageSize;
+    data['offset'] = offset;
+    data['current_page'] = currentPage;
+    data['total_count'] = totalCount;
+    data['total_page'] = totalPage;
+    data['has_more'] = hasMore;
+    data['has_prev'] = hasPrev;
+    data['cur_good_id'] = curGoodId;
     return data;
   }
 }
@@ -2251,9 +2246,9 @@ class PrivateForumActiveInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['forum_brief'] = this.forumBrief;
-    data['forum_share_url'] = this.forumShareUrl;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['forum_brief'] = forumBrief;
+    data['forum_share_url'] = forumShareUrl;
     return data;
   }
 }
@@ -2299,15 +2294,15 @@ class FrsStar {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['has_frs_star'] = this.hasFrsStar;
-    data['star_forum_headimg'] = this.starForumHeadimg;
-    data['top'] = this.top;
-    data['top_size'] = this.topSize;
-    data['head'] = this.head;
-    data['head_size'] = this.headSize;
-    data['gender'] = this.gender;
-    data['fans'] = this.fans;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['has_frs_star'] = hasFrsStar;
+    data['star_forum_headimg'] = starForumHeadimg;
+    data['top'] = top;
+    data['top_size'] = topSize;
+    data['head'] = head;
+    data['head_size'] = headSize;
+    data['gender'] = gender;
+    data['fans'] = fans;
     // if (this.trade != null) {
     //   data['trade'] = this.trade.map((v) => v.toJson()).toList();
     // }
@@ -2377,14 +2372,14 @@ class TopAgreeUser {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['user_id'] = this.userId;
-    data['agree_num'] = this.agreeNum;
-    data['rank'] = this.rank;
-    data['user_name'] = this.userName;
-    data['name_show'] = this.nameShow;
-    data['gender'] = this.gender;
-    data['portrait'] = this.portrait;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['user_id'] = userId;
+    data['agree_num'] = agreeNum;
+    data['rank'] = rank;
+    data['user_name'] = userName;
+    data['name_show'] = nameShow;
+    data['gender'] = gender;
+    data['portrait'] = portrait;
     return data;
   }
 }
@@ -2405,11 +2400,11 @@ class FrsTabInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tab_name'] = this.tabName;
-    data['tab_url'] = this.tabUrl;
-    data['tab_type'] = this.tabType;
-    data['tab_id'] = this.tabId;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tab_name'] = tabName;
+    data['tab_url'] = tabUrl;
+    data['tab_type'] = tabType;
+    data['tab_id'] = tabId;
     return data;
   }
 }
@@ -2492,7 +2487,7 @@ class UserList extends Author {
       iconinfo = [];
       json['iconinfo'].forEach((v) {
         // iconinfo?.add(new ForumIconinfo.fromJson(v));
-        iconinfo?.add(new Iconinfo.fromJson(v));
+        iconinfo?.add(Iconinfo.fromJson(v));
       });
     }
     // if (json['tshow_icon'] != null) {
@@ -2517,7 +2512,7 @@ class UserList extends Author {
     }
 
     privSets = json['priv_sets'] != ""
-        ? new ForumPrivSets.fromJson(json['priv_sets'])
+        ? ForumPrivSets.fromJson(json['priv_sets'])
         : null;
     // themeCard = json['theme_card'] != null
     //     ? new ThemeCard.fromJson(json['theme_card'])
@@ -2560,16 +2555,16 @@ class UserList extends Author {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['portrait'] = this.portrait;
-    data['name'] = this.name;
-    data['name_show'] = this.nameShow;
-    data['sex'] = this.sex;
-    data['gender'] = this.gender;
-    data['type'] = this.type;
-    if (this.iconinfo != null) {
-      data['iconinfo'] = this.iconinfo?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['portrait'] = portrait;
+    data['name'] = name;
+    data['name_show'] = nameShow;
+    data['sex'] = sex;
+    data['gender'] = gender;
+    data['type'] = type;
+    if (iconinfo != null) {
+      data['iconinfo'] = iconinfo?.map((v) => v.toJson()).toList();
     }
     // if (this.tshowIcon != null) {
     //   data['tshow_icon'] = this.tshowIcon.map((v) => v.toJson()).toList();
@@ -2578,13 +2573,13 @@ class UserList extends Author {
     //   data['new_tshow_icon'] =
     //       this.newTshowIcon.map((v) => v.toJson()).toList();
     // }
-    data["level_id"] = this.levelID;
-    data['is_mem'] = this.isMem;
-    data['fans_num'] = this.fansNum;
-    data['fans_nickname'] = this.fansNickname;
-    data['god_data'] = this.godData;
-    if (this.privSets != null) {
-      data['priv_sets'] = this.privSets?.toJson();
+    data["level_id"] = levelID;
+    data['is_mem'] = isMem;
+    data['fans_num'] = fansNum;
+    data['fans_nickname'] = fansNickname;
+    data['god_data'] = godData;
+    if (privSets != null) {
+      data['priv_sets'] = privSets?.toJson();
     }
     // if (this.themeCard != null) {
     //   data['theme_card'] = this.themeCard?.toJson();
@@ -2592,21 +2587,21 @@ class UserList extends Author {
     // if (this.tbVip != null) {
     //   data['tb_vip'] = this.tbVip.map((v) => v.toJson()).toList();
     // }
-    data['is_bawu'] = this.isBawu;
-    data['bawu_type'] = this.bawuType;
-    data['baijiahao_info'] = this.baijiahaoInfo;
+    data['is_bawu'] = isBawu;
+    data['bawu_type'] = bawuType;
+    data['baijiahao_info'] = baijiahaoInfo;
     // if (this.pendant != null) {
     //   data['pendant'] = this.pendant?.toJson();
     // }
     // if (this.alaInfo != null) {
     //   data['ala_info'] = this.alaInfo?.toJson();
     // }
-    data['seal_prefix'] = this.sealPrefix;
-    data['is_videobiggie'] = this.isVideobiggie;
+    data['seal_prefix'] = sealPrefix;
+    data['is_videobiggie'] = isVideobiggie;
     // data['bazhu_grade'] = this.bazhuGrade;
-    data['display_auth_type'] = this.displayAuthType;
+    data['display_auth_type'] = displayAuthType;
     // data['work_creator_info'] = this.workCreatorInfo;
-    data['is_default_avatar'] = this.isDefaultAvatar;
+    data['is_default_avatar'] = isDefaultAvatar;
     // if (this.newGodData != null) {
     //   data['new_god_data'] = this.newGodData?.toJson();
     // }
@@ -2684,10 +2679,10 @@ class Terminal {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['client'] = this.client;
-    data['pc'] = this.pc;
-    data['wap'] = this.wap;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['client'] = client;
+    data['pc'] = pc;
+    data['wap'] = wap;
     return data;
   }
 }
@@ -2769,13 +2764,13 @@ class ForumPrivSets {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['group'] = this.group;
-    data['like'] = this.like;
-    data['live'] = this.live;
-    data['location'] = this.location;
-    data['post'] = this.post;
-    data['reply'] = this.reply;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['group'] = group;
+    data['like'] = like;
+    data['live'] = live;
+    data['location'] = location;
+    data['post'] = post;
+    data['reply'] = reply;
     return data;
   }
 }
