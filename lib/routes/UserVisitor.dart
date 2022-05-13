@@ -3,6 +3,7 @@ import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
+import 'package:tiebanana/Widgets/ThreadFloorCard.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
@@ -20,6 +21,8 @@ class UserVisitor extends StatefulWidget {
 class _UserVisitorState extends State<UserVisitor> {
   UserProfileModel? userinfo;
   Future<UserProfileModel>? futureUserInfo;
+  final GlobalKey<NestedScrollViewState> _globalKey =
+      GlobalKey<NestedScrollViewState>();
   void init() async {
     userinfo = await Global.tiebaAPI.getUserInfo(uid: widget.uid);
     setState(() {});
@@ -34,28 +37,32 @@ class _UserVisitorState extends State<UserVisitor> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: userinfo == null
-            ? const Text("")
-            : Text(userinfo!.user?.nameShow ?? userinfo!.user?.name ?? ""),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
-      body: Column(children: [
-        _UserInfomation(userinfo: userinfo),
-        Container(
-          margin: const EdgeInsets.only(top: 10),
-          color: Colors.white,
-          child: _BottomView(
-            uid: widget.uid,
-            myLikeNum: userinfo?.user!.myLikeNum ?? "0",
-            threadNum: userinfo?.user!.threadNum ?? "0",
-            rePostNum: userinfo?.user!.repostNum ?? "0",
+        appBar: AppBar(
+          title: userinfo == null
+              ? const Text("")
+              : Text(userinfo!.user?.nameShow ?? userinfo!.user?.name ?? ""),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0.5,
+        ),
+        body: NestedScrollView(
+          key: _globalKey,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => <Widget>[
+            SliverToBoxAdapter(
+              child: _UserInfomation(userinfo: userinfo),
+            )
+          ],
+          body: Container(
+            margin: const EdgeInsets.only(top: 10),
+            color: Colors.white,
+            child: _BottomView(
+              uid: widget.uid,
+              myLikeNum: userinfo?.user!.myLikeNum ?? "0",
+              threadNum: userinfo?.user!.threadNum ?? "0",
+              rePostNum: userinfo?.user!.repostNum ?? "0",
+            ),
           ),
-        )
-      ]),
-    );
+        ));
   }
 }
 
@@ -251,16 +258,44 @@ class _BottomViewState extends State<_BottomView>
 
 ///贴视图
 class _ThreadView extends StatefulWidget {
-  const _ThreadView({Key? key}) : super(key: key);
+  final String uid;
+  const _ThreadView({Key? key, required this.uid}) : super(key: key);
 
   @override
   State<_ThreadView> createState() => __ThreadViewState();
 }
 
 class __ThreadViewState extends State<_ThreadView> {
+  UserPostModel? info;
+  List<PostList> posts = [];
+  int pn = 1;
+  void init() async {
+    info = await Global.tiebaAPI
+        .getUserPost(uid: widget.uid, isThread: true, pn: pn);
+
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    init();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container();
+    if (info?.hidePost == "1") {
+      return const Center(
+        child: Text("这位老铁已将贴子设为隐藏"),
+      );
+    }
+    return ListView.builder(
+      itemCount: posts.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Container();
+        // return ThreadSummary(info: info);
+      },
+    );
   }
 }
 
