@@ -43,9 +43,9 @@ class ReplyMe {
     isFloor = json['is_floor'];
     type = json['type'];
     replyer =
-        json['replyer'] != null ? new Replyer.fromJson(json['replyer']) : null;
+        json['replyer'] != null ? Replyer.fromJson(json['replyer']) : null;
     quoteUser = json['quote_user'] != null
-        ? new QuoteUser.fromJson(json['quote_user'])
+        ? QuoteUser.fromJson(json['quote_user'])
         : null;
     title = json['title'];
     content = json['content'];
@@ -60,34 +60,34 @@ class ReplyMe {
     postFrom = json['post_from'];
     threadImgUrl = json['thread_img_url'];
     threadAuthorUser = json['thread_author_user'] != null
-        ? new ThreadAuthorUser.fromJson(json['thread_author_user'])
+        ? ThreadAuthorUser.fromJson(json['thread_author_user'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_floor'] = this.isFloor;
-    data['type'] = this.type;
-    if (this.replyer != null) {
-      data['replyer'] = this.replyer?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_floor'] = isFloor;
+    data['type'] = type;
+    if (replyer != null) {
+      data['replyer'] = replyer?.toJson();
     }
-    if (this.quoteUser != null) {
-      data['quote_user'] = this.quoteUser?.toJson();
+    if (quoteUser != null) {
+      data['quote_user'] = quoteUser?.toJson();
     }
-    data['title'] = this.title;
-    data['content'] = this.content;
-    data['quote_content'] = this.quoteContent;
-    data['thread_id'] = this.threadId;
-    data['post_id'] = this.postId;
-    data['time'] = this.time;
-    data['fname'] = this.fname;
-    data['quote_pid'] = this.quotePid;
-    data['thread_type'] = this.threadType;
-    data['unread'] = this.unread;
-    data['post_from'] = this.postFrom;
-    data['thread_img_url'] = this.threadImgUrl;
-    if (this.threadAuthorUser != null) {
-      data['thread_author_user'] = this.threadAuthorUser?.toJson();
+    data['title'] = title;
+    data['content'] = content;
+    data['quote_content'] = quoteContent;
+    data['thread_id'] = threadId;
+    data['post_id'] = postId;
+    data['time'] = time;
+    data['fname'] = fname;
+    data['quote_pid'] = quotePid;
+    data['thread_type'] = threadType;
+    data['unread'] = unread;
+    data['post_from'] = postFrom;
+    data['thread_img_url'] = threadImgUrl;
+    if (threadAuthorUser != null) {
+      data['thread_author_user'] = threadAuthorUser?.toJson();
     }
     return data;
   }
@@ -123,9 +123,8 @@ class Replyer {
     portrait = json['portrait'];
     displayAuthType = json['display_auth_type'];
     // workCreatorInfo = json['work_creator_info'];
-    privSets = json['priv_sets'] != ""
-        ? new PrivSets.fromJson(json['priv_sets'])
-        : null;
+    privSets =
+        json['priv_sets'] != "" ? PrivSets.fromJson(json['priv_sets']) : null;
     // bazhuGrade = json['bazhu_grade'];
     isFriend = json['is_friend'];
     isFans = json['is_fans'];
@@ -133,20 +132,20 @@ class Replyer {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['portrait'] = this.portrait;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['portrait'] = portrait;
 
-    data['display_auth_type'] = this.displayAuthType;
+    data['display_auth_type'] = displayAuthType;
     // data['work_creator_info'] = this.workCreatorInfo;
-    if (this.privSets != null) {
-      data['priv_sets'] = this.privSets?.toJson();
+    if (privSets != null) {
+      data['priv_sets'] = privSets?.toJson();
     }
     // data['bazhu_grade'] = this.bazhuGrade;
-    data['is_friend'] = this.isFriend;
-    data['is_fans'] = this.isFans;
-    data['name_show'] = this.nameShow;
+    data['is_friend'] = isFriend;
+    data['is_fans'] = isFans;
+    data['name_show'] = nameShow;
     return data;
   }
 }
@@ -167,11 +166,11 @@ class PrivSets {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['like'] = this.like;
-    data['location'] = this.location;
-    data['post'] = this.post;
-    data['reply'] = this.reply;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['like'] = like;
+    data['location'] = location;
+    data['post'] = post;
+    data['reply'] = reply;
     return data;
   }
 }
@@ -192,11 +191,11 @@ class QuoteUser {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['portrait'] = this.portrait;
-    data['name_show'] = this.nameShow;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['portrait'] = portrait;
+    data['name_show'] = nameShow;
     return data;
   }
 }
@@ -213,9 +212,9 @@ class ThreadAuthorUser {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['portrait'] = this.portrait;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['portrait'] = portrait;
     return data;
   }
 }

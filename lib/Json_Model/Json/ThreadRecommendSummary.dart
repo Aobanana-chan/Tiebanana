@@ -52,74 +52,72 @@ class ThreadRecommendSummary {
     createTime = json['create_time'];
     userId = json['user_id'];
     isDeleted = json['is_deleted'];
-    mediaNum = json['media_num'] != ""
-        ? new MediaNum.fromJson(json['media_num'])
-        : null;
-    author =
-        json['author'] != null ? new Author.fromJson(json['author']) : null;
+    mediaNum =
+        json['media_num'] != "" ? MediaNum.fromJson(json['media_num']) : null;
+    author = json['author'] != null ? Author.fromJson(json['author']) : null;
     if (json['media'] != null) {
       media = <Media>[];
       json['media'].forEach((v) {
-        media!.add(new Media.fromJson(v));
+        media!.add(Media.fromJson(v));
       });
     }
-    agree = json['agree'] != null ? new Agree.fromJson(json['agree']) : null;
+    agree = json['agree'] != null ? Agree.fromJson(json['agree']) : null;
     shareNum = json['share_num'];
     fid = json['fid'];
     fname = json['fname'];
     if (json['first_post_content'] != null) {
       firstPostContent = <FirstPostContent>[];
       json['first_post_content'].forEach((v) {
-        firstPostContent!.add(new FirstPostContent.fromJson(v));
+        firstPostContent!.add(FirstPostContent.fromJson(v));
       });
     }
     if (json['thread_personalized'] != null) {
       threadPersonalized = <ThreadPersonalized>[];
       json['thread_personalized'].forEach((v) {
-        threadPersonalized!.add(new ThreadPersonalized.fromJson(v));
+        threadPersonalized!.add(ThreadPersonalized.fromJson(v));
       });
     }
     videoInfo = json['video_info'] != null
-        ? new VideoInfo.fromJson(json['video_info'])
+        ? VideoInfo.fromJson(json['video_info'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['tid'] = this.tid;
-    data['title'] = this.title;
-    data['reply_num'] = this.replyNum;
-    data['view_num'] = this.viewNum;
-    data['last_time_int'] = this.lastTimeInt;
-    data['create_time'] = this.createTime;
-    data['user_id'] = this.userId;
-    data['is_deleted'] = this.isDeleted;
-    if (this.mediaNum != null) {
-      data['media_num'] = this.mediaNum!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['tid'] = tid;
+    data['title'] = title;
+    data['reply_num'] = replyNum;
+    data['view_num'] = viewNum;
+    data['last_time_int'] = lastTimeInt;
+    data['create_time'] = createTime;
+    data['user_id'] = userId;
+    data['is_deleted'] = isDeleted;
+    if (mediaNum != null) {
+      data['media_num'] = mediaNum!.toJson();
     }
-    if (this.author != null) {
-      data['author'] = this.author!.toJson();
+    if (author != null) {
+      data['author'] = author!.toJson();
     }
-    if (this.media != null) {
-      data['media'] = this.media!.map((v) => v.toJson()).toList();
+    if (media != null) {
+      data['media'] = media!.map((v) => v.toJson()).toList();
     }
-    if (this.agree != null) {
-      data['agree'] = this.agree!.toJson();
+    if (agree != null) {
+      data['agree'] = agree!.toJson();
     }
-    data['share_num'] = this.shareNum;
-    data['fid'] = this.fid;
-    data['fname'] = this.fname;
-    if (this.firstPostContent != null) {
+    data['share_num'] = shareNum;
+    data['fid'] = fid;
+    data['fname'] = fname;
+    if (firstPostContent != null) {
       data['first_post_content'] =
-          this.firstPostContent!.map((v) => v.toJson()).toList();
+          firstPostContent!.map((v) => v.toJson()).toList();
     }
-    if (this.threadPersonalized != null) {
+    if (threadPersonalized != null) {
       data['thread_personalized'] =
-          this.threadPersonalized!.map((v) => v.toJson()).toList();
+          threadPersonalized!.map((v) => v.toJson()).toList();
     }
-    if (this.videoInfo != null) {
-      data['video_info'] = this.videoInfo?.toJson();
+    if (videoInfo != null) {
+      data['video_info'] = videoInfo?.toJson();
     }
     return data;
   }
@@ -135,8 +133,8 @@ class MediaNum {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['pic'] = this.pic;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['pic'] = pic;
     return data;
   }
 }
@@ -166,20 +164,20 @@ class Author {
     if (json['iconinfo'] != null) {
       iconinfo = <Iconinfo>[];
       json['iconinfo'].forEach((v) {
-        iconinfo!.add(new Iconinfo.fromJson(v));
+        iconinfo!.add(Iconinfo.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['gender'] = this.gender;
-    data['name_show'] = this.nameShow;
-    data['portrait'] = this.portrait;
-    if (this.iconinfo != null) {
-      data['iconinfo'] = this.iconinfo!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['gender'] = gender;
+    data['name_show'] = nameShow;
+    data['portrait'] = portrait;
+    if (iconinfo != null) {
+      data['iconinfo'] = iconinfo!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -195,8 +193,8 @@ class Iconinfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['icon'] = this.icon;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['icon'] = icon;
     return data;
   }
 }
@@ -248,20 +246,20 @@ class Media {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['type'] = this.type;
-    data['width'] = this.width;
-    data['height'] = this.height;
-    data['show_original_btn'] = this.showOriginalBtn;
-    data['is_long_pic'] = this.isLongPic;
-    data['big_pic'] = this.bigPic;
-    data['dynamic_pic'] = this.dynamicPic;
-    data['src_pic'] = this.srcPic;
-    data['origin_pic'] = this.originPic;
-    data['origin_size'] = this.originSize;
-    data['post_id'] = this.postId;
-    data['wth_mid_loc'] = this.wthMidLoc;
-    data['hth_mid_loc'] = this.hthMidLoc;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['type'] = type;
+    data['width'] = width;
+    data['height'] = height;
+    data['show_original_btn'] = showOriginalBtn;
+    data['is_long_pic'] = isLongPic;
+    data['big_pic'] = bigPic;
+    data['dynamic_pic'] = dynamicPic;
+    data['src_pic'] = srcPic;
+    data['origin_pic'] = originPic;
+    data['origin_size'] = originSize;
+    data['post_id'] = postId;
+    data['wth_mid_loc'] = wthMidLoc;
+    data['hth_mid_loc'] = hthMidLoc;
     return data;
   }
 }
@@ -289,12 +287,12 @@ class Agree {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['agree_num'] = this.agreeNum;
-    data['has_agree'] = this.hasAgree;
-    data['agree_type'] = this.agreeType;
-    data['disagree_num'] = this.disagreeNum;
-    data['diff_agree_num'] = this.diffAgreeNum;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['agree_num'] = agreeNum;
+    data['has_agree'] = hasAgree;
+    data['agree_type'] = agreeType;
+    data['disagree_num'] = disagreeNum;
+    data['diff_agree_num'] = diffAgreeNum;
     return data;
   }
 }
@@ -346,17 +344,17 @@ class FirstPostContent {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['type'] = this.type;
-    data['bsize'] = this.bsize;
-    data['size'] = this.size;
-    data['origin_src'] = this.originSrc;
-    data['origin_size'] = this.originSize;
-    data['is_long_pic'] = this.isLongPic;
-    data['show_original_btn'] = this.showOriginalBtn;
-    data['cdn_src'] = this.cdnSrc;
-    data['cdn_src_active'] = this.cdnSrcActive;
-    data['big_cdn_src'] = this.bigCdnSrc;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['type'] = type;
+    data['bsize'] = bsize;
+    data['size'] = size;
+    data['origin_src'] = originSrc;
+    data['origin_size'] = originSize;
+    data['is_long_pic'] = isLongPic;
+    data['show_original_btn'] = showOriginalBtn;
+    data['cdn_src'] = cdnSrc;
+    data['cdn_src_active'] = cdnSrcActive;
+    data['big_cdn_src'] = bigCdnSrc;
     data['text'] = text;
     data['c'] = c;
     return data;
@@ -388,21 +386,21 @@ class ThreadPersonalized {
     if (json['dislike_resource'] != null) {
       dislikeResource = <DislikeResource>[];
       json['dislike_resource'].forEach((v) {
-        dislikeResource!.add(new DislikeResource.fromJson(v));
+        dislikeResource!.add(DislikeResource.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tid'] = this.tid;
-    data['weight'] = this.weight;
-    data['source'] = this.source;
-    data['abtest_tag'] = this.abtestTag;
-    data['extra'] = this.extra;
-    if (this.dislikeResource != null) {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tid'] = tid;
+    data['weight'] = weight;
+    data['source'] = source;
+    data['abtest_tag'] = abtestTag;
+    data['extra'] = extra;
+    if (dislikeResource != null) {
       data['dislike_resource'] =
-          this.dislikeResource!.map((v) => v.toJson()).toList();
+          dislikeResource!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -422,10 +420,10 @@ class DislikeResource {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['dislike_reason'] = this.dislikeReason;
-    data['dislike_id'] = this.dislikeId;
-    data['extra'] = this.extra;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['dislike_reason'] = dislikeReason;
+    data['dislike_id'] = dislikeId;
+    data['extra'] = extra;
     return data;
   }
 }
@@ -495,11 +493,11 @@ class VideoInfo {
       videoDesc = [];
       if (json['video_desc'] is List) {
         json['video_desc'].forEach((v) {
-          videoDesc?.add(new VideoDesc.fromJson(v));
+          videoDesc?.add(VideoDesc.fromJson(v));
         });
       } else if (json['video_desc'] is Map) {
         json['video_desc'].forEach((v, f) {
-          videoDesc?.add(new VideoDesc.fromJson({v: f}));
+          videoDesc?.add(VideoDesc.fromJson({v: f}));
         });
       } else {
         throw Exception("未知视频类型");
@@ -508,13 +506,13 @@ class VideoInfo {
     if (json['video_desc_cae3'] != null) {
       videoDescCae3 = [];
       json['video_desc_cae3'].forEach((v) {
-        videoDescCae3?.add(new VideoDescCae3.fromJson(v));
+        videoDescCae3?.add(VideoDescCae3.fromJson(v));
       });
     }
     if (json['video_desc_h265'] != null) {
       videoDescH265 = [];
       json['video_desc_h265'].forEach((v) {
-        videoDescH265?.add(new VideoDescH265.fromJson(v));
+        videoDescH265?.add(VideoDescH265.fromJson(v));
       });
     }
     videoDuration = json['video_duration'];
@@ -533,39 +531,37 @@ class VideoInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['auditing'] = this.auditing;
-    data['format_matched'] = this.formatMatched;
-    data['ptid'] = this.ptid;
-    data['thumbnail_height'] = this.thumbnailHeight;
-    data['thumbnail_picid'] = this.thumbnailPicid;
-    data['thumbnail_url'] = this.thumbnailUrl;
-    data['thumbnail_width'] = this.thumbnailWidth;
-    data['version_h265'] = this.versionH265;
-    if (this.videoDesc != null) {
-      data['video_desc'] = this.videoDesc?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['auditing'] = auditing;
+    data['format_matched'] = formatMatched;
+    data['ptid'] = ptid;
+    data['thumbnail_height'] = thumbnailHeight;
+    data['thumbnail_picid'] = thumbnailPicid;
+    data['thumbnail_url'] = thumbnailUrl;
+    data['thumbnail_width'] = thumbnailWidth;
+    data['version_h265'] = versionH265;
+    if (videoDesc != null) {
+      data['video_desc'] = videoDesc?.map((v) => v.toJson()).toList();
     }
-    if (this.videoDescCae3 != null) {
-      data['video_desc_cae3'] =
-          this.videoDescCae3?.map((v) => v.toJson()).toList();
+    if (videoDescCae3 != null) {
+      data['video_desc_cae3'] = videoDescCae3?.map((v) => v.toJson()).toList();
     }
-    if (this.videoDescH265 != null) {
-      data['video_desc_h265'] =
-          this.videoDescH265?.map((v) => v.toJson()).toList();
+    if (videoDescH265 != null) {
+      data['video_desc_h265'] = videoDescH265?.map((v) => v.toJson()).toList();
     }
-    data['video_duration'] = this.videoDuration;
-    data['video_format'] = this.videoFormat;
-    data['video_from'] = this.videoFrom;
-    data['video_height'] = this.videoHeight;
-    data['video_log_id'] = this.videoLogId;
-    data['video_md5'] = this.videoMd5;
-    data['video_type'] = this.videoType;
-    data['video_url'] = this.videoUrl;
-    data['video_width'] = this.videoWidth;
-    data['play_count'] = this.playCount;
-    data['play_time'] = this.playTime;
-    data['video_length'] = this.videoLength;
-    data['is_vertical'] = this.isVertical;
+    data['video_duration'] = videoDuration;
+    data['video_format'] = videoFormat;
+    data['video_from'] = videoFrom;
+    data['video_height'] = videoHeight;
+    data['video_log_id'] = videoLogId;
+    data['video_md5'] = videoMd5;
+    data['video_type'] = videoType;
+    data['video_url'] = videoUrl;
+    data['video_width'] = videoWidth;
+    data['play_count'] = playCount;
+    data['play_time'] = playTime;
+    data['video_length'] = videoLength;
+    data['is_vertical'] = isVertical;
     return data;
   }
 }
@@ -593,12 +589,12 @@ class VideoDesc {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['video_height'] = this.videoHeight;
-    data['video_id'] = this.videoId;
-    data['video_size'] = this.videoSize;
-    data['video_url'] = this.videoUrl;
-    data['video_width'] = this.videoWidth;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['video_height'] = videoHeight;
+    data['video_id'] = videoId;
+    data['video_size'] = videoSize;
+    data['video_url'] = videoUrl;
+    data['video_width'] = videoWidth;
     return data;
   }
 }
@@ -626,12 +622,12 @@ class VideoDescCae3 {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['video_height'] = this.videoHeight;
-    data['video_id'] = this.videoId;
-    data['video_size'] = this.videoSize;
-    data['video_url'] = this.videoUrl;
-    data['video_width'] = this.videoWidth;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['video_height'] = videoHeight;
+    data['video_id'] = videoId;
+    data['video_size'] = videoSize;
+    data['video_url'] = videoUrl;
+    data['video_width'] = videoWidth;
     return data;
   }
 }
@@ -659,12 +655,12 @@ class VideoDescH265 {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['video_height'] = this.videoHeight;
-    data['video_id'] = this.videoId;
-    data['video_size'] = this.videoSize;
-    data['video_url'] = this.videoUrl;
-    data['video_width'] = this.videoWidth;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['video_height'] = videoHeight;
+    data['video_id'] = videoId;
+    data['video_size'] = videoSize;
+    data['video_url'] = videoUrl;
+    data['video_width'] = videoWidth;
     return data;
   }
 }

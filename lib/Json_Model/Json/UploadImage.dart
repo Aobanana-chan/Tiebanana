@@ -32,7 +32,7 @@ class UploadImageModel {
     chunkNo = json['chunkNo'];
     picId = json['picId'];
     picInfo =
-        json['picInfo'] != null ? new PicInfo.fromJson(json['picInfo']) : null;
+        json['picInfo'] != null ? PicInfo.fromJson(json['picInfo']) : null;
     errorCode = json['error_code'];
     errorMsg = json['error_msg'];
     // if (json['info'] != null) {
@@ -48,22 +48,22 @@ class UploadImageModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['resourceId'] = this.resourceId;
-    data['chunkNo'] = this.chunkNo;
-    data['picId'] = this.picId;
-    if (this.picInfo != null) {
-      data['picInfo'] = this.picInfo?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['resourceId'] = resourceId;
+    data['chunkNo'] = chunkNo;
+    data['picId'] = picId;
+    if (picInfo != null) {
+      data['picInfo'] = picInfo?.toJson();
     }
-    data['error_code'] = this.errorCode;
-    data['error_msg'] = this.errorMsg;
+    data['error_code'] = errorCode;
+    data['error_msg'] = errorMsg;
     // if (this.info != null) {
     //   data['info'] = this.info.map((v) => v.toJson()).toList();
     // }
-    data['server_time'] = this.serverTime;
-    data['time'] = this.time;
-    data['ctime'] = this.ctime;
-    data['logid'] = this.logid;
+    data['server_time'] = serverTime;
+    data['time'] = time;
+    data['ctime'] = ctime;
+    data['logid'] = logid;
     return data;
   }
 }
@@ -77,25 +77,23 @@ class PicInfo {
 
   PicInfo.fromJson(Map<String, dynamic> json) {
     originPic = json['originPic'] != null
-        ? new OriginPic.fromJson(json['originPic'])
+        ? OriginPic.fromJson(json['originPic'])
         : null;
-    bigPic =
-        json['bigPic'] != null ? new OriginPic.fromJson(json['bigPic']) : null;
-    smallPic = json['smallPic'] != null
-        ? new OriginPic.fromJson(json['smallPic'])
-        : null;
+    bigPic = json['bigPic'] != null ? OriginPic.fromJson(json['bigPic']) : null;
+    smallPic =
+        json['smallPic'] != null ? OriginPic.fromJson(json['smallPic']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.originPic != null) {
-      data['originPic'] = this.originPic?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (originPic != null) {
+      data['originPic'] = originPic?.toJson();
     }
-    if (this.bigPic != null) {
-      data['bigPic'] = this.bigPic?.toJson();
+    if (bigPic != null) {
+      data['bigPic'] = bigPic?.toJson();
     }
-    if (this.smallPic != null) {
-      data['smallPic'] = this.smallPic?.toJson();
+    if (smallPic != null) {
+      data['smallPic'] = smallPic?.toJson();
     }
     return data;
   }
@@ -117,11 +115,11 @@ class OriginPic {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['width'] = this.width;
-    data['height'] = this.height;
-    data['type'] = this.type;
-    data['picUrl'] = this.picUrl;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['width'] = width;
+    data['height'] = height;
+    data['type'] = type;
+    data['picUrl'] = picUrl;
     return data;
   }
 }

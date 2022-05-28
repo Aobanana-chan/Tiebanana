@@ -10,9 +10,8 @@ class WindowsDv {
     dv = _getDv();
   }
   String _getDv() {
-    var start = "tk" +
-        Random().nextDouble().toString() +
-        DateTime.now().millisecondsSinceEpoch.toString();
+    var start =
+        "tk${Random().nextDouble()}${DateTime.now().millisecondsSinceEpoch}";
     var r = _getDvn(start);
     var o = {
           "flashInfo": 0,
@@ -66,7 +65,7 @@ class WindowsDv {
         }
       }
     }
-    return start + "@" + a.join("");
+    return "$start@${a.join("")}";
   }
 
   //移植于g.min,js

@@ -19,12 +19,12 @@ class SendDPass {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['errno'] = this.errno;
-    data['msg'] = this.msg;
-    data['vcodestr'] = this.vcodestr;
-    data['vcodesign'] = this.vcodesign;
-    data['isslide'] = this.isslide;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['errno'] = errno;
+    data['msg'] = msg;
+    data['vcodestr'] = vcodestr;
+    data['vcodesign'] = vcodesign;
+    data['isslide'] = isslide;
     return data;
   }
 }

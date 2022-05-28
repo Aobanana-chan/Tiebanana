@@ -11,14 +11,14 @@ class SearchUserModel {
     no = json['no'];
     error = json['error'];
     data = json['data'] != null
-        ? new SearchUserModelData.fromJson(json['data'])
+        ? SearchUserModelData.fromJson(json['data'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
-    data['error'] = this.error;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
+    data['error'] = error;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
@@ -46,37 +46,37 @@ class SearchUserModelData {
     pn = json['pn'];
     hasMore = json['has_more'];
     exactMatch = json['exactMatch'] != null
-        ? new ExactMatch.fromJson(json['exactMatch'])
+        ? ExactMatch.fromJson(json['exactMatch'])
         : null;
     if (json['fuzzyMatch'] != null) {
       fuzzyMatch = [];
       json['fuzzyMatch'].forEach((v) {
-        fuzzyMatch?.add(new FuzzyMatch.fromJson(v));
+        fuzzyMatch?.add(FuzzyMatch.fromJson(v));
       });
     }
     ubsSampleIds = json['ubs_sample_ids'];
     if (json['ubs_abtest_config'] != null) {
       ubsAbtestConfig = [];
       json['ubs_abtest_config'].forEach((v) {
-        ubsAbtestConfig?.add(new UbsAbtestConfig.fromJson(v));
+        ubsAbtestConfig?.add(UbsAbtestConfig.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['pn'] = this.pn;
-    data['has_more'] = this.hasMore;
-    if (this.exactMatch != null) {
-      data['exactMatch'] = this.exactMatch?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['pn'] = pn;
+    data['has_more'] = hasMore;
+    if (exactMatch != null) {
+      data['exactMatch'] = exactMatch?.toJson();
     }
-    if (this.fuzzyMatch != null) {
-      data['fuzzyMatch'] = this.fuzzyMatch?.map((v) => v.toJson()).toList();
+    if (fuzzyMatch != null) {
+      data['fuzzyMatch'] = fuzzyMatch?.map((v) => v.toJson()).toList();
     }
-    data['ubs_sample_ids'] = this.ubsSampleIds;
-    if (this.ubsAbtestConfig != null) {
+    data['ubs_sample_ids'] = ubsSampleIds;
+    if (ubsAbtestConfig != null) {
       data['ubs_abtest_config'] =
-          this.ubsAbtestConfig?.map((v) => v.toJson()).toList();
+          ubsAbtestConfig?.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -138,35 +138,34 @@ class ExactMatch extends UserMatch {
     // bazhuGrade = json['bazhu_grade'];
     // displayAuthType = json['display_auth_type'];
     // workCreatorInfo = json['work_creator_info'];
-    alaInfo = json['ala_info'] != null
-        ? new AlaInfo.fromJson(json['ala_info'])
-        : null;
+    alaInfo =
+        json['ala_info'] != null ? AlaInfo.fromJson(json['ala_info']) : null;
     isExact = json['is_exact'];
     hasConcerned = json['has_concerned'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['intro'] = this.intro;
-    data['user_nickname'] = this.userNickname;
-    data['name'] = this.name;
-    data['show_nickname'] = this.showNickname;
-    data['portrait'] = this.portrait;
-    data['encry_uid'] = this.encryUid;
-    data['fans_num'] = this.fansNum;
-    data['is_bjh'] = this.isBjh;
-    data['bjh_v_intro'] = this.bjhVIntro;
-    data['is_god'] = this.isGod;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['intro'] = intro;
+    data['user_nickname'] = userNickname;
+    data['name'] = name;
+    data['show_nickname'] = showNickname;
+    data['portrait'] = portrait;
+    data['encry_uid'] = encryUid;
+    data['fans_num'] = fansNum;
+    data['is_bjh'] = isBjh;
+    data['bjh_v_intro'] = bjhVIntro;
+    data['is_god'] = isGod;
     // data['business_account_info'] = this.businessAccountInfo;
     // data['bazhu_grade'] = this.bazhuGrade;
     // data['display_auth_type'] = this.displayAuthType;
     // data['work_creator_info'] = this.workCreatorInfo;
-    if (this.alaInfo != null) {
-      data['ala_info'] = this.alaInfo?.toJson();
+    if (alaInfo != null) {
+      data['ala_info'] = alaInfo?.toJson();
     }
-    data['is_exact'] = this.isExact;
-    data['has_concerned'] = this.hasConcerned;
+    data['is_exact'] = isExact;
+    data['has_concerned'] = hasConcerned;
     return data;
   }
 }
@@ -233,7 +232,31 @@ class FuzzyMatch extends UserMatch {
     showNickname = json['show_nickname'];
     portrait = json['portrait'];
     encryUid = json['encry_uid'];
-    fansNum = json['fans_num'];
+    if (json['fans_num'] is num) {
+      fansNum = (json['fans_num'] as num).toInt();
+    } else if (json['fans_num'] is String) {
+      fansNum = int.tryParse(json['fans_num']);
+      if (fansNum == null) {
+        var mul = 1;
+        var numstr = "";
+        var m = (json['fans_num'] as String).split('');
+        for (var e in m) {
+          if (e == "." || int.tryParse(e) != null) {
+            numstr += e;
+          } else {
+            if (e.toLowerCase() == "k") {
+              mul *= 1000;
+            } else if (e.toLowerCase() == "w") {
+              mul *= 10000;
+            } else if (e.toLowerCase() == "m") {
+              mul *= 1000000;
+            }
+          }
+        }
+        fansNum = (num.parse(numstr) * mul).toInt();
+      }
+    }
+
     isBjh = json['is_bjh'];
     bjhVIntro = json['bjh_v_intro'];
     isGod = json['is_god'];
@@ -241,33 +264,32 @@ class FuzzyMatch extends UserMatch {
     // bazhuGrade = json['bazhu_grade'];
     // displayAuthType = json['display_auth_type'];
     // workCreatorInfo = json['work_creator_info'];
-    alaInfo = json['ala_info'] != null
-        ? new AlaInfo.fromJson(json['ala_info'])
-        : null;
+    alaInfo =
+        json['ala_info'] != null ? AlaInfo.fromJson(json['ala_info']) : null;
     hasConcerned = json['has_concerned'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['intro'] = this.intro;
-    data['user_nickname'] = this.userNickname;
-    data['name'] = this.name;
-    data['show_nickname'] = this.showNickname;
-    data['portrait'] = this.portrait;
-    data['encry_uid'] = this.encryUid;
-    data['fans_num'] = this.fansNum;
-    data['is_bjh'] = this.isBjh;
-    data['bjh_v_intro'] = this.bjhVIntro;
-    data['is_god'] = this.isGod;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['intro'] = intro;
+    data['user_nickname'] = userNickname;
+    data['name'] = name;
+    data['show_nickname'] = showNickname;
+    data['portrait'] = portrait;
+    data['encry_uid'] = encryUid;
+    data['fans_num'] = fansNum;
+    data['is_bjh'] = isBjh;
+    data['bjh_v_intro'] = bjhVIntro;
+    data['is_god'] = isGod;
     // data['business_account_info'] = this.businessAccountInfo;
     // data['bazhu_grade'] = this.bazhuGrade;
     // data['display_auth_type'] = this.displayAuthType;
     // data['work_creator_info'] = this.workCreatorInfo;
-    if (this.alaInfo != null) {
-      data['ala_info'] = this.alaInfo?.toJson();
+    if (alaInfo != null) {
+      data['ala_info'] = alaInfo?.toJson();
     }
-    data['has_concerned'] = this.hasConcerned;
+    data['has_concerned'] = hasConcerned;
     return data;
   }
 }
@@ -383,33 +405,32 @@ class UserMatch {
     // bazhuGrade = json['bazhu_grade'];
     // displayAuthType = json['display_auth_type'];
     // workCreatorInfo = json['work_creator_info'];
-    alaInfo = json['ala_info'] != null
-        ? new AlaInfo.fromJson(json['ala_info'])
-        : null;
+    alaInfo =
+        json['ala_info'] != null ? AlaInfo.fromJson(json['ala_info']) : null;
     hasConcerned = json['has_concerned'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['intro'] = this.intro;
-    data['user_nickname'] = this.userNickname;
-    data['name'] = this.name;
-    data['show_nickname'] = this.showNickname;
-    data['portrait'] = this.portrait;
-    data['encry_uid'] = this.encryUid;
-    data['fans_num'] = this.fansNum;
-    data['is_bjh'] = this.isBjh;
-    data['bjh_v_intro'] = this.bjhVIntro;
-    data['is_god'] = this.isGod;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['intro'] = intro;
+    data['user_nickname'] = userNickname;
+    data['name'] = name;
+    data['show_nickname'] = showNickname;
+    data['portrait'] = portrait;
+    data['encry_uid'] = encryUid;
+    data['fans_num'] = fansNum;
+    data['is_bjh'] = isBjh;
+    data['bjh_v_intro'] = bjhVIntro;
+    data['is_god'] = isGod;
     // data['business_account_info'] = this.businessAccountInfo;
     // data['bazhu_grade'] = this.bazhuGrade;
     // data['display_auth_type'] = this.displayAuthType;
     // data['work_creator_info'] = this.workCreatorInfo;
-    if (this.alaInfo != null) {
-      data['ala_info'] = this.alaInfo?.toJson();
+    if (alaInfo != null) {
+      data['ala_info'] = alaInfo?.toJson();
     }
-    data['has_concerned'] = this.hasConcerned;
+    data['has_concerned'] = hasConcerned;
     return data;
   }
 }

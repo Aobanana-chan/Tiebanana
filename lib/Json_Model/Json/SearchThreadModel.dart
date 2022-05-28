@@ -11,14 +11,14 @@ class SearchThreadModel {
     no = json['no'];
     threadList = json['thread_list'];
     data = json['data'] != null
-        ? new SearchThreadModelData.fromJson(json['data'])
+        ? SearchThreadModelData.fromJson(json['data'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
-    data['thread_list'] = this.threadList;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
+    data['thread_list'] = threadList;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
@@ -36,18 +36,18 @@ class SearchThreadModelData {
   SearchThreadModelData.fromJson(Map<String, dynamic> json) {
     no = json['no'];
     data = json['data'] != null
-        ? new SearchThreadModelMainData.fromJson(json['data'])
+        ? SearchThreadModelMainData.fromJson(json['data'])
         : null;
     error = json['error'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
-    data['error'] = this.error;
+    data['error'] = error;
     return data;
   }
 }
@@ -81,14 +81,14 @@ class SearchThreadModelMainData {
   SearchThreadModelMainData.fromJson(Map<String, dynamic> json) {
     illegal = json['illegal'];
     page = json['page'] != null
-        ? new SearchForumModelPage.fromJson(json['page'])
+        ? SearchForumModelPage.fromJson(json['page'])
         : null;
     // forum = json['forum'] != null ? new Forum.fromJson(json['forum']) : null;
     searchWhat = json['search_what'];
     if (json['post'] != null) {
       post = [];
       json['post'].forEach((v) {
-        post?.add(new SearchThreadPost.fromJson(v));
+        post?.add(SearchThreadPost.fromJson(v));
       });
     }
     regNum = (json['reg_num'] as num).toInt();
@@ -100,24 +100,24 @@ class SearchThreadModelMainData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['illegal'] = this.illegal;
-    if (this.page != null) {
-      data['page'] = this.page?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['illegal'] = illegal;
+    if (page != null) {
+      data['page'] = page?.toJson();
     }
     // if (this.forum != null) {
     //   data['forum'] = this.forum?.toJson();
     // }
-    data['search_what'] = this.searchWhat;
-    if (this.post != null) {
-      data['post'] = this.post?.map((v) => v.toJson()).toList();
+    data['search_what'] = searchWhat;
+    if (post != null) {
+      data['post'] = post?.map((v) => v.toJson()).toList();
     }
-    data['reg_num'] = this.regNum;
-    data['search_key'] = this.searchKey;
-    data['search_turn'] = this.searchTurn;
-    data['tbs'] = this.tbs;
-    data['total_num'] = this.totalNum;
-    data['kw'] = this.kw;
+    data['reg_num'] = regNum;
+    data['search_key'] = searchKey;
+    data['search_turn'] = searchTurn;
+    data['tbs'] = tbs;
+    data['total_num'] = totalNum;
+    data['kw'] = kw;
     return data;
   }
 }
@@ -161,8 +161,7 @@ class SearchThreadPost {
     url = json['url'];
     forum = json['forum'];
     isReplay = json['is_replay'];
-    author =
-        json['author'] != null ? new Author.fromJson(json['author']) : null;
+    author = json['author'] != null ? Author.fromJson(json['author']) : null;
     replay = (json['replay'] as num).toInt();
     // if (json['video'] != null) {
     //   video =[];
@@ -180,26 +179,26 @@ class SearchThreadPost {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tid'] = this.tid;
-    data['pid'] = this.pid;
-    data['title'] = this.title;
-    data['brief'] = this.brief;
-    data['time'] = this.time;
-    data['url'] = this.url;
-    data['forum'] = this.forum;
-    data['is_replay'] = this.isReplay;
-    if (this.author != null) {
-      data['author'] = this.author?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tid'] = tid;
+    data['pid'] = pid;
+    data['title'] = title;
+    data['brief'] = brief;
+    data['time'] = time;
+    data['url'] = url;
+    data['forum'] = forum;
+    data['is_replay'] = isReplay;
+    if (author != null) {
+      data['author'] = author?.toJson();
     }
-    data['replay'] = this.replay;
+    data['replay'] = replay;
     // if (this.video != null) {
     //   data['video'] = this.video.map((v) => v.toJson()).toList();
     // }
     // if (this.audio != null) {
     //   data['audio'] = this.audio.map((v) => v.toJson()).toList();
     // }
-    data['img'] = this.img;
+    data['img'] = img;
     return data;
   }
 }
@@ -220,14 +219,14 @@ class SearchPostModel {
     no = json['no'];
     error = json['error'];
     data = json['data'] != null
-        ? new SearchPostModelData.fromJson(json['data'])
+        ? SearchPostModelData.fromJson(json['data'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
-    data['error'] = this.error;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
+    data['error'] = error;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
@@ -263,12 +262,12 @@ class SearchPostModelData {
     if (json['post_list'] != null) {
       postList = [];
       json['post_list'].forEach((v) {
-        postList?.add(new SearchPostModelPostList.fromJson(v));
+        postList?.add(SearchPostModelPostList.fromJson(v));
       });
     }
     // cuid = json['cuid'];
     sampleSwitch = json['sample_switch'] != null
-        ? new SampleSwitch.fromJson(json['sample_switch'])
+        ? SampleSwitch.fromJson(json['sample_switch'])
         : null;
     tagId = json['tag_id'];
     logId = (json['log_id'] as num).toInt();
@@ -276,28 +275,28 @@ class SearchPostModelData {
     if (json['ubs_abtest_config'] != null) {
       ubsAbtestConfig = [];
       json['ubs_abtest_config'].forEach((v) {
-        ubsAbtestConfig?.add(new SearchPostModelUbsAbtestConfig.fromJson(v));
+        ubsAbtestConfig?.add(SearchPostModelUbsAbtestConfig.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['has_more'] = this.hasMore;
-    data['current_page'] = this.currentPage;
-    if (this.postList != null) {
-      data['post_list'] = this.postList?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['has_more'] = hasMore;
+    data['current_page'] = currentPage;
+    if (postList != null) {
+      data['post_list'] = postList?.map((v) => v.toJson()).toList();
     }
     // data['cuid'] = this.cuid;
-    if (this.sampleSwitch != null) {
-      data['sample_switch'] = this.sampleSwitch?.toJson();
+    if (sampleSwitch != null) {
+      data['sample_switch'] = sampleSwitch?.toJson();
     }
-    data['tag_id'] = this.tagId;
-    data['log_id'] = this.logId;
-    data['ubs_sample_ids'] = this.ubsSampleIds;
-    if (this.ubsAbtestConfig != null) {
+    data['tag_id'] = tagId;
+    data['log_id'] = logId;
+    data['ubs_sample_ids'] = ubsSampleIds;
+    if (ubsAbtestConfig != null) {
       data['ubs_abtest_config'] =
-          this.ubsAbtestConfig?.map((v) => v.toJson()).toList();
+          ubsAbtestConfig?.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -366,7 +365,7 @@ class SearchPostModelPostList {
     content = json['content'];
     time = json['time'];
     user = json['user'] != null
-        ? new SearchPostModelUser.fromJson(json['user'])
+        ? SearchPostModelUser.fromJson(json['user'])
         : null;
     if (json['post_num'] is String) {
       postNum = json['post_num'];
@@ -377,7 +376,7 @@ class SearchPostModelPostList {
     if (json['media'] != null) {
       media = [];
       json['media'].forEach((v) {
-        media?.add(new SearchPostModelMedia.fromJson(v));
+        media?.add(SearchPostModelMedia.fromJson(v));
       });
     }
     threadTypes = (json['thread_types'] as num).toInt();
@@ -397,45 +396,44 @@ class SearchPostModelPostList {
     type = (json['type'] as num).toInt();
     threadType = (json['thread_type'] as num).toInt();
     forumInfo = json['forum_info'] != null
-        ? new SearchPostModelForumInfo.fromJson(json['forum_info'])
+        ? SearchPostModelForumInfo.fromJson(json['forum_info'])
         : null;
-    mainPost = json['main_post'] != null
-        ? new MainPost.fromJson(json['main_post'])
-        : null;
+    mainPost =
+        json['main_post'] != null ? MainPost.fromJson(json['main_post']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tid'] = this.tid;
-    data['pid'] = this.pid;
-    data['cid'] = this.cid;
-    data['is_copytwzhibo'] = this.isCopytwzhibo;
-    data['title'] = this.title;
-    data['content'] = this.content;
-    data['time'] = this.time;
-    if (this.user != null) {
-      data['user'] = this.user?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tid'] = tid;
+    data['pid'] = pid;
+    data['cid'] = cid;
+    data['is_copytwzhibo'] = isCopytwzhibo;
+    data['title'] = title;
+    data['content'] = content;
+    data['time'] = time;
+    if (user != null) {
+      data['user'] = user?.toJson();
     }
-    data['post_num'] = this.postNum;
-    if (this.media != null) {
-      data['media'] = this.media?.map((v) => v.toJson()).toList();
+    data['post_num'] = postNum;
+    if (media != null) {
+      data['media'] = media?.map((v) => v.toJson()).toList();
     }
-    data['thread_types'] = this.threadTypes;
-    data['like_num'] = this.likeNum;
-    data['share_num'] = this.shareNum;
-    data['duration'] = this.duration;
-    data['play_count'] = this.playCount;
-    data['basicWeight'] = this.basicWeight;
-    data['forum_id'] = this.forumId;
-    data['pb_url'] = this.pbUrl;
-    data['forum_name'] = this.forumName;
-    data['type'] = this.type;
-    data['thread_type'] = this.threadType;
-    if (this.forumInfo != null) {
-      data['forum_info'] = this.forumInfo?.toJson();
+    data['thread_types'] = threadTypes;
+    data['like_num'] = likeNum;
+    data['share_num'] = shareNum;
+    data['duration'] = duration;
+    data['play_count'] = playCount;
+    data['basicWeight'] = basicWeight;
+    data['forum_id'] = forumId;
+    data['pb_url'] = pbUrl;
+    data['forum_name'] = forumName;
+    data['type'] = type;
+    data['thread_type'] = threadType;
+    if (forumInfo != null) {
+      data['forum_info'] = forumInfo?.toJson();
     }
-    if (this.mainPost != null) {
-      data['main_post'] = this.mainPost?.toJson();
+    if (mainPost != null) {
+      data['main_post'] = mainPost?.toJson();
     }
     return data;
   }
@@ -463,20 +461,20 @@ class SearchPostModelUser {
     portrait = json['portrait'];
     portraith = json['portraith'];
     vipInfo =
-        json['vipInfo'] != null ? new VipInfo.fromJson(json['vipInfo']) : null;
+        json['vipInfo'] != null ? VipInfo.fromJson(json['vipInfo']) : null;
     showNickname = json['show_nickname'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['user_name'] = this.userName;
-    data['user_id'] = this.userId;
-    data['portrait'] = this.portrait;
-    data['portraith'] = this.portraith;
-    if (this.vipInfo != null) {
-      data['vipInfo'] = this.vipInfo?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['user_name'] = userName;
+    data['user_id'] = userId;
+    data['portrait'] = portrait;
+    data['portraith'] = portraith;
+    if (vipInfo != null) {
+      data['vipInfo'] = vipInfo?.toJson();
     }
-    data['show_nickname'] = this.showNickname;
+    data['show_nickname'] = showNickname;
     return data;
   }
 }
@@ -530,16 +528,16 @@ class VipInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['a_score'] = this.aScore;
-    data['e_time'] = this.eTime;
-    data['ext_score'] = this.extScore;
-    data['icon_url'] = this.iconUrl;
-    data['n_score'] = this.nScore;
-    data['s_time'] = this.sTime;
-    data['v_level'] = this.vLevel;
-    data['v_status'] = this.vStatus;
-    data['y_score'] = this.yScore;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['a_score'] = aScore;
+    data['e_time'] = eTime;
+    data['ext_score'] = extScore;
+    data['icon_url'] = iconUrl;
+    data['n_score'] = nScore;
+    data['s_time'] = sTime;
+    data['v_level'] = vLevel;
+    data['v_status'] = vStatus;
+    data['y_score'] = yScore;
     return data;
   }
 }
@@ -581,14 +579,14 @@ class SearchPostModelMedia {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['type'] = this.type;
-    data['size'] = this.size;
-    data['width'] = this.width;
-    data['height'] = this.height;
-    data['water_pic'] = this.waterPic;
-    data['small_pic'] = this.smallPic;
-    data['big_pic'] = this.bigPic;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['type'] = type;
+    data['size'] = size;
+    data['width'] = width;
+    data['height'] = height;
+    data['water_pic'] = waterPic;
+    data['small_pic'] = smallPic;
+    data['big_pic'] = bigPic;
     return data;
   }
 }
@@ -619,11 +617,11 @@ class SearchPostModelForumInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['forum_name'] = this.forumName;
-    data['avatar'] = this.avatar;
-    data['post_num'] = this.postNum;
-    data['concern_num'] = this.concernNum;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['forum_name'] = forumName;
+    data['avatar'] = avatar;
+    data['post_num'] = postNum;
+    data['concern_num'] = concernNum;
     return data;
   }
 }
@@ -640,9 +638,9 @@ class MainPost {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['content'] = this.content;
-    data['title'] = this.title;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['content'] = content;
+    data['title'] = title;
     return data;
   }
 }
@@ -657,8 +655,8 @@ class SampleSwitch {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['card_style_optimize'] = this.cardStyleOptimize;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['card_style_optimize'] = cardStyleOptimize;
     return data;
   }
 }
@@ -673,8 +671,8 @@ class SearchPostModelUbsAbtestConfig {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['sid'] = this.sid;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['sid'] = sid;
     return data;
   }
 }

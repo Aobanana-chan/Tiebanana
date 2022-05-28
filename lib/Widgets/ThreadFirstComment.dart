@@ -133,9 +133,9 @@ class ThreadFirstComment extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(5),
             child: Wrap(
-              children: TiebaParser.parserContent(
+              children: TiebaParser.parseContent(
                   postMain.content, allImgs, allOrgImgs,
-                  videoInfo: videoInfo),
+                  videoInfo: videoInfo, selectable: true),
             ),
           ),
         ],

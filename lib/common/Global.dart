@@ -18,7 +18,7 @@ const _themes = <MaterialColor>[
 class Global {
   static TiebaAPI tiebaAPI = TiebaAPI();
   //判断是否是Release版
-  static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
+  // static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
   // 可选的主题列表
   static List<MaterialColor> get themes => _themes;
@@ -30,13 +30,13 @@ class Global {
   //Global类初始化
   static Future init() async {
     profile = await SharedPreferences.getInstance();
-    var _settingload = profile.getString("APPSetting");
+    var settingload = profile.getString("APPSetting");
     //读取APP设置
-    if (_settingload == null) {
+    if (settingload == null) {
       //没有存储过的设置就设置默认设置
       setting = APPSetting.fromJson(defaultAPPSetting);
     } else {
-      setting = APPSetting.fromJson(json5Decode(_settingload));
+      setting = APPSetting.fromJson(json5Decode(settingload));
     }
 
     //通知栏消息插件初始化

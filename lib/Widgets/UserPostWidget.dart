@@ -18,8 +18,11 @@ class UserPostWidget extends StatelessWidget {
     var allImgs = <String>[], allOrgImgs = <String>[];
 
     for (Media i in info.media ?? []) {
-      allImgs.add(i.bigPic!);
-      allOrgImgs.add(i.originPic!);
+      //忽略视频
+      if (i.type != "5") {
+        allImgs.add(i.bigPic!);
+        allOrgImgs.add(i.originPic!);
+      }
     }
     return Container(
       decoration: BoxDecoration(
@@ -57,7 +60,7 @@ class UserPostWidget extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                            "${info.nameShow ?? info.userName ?? username}"),
+                            "${info.nameShow != "" ? (info.nameShow ?? info.userName ?? username) : info.userName ?? username}"),
                       ),
                     ]),
                     Row(
@@ -85,26 +88,31 @@ class UserPostWidget extends StatelessWidget {
               ],
             ),
             //标题
-            Container(
-              padding: const EdgeInsets.all(5),
-              child: Column(
-                children: [
-                  Text(
-                    info.title!,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
-                  )
-                ],
-              ),
-            ),
+            Visibility(
+                visible: info.isThread == "1",
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  child: Column(
+                    children: [
+                      Text(
+                        info.title!,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      )
+                    ],
+                  ),
+                )),
             //正文
             Container(
               padding: const EdgeInsets.all(5),
               child: Wrap(
                 // crossAxisAlignment: CrossAxisAlignment.start,
-                children: TiebaParser.parserContent(
-                    info.content, allImgs, allOrgImgs,
-                    mediaLimit: 1),
+                children: info.isThread == "1"
+                    ? TiebaParser.parseContent(
+                        info.content, allImgs, allOrgImgs,
+                        mediaLimit: 1, videoInfo: info.videoInfo)
+                    : TiebaParser.parseReplyContent(info.quota, info.content,
+                        info.title!, allImgs, allOrgImgs),
               ),
             ),
             //底部

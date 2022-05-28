@@ -162,7 +162,7 @@ class ThreadFloorComment extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(5),
                           child: Wrap(
-                            children: TiebaParser.parserContent(
+                            children: TiebaParser.parseContent(
                                 postMain.content, allImgs, allOrgImgs,
                                 selectable: true),
                           ),
@@ -758,10 +758,8 @@ class InnerFloorCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(5),
                           child: Wrap(
-                            children: TiebaParser.parserContent(
-                                postMain.content,
-                                _imgCollect(),
-                                _originImgCollect(),
+                            children: TiebaParser.parseContent(postMain.content,
+                                _imgCollect(), _originImgCollect(),
                                 selectable: true),
                           ),
                         ),

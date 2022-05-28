@@ -14,10 +14,10 @@ class MessagePage {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['current_page'] = this.currentPage;
-    data['has_more'] = this.hasMore;
-    data['has_prev'] = this.hasPrev;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['current_page'] = currentPage;
+    data['has_more'] = hasMore;
+    data['has_prev'] = hasPrev;
     return data;
   }
 }
@@ -60,17 +60,17 @@ class NewMessages {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['fans'] = this.fans;
-    data['evaluate'] = this.evaluate;
-    data['money'] = this.money;
-    data['replyme'] = this.replyme;
-    data['feature'] = this.feature;
-    data['guess'] = this.guess;
-    data['anti'] = this.anti;
-    data['atme'] = this.atme;
-    data['recycle'] = this.recycle;
-    data['storethread'] = this.storethread;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['fans'] = fans;
+    data['evaluate'] = evaluate;
+    data['money'] = money;
+    data['replyme'] = replyme;
+    data['feature'] = feature;
+    data['guess'] = guess;
+    data['anti'] = anti;
+    data['atme'] = atme;
+    data['recycle'] = recycle;
+    data['storethread'] = storethread;
     return data;
   }
 }
@@ -85,29 +85,28 @@ class ReplyMessage {
 
   ReplyMessage.fromJson(Map<String, dynamic> json) {
     errorCode = json['error_code'];
-    message = json['message'] != null
-        ? new NewMessages.fromJson(json['message'])
-        : null;
-    page = json['page'] != null ? new MessagePage.fromJson(json['page']) : null;
+    message =
+        json['message'] != null ? NewMessages.fromJson(json['message']) : null;
+    page = json['page'] != null ? MessagePage.fromJson(json['page']) : null;
     if (json['reply_list'] != null) {
       reply = [];
       json['reply_list'].forEach((v) {
-        reply?.add(new ReplyMe.fromJson(v));
+        reply?.add(ReplyMe.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['error_code'] = this.errorCode;
-    if (this.message != null) {
-      data['message'] = this.message?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['error_code'] = errorCode;
+    if (message != null) {
+      data['message'] = message?.toJson();
     }
-    if (this.page != null) {
-      data['page'] = this.page?.toJson();
+    if (page != null) {
+      data['page'] = page?.toJson();
     }
-    if (this.reply != null) {
-      data['reply_list'] = this.reply?.map((v) => v.toJson()).toList();
+    if (reply != null) {
+      data['reply_list'] = reply?.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -123,30 +122,29 @@ class AtMeMessage {
 
   AtMeMessage.fromJson(Map<String, dynamic> json) {
     errorCode = json['error_code'];
-    newMessages = json['message'] != null
-        ? new NewMessages.fromJson(json['message'])
-        : null;
+    newMessages =
+        json['message'] != null ? NewMessages.fromJson(json['message']) : null;
     messagePage =
-        json['page'] != null ? new MessagePage.fromJson(json['page']) : null;
+        json['page'] != null ? MessagePage.fromJson(json['page']) : null;
     if (json['at_list'] != null && json['at_list'] != "") {
       atMe = [];
       json['at_list'].forEach((v) {
-        atMe?.add(new AtMe.fromJson(v));
+        atMe?.add(AtMe.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['error_code'] = this.errorCode;
-    if (this.newMessages != null) {
-      data['message'] = this.newMessages?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['error_code'] = errorCode;
+    if (newMessages != null) {
+      data['message'] = newMessages?.toJson();
     }
-    if (this.messagePage != null) {
-      data['page'] = this.messagePage?.toJson();
+    if (messagePage != null) {
+      data['page'] = messagePage?.toJson();
     }
-    if (this.atMe != null) {
-      data['at_list'] = this.atMe?.map((v) => v.toJson()).toList();
+    if (atMe != null) {
+      data['at_list'] = atMe?.map((v) => v.toJson()).toList();
     }
     return data;
   }

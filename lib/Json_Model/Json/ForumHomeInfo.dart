@@ -223,9 +223,9 @@ class ForumHomeInfo {
       });
     }
     serverTime = json['server_time'];
-    time = (json['time'] as double).toInt();
+    time = (json['time'] as num).toInt();
     ctime = json['ctime'];
-    logid = (json['logid'] as double).toInt();
+    logid = (json['logid'] as num).toInt();
     errorCode = json['error_code'];
     for (var thread in threadList ?? []) {
       for (var user in userList ?? []) {

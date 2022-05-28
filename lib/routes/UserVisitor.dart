@@ -1,6 +1,8 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
+import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/Widgets/ThreadFloorCard.dart';
@@ -22,8 +24,6 @@ class UserVisitor extends StatefulWidget {
 class _UserVisitorState extends State<UserVisitor> {
   UserProfileModel? userinfo;
   Future<UserProfileModel>? futureUserInfo;
-  final GlobalKey<NestedScrollViewState> _globalKey =
-      GlobalKey<NestedScrollViewState>();
   void init() async {
     userinfo = await Global.tiebaAPI.getUserInfo(uid: widget.uid);
     setState(() {});
@@ -46,15 +46,19 @@ class _UserVisitorState extends State<UserVisitor> {
           foregroundColor: Colors.black,
           elevation: 0.5,
         ),
-        body: NestedScrollView(
-          key: _globalKey,
-          headerSliverBuilder: (context, innerBoxIsScrolled) => <Widget>[
-            SliverToBoxAdapter(
-              child: _UserInfomation(userinfo: userinfo),
-            )
-          ],
+        body: ExtendedNestedScrollView(
+          onlyOneScrollInBody: true,
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return <Widget>[
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: _UserInfomation(userinfo: userinfo),
+                ),
+              )
+            ];
+          },
           body: Container(
-            margin: const EdgeInsets.only(top: 10),
             color: Colors.white,
             child: _BottomView(
               uid: widget.uid,
@@ -253,9 +257,12 @@ class _BottomViewState extends State<_BottomView>
         ),
         Expanded(
             child: TabBarView(controller: _controller, children: [
-          _ThreadView(uid: widget.uid),
-          _Postview(),
-          _ForumView()
+          KeepAliveWrapper(child: _ThreadView(uid: widget.uid)),
+          KeepAliveWrapper(
+              child: _Postview(
+            uid: widget.uid,
+          )),
+          KeepAliveWrapper(child: _ForumView())
         ]))
       ]),
     );
@@ -275,18 +282,22 @@ class __ThreadViewState extends State<_ThreadView> {
   UserPostModel? info;
   List<UserPostPostList> posts = [];
   int pn = 1;
+  bool hasMore = true;
+  late ScrollController? _controller;
   late final String? username;
   void init() async {
-    info = await Global.tiebaAPI
-        .getUserPost(uid: widget.uid, isThread: true, pn: pn);
+    info = await Global.tiebaAPI.getUserPost(uid: widget.uid, pn: pn);
     posts.addAll(info?.postList ?? []);
     setState(() {});
   }
 
   void _loadPage(int pn) async {
     this.pn = pn;
-    info = await Global.tiebaAPI
-        .getUserPost(uid: widget.uid, isThread: true, pn: pn);
+    info = await Global.tiebaAPI.getUserPost(uid: widget.uid, pn: pn);
+    // ignore: prefer_is_empty
+    if (info?.postList?.length == 0) {
+      hasMore = false;
+    }
     posts.addAll(info?.postList ?? []);
     setState(() {});
   }
@@ -301,18 +312,59 @@ class __ThreadViewState extends State<_ThreadView> {
     var userinfo =
         context.findAncestorStateOfType<_UserVisitorState>()?.userinfo;
     username = "${userinfo?.user?.nameShow ?? userinfo?.user?.name}";
+    _controller = context
+        .findAncestorStateOfType<ExtendedNestedScrollViewState>()
+        ?.innerController;
+    _controller?.addListener(() {
+      if (_controller!.positions.last.pixels >
+          _controller!.positions.last.maxScrollExtent -
+              _controller!.positions.last.viewportDimension) {
+        if (hasMore) {
+          Throttle.seconds(1, _loadNextPage);
+        }
+      }
+    });
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ThreadView oldWidget) {
+    _controller = context
+        .findAncestorStateOfType<ExtendedNestedScrollViewState>()
+        ?.innerController;
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
     if (info?.hidePost == "1") {
-      return const Center(
-        child: Text("这位老铁已将贴子设为隐藏"),
+      return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Container(
+              constraints: constraints,
+              child: const Center(
+                child: Text.rich(
+                  TextSpan(children: [
+                    WidgetSpan(
+                        child: Icon(
+                      Icons.lock,
+                      color: Colors.grey,
+                    )),
+                    TextSpan(text: "这位老铁已将贴设为隐藏")
+                  ]),
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          );
+        },
       );
     }
     return ListView.builder(
       itemCount: posts.length,
+      physics: const BouncingScrollPhysics(),
       itemBuilder: (BuildContext context, int index) {
         // return Container();
         return UserPostWidget(
@@ -326,22 +378,116 @@ class __ThreadViewState extends State<_ThreadView> {
 
 ///回复视图
 class _Postview extends StatefulWidget {
-  _Postview({Key? key}) : super(key: key);
+  final String uid;
+  const _Postview({Key? key, required this.uid}) : super(key: key);
 
   @override
   State<_Postview> createState() => __PostviewState();
 }
 
 class __PostviewState extends State<_Postview> {
+  UserPostModel? info;
+  List<UserPostPostList> posts = [];
+  int pn = 1;
+  bool hasMore = true;
+  late ScrollController? _controller;
+  late final String? username;
+  void init() async {
+    info = await Global.tiebaAPI.getUserPostLowVersion(uid: widget.uid, pn: pn);
+    posts.addAll(info?.postList ?? []);
+    setState(() {});
+  }
+
+  void _loadPage(int pn) async {
+    this.pn = pn;
+    info = await Global.tiebaAPI.getUserPostLowVersion(uid: widget.uid, pn: pn);
+    // ignore: prefer_is_empty
+    if (info?.postList?.length == 0) {
+      hasMore = false;
+    }
+    posts.addAll(info?.postList ?? []);
+    setState(() {});
+  }
+
+  void _loadNextPage() {
+    _loadPage(++pn);
+  }
+
+  @override
+  void initState() {
+    init();
+    var userinfo =
+        context.findAncestorStateOfType<_UserVisitorState>()?.userinfo;
+    username = "${userinfo?.user?.nameShow ?? userinfo?.user?.name}";
+    _controller = context
+        .findAncestorStateOfType<ExtendedNestedScrollViewState>()
+        ?.innerController;
+
+    _controller?.addListener(() {
+      if (_controller!.positions.last.pixels >
+          _controller!.positions.last.maxScrollExtent -
+              _controller!.positions.last.viewportDimension) {
+        if (hasMore) {
+          Throttle.seconds(1, _loadNextPage);
+        }
+      }
+    });
+
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _Postview oldWidget) {
+    _controller = context
+        .findAncestorStateOfType<ExtendedNestedScrollViewState>()
+        ?.innerController;
+    super.didUpdateWidget(oldWidget);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container();
+    if (info?.hidePost == "1") {
+      return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Container(
+              constraints: constraints,
+              child: const Center(
+                child: Text.rich(
+                  TextSpan(children: [
+                    WidgetSpan(
+                        child: Icon(
+                      Icons.lock,
+                      color: Colors.grey,
+                    )),
+                    TextSpan(text: "这位老铁已将回复设为隐藏")
+                  ]),
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+    return ListView.builder(
+      itemCount: posts.length,
+      physics: const BouncingScrollPhysics(),
+      itemBuilder: (BuildContext context, int index) {
+        // return Container();
+        return UserPostWidget(
+          info: posts[index],
+          username: username,
+        );
+      },
+    );
   }
 }
 
 ///关注吧视图
 class _ForumView extends StatefulWidget {
-  _ForumView({Key? key}) : super(key: key);
+  const _ForumView({Key? key}) : super(key: key);
 
   @override
   State<_ForumView> createState() => __ForumViewState();

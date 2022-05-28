@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:extended_image/extended_image.dart';
 import 'package:flukit/flukit.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
@@ -31,7 +34,7 @@ class PassMachineWidget extends StatefulWidget {
 }
 
 class _PassMachineWidgetState extends State<PassMachineWidget> {
-  late var img;
+  late Uint8List img;
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(future: () async {
@@ -58,7 +61,7 @@ class _PassMachineWidgetState extends State<PassMachineWidget> {
 
 class _Rotateableimg extends StatelessWidget {
   final double rotateDegree;
-  final img;
+  final Uint8List img;
   const _Rotateableimg(
       {Key? key, required this.rotateDegree, required this.img})
       : super(key: key);
@@ -136,7 +139,9 @@ class __MaincontainerState extends State<_Maincontainer> {
                     });
                   },
                   onChangeEnd: (value) async {
-                    print(value);
+                    if (kDebugMode) {
+                      print(value);
+                    }
                     Global.tiebaAPI.passMachine.setAcc(value);
                     if (await Global.tiebaAPI.passMachine.verify() == true) {
                       //验证成功就返回

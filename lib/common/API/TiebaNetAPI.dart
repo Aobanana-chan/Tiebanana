@@ -13,6 +13,7 @@ import 'package:dio/adapter.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
+import 'package:flutter/foundation.dart' as runmode;
 import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -88,7 +89,15 @@ class TiebaAPI {
   late String stoken;
 
   ///token值可能为空，不建议直接使用,建议使用_getToken获取token
-  String token = "";
+  String _token = "";
+
+  Future<String> get token async {
+    if (_token != "") {
+      return _token;
+    } else {
+      return await _getToken();
+    }
+  }
 
   String _traceID = "";
 
@@ -106,11 +115,11 @@ class TiebaAPI {
     //设置cookie保存目录
     Directory? cookiedir = await getApplicationDocumentsDirectory();
     cookieJar =
-        PersistCookieJar(storage: FileStorage(cookiedir.path + "/cookies/"));
+        PersistCookieJar(storage: FileStorage("${cookiedir.path}/cookies/"));
     dio.interceptors.add(CookieManager(cookieJar));
 
     //Debug模式下设置抓包调试
-    if (!Global.isRelease) {
+    if (runmode.kDebugMode) {
       (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
           (client) {
         client.findProxy = (uri) {
@@ -149,7 +158,7 @@ class TiebaAPI {
     if (isLogin) {
       //删除cookie和token
       await cookieJar.deleteAll();
-      token = "";
+      _token = "";
       isLogin = false;
     }
     var cookies =
@@ -159,7 +168,7 @@ class TiebaAPI {
       await dio.get(BAIDU_URL);
     }
     //获取token
-    var _token = await _getToken();
+    // var _token = await _getToken();
     //获取RSA加密公钥
     RSAKEY rsaKey = await _getRSAKey();
     var passwdEncrypted = Encrypter(RSA(
@@ -173,7 +182,7 @@ class TiebaAPI {
     var sigParams = {
       "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
       "charset": "UTF-8",
-      "token": _token,
+      "token": await token,
       "tpl": "mn",
       "subpro": "",
       "apiver": "v3",
@@ -279,7 +288,7 @@ class TiebaAPI {
     if (isLogin) {
       //删除cookie和token
       await cookieJar.deleteAll();
-      token = "";
+      _token = "";
       isLogin = false;
     }
     var cookies =
@@ -289,14 +298,14 @@ class TiebaAPI {
       await dio.get(BAIDU_URL);
     }
     //获取token
-    var _token = await _getToken();
+    // var _token = await _getToken();
     //提交登陆POST
     var gid = _guideRandom();
     var time = DateTime.now().millisecondsSinceEpoch;
     var sigParams = {
       "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
       "charset": "UTF-8",
-      "token": _token,
+      "token": await token,
       "tpl": "mn",
       "subpro": "",
       "apiver": "v3",
@@ -391,7 +400,7 @@ class TiebaAPI {
     if (isLogin) {
       //删除cookie和token
       await cookieJar.deleteAll();
-      token = "";
+      _token = "";
       isLogin = false;
     }
     var cookies =
@@ -600,7 +609,7 @@ class TiebaAPI {
     var gid = _guideRandom();
     //签名的参数
     var sigParams = {
-      "token": await _getToken(),
+      "token": await token,
       "tpl": "mn",
       "subpro": "",
       "apiver": "v3",
@@ -615,7 +624,7 @@ class TiebaAPI {
     };
 
     var args = {
-      "token": await _getToken(),
+      "token": await token,
       "tpl": "mn",
       "subpro": "",
       "apiver": "v3",
@@ -649,7 +658,7 @@ class TiebaAPI {
     var gid = _guideRandom();
     var time = DateTime.now().millisecondsSinceEpoch;
     var moonshadow =
-        md5.convert(utf8.encode(phoneNumber + "Moonshadow")).toString();
+        md5.convert(utf8.encode("${phoneNumber}Moonshadow")).toString();
     moonshadow = moonshadow
         .replaceFirst("o", "ow")
         .replaceFirst("d", "do")
@@ -732,9 +741,6 @@ class TiebaAPI {
 
   ///获取连接的token
   Future<String> _getToken() async {
-    if (token != "") {
-      return token;
-    }
     var time = DateTime.now().millisecondsSinceEpoch;
     var gid = _guideRandom();
     var shaOne = _getshaOne(time);
@@ -773,7 +779,7 @@ class TiebaAPI {
           'Referer': BAIDU_URL,
         }, responseType: ResponseType.plain));
     var resJson = JSON5.parse(res.data);
-    token = resJson['data']['token'];
+    _token = resJson['data']['token'];
     return resJson['data']['token'];
   }
 
@@ -1035,8 +1041,8 @@ class TiebaAPI {
         (DateTime.now().millisecondsSinceEpoch + (Random().nextInt(9) + 90))
             .toRadixString(16);
     headID = headID.substring(headID.length - 6, headID.length).toUpperCase();
-    _traceID = headID + "01";
-    return headID + "01"; //登陆结尾为01，注册结尾为02
+    _traceID = "${headID}01";
+    return "${headID}01"; //登陆结尾为01，注册结尾为02
   }
 
   String getTraceID() => _getTraceID();
@@ -1343,7 +1349,7 @@ class TiebaAPI {
       "_client_version": "9.9.8.32",
       "_phone_imei": "000000000000000",
       "back": "0",
-      "cuid": "baidutiebaapp" + const Uuid().v4(),
+      "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "floor_rn": "3",
@@ -1395,7 +1401,7 @@ class TiebaAPI {
       "_phone_imei": "000000000000000",
       "agree_type": agreeType,
       "c3_aid": "",
-      "cuid": "baidutiebaapp" + const Uuid().v4(),
+      "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "obj_type": objType,
@@ -1498,7 +1504,7 @@ class TiebaAPI {
       "can_no_forum": "0",
       "cmode": "1",
       "content": content,
-      "cuid": "baidutiebaapp" + const Uuid().v4(),
+      "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "entrance_type": "0",
@@ -1566,7 +1572,7 @@ class TiebaAPI {
       "can_no_forum": "0",
       "cmode": "1",
       "content": content,
-      "cuid": "baidutiebaapp" + const Uuid().v4(),
+      "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
       "cuid_gid": "",
       "entrance_type": "0",
@@ -1656,7 +1662,7 @@ class TiebaAPI {
       "c3_aid": "",
       "chunkNo": "1",
       "cmode": "1",
-      "cuid": "baidutiebaapp" + const Uuid().v4(),
+      "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
       "cuid_gid": "",
       // "event_day": "", //
@@ -1694,12 +1700,10 @@ class TiebaAPI {
     return SearchUserModel.fromJson(res.data);
   }
 
-  ///获取用户post
+  ///获取用户post（发帖）
+  ///获取用户回复请用低版本API
   Future<UserPostModel> getUserPost(
-      {required String uid,
-      bool isThread = false,
-      int pn = 1,
-      int rn = 20}) async {
+      {required String uid, int pn = 1, int rn = 20}) async {
     if (isLogin == false) {
       throw Exception("未登录");
     }
@@ -1709,9 +1713,45 @@ class TiebaAPI {
       "_client_type": "2",
       "_client_version": "12.15.1.0",
       "_phone_imei": "000000000000000",
-      "cuid": "baidutiebaapp" + const Uuid().v4(),
+      "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
-      "is_thread": isThread ? "1" : "0",
+      "is_thread": "1",
+      "need_content": "1",
+      "pn": pn,
+      "rn": rn,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "uid": uid,
+      "stoken": stoken,
+      "is_view_card": 1,
+      "q_type": 80
+    };
+    arg['sign'] = _signArgs(arg);
+    var res = await dio.post(WAP_USER_POST,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    var resJson = UserPostModel.fromJson(jsonDecode(res.data));
+    return resJson;
+  }
+
+  ///获取用户post（低版本）
+  ///高版本无法获取用户的回复，只能使用低版本API
+  Future<UserPostModel> getUserPostLowVersion(
+      {required String uid, int pn = 1, int rn = 20}) async {
+    if (isLogin == false) {
+      throw Exception("未登录");
+    }
+    var arg = {
+      "BDUSS": bduss,
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "7.2.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "baidutiebaapp${const Uuid().v4()}",
+      "cuid_galaxy2": "",
+      "is_thread": "0",
       "need_content": "1",
       "pn": pn,
       "rn": rn,

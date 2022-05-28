@@ -20,6 +20,7 @@ class MessageCard extends StatelessWidget {
     if (atME != null && atME!.quoteContent == "") {
       text = "回复我的主题: ${atME!.title!}";
     }
+    //TODO:回复跳转
     return ExtendedText(
       text,
       maxLines: 2,

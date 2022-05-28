@@ -6,6 +6,7 @@ import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchThreadCard.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 ///搜索页面
 class SearchPage extends StatefulWidget {
@@ -465,6 +466,8 @@ class _UserListItem extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         //TODO:进入用户界面
+        Navigator.pushNamed(context, PageRouter.user,
+            arguments: user.id!.toString());
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 2),

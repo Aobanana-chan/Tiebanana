@@ -229,9 +229,9 @@ class LikeButtonStateEx extends State<LikeButtonEx>
                       ? _scaleAnimation.value
                       : 1.0,
                   child: SizedBox(
-                    child: likeWidget,
                     height: widget.size,
                     width: widget.size,
+                    child: likeWidget,
                   ),
                 ),
               ),
@@ -326,12 +326,12 @@ class LikeButtonStateEx extends State<LikeButtonEx>
                     clipBehavior: Clip.hardEdge,
                     children: <Widget>[
                       Opacity(
-                        child: currentSameWidget,
                         opacity: _opacityAnimation.value,
+                        child: currentSameWidget,
                       ),
                       Opacity(
-                        child: preSameWidget,
                         opacity: 1.0 - _opacityAnimation.value,
+                        child: preSameWidget,
                       ),
                     ],
                   ),
@@ -382,8 +382,8 @@ class LikeButtonStateEx extends State<LikeButtonEx>
     }
 
     result = ClipRect(
-      child: result,
       clipper: LikeCountClip(),
+      child: result,
     );
 
     return result;

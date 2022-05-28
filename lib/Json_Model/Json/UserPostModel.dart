@@ -90,6 +90,7 @@ class UserPostPostList {
   List<Media>? media;
   String? agreeNum;
   Agree? agree;
+  VideoInfo? videoInfo;
 
   UserPostPostList(
       {this.forumId,
@@ -120,7 +121,8 @@ class UserPostPostList {
       this.vForumId,
       this.media,
       this.agreeNum,
-      this.agree});
+      this.agree,
+      this.videoInfo});
 
   UserPostPostList.fromJson(Map<String, dynamic> json) {
     forumId = json['forum_id'];
@@ -176,6 +178,9 @@ class UserPostPostList {
     if (json['agree'] != null) {
       agree = Agree.fromJson(json['agree']);
     }
+    if (json["video_info"] != null) {
+      videoInfo = VideoInfo.fromJson(json["video_info"]);
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -219,6 +224,7 @@ class UserPostPostList {
     if (agree != null) {
       data['agree'] = agree?.toJson();
     }
+    data['video_info'] = videoInfo?.toJson();
     return data;
   }
 }

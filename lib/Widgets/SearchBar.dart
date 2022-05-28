@@ -36,7 +36,7 @@ class _SearchBarState extends State<SearchBar> {
     if (!showBody) {
       return null;
     }
-    return AnimatedDropDown();
+    return const AnimatedDropDown();
   }
 
   void search(BuildContext context, String searchText) {
@@ -92,7 +92,9 @@ class _SearchBarState extends State<SearchBar> {
             onPressed: () async {
               Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
               await Global.tiebaAPI.signAll();
-              Provider.of<ForumState>(context, listen: false).refresh();
+              if (mounted) {
+                Provider.of<ForumState>(context, listen: false).refresh();
+              }
             },
             child: Stack(
               alignment: AlignmentDirectional.center,
@@ -182,7 +184,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
     var historyLen = history.length;
     getHistory();
     if (history.length != historyLen) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         realheight = scrollController.position.viewportDimension;
         setState(() {});
       });
@@ -265,7 +267,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
   @override
   Widget build(BuildContext context) {
     if (realheight == null) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         realheight = scrollController.position.maxScrollExtent;
         setState(() {});
       });

@@ -103,6 +103,7 @@ class _EmojiLoader extends StatelessWidget {
       this.color,
       this.colorBlendMode,
       this.centerSlice,
+      // ignore: unused_element
       this.onTap,
       this.excludeFromSemantics = false,
       this.alignment = Alignment.center,
@@ -114,7 +115,7 @@ class _EmojiLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var child;
+    Widget child;
     bool localAssetsExist = AssetList.emojiExists("$emoji.png");
     if (localAssetsExist) {
       child = ExtendedImage.asset(

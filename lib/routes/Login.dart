@@ -413,8 +413,10 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
             //是否成功登录
             if (await Global.tiebaAPI.checkLogin()) {
               Fluttertoast.showToast(msg: "登录成功");
-              Provider.of<User>(context, listen: false).login();
-              Provider.of<ForumState>(context, listen: false).refresh();
+              if (mounted) {
+                Provider.of<User>(context, listen: false).login();
+                Provider.of<ForumState>(context, listen: false).refresh();
+              }
             }
             // if (login.errcode == "0" || login.errcode == "20") {
             //   Fluttertoast.showToast(msg: "登录成功");

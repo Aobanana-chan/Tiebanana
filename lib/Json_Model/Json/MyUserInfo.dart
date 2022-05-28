@@ -11,13 +11,13 @@ class MyUserInfo {
   MyUserInfo.fromJson(Map<String, dynamic> json) {
     no = json['no'];
     error = json['error'];
-    data = json['data'] != null ? new MyUserData.fromJson(json['data']) : null;
+    data = json['data'] != null ? MyUserData.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
-    data['error'] = this.error;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
+    data['error'] = error;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
@@ -127,47 +127,47 @@ class MyUserData {
     if (json['ubs_abtest_config'] != null) {
       ubsAbtestConfig = [];
       json['ubs_abtest_config'].forEach((v) {
-        ubsAbtestConfig?.add(new UbsAbtestConfig.fromJson(v));
+        ubsAbtestConfig?.add(UbsAbtestConfig.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['name_show'] = this.nameShow;
-    data['name_link'] = this.nameLink;
-    data['is_login'] = this.isLogin;
-    data['no_un'] = this.noUn;
-    data['mobilephone'] = this.mobilephone;
-    data['email'] = this.email;
-    data['is_half_user'] = this.isHalfUser;
-    data['temp_name'] = this.tempName;
-    data['source_id'] = this.sourceId;
-    data['is_verify'] = this.isVerify;
-    data['portrait'] = this.portrait;
-    data['uid'] = this.uid;
-    data['sid'] = this.sid;
-    data['like_forum_num'] = this.likeForumNum;
-    data['post_num'] = this.postNum;
-    data['concern_num'] = this.concernNum;
-    data['fans_num'] = this.fansNum;
-    data['intro'] = this.intro;
-    data['portrait_url'] = this.portraitUrl;
-    data['user_sex'] = this.userSex;
-    data['is_business_account'] = this.isBusinessAccount;
-    if (this.mParrProps != null) {
-      data['mParr_props'] = this.mParrProps?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['name_show'] = nameShow;
+    data['name_link'] = nameLink;
+    data['is_login'] = isLogin;
+    data['no_un'] = noUn;
+    data['mobilephone'] = mobilephone;
+    data['email'] = email;
+    data['is_half_user'] = isHalfUser;
+    data['temp_name'] = tempName;
+    data['source_id'] = sourceId;
+    data['is_verify'] = isVerify;
+    data['portrait'] = portrait;
+    data['uid'] = uid;
+    data['sid'] = sid;
+    data['like_forum_num'] = likeForumNum;
+    data['post_num'] = postNum;
+    data['concern_num'] = concernNum;
+    data['fans_num'] = fansNum;
+    data['intro'] = intro;
+    data['portrait_url'] = portraitUrl;
+    data['user_sex'] = userSex;
+    data['is_business_account'] = isBusinessAccount;
+    if (mParrProps != null) {
+      data['mParr_props'] = mParrProps?.map((v) => v.toJson()).toList();
     }
-    data['tbs'] = this.tbs;
-    data['itb_tbs'] = this.itbTbs;
-    data['indextk'] = this.indextk;
-    data['profile_index'] = this.profileIndex;
-    data['ubs_sample_ids'] = this.ubsSampleIds;
-    if (this.ubsAbtestConfig != null) {
+    data['tbs'] = tbs;
+    data['itb_tbs'] = itbTbs;
+    data['indextk'] = indextk;
+    data['profile_index'] = profileIndex;
+    data['ubs_sample_ids'] = ubsSampleIds;
+    if (ubsAbtestConfig != null) {
       data['ubs_abtest_config'] =
-          this.ubsAbtestConfig?.map((v) => v.toJson()).toList();
+          ubsAbtestConfig?.map((v) => v.toJson()).toList();
     }
     return data;
   }

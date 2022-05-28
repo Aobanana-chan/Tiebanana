@@ -331,14 +331,14 @@ class _ForumHomePageState extends State<ForumHomePage>
                                       ScrollDirection direction) {
                                     if (maxExtent == 0) {
                                       //使用回调安全更新
-                                      SchedulerBinding.instance!
+                                      SchedulerBinding.instance
                                           .addPostFrameCallback((timeStamp) {
                                         Provider.of<APPBarTitle>(context,
                                                 listen: false)
-                                            .title = widget.kw + "吧";
+                                            .title = "${widget.kw}吧";
                                       });
                                     } else {
-                                      SchedulerBinding.instance!
+                                      SchedulerBinding.instance
                                           .addPostFrameCallback((timeStamp) {
                                         Provider.of<APPBarTitle>(context,
                                                 listen: false)

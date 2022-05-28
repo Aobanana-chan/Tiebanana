@@ -14,8 +14,9 @@ class PullToRefreshHeader extends StatelessWidget {
   const PullToRefreshHeader(
     this.info,
     this.lastRefreshTime, {
+    Key? key,
     this.color,
-  });
+  }) : super(key: key);
 
   final PullToRefreshScrollNotificationInfo? info;
   final DateTime? lastRefreshTime;
@@ -23,21 +24,21 @@ class PullToRefreshHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final PullToRefreshScrollNotificationInfo? _info = info;
-    if (_info == null) {
+    final PullToRefreshScrollNotificationInfo? infoVal = info;
+    if (infoVal == null) {
       return Container();
     }
     String text = '';
-    if (_info.mode == RefreshIndicatorMode.armed) {
+    if (infoVal.mode == RefreshIndicatorMode.armed) {
       text = 'Release to refresh';
-    } else if (_info.mode == RefreshIndicatorMode.refresh ||
-        _info.mode == RefreshIndicatorMode.snap) {
+    } else if (infoVal.mode == RefreshIndicatorMode.refresh ||
+        infoVal.mode == RefreshIndicatorMode.snap) {
       text = 'Loading...';
-    } else if (_info.mode == RefreshIndicatorMode.done) {
+    } else if (infoVal.mode == RefreshIndicatorMode.done) {
       text = 'Refresh completed.';
-    } else if (_info.mode == RefreshIndicatorMode.drag) {
+    } else if (infoVal.mode == RefreshIndicatorMode.drag) {
       text = 'Pull to refresh';
-    } else if (_info.mode == RefreshIndicatorMode.canceled) {
+    } else if (infoVal.mode == RefreshIndicatorMode.canceled) {
       text = 'Cancel refresh';
     }
 
@@ -67,16 +68,15 @@ class PullToRefreshHeader extends StatelessWidget {
                 Expanded(
                   child: Container(
                     alignment: Alignment.centerRight,
-                    child: RefreshImage(top),
                     margin: const EdgeInsets.only(right: 12.0),
+                    child: RefreshImage(top),
                   ),
                 ),
                 Column(
                   children: <Widget>[
                     Text(text, style: ts),
                     Text(
-                      'Last updated:' +
-                          DateFormat('yyyy-MM-dd hh:mm').format(time),
+                      'Last updated:${DateFormat('yyyy-MM-dd hh:mm').format(time)}',
                       style: ts.copyWith(fontSize: 14),
                     )
                   ],
@@ -92,7 +92,7 @@ class PullToRefreshHeader extends StatelessWidget {
 }
 
 class RefreshImage extends StatelessWidget {
-  const RefreshImage(this.top);
+  const RefreshImage(this.top, {Key? key}) : super(key: key);
 
   final double top;
 

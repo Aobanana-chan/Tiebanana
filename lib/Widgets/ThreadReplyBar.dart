@@ -342,16 +342,18 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                         if (msg.errcode == "0") {
                           message = "发送成功";
                           Fluttertoast.showToast(msg: message);
-                          Navigator.pop(context);
+                          if (mounted) {
+                            Navigator.pop(context);
+                          }
                         } else {
                           message = "${msg.msg}";
                           Fluttertoast.showToast(msg: message);
                         }
                       },
+                      borderRadius: BorderRadius.circular(64),
                       child: const Text(
                         "发表",
                       ),
-                      borderRadius: BorderRadius.circular(64),
                     ),
                   )
                 ],
@@ -488,14 +490,6 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
               ],
             ),
             Consumer<ImageUploadProviderModel>(
-                child: Container(
-                  constraints: BoxConstraints(
-                      maxHeight: emojiInputActive ? _keyboardHeight : 0),
-                  child: EmojiPanel(
-                    controller: controller,
-                    height: emojiInputActive ? _keyboardHeight : 0,
-                  ),
-                ),
                 builder: ((context, value, child) {
                   if (emojiInputActive) {
                     return child!;
@@ -528,7 +522,15 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                       ),
                     );
                   }
-                })),
+                }),
+                child: Container(
+                  constraints: BoxConstraints(
+                      maxHeight: emojiInputActive ? _keyboardHeight : 0),
+                  child: EmojiPanel(
+                    controller: controller,
+                    height: emojiInputActive ? _keyboardHeight : 0,
+                  ),
+                )),
           ],
         ),
       ),

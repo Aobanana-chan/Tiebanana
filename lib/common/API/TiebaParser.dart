@@ -10,6 +10,7 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/common/Global.dart';
 
+///贴吧数据生成Widget工具类
 class TiebaParser {
   //获取图片的index
   static int _getImgIndex(String img, List<String> allImgs) {
@@ -24,11 +25,12 @@ class TiebaParser {
     return 0;
   }
 
-  static List<Widget> parserContent(
+  ///通用Content生成Widget
+  static List<Widget> parseContent(
       List<Content>? contents, List<String> allImgs, List<String> allOrgImgs,
       {VideoInfo? videoInfo,
       bool selectable = false,
-      int mediaLimit = 0x7FFFFFFFFFFFFFFF}) {
+      int mediaLimit = 1 << 31}) {
     List<InlineSpan> richText = [];
     int index = 0;
     int? offset;
@@ -136,6 +138,7 @@ class TiebaParser {
         // print("find vedio");
         if (videoInfo?.videoUrl == null) {
           //TODO:外链视频
+          throw Exception("外链视频");
         } else {
           richText.add(ExtendedWidgetSpan(
               child: VideoPlayer(
@@ -158,8 +161,69 @@ class TiebaParser {
       ExtendedText.rich(
         TextSpan(children: richText),
         selectionEnabled: selectable,
-      )
+      ),
     ];
+  }
+
+  ///生成回复贴Widget
+  static List<Widget> parseReplyContent(Quota? quota, List<Content>? contents,
+      String title, List<String> allImgs, List<String> allOrgImgs,
+      {VideoInfo? videoInfo,
+      bool selectable = false,
+      int mediaLimit = 1 << 31}) {
+    List<Widget> richText = [];
+    int index = 0;
+    int? offset;
+    int mediaNum = 0;
+    //TODO:回复跳转
+
+    //引用
+    if (quota != null) {
+      richText.add(Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: 5),
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+            color: const Color(0xFFF0F3F5),
+            borderRadius: BorderRadius.circular(3)),
+        child: Wrap(
+          children: [
+            ExtendedText(
+              quota.content!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              specialTextSpanBuilder: TiebaSpanBuilder(),
+            )
+          ],
+        ),
+      ));
+    } else {
+      richText.add(Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 5),
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+              color: const Color(0xFFF0F3F5),
+              borderRadius: BorderRadius.circular(3)),
+          child: Wrap(children: [
+            ExtendedText(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              specialTextSpanBuilder: TiebaSpanBuilder(),
+            )
+          ])));
+    }
+
+    //回复
+    richText.add(Container(
+      padding: const EdgeInsets.all(5),
+      child: Column(children: parseContent(contents, allImgs, allOrgImgs)),
+    ));
+
+    return richText;
   }
 
   static List<Widget>? processIcon(Author author) {

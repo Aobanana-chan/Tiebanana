@@ -76,11 +76,11 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     Widget childpage;
-    if (Global.tiebaAPI.isLogin == false) {
+    if (Provider.of<User>(context).isLogin == false) {
       childpage = Scaffold(
         body: ChangeNotifierProvider.value(
           value: forumState,
-          builder: (context, child) => LoginPage(),
+          builder: (context, child) => const LoginPage(),
         ),
       );
     } else {
@@ -132,7 +132,7 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-    return WillPopScope(child: childpage, onWillPop: onWillPop);
+    return WillPopScope(onWillPop: onWillPop, child: childpage);
   }
 }
 
@@ -168,7 +168,7 @@ class __HomeState extends State<_Home> {
                   child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: (() => widget.controller.close()),
-                child: TagPan(),
+                child: const TagPan(),
               )),
             ],
           );

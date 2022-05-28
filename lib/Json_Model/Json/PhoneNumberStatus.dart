@@ -9,23 +9,23 @@ class PhoneNumberStatus {
 
   PhoneNumberStatus.fromJson(Map<String, dynamic> json) {
     errInfo = json['errInfo'] != null
-        ? new PhoneNumberStatusErrInfo.fromJson(json['errInfo'])
+        ? PhoneNumberStatusErrInfo.fromJson(json['errInfo'])
         : null;
     data = json['data'] != null
-        ? new PhoneNumberStatusData.fromJson(json['data'])
+        ? PhoneNumberStatusData.fromJson(json['data'])
         : null;
     traceid = json['traceid'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.errInfo != null) {
-      data['errInfo'] = this.errInfo?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (errInfo != null) {
+      data['errInfo'] = errInfo?.toJson();
     }
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
-    data['traceid'] = this.traceid;
+    data['traceid'] = traceid;
     return data;
   }
 }
@@ -44,10 +44,10 @@ class PhoneNumberStatusErrInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
-    data['msg'] = this.msg;
-    data['isPwd'] = this.isPwd;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
+    data['msg'] = msg;
+    data['isPwd'] = isPwd;
     return data;
   }
 }
@@ -62,8 +62,8 @@ class PhoneNumberStatusData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['jumpReg'] = this.jumpReg;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['jumpReg'] = jumpReg;
     return data;
   }
 }

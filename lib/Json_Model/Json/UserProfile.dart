@@ -836,7 +836,7 @@ class VipCloseAd {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['is_open'] = isOpen;
     data['vip_close'] = vipClose;
     // if (forumClose != null) {
@@ -1177,7 +1177,7 @@ class CallFansInfo {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['can_call'] = canCall;
     return data;
   }
@@ -1384,7 +1384,7 @@ class UrlMap {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['name'] = name;
     data['url'] = url;

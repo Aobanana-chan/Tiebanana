@@ -11,14 +11,14 @@ class SearchForumModel {
     no = json['no'];
     forumList = json['forum_list'];
     data = json['data'] != null && json['data'].length != 0
-        ? new SearchForumModelData.fromJson(json['data'])
+        ? SearchForumModelData.fromJson(json['data'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
-    data['forum_list'] = this.forumList;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
+    data['forum_list'] = forumList;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
@@ -36,18 +36,18 @@ class SearchForumModelData {
   SearchForumModelData.fromJson(Map<String, dynamic> json) {
     no = json['no'];
     data = json['data'] != null
-        ? new SearchForumModelMainData.fromJson(json['data'])
+        ? SearchForumModelMainData.fromJson(json['data'])
         : null;
     error = json['error'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['no'] = this.no;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['no'] = no;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
-    data['error'] = this.error;
+    data['error'] = error;
     return data;
   }
 }
@@ -82,31 +82,31 @@ class SearchForumModelMainData {
     if (json['forum'] != null) {
       forum = [];
       json['forum'].forEach((v) {
-        forum?.add(new SearchForumModelForum.fromJson(v));
+        forum?.add(SearchForumModelForum.fromJson(v));
       });
     }
     regNum = (json['reg_num'] as num).toInt();
     searchTime = (json['search_time'] as num).toInt();
     searchKey = json['search_key'];
     page = json['page'] != null
-        ? new SearchForumModelPage.fromJson(json['page'])
+        ? SearchForumModelPage.fromJson(json['page'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tbs'] = this.tbs;
-    data['search_what'] = this.searchWhat;
-    data['illegal'] = this.illegal;
-    data['is_precise'] = this.isPrecise;
-    if (this.forum != null) {
-      data['forum'] = this.forum?.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tbs'] = tbs;
+    data['search_what'] = searchWhat;
+    data['illegal'] = illegal;
+    data['is_precise'] = isPrecise;
+    if (forum != null) {
+      data['forum'] = forum?.map((v) => v.toJson()).toList();
     }
-    data['reg_num'] = this.regNum;
-    data['search_time'] = this.searchTime;
-    data['search_key'] = this.searchKey;
-    if (this.page != null) {
-      data['page'] = this.page?.toJson();
+    data['reg_num'] = regNum;
+    data['search_time'] = searchTime;
+    data['search_key'] = searchKey;
+    if (page != null) {
+      data['page'] = page?.toJson();
     }
     return data;
   }
@@ -142,34 +142,34 @@ class SearchForumModelForum {
     img = json['img'];
     brief = json['brief'];
     hotValue = (json['hot_value'] as num).toInt();
-    dir = json['dir'] != null ? new Dir.fromJson(json['dir']) : null;
+    dir = json['dir'] != null ? Dir.fromJson(json['dir']) : null;
     member = (json['member'] as num).toInt();
     post = (json['post'] as num).toInt();
     if (json['tags'] != null) {
       tags = [];
       json['tags'].forEach((v) {
-        tags?.add(new Tags.fromJson(v));
+        tags?.add(Tags.fromJson(v));
       });
     }
     isLike = json['is_like'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['img'] = this.img;
-    data['brief'] = this.brief;
-    data['hot_value'] = this.hotValue;
-    if (this.dir != null) {
-      data['dir'] = this.dir?.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['img'] = img;
+    data['brief'] = brief;
+    data['hot_value'] = hotValue;
+    if (dir != null) {
+      data['dir'] = dir?.toJson();
     }
-    data['member'] = this.member;
-    data['post'] = this.post;
-    if (this.tags != null) {
-      data['tags'] = this.tags?.map((v) => v.toJson()).toList();
+    data['member'] = member;
+    data['post'] = post;
+    if (tags != null) {
+      data['tags'] = tags?.map((v) => v.toJson()).toList();
     }
-    data['is_like'] = this.isLike;
+    data['is_like'] = isLike;
     return data;
   }
 }
@@ -186,9 +186,9 @@ class Dir {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['level_1_name'] = this.level1Name;
-    data['level_2_name'] = this.level2Name;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['level_1_name'] = level1Name;
+    data['level_2_name'] = level2Name;
     return data;
   }
 }
@@ -205,9 +205,9 @@ class Tags {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['name'] = this.name;
-    data['id'] = this.id;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['name'] = name;
+    data['id'] = id;
     return data;
   }
 }
@@ -238,11 +238,11 @@ class SearchForumModelPage {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['cur_page'] = this.curPage;
-    data['total_page'] = this.totalPage;
-    data['total_num'] = this.totalNum;
-    data['page_size'] = this.pageSize;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['cur_page'] = curPage;
+    data['total_page'] = totalPage;
+    data['total_num'] = totalNum;
+    data['page_size'] = pageSize;
     return data;
   }
 }

@@ -20,7 +20,6 @@ class ThreadSummary extends StatelessWidget {
     List<String> imgs = [];
     List<String>? imgsOriginSrc = [];
     List<String> videos = [];
-    String text = "";
     List<InlineSpan> richText = [];
     //统计与格式化
     for (FirstPostContent elem in info.firstPostContent ?? []) {

@@ -12,19 +12,19 @@ class WapAccountCheck {
     errno = (json['errno'] as num).toInt();
     errmsg = json['errmsg'];
     data = json['data'] != null
-        ? new WapAccountCheckData.fromJson(json['data'])
+        ? WapAccountCheckData.fromJson(json['data'])
         : null;
     traceid = json['traceid'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['errno'] = this.errno;
-    data['errmsg'] = this.errmsg;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['errno'] = errno;
+    data['errmsg'] = errmsg;
     if (this.data != null) {
       data['data'] = this.data?.toJson();
     }
-    data['traceid'] = this.traceid;
+    data['traceid'] = traceid;
     return data;
   }
 }
@@ -96,25 +96,25 @@ class WapAccountCheckData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['uid'] = this.uid;
-    data['isMobile'] = this.isMobile;
-    data['loginTypes'] = this.loginTypes;
-    data['onekeyed'] = this.onekeyed;
-    data['canLogin'] = this.canLogin;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['uid'] = uid;
+    data['isMobile'] = isMobile;
+    data['loginTypes'] = loginTypes;
+    data['onekeyed'] = onekeyed;
+    data['canLogin'] = canLogin;
     // data['userNameUid'] = this.userNameUid;
     // data['userNameLoginTypes'] = this.userNameLoginTypes;
-    data['userNameOneKeyed'] = this.userNameOneKeyed;
-    data['mobile'] = this.mobile;
-    data['displayname'] = this.displayname;
-    data['countryCode'] = this.countryCode;
-    data['jumpReg'] = this.jumpReg;
-    data['hasSecRisk'] = this.hasSecRisk;
-    data['enableLoginTypeRec'] = this.enableLoginTypeRec;
-    data['smsForceSend'] = this.smsForceSend;
-    data['isHasPassword'] = this.isHasPassword;
-    data['maskedMobile'] = this.maskedMobile;
-    data['enableLoginSelectSkip'] = this.enableLoginSelectSkip;
+    data['userNameOneKeyed'] = userNameOneKeyed;
+    data['mobile'] = mobile;
+    data['displayname'] = displayname;
+    data['countryCode'] = countryCode;
+    data['jumpReg'] = jumpReg;
+    data['hasSecRisk'] = hasSecRisk;
+    data['enableLoginTypeRec'] = enableLoginTypeRec;
+    data['smsForceSend'] = smsForceSend;
+    data['isHasPassword'] = isHasPassword;
+    data['maskedMobile'] = maskedMobile;
+    data['enableLoginSelectSkip'] = enableLoginSelectSkip;
     return data;
   }
 }
