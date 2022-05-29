@@ -135,18 +135,24 @@ class UserPostPostList {
     title = json['title'];
     if (json['content'] != null) {
       content = <Content>[];
-      if (json['content'] is String) {
-        if (json['first_post_content'] is List) {
-          json['first_post_content'].forEach((v) {
+      if (isThread == "1") {
+        if (json['content'] is String) {
+          if (json['first_post_content'] is List) {
+            json['first_post_content'].forEach((v) {
+              content?.add(Content.fromJson(v));
+            });
+          } else {
+            throw Exception("UserPost类型不匹配");
+          }
+        } else {
+          json['content'].forEach((v) {
             content?.add(Content.fromJson(v));
           });
-        } else {
-          throw Exception("UserPost类型不匹配");
         }
       } else {
-        json['content'].forEach((v) {
-          content?.add(Content.fromJson(v));
-        });
+        for (var i in json['content'][0]["post_content"]) {
+          content?.add(Content.fromJson(i));
+        }
       }
     }
     userName = json['user_name'];

@@ -200,9 +200,9 @@ packages:
   flukit:
     dependency: "direct main"
     description:
-      name: flukit
-      url: "https://pub.flutter-io.cn"
-    source: hosted
+      path: "dependencyOverrides/flukit/package_src"
+      relative: true
+    source: path
     version: "2.0.0"
   flutter:
     dependency: "direct main"
