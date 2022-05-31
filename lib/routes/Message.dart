@@ -149,10 +149,8 @@ class _MessagePanState extends State<MessagePan>
               child: Text("初始化中..."),
             );
           case ConnectionState.active:
-            return Container(
-              child: const Center(
-                child: Text("加载中..."),
-              ),
+            return const Center(
+              child: Text("加载中..."),
             );
           default:
             if (snapshot.hasData) {
@@ -164,6 +162,7 @@ class _MessagePanState extends State<MessagePan>
                         : false;
               }
               return RefreshIndicator(
+                  onRefresh: refresh,
                   child: ListView.builder(
                       padding: EdgeInsets.zero,
                       controller: controllerReply,
@@ -171,8 +170,7 @@ class _MessagePanState extends State<MessagePan>
                       physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
                         return MessageCard(replyMe: replyMessage[index]);
-                      }),
-                  onRefresh: refresh);
+                      }));
             } else if (snapshot.hasError) {
               return GestureDetector(
                 onTap: () {
@@ -180,10 +178,8 @@ class _MessagePanState extends State<MessagePan>
                     _initReply = Global.tiebaAPI.getReply(1);
                   });
                 },
-                child: Container(
-                  child: const Center(
-                    child: Text("发生了错误...点击重试"),
-                  ),
+                child: const Center(
+                  child: Text("发生了错误...点击重试"),
                 ),
               );
             }
@@ -219,6 +215,7 @@ class _MessagePanState extends State<MessagePan>
               }
 
               return RefreshIndicator(
+                  onRefresh: refresh,
                   child: ListView.builder(
                       padding: EdgeInsets.zero,
                       controller: controllerAtme,
@@ -226,8 +223,7 @@ class _MessagePanState extends State<MessagePan>
                       physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
                         return MessageCard(atME: atMeMessage[index]);
-                      }),
-                  onRefresh: refresh);
+                      }));
             } else if (snapshot.hasError) {
               return GestureDetector(
                 onTap: () {

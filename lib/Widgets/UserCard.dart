@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 import 'CustomUnderlineTabIndicator.dart';
 
@@ -137,6 +138,10 @@ class _UserCardState extends State<UserCard> {
                   imgUrl: widget.info.portraitUrl!,
                   height: 45,
                   width: 45,
+                  onTap: () {
+                    Navigator.pushNamed(context, PageRouter.user,
+                        arguments: widget.info.id.toString());
+                  },
                 ),
               ),
               Column(

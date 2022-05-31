@@ -9,6 +9,16 @@ class User with ChangeNotifier {
   bool _islogin = Global.tiebaAPI.isLogin;
   bool get isLogin => Global.tiebaAPI.isLogin;
 
+  String? _uid;
+  String get uid {
+    if (_uid != null) {
+      return _uid!;
+    } else {
+      _uid = Global.profile.getString("uid");
+      return _uid!;
+    }
+  }
+
   //Login状态改变则通知其依赖项
   void login() {
     if (Global.tiebaAPI.isLogin != _islogin) {

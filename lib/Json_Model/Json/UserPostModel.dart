@@ -141,7 +141,7 @@ class UserPostPostList {
             json['first_post_content'].forEach((v) {
               content?.add(Content.fromJson(v));
             });
-          } else {
+          } else if (json['first_post_content'] != null) {
             throw Exception("UserPost类型不匹配");
           }
         } else {

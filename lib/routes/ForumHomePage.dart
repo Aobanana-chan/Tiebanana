@@ -115,7 +115,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                 .getForumPage(kw: widget.kw, pn: pn, sortType: sortType))
             .threadList;
         //进入精品贴后也重新刷新
-        var refreshGood;
+        late void Function() refreshGood;
         refreshGood = () async {
           if (tabbarController.index == 1) {
             goodThreadList.goodpn = 1;
@@ -142,7 +142,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                 isgood: true))
             .threadList;
         //进入普通贴后也重新刷新
-        var refreshCommon;
+        late void Function() refreshCommon;
         refreshCommon = () async {
           if (tabbarController.index == 0) {
             pn = 1;

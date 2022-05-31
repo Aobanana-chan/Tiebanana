@@ -110,7 +110,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
       future: permission,
       initialData: null,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
-        var body;
+        Widget body;
         if (snapshot.hasData) {
           if ((snapshot.data as PermissionState).isAuth) {
             if (pathes == null) {
@@ -289,19 +289,21 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
                             }
                             var controller = ExtendedPageController(
                                 initialPage: widget.index);
-                            int? result =
-                                await Navigator.push(context, MaterialPageRoute(
-                              builder: (context) {
-                                return ZoomedLocalImage(
-                                  file: fileList,
-                                  controller: controller,
-                                  heroTag: heroTag,
-                                  index: widget.index,
-                                );
-                              },
-                            ));
-                            if (result != null) {
-                              changeSelect(index: result);
+                            if (mounted) {
+                              int? result = await Navigator.push(context,
+                                  MaterialPageRoute(
+                                builder: (context) {
+                                  return ZoomedLocalImage(
+                                    file: fileList,
+                                    controller: controller,
+                                    heroTag: heroTag,
+                                    index: widget.index,
+                                  );
+                                },
+                              ));
+                              if (result != null) {
+                                changeSelect(index: result);
+                              }
                             }
                           },
                           child: ExtendedImage.file(

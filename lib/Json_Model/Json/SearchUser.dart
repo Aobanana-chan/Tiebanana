@@ -45,9 +45,9 @@ class SearchUserModelData {
   SearchUserModelData.fromJson(Map<String, dynamic> json) {
     pn = json['pn'];
     hasMore = json['has_more'];
-    exactMatch = json['exactMatch'] != null
-        ? ExactMatch.fromJson(json['exactMatch'])
-        : null;
+    if (json['exactMatch'] != null && json['exactMatch'] is Map) {
+      exactMatch = ExactMatch.fromJson(json['exactMatch']);
+    }
     if (json['fuzzyMatch'] != null) {
       fuzzyMatch = [];
       json['fuzzyMatch'].forEach((v) {

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
+import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///主页贴合集
@@ -113,6 +114,65 @@ class ForumTag extends StatelessWidget {
             _Rank(
               rank: info.levelId!,
               isSigned: info.isSign == "0" ? false : true,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+///用户界面吧tag部件
+class ForumTagMedium extends StatelessWidget {
+  final String avatarUrl;
+  final String forumName;
+  final String member;
+  final String level;
+  const ForumTagMedium(
+      {Key? key,
+      required this.avatarUrl,
+      required this.forumName,
+      required this.member,
+      required this.level})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(width: 0.1),
+          borderRadius: BorderRadius.circular(8)),
+      child: MaterialButton(
+        onPressed: () {
+          Navigator.pushNamed(context, PageRouter.forumHome,
+              arguments: forumName);
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Avatar(imgUrl: avatarUrl, width: 45, height: 45),
+            Expanded(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  forumName,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  "关注 ${TiebaParser.numberConvertString(int.parse(member))}",
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                )
+              ],
+            )),
+            _Rank(
+              rank: level,
+              isSigned: false,
             )
           ],
         ),

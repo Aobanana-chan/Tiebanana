@@ -72,6 +72,7 @@ class _SearchPageState extends State<SearchPage>
           Expanded(
               child: TabBarView(
             physics: const BouncingScrollPhysics(),
+            controller: controller,
             children: [
               KeepAliveWrapper(
                   child: FourmSearch(
@@ -86,7 +87,6 @@ class _SearchPageState extends State<SearchPage>
                 keyWord: textEditingController.text,
               ))
             ],
-            controller: controller,
           ))
         ],
       ),
@@ -150,7 +150,7 @@ class _FourmSearchState extends State<FourmSearch> {
   // }
 
   Widget buildElem() {
-    var child;
+    Widget child;
     SearchForumModelForum? f;
     List<SearchForumModelForum> related = [];
     for (var forum in forums) {
@@ -465,7 +465,6 @@ class _UserListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        //TODO:进入用户界面
         Navigator.pushNamed(context, PageRouter.user,
             arguments: user.id!.toString());
       },

@@ -111,7 +111,7 @@ class TiebaAPI {
   UserInfomation userInfomation = UserInfomation(dio);
 
   ///类在用之前先初始化
-  Future init() async {
+  Future<TiebaAPI> init() async {
     //设置cookie保存目录
     Directory? cookiedir = await getApplicationDocumentsDirectory();
     cookieJar =
@@ -140,6 +140,7 @@ class TiebaAPI {
       ///登陆之前需要初始化
       await passMachine.init();
     }
+    return this;
   }
 
   ///检查是否登录
@@ -1274,6 +1275,7 @@ class TiebaAPI {
     return replyMessage;
   }
 
+  ///获取个人信息API
   Future<MyUserData> getMyInfo() async {
     if (isLogin == false) {
       throw Exception("未登录");
@@ -1798,5 +1800,39 @@ class TiebaAPI {
           contentType: "application/x-www-form-urlencoded",
         ));
     return UserProfileModel.fromJson(jsonDecode(res.data));
+  }
+
+  ///获取用户关注贴吧
+  Future<UserForumLikeModel> getUserForumnLike(
+      String uid, String myUid, int pn, int pageSize) async {
+    var arg = {
+      "BDUSS": bduss,
+      "stoken": stoken,
+      "tbs": await _getTBS(),
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.24.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "",
+      "cuid_galaxy2": "",
+      "allow_guest": 1,
+      "is_guest": uid == myUid ? "" : 1,
+      "page_no": pn,
+      "page_size": pageSize,
+      "need_member": 1,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "uid": myUid,
+      "friend_uid": uid == myUid ? "" : uid,
+      "q_type": "80",
+    };
+    arg['sign'] = _signArgs(arg);
+
+    var res = await dio.post(GET_USER_TIEBA,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    return UserForumLikeModel.fromJson(jsonDecode(res.data));
   }
 }

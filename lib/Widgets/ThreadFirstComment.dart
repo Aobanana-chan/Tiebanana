@@ -6,6 +6,7 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 ///帖子组件-楼主
 class ThreadFirstComment extends StatelessWidget {
@@ -59,6 +60,10 @@ class ThreadFirstComment extends StatelessWidget {
                   imgUrl: AUTHOR_AVATAR + author.portrait!,
                   height: 45,
                   width: 45,
+                  onTap: () {
+                    Navigator.pushNamed(context, PageRouter.user,
+                        arguments: author.id);
+                  },
                 ),
                 Expanded(
                     child: Column(

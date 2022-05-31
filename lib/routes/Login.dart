@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -212,7 +214,8 @@ class _PasswordLogin extends StatelessWidget {
             while (loginres.errcode == "6") {
               Fluttertoast.showToast(msg: "需要输入验证码");
               bool? verify = await showDialog<bool>(
-                  context: context, builder: (builder) => PassMachineWidget());
+                  context: context,
+                  builder: (builder) => const PassMachineWidget());
               if (verify == true) {
                 loginres =
                     await Global.tiebaAPI.loginByPassword(user.text, pwd.text);
@@ -224,7 +227,8 @@ class _PasswordLogin extends StatelessWidget {
             while (loginres.errcode == "120021") {
               Fluttertoast.showToast(msg: "需要进行安全验证");
               bool? safeVerify = await showDialog(
-                  context: context, builder: (builder) => Authwidgetverify());
+                  context: context,
+                  builder: (builder) => const Authwidgetverify());
               if (safeVerify == true) {
                 loginres =
                     await Global.tiebaAPI.loginByPassword(user.text, pwd.text);

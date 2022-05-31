@@ -19,6 +19,7 @@ part './Json/UploadImage.dart';
 part './Json/SearchUser.dart';
 part './Json/UserProfile.dart';
 part './Json/UserPostModel.dart';
+part './Json/UserForumLike.dart';
 
 //TODO:拆分
 

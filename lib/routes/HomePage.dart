@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
-import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Message.dart';
 import 'package:tiebanana/routes/Recommend.dart';

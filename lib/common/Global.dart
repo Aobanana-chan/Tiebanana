@@ -54,7 +54,11 @@ class Global {
     await localNotifications.initialize(initializationSettings);
 
     //初始化贴吧API
-    await tiebaAPI.init();
+    await tiebaAPI.init().then((value) async {
+      //初始化用户uid
+      var userInfo = await value.getMyInfo();
+      profile.setString("uid", userInfo.id!.toString());
+    });
   }
 
   ///保持用户APP设置

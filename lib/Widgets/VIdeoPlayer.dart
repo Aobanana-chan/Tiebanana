@@ -1,6 +1,7 @@
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:fijkplayer_skin/schema.dart';
 import 'package:fijkplayer_skin/slider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // ignore_for_file: must_call_super, camel_case_types
@@ -349,30 +350,27 @@ class _TiebananaFijkPanelState extends State<TiebananaFijkPanel>
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _cancelAndRestartLockTimer,
-      child: Container(
-        child: AnimatedOpacity(
-          opacity: _hideLockStuff ? 0.0 : 0.7,
-          duration: const Duration(milliseconds: 400),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                top: showConfig.stateAuto && !player.value.fullScreen
-                    ? barGap
-                    : 0,
-              ),
-              child: IconButton(
-                iconSize: 30,
-                onPressed: () {
-                  setState(() {
-                    _lockStuff = false;
-                    _hideLockStuff = true;
-                  });
-                },
-                icon: const Icon(Icons.lock_open),
-                color: Colors.white,
-              ),
+      child: AnimatedOpacity(
+        opacity: _hideLockStuff ? 0.0 : 0.7,
+        duration: const Duration(milliseconds: 400),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              top:
+                  showConfig.stateAuto && !player.value.fullScreen ? barGap : 0,
+            ),
+            child: IconButton(
+              iconSize: 30,
+              onPressed: () {
+                setState(() {
+                  _lockStuff = false;
+                  _hideLockStuff = true;
+                });
+              },
+              icon: const Icon(Icons.lock_open),
+              color: Colors.white,
             ),
           ),
         ),
@@ -424,14 +422,12 @@ class _TiebananaFijkPanelState extends State<TiebananaFijkPanel>
               },
             ),
           ),
-          Container(
-            child: SlideTransition(
-              position: _animation!,
-              child: Container(
-                height: window.physicalSize.height,
-                width: 320,
-                child: _buildPlayDrawer(),
-              ),
+          SlideTransition(
+            position: _animation!,
+            child: SizedBox(
+              height: window.physicalSize.height,
+              width: 320,
+              child: _buildPlayDrawer(),
             ),
           ),
         ],
@@ -552,22 +548,20 @@ class _TiebananaFijkPanelState extends State<TiebananaFijkPanel>
                             ? barFillingHeight
                             : barHeight,
                     alignment: Alignment.bottomLeft,
-                    child: Container(
+                    child: SizedBox(
                       height: barHeight,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
                           _buildTopBackBtn(),
                           Expanded(
-                            child: Container(
-                              child: Text(
-                                widget.playerTitle,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                textAlign: TextAlign.left,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                ),
+                            child: Text(
+                              widget.playerTitle,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              textAlign: TextAlign.left,
+                              style: const TextStyle(
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -778,7 +772,7 @@ class _buildGestureDetector extends StatefulWidget {
   final Function changeLockState;
   final ShowConfigAbs showConfig;
   final VideoSourceFormat? videoFormat;
-  _buildGestureDetector({
+  const _buildGestureDetector({
     Key? key,
     required this.player,
     required this.viewSize,
@@ -920,10 +914,15 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
         _duration = value.duration;
       });
     }
-    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-    print('++++++++ 是否开始播放 => ${value.state == FijkState.started} ++++++++');
-    print('+++++++++++++++++++ 播放器状态 => ${value.state} ++++++++++++++++++++');
-    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+    if (kDebugMode) {
+      print(
+          '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+      print('++++++++ 是否开始播放 => ${value.state == FijkState.started} ++++++++');
+      print('+++++++++++++++++++ 播放器状态 => ${value.state} ++++++++++++++++++++');
+      print(
+          '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+    }
+
     // 新状态
     bool playing = value.state == FijkState.started;
     bool prepared = value.prepared;
@@ -1134,7 +1133,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     return Ink(
       child: InkWell(
         onTap: () => cb(),
-        child: Container(
+        child: SizedBox(
           height: 30,
           child: Padding(
             padding: const EdgeInsets.only(left: 5, right: 5),
@@ -1165,7 +1164,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     double curTimePro = (currentValue / duration) * 100;
     double curBottomProW = (curConWidth / 100) * curTimePro;
 
-    return Container(
+    return SizedBox(
       height: barHeight,
       child: Stack(
         children: [
@@ -1219,7 +1218,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                     Padding(
                       padding: const EdgeInsets.only(right: 5.0, left: 5),
                       child: Text(
-                        '${_duration2String(_currentPos)}',
+                        _duration2String(_currentPos),
                         style: const TextStyle(
                           fontSize: 14.0,
                           color: Colors.white,
@@ -1264,7 +1263,9 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                                 onChangeEnd: (v) {
                                   setState(() {
                                     player.seekTo(v.toInt());
-                                    print("seek to $v");
+                                    if (kDebugMode) {
+                                      print("seek to $v");
+                                    }
                                     _currentPos = Duration(
                                         milliseconds: _seekPos.toInt());
                                     _seekPos = -1;
@@ -1276,16 +1277,14 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
 
                     // 总播放时间
                     _duration.inMilliseconds == 0
-                        ? Container(
-                            child: const Text(
-                              "00:00",
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        ? const Text(
+                            "00:00",
+                            style: TextStyle(color: Colors.white),
                           )
                         : Padding(
                             padding: const EdgeInsets.only(right: 5.0, left: 5),
                             child: Text(
-                              '${_duration2String(_duration)}',
+                              _duration2String(_duration),
                               style: const TextStyle(
                                 fontSize: 14.0,
                                 color: Colors.white,
@@ -1328,7 +1327,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                                 width: 40,
                                 height: 30,
                                 child: Text(
-                                  _speed.toString() + " X",
+                                  "$_speed X",
                                   style: const TextStyle(color: Colors.white),
                                 ),
                               ),
@@ -1426,21 +1425,19 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
             ],
           ),
         ),
-        child: Container(
+        child: SizedBox(
           height: barHeight,
           child: Row(
             children: <Widget>[
               _buildTopBackBtn(),
               Expanded(
-                child: Container(
-                  child: Text(
-                    widget.playerTitle,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    textAlign: TextAlign.left,
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
+                child: Text(
+                  widget.playerTitle,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(
+                    color: Colors.white,
                   ),
                 ),
               )
@@ -1569,7 +1566,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
               width: 50,
               height: 30,
               child: Text(
-                mapKey + " X",
+                "$mapKey X",
                 style: TextStyle(
                   color: _speed == speedVals ? Colors.blue : Colors.white,
                   fontSize: 16,
@@ -1648,15 +1645,15 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                     bottom: 0,
                     child: !_hideSpeedStu
                         ? Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black45,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(10),
                               child: Column(
                                 children: _buildSpeedListWidget(),
                               ),
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black45,
-                              borderRadius: BorderRadius.circular(10),
                             ),
                           )
                         : Container(),

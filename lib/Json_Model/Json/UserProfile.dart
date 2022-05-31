@@ -398,7 +398,7 @@ class UserProfileModelUser {
   // List<Null> groupList;
   String? giftNum;
   List<GiftList>? giftList;
-  String? bazhuGrade;
+  // String? bazhuGrade;
   String? friendNum;
   // List<Null> parrScores;
   String? isInvited;
@@ -467,7 +467,7 @@ class UserProfileModelUser {
       // this.groupList,
       this.giftNum,
       this.giftList,
-      this.bazhuGrade,
+      // this.bazhuGrade,
       this.friendNum,
       // this.parrScores,
       this.isInvited,
@@ -608,13 +608,13 @@ class UserProfileModelUser {
         giftList?.add(GiftList.fromJson(v));
       });
     }
-    if (json['bazhu_grade'] is List) {
-      if ((json['bazhu_grade'] as List).isNotEmpty) {
-        throw Exception("数据类型不匹配");
-      }
-    } else {
-      bazhuGrade = json['bazhu_grade'];
-    }
+    // if (json['bazhu_grade'] is List) {
+    //   if ((json['bazhu_grade'] as List).isNotEmpty) {
+    //     throw Exception("数据类型不匹配");
+    //   }
+    // } else {
+    //   bazhuGrade = json['bazhu_grade'];
+    // }
 
     friendNum = json['friend_num'];
     // if (json['parr_scores'] != null) {
@@ -742,7 +742,7 @@ class UserProfileModelUser {
     if (giftList != null) {
       data['gift_list'] = giftList?.map((v) => v.toJson()).toList();
     }
-    data['bazhu_grade'] = bazhuGrade;
+    // data['bazhu_grade'] = bazhuGrade;
     data['friend_num'] = friendNum;
     // if (parrScores != null) {
     //   data['parr_scores'] = parrScores.map((v) => v.toJson()).toList();

@@ -159,7 +159,9 @@ class __VerifyTypeDropDownState extends State<_VerifyTypeDropDown> {
     } else {
       Fluttertoast.showToast(
           msg: "获取验证方式错误，错误代码(errno):${res.errno}\n${res.msg}");
-      Navigator.pop(context, false);
+      if (mounted) {
+        Navigator.pop(context, false);
+      }
     }
   }
 

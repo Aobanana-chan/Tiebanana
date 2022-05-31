@@ -172,9 +172,6 @@ class TiebaParser {
       bool selectable = false,
       int mediaLimit = 1 << 31}) {
     List<Widget> richText = [];
-    int index = 0;
-    int? offset;
-    int mediaNum = 0;
     //TODO:回复跳转
 
     //引用
@@ -309,6 +306,23 @@ class TiebaParser {
       default:
     }
     return "";
+  }
+
+  ///数字转字符串缩写
+  static String numberConvertString(int number) {
+    double left = number.toDouble();
+
+    if (left >= 10000000) {
+      left /= 10000000;
+      return "${left.toStringAsFixed(2)}KW";
+    } else if (left >= 10000) {
+      left /= 10000;
+      return "${left.toStringAsFixed(2)}W";
+    } else if (left >= 1000) {
+      left /= 1000;
+      return "${left.toStringAsFixed(2)}K";
+    }
+    return number.toString();
   }
 }
 

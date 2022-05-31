@@ -2,15 +2,17 @@ import 'package:animate_do/animate_do.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
-import 'package:tiebanana/Widgets/ThreadFloorCard.dart';
+import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/UserPostWidget.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
-import 'package:uuid/uuid.dart';
 
 ///用户界面-访客
 class UserVisitor extends StatefulWidget {
@@ -26,6 +28,7 @@ class _UserVisitorState extends State<UserVisitor> {
   Future<UserProfileModel>? futureUserInfo;
   void init() async {
     userinfo = await Global.tiebaAPI.getUserInfo(uid: widget.uid);
+
     setState(() {});
   }
 
@@ -186,8 +189,11 @@ class __UserInfomationState extends State<_UserInfomation> {
             ],
           ),
         ),
-        Text(
-            "~~ ${widget.userinfo?.user?.intro == null || widget.userinfo?.user?.intro == "" ? "这懒人没设签名喵" : widget.userinfo?.user?.intro} ~~"),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          child: Text(
+              "~~ ${widget.userinfo?.user?.intro == null || widget.userinfo?.user?.intro == "" ? "这懒人没设签名喵" : widget.userinfo?.user?.intro} ~~"),
+        )
       ]),
     ));
   }
@@ -262,7 +268,10 @@ class _BottomViewState extends State<_BottomView>
               child: _Postview(
             uid: widget.uid,
           )),
-          KeepAliveWrapper(child: _ForumView())
+          KeepAliveWrapper(
+              child: _ForumView(
+            uid: widget.uid,
+          ))
         ]))
       ]),
     );
@@ -288,7 +297,9 @@ class __ThreadViewState extends State<_ThreadView> {
   void init() async {
     info = await Global.tiebaAPI.getUserPost(uid: widget.uid, pn: pn);
     posts.addAll(info?.postList ?? []);
-    setState(() {});
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      setState(() {});
+    });
   }
 
   void _loadPage(int pn) async {
@@ -487,15 +498,77 @@ class __PostviewState extends State<_Postview> {
 
 ///关注吧视图
 class _ForumView extends StatefulWidget {
-  const _ForumView({Key? key}) : super(key: key);
+  final String uid;
+  const _ForumView({Key? key, required this.uid}) : super(key: key);
 
   @override
   State<_ForumView> createState() => __ForumViewState();
 }
 
 class __ForumViewState extends State<_ForumView> {
+  int pn = 1;
+  final int pageSize = 50;
+  List<NonGconforum>? forums = [];
+  void init() async {
+    var info = await Global.tiebaAPI.getUserForumnLike(widget.uid,
+        Provider.of<User>(context, listen: false).uid, pn, pageSize);
+    forums = info.forumList?.nonGconforum;
+
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    init();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container();
+    if (forums == null) {
+      return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Container(
+              constraints: constraints,
+              child: const Center(
+                child: Text.rich(
+                  TextSpan(children: [
+                    WidgetSpan(
+                        child: Icon(
+                      Icons.lock,
+                      color: Colors.grey,
+                    )),
+                    TextSpan(text: "这位老铁已将关注的吧设为隐藏")
+                  ]),
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      return GridView.builder(
+        physics: const BouncingScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          mainAxisExtent: 72,
+          crossAxisCount: 2,
+        ),
+        itemCount: forums?.length ?? 0,
+        itemBuilder: (BuildContext context, int index) {
+          var i = forums![index];
+          return Container(
+            padding: const EdgeInsets.all(3),
+            child: ForumTagMedium(
+                avatarUrl: i.avatar!,
+                forumName: i.name!,
+                member: i.memberCount!,
+                level: i.levelId!),
+          );
+        },
+      );
+    }
   }
 }

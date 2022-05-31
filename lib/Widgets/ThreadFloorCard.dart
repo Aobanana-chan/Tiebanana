@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
@@ -7,6 +8,7 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 ///帖子-楼层组件
 class ThreadFloorComment extends StatelessWidget {
@@ -72,6 +74,10 @@ class ThreadFloorComment extends StatelessWidget {
                     imgUrl: AUTHOR_AVATAR + author.portrait!,
                     height: 35,
                     width: 35,
+                    onTap: () {
+                      Navigator.pushNamed(context, PageRouter.user,
+                          arguments: author.id);
+                    },
                   ),
                 ),
                 Expanded(
@@ -222,7 +228,9 @@ class InnerFloor extends StatelessWidget {
     for (var i = 0; i < subPostList.length; i++) {
       var post = subPostList[i];
       if (post.isVoice == "1") {
-        print("音频回复");
+        if (kDebugMode) {
+          print("音频回复");
+        }
       }
       subposts.add(InnerPost(
         author: userlist[post.authorId!]!,
