@@ -31,20 +31,35 @@ class User with ChangeNotifier {
 ///应用主题Model
 class APPTheme with ChangeNotifier {
   // 获取当前主题，如果未设置主题，则默认使用蓝色主题
-  ColorSwatch get theme =>
-      Global.themes.firstWhere((e) => e.value == Global.setting.theme,
-          orElse: () => Colors.blue);
+  AppBarTheme _appBarTheme = AppBarTheme();
+  String get theme {
+    return Global.setting.theme!;
+  }
+
+  ColorSwatch get materialTheme {
+    if (Global.setting.theme == "white") {
+      return Global.themes["blue"]!;
+    }
+    return Global.themes[Global.setting.theme]!;
+  }
 
   // 主题改变后，通知其依赖项
-  set theme(ColorSwatch color) {
+  set theme(String color) {
     if (color != theme) {
       theme = color;
       //保存APP配置项
-      Global.setting.theme = color[500]!.value;
+      Global.setting.theme = color;
       Global.saveProfile();
 
       notifyListeners();
     }
+  }
+
+  AppBarTheme get appBarTheme {
+    if (theme == "white") {
+      _appBarTheme.copyWith(backgroundColor: Colors.white);
+    }
+    return _appBarTheme;
   }
 }
 

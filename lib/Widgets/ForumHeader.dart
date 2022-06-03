@@ -55,8 +55,9 @@ class _ForumHeaderState extends State<ForumHeader> {
     } else {
       return GradientButton(
           borderRadius: BorderRadius.circular(18),
-          onPressed: () {
+          onPressed: () async {
             //TODO:关注吧
+            var res = await Global.tiebaAPI.favoForum(info.id!, info.name!);
           },
           child: const Text("关注"));
     }

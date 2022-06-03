@@ -5,43 +5,48 @@ import 'package:tiebanana/routes/ImagePicker.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Search.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
+import 'package:tiebanana/routes/ThreadStorePage.dart';
 import 'package:tiebanana/routes/UserVisitor.dart';
 
 ///命名路由表
 class PageRouter {
   static Map<String, WidgetBuilder> routes = {
-    "/": (builder) => const HomePage(),
-    "forumHome": (builder) {
+    "/": (context) => const HomePage(),
+    "forumHome": (context) {
       return ForumHomePage(
-        kw: ModalRoute.of(builder)!.settings.arguments as String,
+        kw: ModalRoute.of(context)!.settings.arguments as String,
       );
     },
-    "threadPage": (builder) {
+    "threadPage": (context) {
       return ThreadPageRoute(
-        kz: ModalRoute.of(builder)!.settings.arguments as String,
+        kz: ModalRoute.of(context)!.settings.arguments as String,
       );
     },
-    "login": (builder) {
+    "login": (context) {
       return const LoginPage();
     },
-    "search": (builder) {
+    "search": (context) {
       return SearchPage(
-        searchWords: ModalRoute.of(builder)!.settings.arguments as String,
+        searchWords: ModalRoute.of(context)!.settings.arguments as String,
       );
     },
-    "imagePicker": (builder) {
+    "imagePicker": (context) {
       return const ImagePickerRoute();
     },
-    "user": (builder) {
+    "user": (context) {
       return UserVisitor(
-          uid: ModalRoute.of(builder)!.settings.arguments as String);
+          uid: ModalRoute.of(context)!.settings.arguments as String);
+    },
+    "threadStore": (context) {
+      return const ThreadStorePage();
     }
   };
-  static String home = "/";
-  static String forumHome = "forumHome";
-  static String threadPage = "threadPage";
-  static String login = "login";
-  static String search = "search";
-  static String imagePicker = "imagePicker";
-  static String user = "user";
+  static const String home = "/";
+  static const String forumHome = "forumHome";
+  static const String threadPage = "threadPage";
+  static const String login = "login";
+  static const String search = "search";
+  static const String imagePicker = "imagePicker";
+  static const String user = "user";
+  static const String threadStore = "threadStore";
 }

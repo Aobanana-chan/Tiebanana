@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:json5/json5.dart';
-import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/TiebaNetAPI.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiebanana/common/DefaultConfig.dart';
 
 ///主体颜色常量
-const _themes = <MaterialColor>[
-  Colors.blue,
-  Colors.cyan,
-  Colors.teal,
-  Colors.green,
-  Colors.yellow,
-];
+const _themes = <String, MaterialColor>{
+  "blue": Colors.blue,
+  "cyan": Colors.cyan,
+  "teal": Colors.teal,
+  "green": Colors.green,
+  "yellow": Colors.yellow,
+  "pink": Colors.pink,
+  "white": MaterialColor(0xFFFFFFFF, <int, Color>{
+    50: Color(0xFFFFFFFF),
+    100: Color(0xFFFFFFFF),
+    200: Color(0xFFFFFFFF),
+    300: Color(0xFFFFFFFF),
+    400: Color(0xFFFFFFFF),
+    500: Color(0xFFFFFFFF),
+    600: Color(0xFFFFFFFF),
+    700: Color(0xFFFFFFFF),
+    800: Color(0xFFFFFFFF),
+    900: Color(0xFFFFFFFF),
+  })
+};
 
 class Global {
   static TiebaAPI tiebaAPI = TiebaAPI();
@@ -21,16 +33,19 @@ class Global {
   // static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
   // 可选的主题列表
-  static List<MaterialColor> get themes => _themes;
+  static Map<String, MaterialColor> get themes => _themes;
+
   //APP配置信息
   static late SharedPreferences profile;
   static late APPSetting setting;
   static FlutterLocalNotificationsPlugin localNotifications =
       FlutterLocalNotificationsPlugin();
+
   //Global类初始化
   static Future init() async {
     profile = await SharedPreferences.getInstance();
     var settingload = profile.getString("APPSetting");
+
     //读取APP设置
     if (settingload == null) {
       //没有存储过的设置就设置默认设置

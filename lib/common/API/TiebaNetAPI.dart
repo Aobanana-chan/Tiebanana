@@ -1835,4 +1835,88 @@ class TiebaAPI {
         ));
     return UserForumLikeModel.fromJson(jsonDecode(res.data));
   }
+
+  ///关注一个吧
+  Future<LikeFourmModel> favoForum(String fid, String forumName) async {
+    var arg = {
+      "BDUSS": bduss,
+      "stoken": stoken,
+      "tbs": await _getTBS(),
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.24.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "",
+      "cuid_galaxy2": "",
+      "kw": forumName,
+      "fid": fid,
+      "forum_name": forumName,
+      // "user_id":
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+    arg['sign'] = _signArgs(arg);
+
+    var res = await dio.post(LIKE_TIEBA_URL,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    return LikeFourmModel.fromJson(jsonDecode(res.data));
+  }
+
+  ///取消关注一个吧
+  Future unfavoForum(String fid, String forumName) async {
+    var arg = {
+      "BDUSS": bduss,
+      "stoken": stoken,
+      "tbs": await _getTBS(),
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.24.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "",
+      "cuid_galaxy2": "",
+      "kw": forumName,
+      "fid": fid,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+    arg['sign'] = _signArgs(arg);
+    var res = await dio.post(UNFAVO_TIEBA_URL_NEW,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+    var jsonRes = jsonDecode(res.data);
+  }
+
+  ///获取用户收藏贴API
+  Future<ThreadStoreModel> getThreadStore(int offset, String myUid,
+      {int rn = 20}) async {
+    var arg = {
+      "BDUSS": bduss,
+      "stoken": stoken,
+      "tbs": await _getTBS(),
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.24.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "",
+      "cuid_galaxy2": "",
+      "offset": offset,
+      "rn": rn,
+      "user_id": myUid,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+    arg['sign'] = _signArgs(arg);
+    var res = await dio.post(USER_THREAD_STORE,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+
+    return ThreadStoreModel.fromJson(jsonDecode(res.data));
+  }
 }

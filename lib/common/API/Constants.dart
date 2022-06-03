@@ -2,146 +2,274 @@
 
 import 'package:tiebanana/Json_Model/json.dart';
 
+///UA
 const String ChromeUA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36";
-const String BAIDU_URL = "https://www.baidu.com"; //百度首页
-const String BAIDU_PASSPORT_URL = "https://passport.baidu.com"; //用户首页
+
+///百度首页
+const String BAIDU_URL = "https://www.baidu.com";
+/////用户首页
+const String BAIDU_PASSPORT_URL = "https://passport.baidu.com";
 const String LOGIN_GET_URL = "https://passport.baidu.com/v2/?login";
-const String LOGIN_POST_URL =
-    "https://passport.baidu.com/v2/api/?login"; //登陆API
-const String TOKEN_GET_URL =
-    "https://passport.baidu.com/v2/api/?getapi"; //获取TOKEN
+
+///登陆API
+const String LOGIN_POST_URL = "https://passport.baidu.com/v2/api/?login";
+
+///获取TOKEN
+const String TOKEN_GET_URL = "https://passport.baidu.com/v2/api/?getapi";
+
+///获取登陆rsa加密公钥
 const String PUB_KEY_URL = "https://passport.baidu.com/v2/getpublickey";
-const String TIEBA_URL = "https://tieba.baidu.com"; //贴吧首页
-const String TBS_URL = "http://tieba.baidu.com/dc/common/tbs/"; //tbs 获取随机参数
-const String IMGTBS_URL = "https://tieba.baidu.com/dc/common/imgtbs"; //获取传图 tbs
-const String USER_INFO_GET_URL =
-    "http://tieba.baidu.com/f/user/json_userinfo"; //获取用户json信息
-const String MY_LIKE_URL = "http://tieba.baidu.com/f/like/mylike"; //我喜欢的贴吧
-const String CAPTCHA_IMG =
-    "https://passport.baidu.com/cgi-bin/genimage"; //验证码图片地址
-const String REPLY_POST_URL =
-    "http://c.tieba.baidu.com/c/c/post/add"; //贴吧回帖post url
-const String THREAD_ADD_URL =
-    "http://c.tieba.baidu.com/c/c/thread/add"; //贴吧发帖post url
-const String DEL_POST_URL =
-    "http://c.tieba.baidu.com/c/c/bawu/delthread"; //删帖post url
-const String BAWU_POST_URL =
-    "http://c.tieba.baidu.com/c/u/bawu/listreason"; //获取封禁列表
+
+///贴吧首页
+const String TIEBA_URL = "https://tieba.baidu.com";
+
+///tbs 获取随机参数
+const String TBS_URL = "http://tieba.baidu.com/dc/common/tbs/";
+
+///获取传图 tbs
+const String IMGTBS_URL = "https://tieba.baidu.com/dc/common/imgtbs";
+
+///获取用户json信息
+const String USER_INFO_GET_URL = "http://tieba.baidu.com/f/user/json_userinfo";
+
+///我喜欢的贴吧
+const String MY_LIKE_URL = "http://tieba.baidu.com/f/like/mylike";
+
+///验证码图片地址
+const String CAPTCHA_IMG = "https://passport.baidu.com/cgi-bin/genimage";
+
+///贴吧回帖post url
+const String REPLY_POST_URL = "http://c.tieba.baidu.com/c/c/post/add";
+
+///贴吧发帖post url
+const String THREAD_ADD_URL = "http://c.tieba.baidu.com/c/c/thread/add";
+
+///删帖post url
+const String DEL_POST_URL = "http://c.tieba.baidu.com/c/c/bawu/delthread";
+
+///获取封禁列表
+const String BAWU_POST_URL = "http://c.tieba.baidu.com/c/u/bawu/listreason";
+
+///封禁用户
 const String PRISION_POST_URL =
-    "http://c.tieba.baidu.com/c/c/bawu/commitprison"; //封禁用户
-const String INFO_GET_URL = "https://www.baidu.com/p"; //百度个人资料（获取贴吧头像）
-const String HEAD_GET_URL =
-    "http://himg.bdimg.com/sys/portrait/item"; //（获取贴吧头像地址）
-const String BAIDUTIME_GET_URL =
-    "http://open.baidu.com/special/time/"; //获取百度服务器时间
-const String TBAT_POST_URL = "http://c.tieba.baidu.com/c/u/feed/"; //贴吧@、回复
-const String FLOOR_POST_URL = "http://c.tieba.baidu.com/c/f/pb/floor"; //楼层
+    "http://c.tieba.baidu.com/c/c/bawu/commitprison";
+
+///百度个人资料（获取贴吧头像）
+const String INFO_GET_URL = "https://www.baidu.com/p";
+
+///（获取贴吧头像地址）
+const String HEAD_GET_URL = "http://himg.bdimg.com/sys/portrait/item";
+
+///获取百度服务器时间
+const String BAIDUTIME_GET_URL = "http://open.baidu.com/special/time/";
+
+///贴吧@、回复
+const String TBAT_POST_URL = "http://c.tieba.baidu.com/c/u/feed/";
+
+///楼层
+const String FLOOR_POST_URL = "http://c.tieba.baidu.com/c/f/pb/floor";
+
+///授权url
 const String PASSPORT_AUTH_URL =
-    "https://passport.baidu.com/v3/login/api/auth/"; //授权url
-const String NEW_HEAD_URL = "http://tieba.baidu.com/home/main"; //用户首页
-const String USER_PROFILE =
-    "http://c.tieba.baidu.com/c/u/user/profile"; //贴吧用户信息查询
-const String FOLLOW = "http://c.tieba.baidu.com/c/c/user/follow"; //关注某人
-const String UNFOLLOW = "http://c.tieba.baidu.com/c/c/user/unfollow"; //取消关注某人
-const String F_PAGE = "http://c.tieba.baidu.com/c/f/pb/page"; //帖子信息
-const String SEARCH_FRIEND =
-    "http://c.tieba.baidu.com/c/r/friend/searchFriend"; //获取用户信息
-const String GET_USER_TIEBA =
-    "http://c.tieba.baidu.com/c/f/forum/like"; //获取用户关注的贴吧
-const String LIKE_TIEBA_URL =
-    "http://c.tieba.baidu.com/c/c/forum/like"; //关注一个贴吧（客户端接口）
-const String UNFAVO_TIEBA_URL =
-    "http://c.tieba.baidu.com/c/c/forum/unfavo"; //取消关注一个贴吧(客户端接口)
+    "https://passport.baidu.com/v3/login/api/auth/";
+
+///用户首页
+const String NEW_HEAD_URL = "http://tieba.baidu.com/home/main";
+
+///贴吧用户信息查询
+const String USER_PROFILE = "http://c.tieba.baidu.com/c/u/user/profile";
+
+///关注某人
+const String FOLLOW = "http://c.tieba.baidu.com/c/c/user/follow";
+
+///取消关注某人
+const String UNFOLLOW = "http://c.tieba.baidu.com/c/c/user/unfollow";
+
+///帖子信息
+const String F_PAGE = "http://c.tieba.baidu.com/c/f/pb/page";
+
+///获取用户信息
+const String SEARCH_FRIEND = "http://c.tieba.baidu.com/c/r/friend/searchFriend";
+
+///获取用户关注的贴吧
+const String GET_USER_TIEBA = "http://c.tieba.baidu.com/c/f/forum/like";
+
+///关注一个贴吧（客户端接口）
+const String LIKE_TIEBA_URL = "http://c.tieba.baidu.com/c/c/forum/like";
+
+///取消关注一个贴吧(客户端接口)
+const String UNFAVO_TIEBA_URL = "http://c.tieba.baidu.com/c/c/forum/unfavo";
+
+///取消关注一个贴吧(新客户端接口)
 const String UNFAVO_TIEBA_URL_NEW =
-    "http://c.tieba.baidu.com/c/c/forum/unfavolike"; //取消关注一个贴吧(新客户端接口)
-const String ADD_TIEBA =
-    "https://tieba.baidu.com/f/like/commit/add"; //关注一个贴吧（网页接口）
-const String DELETE_TIEBA =
-    "https://tieba.baidu.com/f/like/commit/delete"; //取消关注一个贴吧（网页接口）
-const String TIEBA_FID =
-    "http://tieba.baidu.com/f/commit/share/fnameShareApi"; //获取贴吧fid
-const String FLOR_PID = "http://c.tieba.baidu.com/c/f/pb/floor"; //获取楼层pid
-const String GET_QRCODE_SIGN =
-    "https://passport.baidu.com/v2/api/getqrcode"; //获取登录二维码sign
-const String GET_QRCODE_IMG =
-    "https://passport.baidu.com/v2/api/qrcode"; //获取登录二维码图片
-const String GET_FOLLOW_LIST =
-    "http://c.tieba.baidu.com/c/u/follow/followList"; //获取关注列表
-const String GET_FANS_LIST = "http://c.tieba.baidu.com/c/u/fans/page"; //获取粉丝列表
-const String REMOVE_FANS =
-    "http://c.tieba.baidu.com/c/c/user/removeFans"; //移除粉丝
-const String TOOUSU_CHECK =
-    "http://tieba.baidu.com/complaint/checkjubao"; //1. 举报提交
-const String TOOUSU_SUBMIT = "http://help.baidu.com/tousu/submit"; //2. 举报提交
-const String ZHIDAO_USER_CENTER =
-    "https://zhidao.baidu.com/usercenter"; //知道用户中心，用于查询完整用户名
+    "http://c.tieba.baidu.com/c/c/forum/unfavolike";
+
+///关注一个贴吧（网页接口）
+const String ADD_TIEBA = "https://tieba.baidu.com/f/like/commit/add";
+
+///取消关注一个贴吧（网页接口）
+const String DELETE_TIEBA = "https://tieba.baidu.com/f/like/commit/delete";
+
+///获取贴吧fid
+const String TIEBA_FID = "http://tieba.baidu.com/f/commit/share/fnameShareApi";
+
+///获取楼层pid
+const String FLOR_PID = "http://c.tieba.baidu.com/c/f/pb/floor";
+
+///获取登录二维码sign
+const String GET_QRCODE_SIGN = "https://passport.baidu.com/v2/api/getqrcode";
+
+///获取登录二维码图片
+const String GET_QRCODE_IMG = "https://passport.baidu.com/v2/api/qrcode";
+
+///获取关注列表
+const String GET_FOLLOW_LIST = "http://c.tieba.baidu.com/c/u/follow/followList";
+
+///获取粉丝列表
+const String GET_FANS_LIST = "http://c.tieba.baidu.com/c/u/fans/page";
+
+///移除粉丝
+const String REMOVE_FANS = "http://c.tieba.baidu.com/c/c/user/removeFans";
+
+///1. 举报提交
+const String TOOUSU_CHECK = "http://tieba.baidu.com/complaint/checkjubao";
+
+///2. 举报提交
+const String TOOUSU_SUBMIT = "http://help.baidu.com/tousu/submit";
+
+///知道用户中心，用于查询完整用户名
+const String ZHIDAO_USER_CENTER = "https://zhidao.baidu.com/usercenter";
+
+///1.名人堂助攻
 const String GET_FORUM_SUPPORT =
-    "http://tieba.baidu.com/celebrity/submit/getForumSupport"; //1.名人堂助攻
-const String FORUM_SUPPORT =
-    "http://tieba.baidu.com/celebrity/submit/support"; //2。名人堂助攻
-const String LEBO_API = "http://leboapi.baidu.com/leboapi/user"; //BDUSS查询用户信息
-const String SIGN_DEL = "http://tieba.baidu.com/f/user/cm/sign_del"; //删除签名档
-const String SIGN_QUERY = "http://tieba.baidu.com/f/user/sign"; //获取签名档
-const String UK_UN = "https://pan.baidu.com/pcloud/user/getinfo"; //根据uk查询un
-const String QRCODE_LOGIN_STATUS =
-    "https://passport.baidu.com/channel/unicast"; //根据uk查询un
-const String UPLOAD_PHOTOS =
-    "https://uploadphotos.baidu.com/upload/pic"; //传图 url
-const String VIEW_LOG_URL =
-    "https://passport.baidu.com/viewlog"; //用户操作记录提交&旋转验证码提交
-const String GETSTYLE_URL =
-    "https://passport.baidu.com/viewlog/getstyle"; //用于获取验证码图片地址
+    "http://tieba.baidu.com/celebrity/submit/getForumSupport";
+
+///2。名人堂助攻
+const String FORUM_SUPPORT = "http://tieba.baidu.com/celebrity/submit/support";
+
+///BDUSS查询用户信息
+const String LEBO_API = "http://leboapi.baidu.com/leboapi/user";
+
+///删除签名档
+const String SIGN_DEL = "http://tieba.baidu.com/f/user/cm/sign_del";
+
+///获取签名档
+const String SIGN_QUERY = "http://tieba.baidu.com/f/user/sign";
+
+///根据uk查询un
+const String UK_UN = "https://pan.baidu.com/pcloud/user/getinfo";
+
+///根据uk查询un
+const String QRCODE_LOGIN_STATUS = "https://passport.baidu.com/channel/unicast";
+
+///传图 url
+const String UPLOAD_PHOTOS = "https://uploadphotos.baidu.com/upload/pic";
+
+///用户操作记录提交&旋转验证码提交
+const String VIEW_LOG_URL = "https://passport.baidu.com/viewlog";
+
+///用于获取验证码图片地址
+const String GETSTYLE_URL = "https://passport.baidu.com/viewlog/getstyle";
+
+///强制安全验证
 const String AUTH_VERIFY_URL =
-    "https://passport.baidu.com/v2/sapi/authwidgetverify"; //强制安全验证
-const String WAP_URL = "https://wappass.baidu.com/"; //wap端入口
-const String WAP_LOGIN_URL =
-    "https://wappass.baidu.com/wp/api/login"; //wap端登陆入口
-const String ONE_KEY_SIGN_IN =
-    "https://tieba.baidu.com/tbmall/onekeySignin1"; //贴吧一键签到入口，使用POST方法，只会签到7级以上的贴吧，功能有限，但效率最高
-const String GET_FORUM_HOME =
-    "https://tieba.baidu.com/mg/o/getForumHome"; //获取贴吧主页信息(手机web端)
+    "https://passport.baidu.com/v2/sapi/authwidgetverify";
+
+///wap端入口
+const String WAP_URL = "https://wappass.baidu.com/";
+
+///wap端登陆入口
+const String WAP_LOGIN_URL = "https://wappass.baidu.com/wp/api/login";
+
+///贴吧一键签到入口，使用POST方法，只会签到7级以上的贴吧，功能有限，但效率最高
+const String ONE_KEY_SIGN_IN = "https://tieba.baidu.com/tbmall/onekeySignin1";
+
+///获取贴吧主页信息(手机web端)
+const String GET_FORUM_HOME = "https://tieba.baidu.com/mg/o/getForumHome";
+
+///可以获取关注的吧信息，可以用GET或者是POST方法
 const String GET_FORUM_RECOMMEND =
-    "http://c.tieba.baidu.com/c/f/forum/forumrecommend"; //可以获取关注的吧信息，可以用GET或者是POST方法
-const String FORUM_SIGN_IN = "http://c.tieba.baidu.com/c/c/forum/sign"; //单个吧签到
+    "http://c.tieba.baidu.com/c/f/forum/forumrecommend";
+
+///单个吧签到
+const String FORUM_SIGN_IN = "http://c.tieba.baidu.com/c/c/forum/sign";
+
+///获取动态贴
 const String FORUM_DYNMANIC =
-    "http://c.tieba.baidu.com/c/f/excellent/personalized"; //获取动态贴
-const String AUTHOR_AVATAR =
-    "http://tb.himg.baidu.com/sys/portrait/item/"; //获取头像
-const String GET_REPLY = "http://c.tieba.baidu.com/c/u/feed/replyme"; //获取回复
-const String GET_ATME = "http://c.tieba.baidu.com/c/u/feed/atme"; //获取@我
+    "http://c.tieba.baidu.com/c/f/excellent/personalized";
+
+///获取头像
+const String AUTHOR_AVATAR = "http://tb.himg.baidu.com/sys/portrait/item/";
+
+///获取回复
+const String GET_REPLY = "http://c.tieba.baidu.com/c/u/feed/replyme";
+
+///获取@我
+const String GET_ATME = "http://c.tieba.baidu.com/c/u/feed/atme";
+
+///获取个人信息，用Get方法
 const String GET_MY_USER_INFO =
-    "https://tieba.baidu.com/mo/q/newmoindex?need_user=1"; //获取个人信息，用Get方法
-const String GET_MESSAGE = "http://c.tieba.baidu.com/c/s/msg"; // 获取消息通知
-const String GET_FORUM_PAGE = "http://c.tieba.baidu.com/c/f/frs/page"; //获取吧主页信息
-const String AGREE_URL = "http://c.tieba.baidu.com/c/c/agree/opAgree"; //点赞
+    "https://tieba.baidu.com/mo/q/newmoindex?need_user=1";
+
+/// 获取消息通知
+const String GET_MESSAGE = "http://c.tieba.baidu.com/c/s/msg";
+
+///获取吧主页信息
+const String GET_FORUM_PAGE = "http://c.tieba.baidu.com/c/f/frs/page";
+
+///点赞
+const String AGREE_URL = "http://c.tieba.baidu.com/c/c/agree/opAgree";
+
+///获取手机号码注册状态
 const String GET_PHONE_NUMBER_STATUS =
-    "https://passport.baidu.com/v2/?getphonestatus"; //获取手机号码注册状态
-const String LOGIN_SEND_PASS =
-    "https://passport.baidu.com/v2/api/senddpass"; //短信登录发送短信API
+    "https://passport.baidu.com/v2/?getphonestatus";
+
+///短信登录发送短信API
+const String LOGIN_SEND_PASS = "https://passport.baidu.com/v2/api/senddpass";
+
+///文字图片验证码，后加vcodestr
 const String WORD_CAPTCHA_IMAGE =
-    "https://passport.baidu.com/cgi-bin/genimage?"; //文字图片验证码，后加vcodestr
-const String WAP_ACCOUNT_CHECK =
-    "https://wappass.baidu.com/v3/login/api/check"; // WAP端账号状态检查
-const String SEARCH_FORUM = "https://tieba.baidu.com/mo/q/seekforum"; //搜索吧API
-const String SEARCH_THREAD =
-    "https://tieba.baidu.com/mo/q/seekcomposite"; //搜索贴API
+    "https://passport.baidu.com/cgi-bin/genimage?";
+
+/// WAP端账号状态检查
+const String WAP_ACCOUNT_CHECK = "https://wappass.baidu.com/v3/login/api/check";
+
+///搜索吧API
+const String SEARCH_FORUM = "https://tieba.baidu.com/mo/q/seekforum";
+
+///搜索贴API
+const String SEARCH_THREAD = "https://tieba.baidu.com/mo/q/seekcomposite";
+
+///贴吧表情链接cdn
 const String TIEBA_EMOJI =
-    "https://gsp0.baidu.com/5aAHeD3nKhI2p27j8IqW0jdnxx1xbK/tb/editor/images/client/"; //贴吧表情链接
+    "https://gsp0.baidu.com/5aAHeD3nKhI2p27j8IqW0jdnxx1xbK/tb/editor/images/client/";
+
+///贴吧熊GIF表情链接cdn
 const String TIEBA_KUMA_EMOJI =
-    "https://gsp0.baidu.com/5aAHeD3nKhI2p27j8IqW0jdnxx1xbK/tb/editor/images/bearchildren/"; //贴吧熊GIF表情链接
-const String WAP_POST_REPLY =
-    "http://c.tieba.baidu.com/c/c/post/add"; // WAP端回帖API
-const String WAP_UPLOAD_PICTURE =
-    "http://c.tieba.baidu.com/c/s/uploadPicture"; //WAP端传图API
-const String WEB_SEARCH_POST =
-    "https://tieba.baidu.com/mo/q/search/thread"; // WEB端搜贴API
-const String WEB_SEARCH_USER =
-    "https://tieba.baidu.com/mo/q/search/user"; //WEB端搜索用户API
-const String WAP_USER_POST =
-    "http://c.tieba.baidu.com/c/u/feed/userpost"; //WAP端获取用户post
-const String WAP_USER_FORUM_LIKE =
-    "http://c.tieba.baidu.com/c/f/forum/like"; //WAP端获取用户关注贴
+    "https://gsp0.baidu.com/5aAHeD3nKhI2p27j8IqW0jdnxx1xbK/tb/editor/images/bearchildren/";
+
+/// WAP端回帖API
+const String WAP_POST_REPLY = "http://c.tieba.baidu.com/c/c/post/add";
+
+///WAP端传图API
+const String WAP_UPLOAD_PICTURE = "http://c.tieba.baidu.com/c/s/uploadPicture";
+
+/// WEB端搜贴API
+const String WEB_SEARCH_POST = "https://tieba.baidu.com/mo/q/search/thread";
+
+///WEB端搜索用户API
+const String WEB_SEARCH_USER = "https://tieba.baidu.com/mo/q/search/user";
+
+///WAP端获取用户post
+const String WAP_USER_POST = "http://c.tieba.baidu.com/c/u/feed/userpost";
+
+///WAP端获取用户关注贴
+const String WAP_USER_FORUM_LIKE = "http://c.tieba.baidu.com/c/f/forum/like";
+
+///获取用户收藏贴
+const String USER_THREAD_STORE =
+    "http://c.tieba.baidu.com/c/f/post/threadstore";
 
 ///不喜欢首页推荐贴 参数：
 ///

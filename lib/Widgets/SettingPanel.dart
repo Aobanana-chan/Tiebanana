@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 class SettingPanel extends StatefulWidget {
   const SettingPanel({Key? key}) : super(key: key);
@@ -22,7 +23,9 @@ class _SettingPanelState extends State<SettingPanel> {
             highlightElevation: 0,
             disabledElevation: 0,
             color: Colors.white,
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, PageRouter.threadStore);
+            },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
@@ -42,7 +45,9 @@ class _SettingPanelState extends State<SettingPanel> {
             highlightElevation: 0,
             disabledElevation: 0,
             color: Colors.white,
-            onPressed: () {},
+            onPressed: () {
+              //TODO:历史界面
+            },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
@@ -62,7 +67,9 @@ class _SettingPanelState extends State<SettingPanel> {
             highlightElevation: 0,
             disabledElevation: 0,
             color: Colors.white,
-            onPressed: () {},
+            onPressed: () {
+              //TODO:主题切换
+            },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
@@ -82,7 +89,9 @@ class _SettingPanelState extends State<SettingPanel> {
             highlightElevation: 0,
             disabledElevation: 0,
             color: Colors.white,
-            onPressed: () {},
+            onPressed: () {
+              //TODO：贴吧服务中心
+            },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
@@ -102,7 +111,9 @@ class _SettingPanelState extends State<SettingPanel> {
             highlightElevation: 0,
             disabledElevation: 0,
             color: Colors.white,
-            onPressed: () {},
+            onPressed: () {
+              //TODO:软件设置
+            },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [

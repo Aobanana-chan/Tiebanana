@@ -36,8 +36,15 @@ class App extends StatelessWidget {
                     }
                     return null;
                   },
-                  theme: ThemeData(primaryColor: theme.theme),
-                  darkTheme: Global.setting.darkModel == 0
+                  theme:
+                      // ThemeData.from(
+                      //     colorScheme: ColorScheme.light(primary: theme.theme)),
+                      ThemeData(
+                          brightness: Brightness.light,
+                          primaryColor: theme.materialTheme,
+                          appBarTheme: theme.appBarTheme,
+                          scaffoldBackgroundColor: const Color(0xFFF2F2F5)),
+                  darkTheme: Global.setting.darkModel == 1
                       ? ThemeData(
                           brightness: Brightness.dark,
                         )

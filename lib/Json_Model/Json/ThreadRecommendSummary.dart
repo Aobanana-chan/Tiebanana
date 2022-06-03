@@ -214,6 +214,16 @@ class Media {
   String? wthMidLoc;
   String? hthMidLoc;
 
+  String? size;
+
+  String? waterPic;
+  String? smallPic;
+
+  String? src;
+  String? vsrc;
+  String? vhsrc;
+  String? vpic;
+
   Media(
       {this.type,
       this.width,
@@ -227,7 +237,14 @@ class Media {
       this.originSize,
       this.postId,
       this.wthMidLoc,
-      this.hthMidLoc});
+      this.hthMidLoc,
+      this.size,
+      this.waterPic,
+      this.smallPic,
+      this.src,
+      this.vsrc,
+      this.vhsrc,
+      this.vpic});
 
   Media.fromJson(Map<String, dynamic> json) {
     type = json['type'];
@@ -243,6 +260,16 @@ class Media {
     postId = json['post_id'];
     wthMidLoc = json['wth_mid_loc'];
     hthMidLoc = json['hth_mid_loc'];
+
+    size = json['size'];
+
+    waterPic = json['water_pic'];
+    smallPic = json['small_pic'];
+
+    src = json['src'];
+    vsrc = json['vsrc'];
+    vhsrc = json['vhsrc'];
+    vpic = json['vpic'];
   }
 
   Map<String, dynamic> toJson() {
@@ -260,6 +287,16 @@ class Media {
     data['post_id'] = postId;
     data['wth_mid_loc'] = wthMidLoc;
     data['hth_mid_loc'] = hthMidLoc;
+
+    data['size'] = size;
+
+    data['water_pic'] = waterPic;
+    data['small_pic'] = smallPic;
+
+    data['src'] = src;
+    data['vsrc'] = vsrc;
+    data['vhsrc'] = vhsrc;
+    data['vpic'] = vpic;
     return data;
   }
 }
