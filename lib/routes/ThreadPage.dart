@@ -1,11 +1,15 @@
+import 'package:dio/dio.dart';
 import 'package:extended_image/extended_image.dart';
+import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
+import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/ThreadFirstComment.dart';
 import 'package:tiebanana/Widgets/ThreadFloorCard.dart';
 import 'package:tiebanana/Widgets/ThreadReplyBar.dart';
+import 'package:tiebanana/Widgets/common/AlterDialog.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 
@@ -13,7 +17,9 @@ import 'package:tiebanana/routes/routes.dart';
 
 class ThreadPageRoute extends StatefulWidget {
   final String kz;
-  const ThreadPageRoute({Key? key, required this.kz}) : super(key: key);
+  final String? pid;
+  const ThreadPageRoute({Key? key, required this.kz, this.pid})
+      : super(key: key);
 
   @override
   _ThreadPageState createState() => _ThreadPageState();
@@ -22,7 +28,7 @@ class ThreadPageRoute extends StatefulWidget {
 class _ThreadPageState extends State<ThreadPageRoute> {
   Future<ThreadPageData>? initThread;
   void init() async {
-    initThread = Global.tiebaAPI.getThreadPage(widget.kz);
+    initThread = Global.tiebaAPI.getThreadPage(widget.kz, pid: widget.pid);
     setState(() {});
   }
 
@@ -39,8 +45,33 @@ class _ThreadPageState extends State<ThreadPageRoute> {
       initialData: null,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         if (snapshot.hasData) {
+          ThreadPageData data = snapshot.data;
+
+          var list = <ThreadPagePost>[];
+          for (var i in data.postList!) {
+            var t = ThreadPagePost.fromPostList(i);
+
+            list.add(t);
+          }
           return Scaffold(
-            body: ThreadPageMain(kz: widget.kz, initInfo: snapshot.data),
+            body: ThreadPageMain(
+              kz: widget.kz,
+              hasMore: data.page!.hasMore == "1`",
+              hasPrev: data.page!.hasPrev == "1",
+              pid: null,
+              pn: int.parse(data.page!.currentPage!),
+              title: data.thread!.title!,
+              userList: data.userList,
+              videoInfo: data.thread?.videoInfo,
+              avatar: data.forum!.avatar!,
+              fid: data.forum!.id!,
+              forumName: data.forum!.name!,
+              tid: data.thread!.id!,
+              forum: ForumData.fromForm(data.forum!),
+              thread: ThreadData.fromThread(data.thread!),
+              initPost: list,
+              isStored: data.thread!.collectStatus != "0",
+            ),
           );
         } else if (snapshot.hasError) {
           //TODO:以后添加收藏贴缓存
@@ -60,31 +91,62 @@ class _ThreadPageState extends State<ThreadPageRoute> {
 
 class ThreadPageMain extends StatefulWidget {
   final String kz;
-  final ThreadPageData initInfo;
-  const ThreadPageMain({Key? key, required this.kz, required this.initInfo})
+
+  final bool hasMore;
+  final bool hasPrev;
+  final String title;
+  // final ThreadPageData initInfo;
+  final VideoInfo? videoInfo;
+  final List<UserList>? userList;
+  final int? pn;
+  final String? pid;
+  final String avatar; //吧头像
+  final String fid;
+  final String forumName;
+  final String tid;
+  final ThreadData thread;
+  final List<ThreadPagePost> initPost;
+  final ForumData forum;
+  final bool isStored;
+  const ThreadPageMain(
+      {Key? key,
+      required this.kz,
+      required this.hasMore,
+      required this.hasPrev,
+      required this.title,
+      required this.videoInfo,
+      required this.userList,
+      required this.pn,
+      required this.pid,
+      required this.avatar,
+      required this.fid,
+      required this.forumName,
+      required this.tid,
+      required this.forum,
+      required this.thread,
+      required this.initPost,
+      required this.isStored})
       : super(key: key);
 
   @override
-  _ThreadPageMainState createState() => _ThreadPageMainState();
+  ThreadPageMainState createState() => ThreadPageMainState();
 }
 
-class _ThreadPageMainState extends State<ThreadPageMain> {
+class ThreadPageMainState extends State<ThreadPageMain> {
+  late ThreadPageModel info;
+
   late List<Widget> appBarAction;
   final ScrollController _controller = ScrollController();
 
   bool lz = false; //只看楼主
-  late List<PostList> postList;
-  Map<String, UserList> userListSet = {};
-  String title = "";
-  List<String> imgs = []; // 贴中所有图片列表
-  List<String> imgsOrgSrc = []; // 贴中所有高清图片列表
-  VideoInfo? videoInfo;
+
   double scrollOffset = 0;
 
-  late int topPn;
-  late int bottomPn;
-  late bool hasMore;
-  late bool hasPrev;
+  ///目前滑到的pid
+  String pid = "";
+
+  bool isStored = false;
+
   @override
   void initState() {
     super.initState();
@@ -122,12 +184,28 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
           },
           icon: const Icon(Icons.more_vert)),
     ];
-    postList = widget.initInfo.postList ?? [];
-    title = widget.initInfo.thread!.title!;
-    videoInfo = widget.initInfo.thread?.videoInfo;
+
+    info = ThreadPageModel(
+      title: widget.title,
+      videoInfo: widget.videoInfo,
+      hasMore: widget.hasMore,
+      hasPrev: widget.hasPrev,
+      initPid: widget.pid,
+      bottomPn: widget.pn,
+      topPn: widget.pn,
+      avatar: widget.avatar,
+      fid: widget.fid,
+      forumName: widget.forumName,
+      tid: widget.tid,
+      isStored: widget.isStored,
+    );
+    info.postPage[widget.pn!] = widget.initPost;
+    // postList = widget.initInfo.postList ?? [];
+    // title = widget.initInfo.thread!.title!;
+    // videoInfo = widget.initInfo.thread?.videoInfo;
     //处理用户列表映射关系
-    for (UserList user in widget.initInfo.userList ?? []) {
-      userListSet[user.id!] = user;
+    for (UserList user in widget.userList ?? []) {
+      info.userListSet[user.id!] = user;
     }
 
     collectImages();
@@ -144,11 +222,12 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
       }
     });
 
-    //设置页码
-    topPn = int.parse(widget.initInfo.page!.currentPage!);
-    bottomPn = topPn;
-    hasMore = widget.initInfo.page?.hasMore == "1";
-    hasPrev = widget.initInfo.page?.hasPrev == "1";
+    // //设置页码
+    // topPn = int.parse(widget.initInfo.page!.currentPage!);
+    // bottomPn = topPn;
+
+    // hasMore = widget.initInfo.page?.hasMore == "1";
+    // hasPrev = widget.initInfo.page?.hasPrev == "1";
 
     //快滑到页面底部加载下一页
     _controller.addListener(() {
@@ -166,20 +245,32 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
         Throttle.seconds(5, prevPage);
       }
     });
+
+    isStored = widget.isStored;
   }
 
   //TODO:页面加载完成后清除Throttle,以便快速滑动
   //下一页
   void nextPage() async {
-    if (hasMore) {
-      bottomPn++;
+    if (info.hasMore) {
+      info.bottomPn = info.bottomPn! + 1;
       var l = await Global.tiebaAPI
-          .getThreadPage(widget.kz, pn: bottomPn, onlyLz: lz);
-      postList.addAll(l.postList!);
-      hasMore = l.page?.hasMore == "1";
+          .getThreadPage(widget.kz, pn: info.bottomPn!, onlyLz: lz);
+
+      var list = <ThreadPagePost>[];
+      for (var i in l.postList!) {
+        var t = ThreadPagePost.fromPostList(i);
+
+        list.add(t);
+      }
+      info.postPage[info.bottomPn!] = list;
+
+      // postList.addAll(l.postList!);
+      info.hasMore = l.page?.hasMore == "1";
+      // hasMore = l.page?.hasMore == "1";
       //添加新的user列表
       for (UserList user in l.userList ?? []) {
-        userListSet[user.id!] = user;
+        info.userListSet[user.id!] = user;
       }
       setState(() {
         collectImages();
@@ -189,15 +280,24 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
 
   //上一页
   void prevPage() async {
-    if (hasPrev) {
-      topPn++;
-      var l =
-          await Global.tiebaAPI.getThreadPage(widget.kz, pn: topPn, onlyLz: lz);
-      postList.addAll(l.postList!);
-      hasPrev = l.page?.hasPrev == "1";
+    if (info.hasPrev) {
+      info.topPn = info.topPn! - 1;
+      var l = await Global.tiebaAPI
+          .getThreadPage(widget.kz, pn: info.topPn!, onlyLz: lz);
+
+      var list = <ThreadPagePost>[];
+      for (var i in l.postList!) {
+        var t = ThreadPagePost.fromPostList(i);
+
+        list.add(t);
+      }
+      info.postPage[info.topPn!] = list;
+      // postList.addAll(l.postList!);
+      info.hasPrev = l.page?.hasPrev == "1";
+      // hasPrev = l.page?.hasPrev == "1";
       //添加新的user列表
       for (UserList user in l.userList ?? []) {
-        userListSet[user.id!] = user;
+        info.userListSet[user.id!] = user;
       }
       setState(() {
         collectImages();
@@ -207,13 +307,14 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
 
   void collectImages() {
     //整理图片
-    for (PostList post in postList) {
-      for (Content content in post.content ?? []) {
+    for (ThreadPagePost post in info.postList) {
+      for (Content content in post.content) {
         if ((content.type == "4" && content.originSrc != null) ||
             content.type == "3") {
           //type4可能是富文本
-          imgs.add(content.text ?? content.bigCdnSrc ?? content.originSrc!);
-          imgsOrgSrc.add(content.originSrc!);
+          info.imgs
+              .add(content.text ?? content.bigCdnSrc ?? content.originSrc!);
+          info.imgsOrgSrc.add(content.originSrc!);
         }
       }
     }
@@ -221,16 +322,16 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
 
   List<Widget> buildFloor() {
     List<Widget> w = [];
-    for (var floor in postList) {
+    for (var floor in info.postList) {
       if (floor.floor != "1") {
         w.add(ThreadFloorComment(
-          allImgs: imgs,
-          allOrgImgs: imgsOrgSrc,
-          author: userListSet[floor.authorId!]!,
+          allImgs: info.imgs,
+          allOrgImgs: info.imgsOrgSrc,
+          author: info.userListSet[floor.uid]!,
           postMain: floor,
-          userList: userListSet,
-          threadID: widget.initInfo.thread!.id!,
-          forum: widget.initInfo.forum!,
+          userList: info.userListSet,
+          threadID: info.tid,
+          forum: widget.forum,
         ));
       }
     }
@@ -239,121 +340,102 @@ class _ThreadPageMainState extends State<ThreadPageMain> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF2F2F5),
-      child: Column(
-        children: [
-          Expanded(
-              child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            controller: _controller,
-            slivers: <Widget>[
-              SliverAppBar(
-                //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
-                // expandedHeight: .00001,
-                elevation: 0.5,
-                pinned: true,
-                snap: true,
-                floating: true,
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                actions: appBarAction,
-                title: AnimatedOpacity(
-                  alwaysIncludeSemantics: true,
-                  opacity: scrollOffset < 36 ? 0 : 1,
-                  duration: const Duration(milliseconds: 200),
-                  child: GestureDetector(
-                      onTap: () {
-                        _controller.animateTo(0,
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeIn);
-                      },
-                      child: Text(
-                        widget.initInfo.thread!.title!,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 17),
-                      )),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Visibility(
-                    visible: postList[0].floor! == "1",
-                    child: ThreadFirstComment(
-                      postMain: postList[0],
-                      author: userListSet[postList[0].authorId!]!,
-                      videoInfo: videoInfo,
-                      allImgs: imgs,
-                      allOrgImgs: imgsOrgSrc,
-                      threadID: widget.initInfo.thread!.id!,
-                      thread: widget.initInfo.thread!,
-                    )),
-              ),
-              SliverToBoxAdapter(
-                child: FourmBar(
-                  avatar: widget.initInfo.forum!.avatar!,
-                  name: widget.initInfo.forum!.name!,
-                ),
-              ),
-              SliverList(delegate: SliverChildListDelegate(buildFloor()))
+    return WillPopScope(
+        onWillPop: () async {
+          if (isStored) {
+            bool? q = await showDialog(
+                context: context,
+                builder: (builder) =>
+                    const TiebaAlterDialog(title: "本次阅读到这里，是否更新收藏楼层?"));
+            if (q == null) {
+              return false;
+            } else if (q == true) {
+              Global.tiebaAPI.threadAddStore(widget.tid, pid);
+            }
+          }
+
+          return true;
+        },
+        child: Container(
+          color: const Color(0xFFF2F2F5),
+          child: Column(
+            children: [
+              Expanded(
+                  child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                controller: _controller,
+                slivers: <Widget>[
+                  SliverAppBar(
+                    //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
+                    // expandedHeight: .00001,
+                    elevation: 0.5,
+                    pinned: true,
+                    snap: true,
+                    floating: true,
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    actions: appBarAction,
+                    title: AnimatedOpacity(
+                      alwaysIncludeSemantics: true,
+                      opacity: scrollOffset < 36 ? 0 : 1,
+                      duration: const Duration(milliseconds: 200),
+                      child: GestureDetector(
+                          onTap: () {
+                            _controller.animateTo(0,
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeIn);
+                          },
+                          child: Text(
+                            info.title,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 17),
+                          )),
+                    ),
+                  ),
+
+                  //一楼
+                  SliverToBoxAdapter(
+                    child: Visibility(
+                        visible: info.postList[0].floor! == "1",
+                        child: ThreadFirstComment(
+                          postMain: info.postList[0],
+                          author: info.userListSet[info.postList[0].uid]!,
+                          videoInfo: info.videoInfo,
+                          allImgs: info.imgs,
+                          allOrgImgs: info.imgsOrgSrc,
+                          threadID: info.tid,
+                          thread: widget.thread,
+                        )),
+                  ),
+                  SliverToBoxAdapter(
+                    child: FourmBar(
+                      avatar: info.avatar,
+                      name: info.forumName,
+                    ),
+                  ),
+
+                  //其他楼
+                  SliverList(delegate: SliverChildListDelegate(buildFloor()))
+                ],
+              )),
+              //回复条
+              ThreadReplyBar(
+                fid: info.fid,
+                tid: info.tid,
+                kw: info.forumName,
+                replyText: info.title,
+                isThreadStored: info.isStored,
+              )
             ],
-          )),
-          //回复条
-          ThreadReplyBar(
-            fid: widget.initInfo.forum!.id!,
-            tid: widget.initInfo.thread!.id!,
-            kw: widget.initInfo.forum!.name!,
-            replyText: widget.initInfo.thread!.title!,
-          )
-        ],
-      ),
-      // ExtendedNestedScrollViewEx(
-      //   initStateCallback: (p0) {
-      //     innerController = p0.innerController;
-      //     outerController = p0.outerController;
-      //   },
-      //   floatHeaderSlivers: true,
-      //   headerSliverBuilder: (context, innerBoxIsScrolled) {
-      //     return <Widget>[
-      //       SliverOverlapAbsorber(
-      //         handle: ExtendedNestedScrollViewEx.sliverOverlapAbsorberHandleFor(
-      //             context),
-      //         sliver: ,
-      //       ),
-      //     ];
-      //   },
-      //   body: Builder(
-      //     builder: (context) => CustomScrollView(
-      //       shrinkWrap: true,
-      //       physics: BouncingScrollPhysics(),
-      //       slivers: <Widget>[
-      //         SliverOverlapInjector(
-      //             handle:
-      //                 ExtendedNestedScrollViewEx.sliverOverlapAbsorberHandleFor(
-      //                     context)),
-      //         SliverToBoxAdapter(
-      //           child: Visibility(
-      //               visible: postList[0].floor! == "1",
-      //               child: ThreadFirstComment(
-      //                 postMain: postList[0],
-      //                 author: userListSet[postList[0].authorId!]!,
-      //                 videoInfo: videoInfo,
-      //                 allImgs: imgs,
-      //                 allOrgImgs: imgsOrgSrc,
-      //               )),
-      //         ),
-      //         SliverToBoxAdapter(
-      //           child: FourmBar(
-      //             avatar: widget.initInfo.forum!.avatar!,
-      //             name: widget.initInfo.forum!.name!,
-      //           ),
-      //         ),
-      //         SliverList(delegate: SliverChildListDelegate(buildFloor()))
-      //       ],
-      //     ),
-      //   ),
-      // ),
-    );
+          ),
+        ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
 

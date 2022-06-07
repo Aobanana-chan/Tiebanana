@@ -22,6 +22,7 @@ part './Json/UserPostModel.dart';
 part './Json/UserForumLike.dart';
 part './Json/LikeForumModel.dart';
 part './Json/ThreadStoreModel.dart';
+part 'Json/ThreadStore.dart';
 
 //TODO:拆分
 

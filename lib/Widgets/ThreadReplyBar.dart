@@ -7,12 +7,14 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:like_button/like_button.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/EmojiPanel.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///帖子-底端回复栏
@@ -21,12 +23,14 @@ class ThreadReplyBar extends StatefulWidget {
   final String tid;
   final String kw;
   final String replyText;
+  final bool isThreadStored;
   const ThreadReplyBar(
       {Key? key,
       required this.fid,
       required this.tid,
       required this.kw,
-      required this.replyText})
+      required this.replyText,
+      required this.isThreadStored})
       : super(key: key);
 
   @override
@@ -34,6 +38,20 @@ class ThreadReplyBar extends StatefulWidget {
 }
 
 class _ThreadReplyBarState extends State<ThreadReplyBar> {
+  String get pid {
+    var p = "";
+    p = context.findAncestorStateOfType<ThreadPageMainState>()!.pid;
+    return p;
+  }
+
+  ///贴是否收藏
+  bool isStored = false;
+  @override
+  void initState() {
+    super.initState();
+    isStored = widget.isThreadStored;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -78,6 +96,7 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
             ),
           )),
           LikeButton(
+            isLiked: isStored,
             likeBuilder: (isLiked) {
               if (!isLiked) {
                 return const Icon(Icons.star_border);
@@ -87,6 +106,35 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
                   color: Colors.yellow,
                 );
               }
+            },
+            onTap: (isLiked) async {
+              if (isLiked) {
+                //TODO:取消收藏
+                var res = await Global.tiebaAPI.threadRemoveStore(widget.tid);
+                if (res.error?.errno == "0") {
+                  Fluttertoast.showToast(msg: "取消收藏");
+                } else {
+                  Fluttertoast.showToast(msg: "取消失败");
+                  return isLiked;
+                }
+              } else {
+                var res = await Global.tiebaAPI.threadAddStore(widget.tid, pid);
+                if (res.error?.errno == "0") {
+                  Fluttertoast.showToast(msg: "收藏成功");
+                } else {
+                  Fluttertoast.showToast(msg: "收藏失败");
+                  return isLiked;
+                }
+              }
+
+              isStored = !isLiked;
+              if (mounted) {
+                context
+                    .findAncestorStateOfType<ThreadPageMainState>()
+                    ?.isStored = isStored;
+              }
+
+              return !isLiked;
             },
           ),
           //TODO:帖子分享
@@ -103,7 +151,7 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
 
 class InnerFloorReplyBar extends StatelessWidget {
   final Author author;
-  final Forum forum;
+  final ForumData forum;
   final String threadID;
   final PostList postMain;
   const InnerFloorReplyBar(
@@ -133,8 +181,8 @@ class InnerFloorReplyBar extends StatelessWidget {
                 builder: (context) => ReplyBottomSheet(
                   replyText:
                       "${author.nameShow ?? author.name}： ${TiebaParser.parserContentString(postMain.content)}",
-                  kw: forum.name!,
-                  fid: forum.id!,
+                  kw: forum.forumName,
+                  fid: forum.fid,
                   tid: threadID,
                   floorId: postMain.id,
                   isReplyThread: false,

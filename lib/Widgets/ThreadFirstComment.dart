@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/LikeButtonEx.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///帖子组件-楼主
 class ThreadFirstComment extends StatelessWidget {
-  final PostList postMain;
+  // final PostList postMain;
+  final ThreadPagePost postMain;
   final UserList author;
   final VideoInfo? videoInfo;
   final List<String> allImgs;
   final List<String> allOrgImgs;
   final String threadID;
-  final Thread thread;
+  final ThreadData thread;
   const ThreadFirstComment(
       {Key? key,
       required this.postMain,
@@ -42,7 +45,7 @@ class ThreadFirstComment extends StatelessWidget {
             child: Column(
               children: [
                 SelectableText(
-                  postMain.title!,
+                  postMain.title,
                   style: const TextStyle(
                       color: Colors.black,
                       fontSize: 16,
@@ -99,7 +102,7 @@ class ThreadFirstComment extends StatelessWidget {
                         ),
                         //发帖时间
                         Text(
-                          TiebaParser.getPostTime(strTime: postMain.time),
+                          TiebaParser.getPostTime(strTime: postMain.createTime),
                           style:
                               const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
@@ -123,13 +126,13 @@ class ThreadFirstComment extends StatelessWidget {
                   ],
                 )),
                 AgreeAndDisagreeBar(
-                  agreeNum: int.parse(postMain.agree!.agreeNum!),
-                  disagreeNum: int.parse(postMain.agree!.disagreeNum!),
-                  agreeType: int.parse(thread.agree!.agreeType!),
-                  postID: postMain.id!,
+                  agreeNum: int.parse(postMain.agreeNum!),
+                  disagreeNum: int.parse(postMain.disagreeNum!),
+                  agreeType: int.parse(thread.agreeType!),
+                  postID: postMain.id,
                   threadID: threadID,
                   objType: 3,
-                  hasAgree: postMain.agree!.hasAgree!,
+                  hasAgree: postMain.hasAgree!,
                 )
               ],
             ),

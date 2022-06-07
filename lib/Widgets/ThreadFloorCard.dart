@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadFirstComment.dart';
@@ -8,12 +9,13 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///帖子-楼层组件
 class ThreadFloorComment extends StatelessWidget {
-  final Forum forum;
-  final PostList postMain;
+  final ForumData forum;
+  final ThreadPagePost postMain;
   // final SubPostList? subPostList;
   final UserList author;
   final VideoInfo? videoInfo;
@@ -35,6 +37,12 @@ class ThreadFloorComment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kDebugMode) {
+      print("正在浏览PID:${postMain.id},第${postMain.floor}楼");
+    }
+    var readingHistoryPid =
+        context.findAncestorStateOfType<ThreadPageMainState>();
+    readingHistoryPid?.pid = postMain.id;
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
@@ -46,8 +54,8 @@ class ThreadFloorComment extends StatelessWidget {
               return ReplyBottomSheet(
                 replyText:
                     "${author.nameShow ?? author.name}： ${TiebaParser.parserContentString(postMain.content)}",
-                kw: forum.name!,
-                fid: forum.id!,
+                kw: forum.forumName,
+                fid: forum.fid,
                 tid: threadID,
                 floorId: postMain.id,
                 isReplyThread: false,
@@ -124,7 +132,7 @@ class ThreadFloorComment extends StatelessWidget {
                                   //发帖时间
                                   Text(
                                     TiebaParser.getPostTime(
-                                        strTime: postMain.time),
+                                        strTime: postMain.createTime),
                                     style: const TextStyle(
                                         color: Colors.grey, fontSize: 14),
                                   ),
@@ -149,14 +157,13 @@ class ThreadFloorComment extends StatelessWidget {
                             ],
                           )),
                           AgreeAndDisagreeBar(
-                            agreeNum: int.parse(postMain.agree!.agreeNum!),
-                            disagreeNum:
-                                int.parse(postMain.agree!.disagreeNum!),
-                            agreeType: int.parse(postMain.agree!.agreeType!),
-                            postID: postMain.id!,
+                            agreeNum: int.parse(postMain.agreeNum!),
+                            disagreeNum: int.parse(postMain.disagreeNum!),
+                            agreeType: int.parse(postMain.agreeType!),
+                            postID: postMain.id,
                             threadID: threadID,
                             objType: 1,
-                            hasAgree: postMain.agree!.hasAgree!,
+                            hasAgree: postMain.hasAgree!,
                           )
                         ],
                       ),
@@ -174,17 +181,17 @@ class ThreadFloorComment extends StatelessWidget {
                           ),
                         ),
                         Visibility(
-                            visible: postMain.subPostList != null,
+                            visible: postMain.subPostList.isNotEmpty,
                             child: Row(
                               children: [
                                 Expanded(
                                     child: InnerFloor(
-                                  subPostList: postMain.subPostList ?? [],
+                                  subPostList: postMain.subPostList,
                                   userlist: userList,
-                                  subPostNumber: postMain.subPostNumber!,
+                                  subPostNumber: postMain.subPostNumber,
                                   floorNum: postMain.floor!,
                                   kz: threadID,
-                                  pid: postMain.id!,
+                                  pid: postMain.id,
                                   forum: forum,
                                 ))
                               ],
@@ -206,12 +213,12 @@ class ThreadFloorComment extends StatelessWidget {
 ///楼中楼
 class InnerFloor extends StatelessWidget {
   final Map<String, UserList> userlist;
-  final List<SubPostList> subPostList;
+  final List<SubPost> subPostList;
   final String subPostNumber;
   final String floorNum;
   final String kz;
   final String pid;
-  final Forum forum;
+  final ForumData forum;
   const InnerFloor({
     Key? key,
     required this.subPostList,
@@ -227,18 +234,18 @@ class InnerFloor extends StatelessWidget {
     List<Widget> subposts = <Widget>[];
     for (var i = 0; i < subPostList.length; i++) {
       var post = subPostList[i];
-      if (post.isVoice == "1") {
+      if (post.isVoice) {
         if (kDebugMode) {
           print("音频回复");
         }
       }
       subposts.add(InnerPost(
-        author: userlist[post.authorId!]!,
-        posts: post.content!,
+        author: userlist[post.uid]!,
+        posts: post.content,
         floorNum: floorNum,
         kz: kz,
         pid: pid,
-        spid: subPostList[i].id!,
+        spid: subPostList[i].id,
         forum: forum,
       ));
     }
@@ -295,7 +302,7 @@ class InnerPost extends StatelessWidget {
   final String spid;
   final Author author;
   final List<Content> posts;
-  final Forum forum;
+  final ForumData forum;
   const InnerPost(
       {Key? key,
       required this.author,
@@ -378,7 +385,7 @@ class InnerFloorBottomSheet extends StatefulWidget {
   final String pid;
   final String spid;
   final int pn;
-  final Forum forum;
+  final ForumData forum;
   const InnerFloorBottomSheet(
       {Key? key,
       required this.floorNum,
@@ -622,7 +629,7 @@ class InnerFloorCard extends StatelessWidget {
   final SubpostList postMain;
   final String threadID;
   final bool isSpid;
-  final Forum forum;
+  final ForumData forum;
   final String floorId;
   const InnerFloorCard(
       {Key? key,
@@ -668,8 +675,8 @@ class InnerFloorCard extends StatelessWidget {
               return ReplyBottomSheet(
                 replyText:
                     "${author.nameShow ?? author.name}： ${TiebaParser.parserContentString(postMain.content)}",
-                kw: forum.name!,
-                fid: forum.id!,
+                kw: forum.forumName,
+                fid: forum.fid,
                 tid: threadID,
                 floorId: floorId,
                 isReplyThread: false,

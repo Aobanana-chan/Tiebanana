@@ -7,7 +7,8 @@ const defaultAPPSetting = {
   "useBuildinBrowser": true,
   "checkUpdateAutomaticlly": true,
   "usePostTail": false,
-  "postTail": ""
+  "postTail": "",
+  "fontSize": 16.0
 };
 
 ///APP设置Model类
@@ -46,6 +47,8 @@ class APPSetting {
   ///小尾巴内容
   String? postTail;
 
+  double fontSize = 16;
+
   APPSetting(
       {this.theme,
       this.pictureLoadSetting,
@@ -55,7 +58,8 @@ class APPSetting {
       this.useBuildinBrowser,
       this.checkUpdateAutomaticlly,
       this.usePostTail,
-      this.postTail});
+      this.postTail,
+      required this.fontSize});
 
   APPSetting.fromJson(Map<String, dynamic> json) {
     theme = json['theme'];
@@ -67,6 +71,7 @@ class APPSetting {
     checkUpdateAutomaticlly = json['checkUpdateAutomaticlly'];
     usePostTail = json['usePostTail'];
     postTail = json['postTail'];
+    fontSize = json['fontSize'];
   }
 
   Map<String, dynamic> toJson() {
@@ -80,6 +85,7 @@ class APPSetting {
     data['checkUpdateAutomaticlly'] = checkUpdateAutomaticlly;
     data['usePostTail'] = usePostTail;
     data['postTail'] = postTail;
+    data['fontSize'] = fontSize;
     return data;
   }
 }

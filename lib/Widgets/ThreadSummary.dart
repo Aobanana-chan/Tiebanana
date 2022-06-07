@@ -247,7 +247,7 @@ class ThreadSummary extends StatelessWidget {
       child: MaterialButton(
         onPressed: () async {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: info.tid!);
+              arguments: ThreadPageRouterData(kz: info.tid!, pid: null));
           // await Global.tiebaAPI.getThreadPage(info.tid!);
         },
         padding: const EdgeInsets.all(5),

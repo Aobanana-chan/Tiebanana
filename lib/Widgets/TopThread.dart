@@ -16,7 +16,7 @@ class TopThread extends StatelessWidget {
       child: MaterialButton(
         onPressed: () {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: info.tid!);
+              arguments: ThreadPageRouterData(kz: info.tid!, pid: null));
         },
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: const EdgeInsets.all(8),

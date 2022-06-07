@@ -17,7 +17,7 @@ class SearchThreadCard extends StatelessWidget {
         //主题帖
         if (post.type == 1) {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: post.tid);
+              arguments: ThreadPageRouterData(kz: post.tid!, pid: null));
         }
       },
       child: Container(

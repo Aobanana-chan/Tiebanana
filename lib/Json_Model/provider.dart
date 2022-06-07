@@ -28,8 +28,8 @@ class User with ChangeNotifier {
   }
 }
 
-///应用主题Model
-class APPTheme with ChangeNotifier {
+///应用设置Provider
+class APPSettingProvider with ChangeNotifier {
   // 获取当前主题，如果未设置主题，则默认使用蓝色主题
   AppBarTheme _appBarTheme = AppBarTheme();
   String get theme {
@@ -60,6 +60,17 @@ class APPTheme with ChangeNotifier {
       _appBarTheme.copyWith(backgroundColor: Colors.white);
     }
     return _appBarTheme;
+  }
+
+  //字号大小
+  double get fontSize {
+    return Global.setting.fontSize;
+  }
+
+  set fontSize(double size) {
+    Global.setting.fontSize = size;
+    Global.saveProfile();
+    notifyListeners();
   }
 }
 
@@ -153,3 +164,24 @@ class ImageUploadProviderModel with ChangeNotifier {
     });
   }
 }
+
+const String frontSizeSetting = "AppSettingFrontSize";
+
+///应用设置Provider
+// class APPSettingProvider with ChangeNotifier {
+//   APPSettingProvider() {
+//     _frontSize = Global.profile.getInt(frontSizeSetting);
+//   }
+
+//   ///字号大小
+//   int _frontSize = 20;
+
+//   int get frontSize {
+//     return _frontSize;
+//   }
+
+//   set frontSize(int size) {
+//     _frontSize = size;
+//     notifyListeners();
+//   }
+// }

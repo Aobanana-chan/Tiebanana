@@ -271,6 +271,12 @@ const String WAP_USER_FORUM_LIKE = "http://c.tieba.baidu.com/c/f/forum/like";
 const String USER_THREAD_STORE =
     "http://c.tieba.baidu.com/c/f/post/threadstore";
 
+///添加到收藏贴
+const String ADD_THREAD_STORE = "http://c.tieba.baidu.com/c/c/post/addstore";
+
+///取消收藏贴
+const String REMOVE_THREAD_STORE = "http://c.tieba.baidu.com/c/c/post/rmstore";
+
 ///不喜欢首页推荐贴 参数：
 ///
 ///BDUSS

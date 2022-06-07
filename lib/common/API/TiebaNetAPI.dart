@@ -1340,7 +1340,7 @@ class TiebaAPI {
   ///
   ///[onlyLz] - 只看楼主
   Future<ThreadPageData> getThreadPage(String kz,
-      {int pn = 1, int rn = 30, bool onlyLz = false}) async {
+      {String? pid, int pn = 1, int rn = 30, bool onlyLz = false}) async {
     if (isLogin == false) {
       throw Exception("未登录");
     }
@@ -1359,12 +1359,17 @@ class TiebaAPI {
       "lz": onlyLz ? "1" : "0",
       "mark": "0",
       "net_type": "1",
-      "pn": pn,
+      // "pn": pn,
       "rn": rn,
       "st_type": "tb_frslist",
       "timestamp": DateTime.now().millisecondsSinceEpoch,
       "with_floor": "1",
     };
+    if (pid == null) {
+      args["pn"] = pn;
+    } else {
+      args["pid"] = pid;
+    }
     args['sign'] = _signArgs(args);
     var res = await dio.post(F_PAGE,
         data: args,
@@ -1865,7 +1870,7 @@ class TiebaAPI {
     return LikeFourmModel.fromJson(jsonDecode(res.data));
   }
 
-  ///取消关注一个吧
+  ///TODO:取消关注一个吧
   Future unfavoForum(String fid, String forumName) async {
     var arg = {
       "BDUSS": bduss,
@@ -1918,5 +1923,66 @@ class TiebaAPI {
         ));
 
     return ThreadStoreModel.fromJson(jsonDecode(res.data));
+  }
+
+  ///收藏一个贴
+  Future<AddThreadStoreModel> threadAddStore(String tid, String pid,
+      {int status = 1}) async {
+    Map<String, dynamic> data = {"tid": tid, "pid": pid, "status": status};
+
+    var arg = {
+      "BDUSS": bduss,
+      "stoken": stoken,
+      "tbs": await _getTBS(),
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.24.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "",
+      "cuid_galaxy2": "",
+      "data": jsonEncode([data]),
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+    arg['sign'] = _signArgs(arg);
+
+    var res = await dio.post(ADD_THREAD_STORE,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+
+    AddThreadStoreModel resJson =
+        AddThreadStoreModel.fromJson(jsonDecode(res.data));
+    return resJson;
+  }
+
+  ///取消收藏贴
+  Future<RemoveThreadStoreModel> threadRemoveStore(String tid) async {
+    var arg = {
+      "BDUSS": bduss,
+      "stoken": stoken,
+      "tbs": await _getTBS(),
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": "12.24.1.0",
+      "_phone_imei": "000000000000000",
+      "cuid": "",
+      "cuid_galaxy2": "",
+      "tid": tid,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+    arg['sign'] = _signArgs(arg);
+
+    var res = await dio.post(REMOVE_THREAD_STORE,
+        data: arg,
+        options: Options(
+          responseType: ResponseType.plain,
+          contentType: "application/x-www-form-urlencoded",
+        ));
+
+    RemoveThreadStoreModel resJson =
+        RemoveThreadStoreModel.fromJson(jsonDecode(res.data));
+    return resJson;
   }
 }

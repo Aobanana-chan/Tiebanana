@@ -20,9 +20,9 @@ class App extends StatelessWidget {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (BuildContext context) => User()),
-          ChangeNotifierProvider(create: (context) => APPTheme()),
+          ChangeNotifierProvider(create: (context) => APPSettingProvider()),
         ],
-        builder: (context, child) => Consumer2<APPTheme, User>(
+        builder: (context, child) => Consumer2<APPSettingProvider, User>(
               builder: (BuildContext context, theme, user, Widget? child) {
                 return MaterialApp(
                   initialRoute: PageRouter.home,

@@ -3,6 +3,12 @@ import 'package:tiebanana/Json_Model/json.dart';
 
 ///收藏的贴
 class StoredThread implements User {
+  ///帖子的id
+  String id;
+
+  ///观看到的post的ID
+  String pid;
+
   @override
   String portrait;
 
@@ -13,7 +19,9 @@ class StoredThread implements User {
   String? postNo;
   String? postNoMsg;
   String title;
+  @override
   String? nameShow;
+  @override
   String? username;
   List<Media>? media;
   String? count;
@@ -29,7 +37,9 @@ class StoredThread implements User {
       required this.username,
       required this.nameShow,
       required this.media,
-      required this.count});
+      required this.count,
+      required this.id,
+      required this.pid});
 
   @override
   String get name {

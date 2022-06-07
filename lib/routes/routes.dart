@@ -18,9 +18,9 @@ class PageRouter {
       );
     },
     "threadPage": (context) {
-      return ThreadPageRoute(
-        kz: ModalRoute.of(context)!.settings.arguments as String,
-      );
+      var data =
+          ModalRoute.of(context)!.settings.arguments as ThreadPageRouterData;
+      return ThreadPageRoute(kz: data.kz, pid: data.pid);
     },
     "login": (context) {
       return const LoginPage();
@@ -49,4 +49,12 @@ class PageRouter {
   static const String imagePicker = "imagePicker";
   static const String user = "user";
   static const String threadStore = "threadStore";
+}
+
+///贴界面路由传值
+class ThreadPageRouterData {
+  String kz;
+  String? pid;
+  // bool isStored;
+  ThreadPageRouterData({required this.kz, required this.pid});
 }

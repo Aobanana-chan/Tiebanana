@@ -40,7 +40,7 @@ class TiebaParser {
       {
         richText.add(TextSpan(
           text: elem.text!,
-          style: const TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: Global.setting.fontSize),
         ));
       } else if (elem.type == "4" || elem.type == "3") {
         //媒体数量限制

@@ -54,6 +54,7 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
     if (result.error?.errno == "0") {
       for (var i in result.storeThread!) {
         threads.add(StoredThread(
+            id: i.threadId!,
             title: i.title!,
             isDeleted: i.isDeleted == "1",
             isFollowed: i.isFollow == "1",
@@ -64,7 +65,8 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
             media: i.media,
             nameShow: i.author!.nameShow,
             username: i.author!.name,
-            count: i.count));
+            count: i.count,
+            pid: i.markPid!));
       }
       offset += rn;
     }
@@ -76,6 +78,7 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
       if (result.storeThread!.isNotEmpty) {
         for (var i in result.storeThread!) {
           threads.add(StoredThread(
+              id: i.threadId!,
               title: i.title!,
               isDeleted: i.isDeleted == "1",
               isFollowed: i.isFollow == "1",
@@ -86,7 +89,8 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
               media: i.media,
               nameShow: i.author!.nameShow,
               username: i.author!.name,
-              count: i.count));
+              count: i.count,
+              pid: i.markPid!));
         }
         offset += rn;
       } else {
@@ -109,7 +113,7 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
                     deleteMode = !deleteMode;
                   });
                 },
-                child: const Text("编辑"))
+                child: deleteMode ? const Text("取消") : const Text("编辑"))
           ],
         ),
         body: RefreshIndicator(
@@ -125,6 +129,10 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
               return StoredThreadWidget(
                 info: threads[index],
                 deleteMode: deleteMode,
+                deleteFromList: () {
+                  threads.removeAt(index);
+                  setState(() {});
+                },
               );
             },
           ),

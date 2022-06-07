@@ -72,7 +72,7 @@ class _RecommendPanState extends State<RecommendPan> {
             child: Container(
               height: 40,
               decoration: BoxDecoration(
-                color: Provider.of<APPTheme>(context).materialTheme,
+                color: Provider.of<APPSettingProvider>(context).materialTheme,
                 // border: Border.all(width: 0.05),
               ),
               child: Row(

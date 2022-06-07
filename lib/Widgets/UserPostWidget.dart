@@ -34,7 +34,7 @@ class UserPostWidget extends StatelessWidget {
       child: MaterialButton(
         onPressed: () async {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: info.threadId!);
+              arguments: ThreadPageRouterData(kz: info.threadId!, pid: null));
           // await Global.tiebaAPI.getThreadPage(info.tid!);
         },
         padding: const EdgeInsets.all(5),
