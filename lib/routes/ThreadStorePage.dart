@@ -101,6 +101,9 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
 
   @override
   Widget build(BuildContext context) {
+    //去重，当删除后刷新，会同时触发Refresh和loadNextPage
+    threads = threads.toSet().toList();
+
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -126,14 +129,18 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
             physics: const BouncingScrollPhysics(),
             itemCount: threads.length,
             itemBuilder: (BuildContext context, int index) {
-              return StoredThreadWidget(
-                info: threads[index],
-                deleteMode: deleteMode,
-                deleteFromList: () {
-                  threads.removeAt(index);
-                  setState(() {});
-                },
-              );
+              return Dismissible(
+                  key: UniqueKey(),
+                  direction: DismissDirection.none,
+                  child: StoredThreadWidget(
+                    info: threads[index],
+                    deleteMode: deleteMode,
+                    deleteFromList: () {
+                      setState(() {
+                        threads.removeAt(index);
+                      });
+                    },
+                  ));
             },
           ),
         ));

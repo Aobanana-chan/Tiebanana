@@ -85,4 +85,15 @@ class StoredThread implements User {
     }
     return false;
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is StoredThread) {
+      return id == other.id;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

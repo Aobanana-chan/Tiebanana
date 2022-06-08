@@ -7,7 +7,7 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     tags:
-    - v*
+      - v*
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -24,19 +24,19 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
+
       # setup JDK
       - name: Setup Java JDK
         uses: actions/setup-java@v3.0.0
         with:
-          distribution: 'zulu'
+          distribution: "zulu"
           java-version: "17"
       # flutter env
       - name: Flutter action
         uses: subosito/flutter-action@v2.3.0
         with:
           channel: "stable"
-          flutter-version: "2.10.2"
+          flutter-version: "3.0.1"
       #setup key
       - run: echo "${{ secrets.KEYSTORE2 }}" | base64 --decode > key.jks
       # Creating the key.properties file
