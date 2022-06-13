@@ -53,6 +53,10 @@ class _ThreadPageState extends State<ThreadPageRoute> {
 
             list.add(t);
           }
+          //记录历史记录
+          Global.daoapi.storeViewHistory(
+              data.thread!.id!, data.thread!.title!, data.forum!.name!);
+
           return Scaffold(
             body: ThreadPageMain(
               kz: widget.kz,

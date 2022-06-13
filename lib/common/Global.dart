@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:json5/json5.dart';
+import 'package:tiebanana/DAO/DAOApi.dart';
 import 'package:tiebanana/common/API/TiebaNetAPI.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiebanana/common/DefaultConfig.dart';
@@ -41,6 +42,9 @@ class Global {
   static FlutterLocalNotificationsPlugin localNotifications =
       FlutterLocalNotificationsPlugin();
 
+  //DAOAPI
+  static DAOAPI daoapi = DAOAPI();
+
   //Global类初始化
   static Future init() async {
     profile = await SharedPreferences.getInstance();
@@ -74,6 +78,9 @@ class Global {
       var userInfo = await value.getMyInfo();
       profile.setString("uid", userInfo.id!.toString());
     });
+
+    //初始化数据库
+    await daoapi.init();
   }
 
   ///保持用户APP设置

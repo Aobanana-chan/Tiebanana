@@ -46,7 +46,7 @@ class _SettingPanelState extends State<SettingPanel> {
             disabledElevation: 0,
             color: Colors.white,
             onPressed: () {
-              //TODO:历史界面
+              Navigator.pushNamed(context, PageRouter.viewHistory);
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

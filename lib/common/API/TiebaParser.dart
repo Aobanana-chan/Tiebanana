@@ -236,12 +236,15 @@ class TiebaParser {
     return icons;
   }
 
-  static String getPostTime({String? strTime, int? intTime}) {
+  static String getPostTime(
+      {String? strTime, int? intTime, DateTime? dateTime}) {
     DateTime time;
     if (strTime != null) {
       time = DateTime.fromMillisecondsSinceEpoch(int.parse(strTime) * 1000);
     } else if (intTime != null) {
       time = DateTime.fromMillisecondsSinceEpoch(intTime * 1000);
+    } else if (dateTime != null) {
+      time = dateTime;
     } else {
       throw Exception("至少要有一个参数不为null");
     }

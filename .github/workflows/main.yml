@@ -47,6 +47,8 @@ jobs:
           echo storeFile=../key.jks >> ${{env.PROPERTIES_PATH}}
       # get dependence
       - run: flutter pub get
+      # build Entity
+      - run: flutter pub run build_runner build
       # build
       # - run: flutter build apk
       - run: flutter build apk --split-per-abi

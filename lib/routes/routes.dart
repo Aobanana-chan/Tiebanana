@@ -7,6 +7,7 @@ import 'package:tiebanana/routes/Search.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/ThreadStorePage.dart';
 import 'package:tiebanana/routes/UserVisitor.dart';
+import 'package:tiebanana/routes/ViewHistoryPage.dart';
 
 ///命名路由表
 class PageRouter {
@@ -39,6 +40,9 @@ class PageRouter {
     },
     "threadStore": (context) {
       return const ThreadStorePage();
+    },
+    "viewHistory": (context) {
+      return const ViewHistoryPage();
     }
   };
   static const String home = "/";
@@ -49,11 +53,15 @@ class PageRouter {
   static const String imagePicker = "imagePicker";
   static const String user = "user";
   static const String threadStore = "threadStore";
+  static const String viewHistory = "viewHistory";
 }
 
 ///贴界面路由传值
 class ThreadPageRouterData {
+  ///帖子的id
   String kz;
+
+  ///不需要情况下填null
   String? pid;
   // bool isStored;
   ThreadPageRouterData({required this.kz, required this.pid});
