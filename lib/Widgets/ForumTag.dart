@@ -40,7 +40,7 @@ class _TagPanState extends State<TagPan> {
             },
             child: Consumer<ForumState>(builder: (builder, forumState, _) {
               return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                // physics: const BouncingScrollPhysics(),
                 slivers: <Widget>[
                   SliverToBoxAdapter(
                     child: LimitedBox(

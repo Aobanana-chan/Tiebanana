@@ -113,7 +113,7 @@ class _RecommendPanState extends State<RecommendPan> {
                         child: ListView(
                           padding: EdgeInsets.zero,
                           controller: controller,
-                          physics: const BouncingScrollPhysics(),
+                          // physics: const BouncingScrollPhysics(),
                           children: threadwidgets,
                         ),
                       ),

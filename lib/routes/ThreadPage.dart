@@ -366,7 +366,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
             children: [
               Expanded(
                   child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                // physics: const BouncingScrollPhysics(),
                 controller: _controller,
                 slivers: <Widget>[
                   SliverAppBar(

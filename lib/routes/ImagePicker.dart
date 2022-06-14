@@ -117,7 +117,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
               initloadPhotos();
             }
             body = GridView.builder(
-              physics: const BouncingScrollPhysics(),
+              // physics: const BouncingScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3, mainAxisSpacing: 5, crossAxisSpacing: 3),
               itemCount: imageFileList.length,
@@ -441,7 +441,7 @@ class _ZoomedLocalImageState extends State<ZoomedLocalImage> {
               currentIndex = index;
               setState(() {});
             },
-            physics: const BouncingScrollPhysics(),
+            // physics: const BouncingScrollPhysics(),
             pageSnapping: true,
           ),
         ),

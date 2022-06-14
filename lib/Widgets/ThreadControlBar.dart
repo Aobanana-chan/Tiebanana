@@ -78,12 +78,12 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
-                labelColor: Colors.blue,
+                labelColor: Theme.of(context).primaryColor,
                 indicator: CustomUnderlineTabIndicator(
                     wantWidth: 36,
                     insets: const EdgeInsets.only(left: 15, right: 15),
-                    borderSide:
-                        const BorderSide(width: 4, color: Colors.green)),
+                    borderSide: BorderSide(
+                        width: 4, color: Theme.of(context).primaryColor)),
                 tabs: widget.tabs
                     .map((e) => Tab(
                           text: e,
@@ -127,7 +127,7 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeIn,
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                // physics: const BouncingScrollPhysics(),
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: _buildClassify(),

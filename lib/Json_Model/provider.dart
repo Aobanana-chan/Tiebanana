@@ -31,12 +31,15 @@ class User with ChangeNotifier {
 ///应用设置Provider
 class APPSettingProvider with ChangeNotifier {
   // 获取当前主题，如果未设置主题，则默认使用蓝色主题
-  AppBarTheme _appBarTheme = AppBarTheme();
   String get theme {
     return Global.setting.theme!;
   }
 
-  ColorSwatch get materialTheme {
+  Color get themeColor {
+    return Global.themes[theme]!;
+  }
+
+  MaterialColor get materialTheme {
     if (Global.setting.theme == "white") {
       return Global.themes["blue"]!;
     }
@@ -46,7 +49,7 @@ class APPSettingProvider with ChangeNotifier {
   // 主题改变后，通知其依赖项
   set theme(String color) {
     if (color != theme) {
-      theme = color;
+      // theme = color;
       //保存APP配置项
       Global.setting.theme = color;
       Global.saveProfile();
@@ -57,9 +60,12 @@ class APPSettingProvider with ChangeNotifier {
 
   AppBarTheme get appBarTheme {
     if (theme == "white") {
-      _appBarTheme.copyWith(backgroundColor: Colors.white);
+      return const AppBarTheme(
+          backgroundColor: Colors.white, foregroundColor: Colors.black);
     }
-    return _appBarTheme;
+    return AppBarTheme(
+        backgroundColor:
+            ColorScheme.fromSwatch(primarySwatch: materialTheme).onPrimary);
   }
 
   //字号大小

@@ -76,7 +76,7 @@ class _MessagePanState extends State<MessagePan>
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
-          labelColor: Colors.green,
+          labelColor: Theme.of(context).primaryColor,
           unselectedLabelColor: Colors.black26,
           indicator: CustomUnderlineTabIndicator(
               wantWidth: 36,
@@ -86,7 +86,8 @@ class _MessagePanState extends State<MessagePan>
               ),
               borderSide: BorderSide(
                 width: 4,
-                color: Colors.green
+                color: Theme.of(context)
+                    .primaryColor
                     .withAlpha((255 * (realHeight / maxHeight)).toInt()),
               )),
           tabs: tabs
@@ -167,7 +168,7 @@ class _MessagePanState extends State<MessagePan>
                       padding: EdgeInsets.zero,
                       controller: controllerReply,
                       itemCount: replyMessage.length,
-                      physics: const BouncingScrollPhysics(),
+                      // physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
                         return MessageCard(replyMe: replyMessage[index]);
                       }));
@@ -220,7 +221,7 @@ class _MessagePanState extends State<MessagePan>
                       padding: EdgeInsets.zero,
                       controller: controllerAtme,
                       itemCount: atMeMessage.length,
-                      physics: const BouncingScrollPhysics(),
+                      // physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
                         return MessageCard(atME: atMeMessage[index]);
                       }));

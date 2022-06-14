@@ -24,10 +24,10 @@ class TopThread extends StatelessWidget {
           children: [
             ClipOval(
               child: Container(
-                color: Colors.blue,
-                child: const Icon(
+                color: Theme.of(context).primaryColor,
+                child: Icon(
                   Icons.arrow_drop_up_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
             ),

@@ -74,7 +74,7 @@ class _ViewHistoryPageState extends State<ViewHistoryPage> {
         ],
       ),
       body: ListView.builder(
-        physics: const BouncingScrollPhysics(),
+        // physics: const BouncingScrollPhysics(),
         // controller: controller,
         itemCount: historys.length,
         itemBuilder: (BuildContext context, int index) {

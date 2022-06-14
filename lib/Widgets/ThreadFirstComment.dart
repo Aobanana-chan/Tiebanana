@@ -175,6 +175,7 @@ class AgreeAndDisagreeBar extends StatefulWidget {
   _AgreeAndDisagreeBarState createState() => _AgreeAndDisagreeBarState();
 }
 
+//TODO:BUG 滑动后点赞状态消失
 class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
   late int agreeNum;
   late int disagreeNum;
@@ -237,7 +238,8 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
                 color: Colors.black,
               );
             } else {
-              return const Icon(Icons.thumb_up_alt, color: Colors.blue);
+              return Icon(Icons.thumb_up_alt,
+                  color: Theme.of(context).primaryColor);
             }
           },
           likeCount: agreeNum,
@@ -281,7 +283,8 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
                 color: Colors.black,
               );
             } else {
-              return const Icon(Icons.thumb_down_alt, color: Colors.blue);
+              return Icon(Icons.thumb_down_alt,
+                  color: Theme.of(context).primaryColor);
             }
           },
           likeCount: disagreeNum,

@@ -71,7 +71,7 @@ class _SearchPageState extends State<SearchPage>
           ),
           Expanded(
               child: TabBarView(
-            physics: const BouncingScrollPhysics(),
+            // physics: const BouncingScrollPhysics(),
             controller: controller,
             children: [
               KeepAliveWrapper(
@@ -190,7 +190,7 @@ class _FourmSearchState extends State<FourmSearch> {
               ),
               Expanded(
                   child: ListView(
-                physics: const BouncingScrollPhysics(),
+                // physics: const BouncingScrollPhysics(),
                 children: related
                     .map((e) => ForumCardRelated(
                           searchForumModelForum: e,
@@ -203,7 +203,7 @@ class _FourmSearchState extends State<FourmSearch> {
       );
     } else {
       child = ListView(
-        physics: const BouncingScrollPhysics(),
+        // physics: const BouncingScrollPhysics(),
         children: related
             .map((e) => ForumCardRelated(
                   searchForumModelForum: e,
@@ -322,7 +322,7 @@ class _ThreadSearchState extends State<ThreadSearch> {
     return Stack(
       children: [
         CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          // physics: const BouncingScrollPhysics(),
           controller: controller,
           slivers: <Widget>[
             //控制器
@@ -448,7 +448,7 @@ class _UserSearchState extends State<UserSearch> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      physics: const BouncingScrollPhysics(),
+      // physics: const BouncingScrollPhysics(),
       itemCount: users.length,
       itemBuilder: (BuildContext context, int index) {
         return _UserListItem(user: users[index]);

@@ -126,7 +126,7 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
           },
           child: ListView.builder(
             controller: controller,
-            physics: const BouncingScrollPhysics(),
+            // physics: const BouncingScrollPhysics(),
             itemCount: threads.length,
             itemBuilder: (BuildContext context, int index) {
               return Dismissible(

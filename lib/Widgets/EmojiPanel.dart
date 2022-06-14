@@ -151,7 +151,7 @@ class ImagePanel extends StatelessWidget {
       color: Colors.white,
       constraints: const BoxConstraints(maxHeight: 185),
       child: ListView.builder(
-        physics: const BouncingScrollPhysics(),
+        // physics: const BouncingScrollPhysics(),
         scrollDirection: Axis.horizontal,
         itemCount: uploaded.length + 1,
         itemBuilder: (BuildContext context, int index) {

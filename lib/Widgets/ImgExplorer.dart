@@ -377,7 +377,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                   currentIndex = index;
                   setState(() {});
                 },
-                physics: const BouncingScrollPhysics(),
+                // physics: const BouncingScrollPhysics(),
                 pageSnapping: true,
               ),
             ),

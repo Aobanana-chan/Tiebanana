@@ -352,7 +352,7 @@ class __ThreadViewState extends State<_ThreadView> {
       return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            // // physics: const BouncingScrollPhysics(),
             child: Container(
               constraints: constraints,
               child: const Center(
@@ -375,7 +375,7 @@ class __ThreadViewState extends State<_ThreadView> {
     }
     return ListView.builder(
       itemCount: posts.length,
-      physics: const BouncingScrollPhysics(),
+      // physics: const BouncingScrollPhysics(),
       itemBuilder: (BuildContext context, int index) {
         // return Container();
         return UserPostWidget(
@@ -461,7 +461,7 @@ class __PostviewState extends State<_Postview> {
       return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            // physics: const BouncingScrollPhysics(),
             child: Container(
               constraints: constraints,
               child: const Center(
@@ -484,7 +484,7 @@ class __PostviewState extends State<_Postview> {
     }
     return ListView.builder(
       itemCount: posts.length,
-      physics: const BouncingScrollPhysics(),
+      // physics: const BouncingScrollPhysics(),
       itemBuilder: (BuildContext context, int index) {
         // return Container();
         return UserPostWidget(
@@ -529,7 +529,7 @@ class __ForumViewState extends State<_ForumView> {
       return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            // physics: const BouncingScrollPhysics(),
             child: Container(
               constraints: constraints,
               child: const Center(
@@ -551,7 +551,7 @@ class __ForumViewState extends State<_ForumView> {
       );
     } else {
       return GridView.builder(
-        physics: const BouncingScrollPhysics(),
+        // physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           mainAxisExtent: 72,
           crossAxisCount: 2,

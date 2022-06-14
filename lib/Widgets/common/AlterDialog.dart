@@ -15,20 +15,20 @@ class TiebaAlterDialog extends StatelessWidget {
               fontSize: Provider.of<APPSettingProvider>(context, listen: false)
                   .fontSize)),
       actions: [
-        GradientButton(
+        TextButton(
             onPressed: () {
               Navigator.pop(context, false);
             },
-            borderRadius: BorderRadius.circular(64),
+            // borderRadius: BorderRadius.circular(64),
             child: const Text(
               "否",
               style: TextStyle(fontWeight: FontWeight.bold),
             )),
-        GradientButton(
+        TextButton(
             onPressed: () {
               Navigator.pop(context, true);
             },
-            borderRadius: BorderRadius.circular(64),
+            // borderRadius: BorderRadius.circular(64),
             child:
                 const Text("是", style: TextStyle(fontWeight: FontWeight.bold)))
       ],

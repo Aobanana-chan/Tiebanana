@@ -4,6 +4,7 @@ import 'package:tiebanana/routes/HomePage.dart';
 import 'package:tiebanana/routes/ImagePicker.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Search.dart';
+import 'package:tiebanana/routes/ThemeChange.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/ThreadStorePage.dart';
 import 'package:tiebanana/routes/UserVisitor.dart';
@@ -43,6 +44,9 @@ class PageRouter {
     },
     "viewHistory": (context) {
       return const ViewHistoryPage();
+    },
+    "themeChange": (context) {
+      return const ThemeChangePage();
     }
   };
   static const String home = "/";
@@ -54,6 +58,7 @@ class PageRouter {
   static const String user = "user";
   static const String threadStore = "threadStore";
   static const String viewHistory = "viewHistory";
+  static const String themeChange = "themeChange";
 }
 
 ///贴界面路由传值

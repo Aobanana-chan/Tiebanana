@@ -193,14 +193,14 @@ class _ForumHomePageState extends State<ForumHomePage>
                 ),
               ),
               floatingActionButton: ClipOval(
-                child: Container(
-                  color: Colors.blue,
-                  child: IconButton(
-                    onPressed: () {
-                      //TODO:发帖
-                    },
-                    icon: const Icon(Icons.edit),
-                    color: Colors.white,
+                child: FloatingActionButton(
+                  // color: Colors.blue,
+                  onPressed: () {
+                    //TODO:发帖
+                  },
+                  child: Icon(
+                    Icons.edit,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ),
@@ -241,7 +241,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                             }),
                             Expanded(
                                 child: CustomScrollView(
-                              physics: const BouncingScrollPhysics(),
+                              // physics: const BouncingScrollPhysics(),
                               slivers: <Widget>[
                                 SliverList(
                                     delegate: SliverChildBuilderDelegate(
@@ -376,7 +376,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                               ];
                             },
                             body: TabBarView(
-                              physics: const BouncingScrollPhysics(),
+                              // physics: const BouncingScrollPhysics(),
                               controller: tabbarController,
                               children: [
                                 //普通帖列表
@@ -421,8 +421,8 @@ class _ForumHomePageState extends State<ForumHomePage>
                                           Consumer<ThreadListProviderModel>(
                                         builder: (context, value, child) {
                                           return CustomScrollView(
-                                            physics:
-                                                const BouncingScrollPhysics(),
+                                            // physics:
+                                            //     const BouncingScrollPhysics(),
                                             slivers: <Widget>[
                                               SliverList(
                                                   delegate:

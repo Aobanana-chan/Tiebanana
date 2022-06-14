@@ -89,3 +89,13 @@ class APPSetting {
     return data;
   }
 }
+
+const Map<String, String> themeName = {
+  "blue": "宝石蓝",
+  "cyan": "石青金",
+  "teal": "玛瑙绿",
+  "green": "早苗绿",
+  "yellow": "咸蛋黄",
+  "pink": "胭脂粉",
+  "white": "简洁白"
+};

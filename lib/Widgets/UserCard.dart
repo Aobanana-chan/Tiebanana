@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
+import 'package:tiebanana/common/DefaultConfig.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 import 'CustomUnderlineTabIndicator.dart';
@@ -70,7 +73,8 @@ class _UserCardState extends State<UserCard> {
                           child: Text(
                             i["text"],
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white),
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary),
                           ),
                         ))
                       ],
@@ -83,7 +87,9 @@ class _UserCardState extends State<UserCard> {
                             child: Text(
                               i["num"].toString(),
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white),
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary),
                             ),
                           ),
                         )
@@ -122,11 +128,15 @@ class _UserCardState extends State<UserCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      margin: const EdgeInsets.all(20),
-      color: Colors.green,
-      shadowColor: Colors.yellow.shade100,
+    return Consumer<APPSettingProvider>(
+      builder: (context, value, child) => Card(
+        elevation: 5,
+        margin: const EdgeInsets.all(20),
+        // color: Colors.green,
+        color: value.materialTheme,
+        shadowColor: Colors.yellow.shade100,
+        child: child,
+      ),
       child: Column(
         children: [
           Row(
@@ -152,7 +162,8 @@ class _UserCardState extends State<UserCard> {
                     children: [
                       Text(
                         widget.info.name!,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary),
                       )
                     ],
                   ),
@@ -160,16 +171,17 @@ class _UserCardState extends State<UserCard> {
                     children: [
                       Text(
                         widget.info.intro!,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary),
                       )
                     ],
                   ),
                 ],
               ),
               const Spacer(),
-              const Icon(
+              Icon(
                 Icons.chevron_right_outlined,
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onPrimary,
               )
             ],
           ),

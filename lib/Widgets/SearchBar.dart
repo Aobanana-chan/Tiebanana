@@ -64,8 +64,10 @@ class _SearchBarState extends State<SearchBar> {
       margin: EdgeInsets.only(
           top: showBody ? 0 : MediaQuery.of(context).viewPadding.top),
       child: FloatingSearchAppBar(
-        color: Colors.white,
-        colorOnScroll: Colors.white,
+        // color: Colors.white,
+        // colorOnScroll: Colors.white,
+        // color: Theme.of(context).primaryColor,
+        // colorOnScroll: Theme.of(context).primaryColor,
         controller: barController,
         clearQueryOnClose: false,
         onSubmitted: (searchText) {

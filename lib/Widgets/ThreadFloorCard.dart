@@ -270,8 +270,9 @@ class InnerFloor extends StatelessWidget {
           padding: const EdgeInsets.all(5),
           child: Text(
             "查看剩余${int.parse(subPostNumber) - subPostList.length}条回复",
-            style: const TextStyle(
-                color: Colors.blue, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.bold),
           ),
         ),
       ));

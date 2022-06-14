@@ -270,7 +270,7 @@ class SearchPostModelData {
         ? SampleSwitch.fromJson(json['sample_switch'])
         : null;
     tagId = json['tag_id'];
-    logId = (json['log_id'] as num).toInt();
+    logId = (json['log_id'] as num?)?.toInt();
     ubsSampleIds = json['ubs_sample_ids'];
     if (json['ubs_abtest_config'] != null) {
       ubsAbtestConfig = [];
