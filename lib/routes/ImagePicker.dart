@@ -144,8 +144,8 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
 
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
+            // backgroundColor: Colors.white,
+            // foregroundColor: Colors.black,
             elevation: 1,
             title: Theme(
               data: Theme.of(context).copyWith(
@@ -188,7 +188,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
           ),
           body: body,
           bottomNavigationBar: Container(
-            color: Colors.white,
+            // color: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: LeftRightBox(
               verticalAlign: VerticalAlign.center,

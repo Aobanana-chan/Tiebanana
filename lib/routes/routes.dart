@@ -4,6 +4,7 @@ import 'package:tiebanana/routes/HomePage.dart';
 import 'package:tiebanana/routes/ImagePicker.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Search.dart';
+import 'package:tiebanana/routes/ServiceCenter.dart';
 import 'package:tiebanana/routes/ThemeChange.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/ThreadStorePage.dart';
@@ -11,7 +12,7 @@ import 'package:tiebanana/routes/UserVisitor.dart';
 import 'package:tiebanana/routes/ViewHistoryPage.dart';
 
 ///命名路由表
-class PageRouter {
+abstract class PageRouter {
   static Map<String, WidgetBuilder> routes = {
     "/": (context) => const HomePage(),
     "forumHome": (context) {
@@ -47,6 +48,9 @@ class PageRouter {
     },
     "themeChange": (context) {
       return const ThemeChangePage();
+    },
+    "serviceCenter": (context) {
+      return const ServiceCenterPage();
     }
   };
   static const String home = "/";
@@ -59,6 +63,7 @@ class PageRouter {
   static const String threadStore = "threadStore";
   static const String viewHistory = "viewHistory";
   static const String themeChange = "themeChange";
+  static const String serviceCenter = "serviceCenter";
 }
 
 ///贴界面路由传值

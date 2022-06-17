@@ -1,4 +1,5 @@
 import 'package:flukit/flukit.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
@@ -6,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
+import 'package:tiebanana/common/Util/AppUtil.dart';
 import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Message.dart';
 import 'package:tiebanana/routes/Recommend.dart';
@@ -118,8 +120,9 @@ class _HomePageState extends State<HomePage> {
                   curve: Curves.easeIn);
             });
           },
-          selectedItemColor: Theme.of(context).primaryColor,
-          unselectedItemColor: Colors.grey.shade800,
+          // selectedItemColor: Theme.of(context).primaryColor,
+          // unselectedItemColor:
+          //     Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
         ),
         body: ChangeNotifierProvider.value(
           value: forumState,
@@ -132,6 +135,12 @@ class _HomePageState extends State<HomePage> {
       );
     }
     return WillPopScope(onWillPop: onWillPop, child: childpage);
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 }
 
@@ -153,7 +162,7 @@ class __HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(color: Color(0xFFF2F2F5)),
+      // decoration: const BoxDecoration(color: Color(0xFFF2F2F5)),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           return Column(

@@ -34,7 +34,10 @@ class ThreadFirstComment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      // color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.white
+          : Theme.of(context).primaryColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -47,7 +50,7 @@ class ThreadFirstComment extends StatelessWidget {
                 SelectableText(
                   postMain.title,
                   style: const TextStyle(
-                      color: Colors.black,
+                      // color: Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.w600),
                 )
@@ -235,11 +238,13 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
             if (!isLiked) {
               return const Icon(
                 Icons.thumb_up_alt_outlined,
-                color: Colors.black,
+                // color: Colors.black,
               );
             } else {
               return Icon(Icons.thumb_up_alt,
-                  color: Theme.of(context).primaryColor);
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Theme.of(context).primaryColor
+                      : Colors.white);
             }
           },
           likeCount: agreeNum,
@@ -280,11 +285,13 @@ class _AgreeAndDisagreeBarState extends State<AgreeAndDisagreeBar> {
             if (!isLiked) {
               return const Icon(
                 Icons.thumb_down_alt_outlined,
-                color: Colors.black,
+                // color: Colors.black,
               );
             } else {
               return Icon(Icons.thumb_down_alt,
-                  color: Theme.of(context).primaryColor);
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Theme.of(context).primaryColor
+                      : Colors.white);
             }
           },
           likeCount: disagreeNum,

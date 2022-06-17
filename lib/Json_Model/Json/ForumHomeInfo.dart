@@ -2257,22 +2257,22 @@ class FrsStar {
   String? hasFrsStar;
   String? starForumHeadimg;
   String? top;
-  String? topSize;
+  // String? topSize;
   String? head;
-  String? headSize;
+  // String? headSize;
   String? gender;
-  String? fans;
+  // String? fans;
   // List<Null> trade;
 
   FrsStar({
     this.hasFrsStar,
     this.starForumHeadimg,
     this.top,
-    this.topSize,
+    // this.topSize,
     this.head,
-    this.headSize,
+    // this.headSize,
     this.gender,
-    this.fans,
+    // this.fans,
     // this.trade
   });
 
@@ -2280,11 +2280,11 @@ class FrsStar {
     hasFrsStar = json['has_frs_star'];
     starForumHeadimg = json['star_forum_headimg'];
     top = json['top'];
-    topSize = json['top_size'];
+    // topSize = json['top_size'];
     head = json['head'];
-    headSize = json['head_size'];
+    // headSize = json['head_size'];
     gender = json['gender'];
-    fans = json['fans'];
+    // fans = json['fans'];
     // if (json['trade'] != null) {
     //   trade = new List<Null>();
     //   json['trade'].forEach((v) {
@@ -2298,11 +2298,11 @@ class FrsStar {
     data['has_frs_star'] = hasFrsStar;
     data['star_forum_headimg'] = starForumHeadimg;
     data['top'] = top;
-    data['top_size'] = topSize;
+    // data['top_size'] = topSize;
     data['head'] = head;
-    data['head_size'] = headSize;
+    // data['head_size'] = headSize;
     data['gender'] = gender;
-    data['fans'] = fans;
+    // data['fans'] = fans;
     // if (this.trade != null) {
     //   data['trade'] = this.trade.map((v) => v.toJson()).toList();
     // }

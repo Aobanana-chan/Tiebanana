@@ -47,13 +47,16 @@ class _TagPanState extends State<TagPan> {
                       maxHeight: constraints.maxHeight,
                       child: Container(
                         padding: const EdgeInsets.only(left: 10),
-                        child: const IntrinsicHeight(
+                        child: IntrinsicHeight(
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
                               "我关注的吧",
                               style: TextStyle(
-                                  color: Color(0xFF6F6F6F), fontSize: 18),
+                                  fontSize:
+                                      Provider.of<APPSettingProvider>(context)
+                                              .fontSize +
+                                          2),
                             ),
                           ),
                         ),
@@ -90,8 +93,14 @@ class ForumTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(width: 0.1),
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : Theme.of(context).backgroundColor,
+          border: Border.all(
+              width: 0.1,
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.black
+                  : Theme.of(context).colorScheme.onBackground),
           borderRadius: BorderRadius.circular(8)),
       child: MaterialButton(
         onPressed: () {
@@ -224,16 +233,15 @@ class ForumCardRelated extends StatelessWidget {
                 Text(
                   "${searchForumModelForum.name}吧",
                   style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Visibility(
                     visible: searchForumModelForum.brief != null,
                     child: Text(
                       "简介:${searchForumModelForum.brief}",
-                      style: const TextStyle(color: Colors.black),
                       overflow: TextOverflow.ellipsis,
                     )),
                 Row(
@@ -241,7 +249,6 @@ class ForumCardRelated extends StatelessWidget {
                     Text(
                       "关注 ${convertNumber(searchForumModelForum.member!)}",
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.black),
                     ),
                     const SizedBox(
                       width: 10,
@@ -249,7 +256,6 @@ class ForumCardRelated extends StatelessWidget {
                     Text(
                       "贴子 ${convertNumber(searchForumModelForum.post!)}",
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.black),
                     )
                   ],
                 ),

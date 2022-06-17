@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
@@ -64,7 +65,7 @@ class _SearchBarState extends State<SearchBar> {
       margin: EdgeInsets.only(
           top: showBody ? 0 : MediaQuery.of(context).viewPadding.top),
       child: FloatingSearchAppBar(
-        // color: Colors.white,
+        color: Theme.of(context).appBarTheme.backgroundColor,
         // colorOnScroll: Colors.white,
         // color: Theme.of(context).primaryColor,
         // colorOnScroll: Theme.of(context).primaryColor,
@@ -100,8 +101,8 @@ class _SearchBarState extends State<SearchBar> {
             },
             child: Stack(
               alignment: AlignmentDirectional.center,
-              children: [
-                const Icon(
+              children: const [
+                Icon(
                   Icons.circle_outlined,
                   size: 32,
                 ),
@@ -109,7 +110,7 @@ class _SearchBarState extends State<SearchBar> {
                   child: Text(
                     "签",
                     style: TextStyle(
-                        color: Colors.blueGrey.shade800,
+                        // color: Colors.blueGrey.shade800,
                         fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -199,7 +200,12 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
       return MaterialButton(
         padding: const EdgeInsets.all(20),
         onPressed: () {
-          bar!.barController.query = item;
+          if (bar!.barController.query != item) {
+            bar!.barController.query = item;
+          } else {
+            bar!.search(context, item);
+          }
+
           // bar!.barController.close();
         },
         onLongPress: () {
@@ -211,9 +217,11 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
                   overlay.size.width - tapPoint!.localPosition.dx,
                   overlay.size.height - tapPoint!.localPosition.dy),
               shape: RoundedRectangleBorder(
+                  side: const BorderSide(width: 0.1),
                   borderRadius: BorderRadius.circular(8)),
               items: [
                 PopupMenuItem(
+                  // padding: EdgeInsets.zero,
                   onTap: () {
                     //删除该历史搜索
                     history.remove(item);
@@ -281,7 +289,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Material(
-                color: Colors.white,
+                // color: Colors.white,
                 elevation: 4.0,
                 child: Listener(
                   child: ListView(

@@ -148,7 +148,7 @@ class ImagePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     var images = uploaded.values.toList();
     return Container(
-      color: Colors.white,
+      // color: Colors.white,
       constraints: const BoxConstraints(maxHeight: 185),
       child: ListView.builder(
         // physics: const BouncingScrollPhysics(),

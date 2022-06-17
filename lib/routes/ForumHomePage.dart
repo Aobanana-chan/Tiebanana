@@ -17,6 +17,7 @@ import 'package:tiebanana/Widgets/TopThread.dart';
 import 'package:tiebanana/Widgets/PushToRefreshHeader.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/common/Util/AppUtil.dart';
 
 ///吧页面
 class ForumHomePage extends StatefulWidget {
@@ -45,12 +46,12 @@ class _ForumHomePageState extends State<ForumHomePage>
   List<ForumThreadList>? forumThreadList; //普通贴
   late ThreadListProviderModel goodThreadList; //精品贴
 
-  Future init() async {
+  void init() {
     pn = 1;
     initForum =
         Global.tiebaAPI.getForumPage(kw: widget.kw, pn: pn, sortType: sortType);
     goodThreadList = ThreadListProviderModel();
-    setState(() {});
+    // setState(() {});
   }
 
   @override
@@ -171,8 +172,8 @@ class _ForumHomePageState extends State<ForumHomePage>
             child: Scaffold(
               appBar: AppBar(
                 elevation: 0.5,
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                // backgroundColor: Colors.white,
+                // foregroundColor: Colors.black,
                 actions: appBarAction,
                 title: Consumer<APPBarTitle>(
                   builder: (context, value, child) {
@@ -208,7 +209,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                 builder: (BuildContext context, setState) {
                   threadState = setState;
                   return Container(
-                    color: const Color(0xFFF2F2F5),
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     child: ChangeNotifierProvider.value(
                       value: goodClassify,
                       child: KeepAliveWrapper(
@@ -473,5 +474,13 @@ class _ForumHomePageState extends State<ForumHomePage>
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    innerController.dispose();
+    outerController.dispose();
+    tabbarController.dispose();
+    super.dispose();
   }
 }

@@ -6,6 +6,7 @@ import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchThreadCard.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/common/Util/AppUtil.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///搜索页面
@@ -46,51 +47,64 @@ class _SearchPageState extends State<SearchPage>
           decoration: const InputDecoration(border: InputBorder.none),
           onSubmitted: (value) {},
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
         elevation: 0.5,
       ),
-      body: Column(
-        children: [
-          TabBar(
-            controller: controller,
-            labelStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+      body: Container(
+        color: Theme.of(context).brightness == Brightness.light
+            ? Colors.white
+            : Theme.of(context).backgroundColor,
+        child: Column(
+          children: [
+            TabBar(
+              controller: controller,
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              labelColor: Theme.of(context).brightness == Brightness.light
+                  ? Theme.of(context).primaryColor
+                  : Theme.of(context).colorScheme.onSurface,
+              indicator: CustomUnderlineTabIndicator(
+                  wantWidth: 36,
+                  insets: const EdgeInsets.only(left: 15, right: 15),
+                  borderSide: BorderSide(
+                      width: 4, color: Theme.of(context).primaryColor)),
+              tabs: _tab
+                  .map((e) => Tab(
+                        text: e,
+                      ))
+                  .toList(),
             ),
-            labelColor: Colors.blue,
-            indicator: CustomUnderlineTabIndicator(
-                wantWidth: 36,
-                insets: const EdgeInsets.only(left: 15, right: 15),
-                borderSide: const BorderSide(width: 4, color: Colors.green)),
-            tabs: _tab
-                .map((e) => Tab(
-                      text: e,
-                    ))
-                .toList(),
-          ),
-          Expanded(
-              child: TabBarView(
-            // physics: const BouncingScrollPhysics(),
-            controller: controller,
-            children: [
-              KeepAliveWrapper(
-                  child: FourmSearch(
-                keyword: textEditingController.text,
-              )),
-              KeepAliveWrapper(
-                  child: ThreadSearch(
-                keyword: textEditingController.text,
-              )),
-              KeepAliveWrapper(
-                  child: UserSearch(
-                keyWord: textEditingController.text,
-              ))
-            ],
-          ))
-        ],
+            Expanded(
+                child: TabBarView(
+              // physics: const BouncingScrollPhysics(),
+              controller: controller,
+              children: [
+                KeepAliveWrapper(
+                    child: FourmSearch(
+                  keyword: textEditingController.text,
+                )),
+                KeepAliveWrapper(
+                    child: ThreadSearch(
+                  keyword: textEditingController.text,
+                )),
+                KeepAliveWrapper(
+                    child: UserSearch(
+                  keyWord: textEditingController.text,
+                ))
+              ],
+            ))
+          ],
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    textEditingController.dispose();
+    super.dispose();
   }
 }
 
@@ -180,7 +194,10 @@ class _FourmSearchState extends State<FourmSearch> {
         body: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8), color: Colors.white),
+              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.white
+                  : Theme.of(context).backgroundColor),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -331,7 +348,9 @@ class _ThreadSearchState extends State<ThreadSearch> {
                   constraints: const BoxConstraints(maxHeight: 48),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                  color: Colors.white,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.white
+                      : Theme.of(context).backgroundColor,
                   child: Row(
                     children: [
                       Expanded(
@@ -364,8 +383,18 @@ class _ThreadSearchState extends State<ThreadSearch> {
                                   "仅看主题帖",
                                   style: TextStyle(
                                       color: filter == 1
-                                          ? Colors.blue
-                                          : Colors.black),
+                                          ? (Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Theme.of(context).primaryColor
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface)
+                                          : (Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Colors.black
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface)),
                                 ),
                               ))),
                       Expanded(

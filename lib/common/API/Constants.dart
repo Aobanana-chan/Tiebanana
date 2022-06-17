@@ -277,6 +277,10 @@ const String ADD_THREAD_STORE = "http://c.tieba.baidu.com/c/c/post/addstore";
 ///取消收藏贴
 const String REMOVE_THREAD_STORE = "http://c.tieba.baidu.com/c/c/post/rmstore";
 
+///服务中心
+const String SERVICE_CENTER =
+    "http://tieba.baidu.com/n/apage-runtime/page/ueg_service_center";
+
 ///不喜欢首页推荐贴 参数：
 ///
 ///BDUSS

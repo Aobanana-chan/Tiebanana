@@ -64,7 +64,9 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.white
+          : Theme.of(context).backgroundColor,
       child: Column(
         children: [
           //贴控制
@@ -78,12 +80,17 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
-                labelColor: Theme.of(context).primaryColor,
+                labelColor: Theme.of(context).brightness == Brightness.light
+                    ? Theme.of(context).primaryColor
+                    : Theme.of(context).colorScheme.onSurface,
                 indicator: CustomUnderlineTabIndicator(
                     wantWidth: 36,
                     insets: const EdgeInsets.only(left: 15, right: 15),
                     borderSide: BorderSide(
-                        width: 4, color: Theme.of(context).primaryColor)),
+                        width: 4,
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? Theme.of(context).primaryColor
+                            : Theme.of(context).colorScheme.onSurface)),
                 tabs: widget.tabs
                     .map((e) => Tab(
                           text: e,
@@ -93,7 +100,9 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
             ),
             right: Theme(
               data: Theme.of(context).copyWith(
-                canvasColor: Colors.white,
+                canvasColor: Theme.of(context).brightness == Brightness.light
+                    ? Colors.white
+                    : Theme.of(context).backgroundColor,
               ),
               child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(

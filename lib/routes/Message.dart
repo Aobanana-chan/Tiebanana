@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/Widgets/MessageCard.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
+import 'package:tiebanana/common/DefaultConfig.dart';
 import 'package:tiebanana/common/Global.dart';
 
 ///消息页
@@ -67,17 +70,24 @@ class _MessagePanState extends State<MessagePan>
   }
 
   Widget _tabBar(double maxHeight, double realHeight) {
+    var indicatorColor = Theme.of(context).brightness == Brightness.light
+        ? Theme.of(context).primaryColor
+        : Theme.of(context).colorScheme.onBackground;
     return Container(
       height: 56,
-      color: Colors.white,
+      // color: Colors.white,
+      // color: Theme.of(context).colorScheme.onPrimaryContainer,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.white
+          : null,
       child: TabBar(
           controller: _controller,
-          labelStyle: const TextStyle(
-            fontSize: 14,
+          labelStyle: TextStyle(
+            fontSize: Provider.of<APPSettingProvider>(context).fontSize - 2,
             fontWeight: FontWeight.bold,
           ),
-          labelColor: Theme.of(context).primaryColor,
-          unselectedLabelColor: Colors.black26,
+          // labelColor: Theme.of(context).primaryColor,
+          // unselectedLabelColor: Colors.black26,
           indicator: CustomUnderlineTabIndicator(
               wantWidth: 36,
               insets: const EdgeInsets.only(
@@ -86,8 +96,7 @@ class _MessagePanState extends State<MessagePan>
               ),
               borderSide: BorderSide(
                 width: 4,
-                color: Theme.of(context)
-                    .primaryColor
+                color: indicatorColor
                     .withAlpha((255 * (realHeight / maxHeight)).toInt()),
               )),
           tabs: tabs

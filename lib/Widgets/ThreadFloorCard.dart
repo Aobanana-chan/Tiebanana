@@ -1,13 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/ThemeExtension/QuoteTheme.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadFirstComment.dart';
 import 'package:tiebanana/Widgets/ThreadReplyBar.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
+import 'package:tiebanana/common/DefaultConfig.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
@@ -63,9 +67,9 @@ class ThreadFloorComment extends StatelessWidget {
             });
       },
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-        ),
+        // decoration: const BoxDecoration(
+        //   color: Colors.white,
+        // ),
         padding: const EdgeInsets.only(left: 8, right: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -271,7 +275,7 @@ class InnerFloor extends StatelessWidget {
           child: Text(
             "查看剩余${int.parse(subPostNumber) - subPostList.length}条回复",
             style: TextStyle(
-                color: Theme.of(context).primaryColor,
+                color: Theme.of(context).extension<QuoteTheme>()!.textColor,
                 fontWeight: FontWeight.bold),
           ),
         ),
@@ -285,7 +289,7 @@ class InnerFloor extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-          color: const Color(0xFFF7F8FA),
+          color: Theme.of(context).extension<QuoteTheme>()!.backgorund!,
           borderRadius: BorderRadius.circular(5),
           border: Border.all(color: const Color(0xFFF0F1F2))),
       child: Column(
@@ -314,7 +318,7 @@ class InnerPost extends StatelessWidget {
       required this.spid,
       required this.forum})
       : super(key: key);
-  List<Widget> buildContent() {
+  List<Widget> buildContent(BuildContext context) {
     List<InlineSpan> w = [];
     w.add(AtUserSpan(
       text: "${author.nameShow} :",
@@ -343,7 +347,9 @@ class InnerPost extends StatelessWidget {
       RichText(
           text: TextSpan(
               children: w,
-              style: const TextStyle(color: Colors.black, fontSize: 15)))
+              style: TextStyle(
+                  fontSize:
+                      Provider.of<APPSettingProvider>(context).fontSize - 1)))
     ];
   }
 
@@ -371,7 +377,7 @@ class InnerPost extends StatelessWidget {
             children: [
               Expanded(
                   child: Wrap(
-                children: buildContent(),
+                children: buildContent(context),
               )),
             ],
           ),
@@ -495,12 +501,14 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
           ),
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          decoration: const BoxDecoration(
-              borderRadius: BorderRadius.only(
+          decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20.0),
                 topRight: Radius.circular(20.0),
               ),
-              color: Colors.white),
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.white
+                  : Theme.of(context).backgroundColor),
           child: child,
         );
       },
@@ -687,7 +695,11 @@ class InnerFloorCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isSpid ? Colors.amber.shade100 : Colors.white,
+          color: isSpid
+              ? Colors.amber.shade100
+              : (Theme.of(context).brightness == Brightness.light
+                  ? Colors.white
+                  : Theme.of(context).backgroundColor),
         ),
         padding: const EdgeInsets.only(left: 18, right: 18),
         child: Column(

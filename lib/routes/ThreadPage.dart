@@ -82,9 +82,9 @@ class _ThreadPageState extends State<ThreadPageRoute> {
           Fluttertoast.showToast(msg: snapshot.error.toString());
           Navigator.pop(context);
         }
-        return Container(
-          color: Colors.white,
-          child: const Center(
+        return const Scaffold(
+          // color: Colors.white,
+          body: Center(
             child: CircularProgressIndicator(),
           ),
         );
@@ -169,15 +169,21 @@ class ThreadPageMainState extends State<ThreadPageMain> {
                 padding: const EdgeInsets.all(1),
                 decoration: BoxDecoration(
                   border: Border.all(
-                      width: 2, color: lz ? Colors.blue : Colors.black),
+                      width: 2,
+                      color:
+                          lz ? Theme.of(context).primaryColor : Colors.black),
                   borderRadius: BorderRadius.circular(5),
-                  color: lz ? Colors.blue : Colors.white,
+                  color: lz
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).colorScheme.onPrimary,
                 ),
                 child: Text(
                   "楼主",
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: lz ? Colors.white : Colors.black),
+                      color: lz
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Colors.black),
                 ),
               ));
         },
@@ -361,7 +367,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
           return true;
         },
         child: Container(
-          color: const Color(0xFFF2F2F5),
+          // color: const Color(0xFFF2F2F5),
           child: Column(
             children: [
               Expanded(
@@ -376,8 +382,6 @@ class ThreadPageMainState extends State<ThreadPageMain> {
                     pinned: true,
                     snap: true,
                     floating: true,
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
                     actions: appBarAction,
                     title: AnimatedOpacity(
                       alwaysIncludeSemantics: true,
@@ -453,7 +457,9 @@ class FourmBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 5, bottom: 5),
-      color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.white
+          : Theme.of(context).backgroundColor,
       child: MaterialButton(
         padding: EdgeInsets.zero,
         onPressed: () {

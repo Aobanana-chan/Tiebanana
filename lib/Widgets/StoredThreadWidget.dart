@@ -42,7 +42,9 @@ class _StoredThreadWidgetState extends State<StoredThreadWidget> {
             arguments: ThreadPageRouterData(kz: info.id, pid: info.pid));
       },
       child: Container(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.light
+            ? Colors.white
+            : Theme.of(context).colorScheme.background,
         margin: const EdgeInsets.only(top: 3, bottom: 3),
         padding: const EdgeInsets.all(10),
         child: Row(

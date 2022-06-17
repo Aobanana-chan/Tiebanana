@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/ThemeExtension/QuoteTheme.dart';
+import 'package:tiebanana/Widgets/common/ClipBordObserve.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -24,6 +26,8 @@ class App extends StatelessWidget {
         ],
         builder: (context, child) => Consumer2<APPSettingProvider, User>(
               builder: (BuildContext context, theme, user, Widget? child) {
+                ColorScheme darkThemeScheme = ColorScheme.fromSeed(
+                    brightness: Brightness.dark, seedColor: Colors.black54);
                 return MaterialApp(
                   initialRoute: PageRouter.home,
                   //配置命名路由
@@ -31,11 +35,17 @@ class App extends StatelessWidget {
                     if (PageRouter.routes.containsKey(settings.name)) {
                       return CupertinoPageRoute(
                           settings: settings,
-                          builder: (context) =>
-                              PageRouter.routes[settings.name]!(context));
+                          builder: (context) => ClipBordObserver(
+                              child:
+                                  PageRouter.routes[settings.name]!(context)));
                     }
                     return null;
                   },
+                  themeMode: Global.setting.darkModel == 0
+                      ? ThemeMode.system
+                      : Global.setting.darkModel == 1
+                          ? ThemeMode.dark
+                          : ThemeMode.light,
                   theme: ThemeData(
                       useMaterial3: true,
                       brightness: Brightness.light,
@@ -44,14 +54,30 @@ class App extends StatelessWidget {
                       // appBarTheme: theme.appBarTheme,
                       colorScheme: ColorScheme.fromSwatch(
                           primarySwatch: theme.materialTheme),
-                      scaffoldBackgroundColor: const Color(0xFFF2F2F5)),
+                      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+                          unselectedItemColor: Colors.black,
+                          selectedItemColor: theme.materialTheme),
+                      tabBarTheme: TabBarTheme(
+                        labelColor: theme.materialTheme,
+                        unselectedLabelColor: Colors.black26,
+                      ),
+                      scaffoldBackgroundColor: const Color(0xFFF2F2F5),
+                      extensions: [QuoteTheme.bright]),
 
-                  darkTheme: Global.setting.darkModel == 1
-                      ? ThemeData(
-                          useMaterial3: true,
-                          brightness: Brightness.dark,
-                        )
-                      : null,
+                  darkTheme: ThemeData(
+                      useMaterial3: true,
+                      brightness: Brightness.dark,
+                      colorSchemeSeed: Colors.black54,
+                      scaffoldBackgroundColor:
+                          const Color.fromARGB(137, 75, 69, 69),
+                      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+                          selectedItemColor: darkThemeScheme.onSurface,
+                          unselectedItemColor: darkThemeScheme.onPrimary),
+                      tabBarTheme: TabBarTheme(
+                        labelColor: darkThemeScheme.onSurface,
+                        unselectedLabelColor: darkThemeScheme.onSurface,
+                      ),
+                      extensions: [QuoteTheme.dark]),
                   localizationsDelegates: const [
                     GlobalMaterialLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,

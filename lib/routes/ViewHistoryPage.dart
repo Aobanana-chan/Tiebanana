@@ -54,8 +54,8 @@ class _ViewHistoryPageState extends State<ViewHistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        // backgroundColor: Colors.white,
+        // foregroundColor: Colors.black,
         title: const Text("浏览历史"),
         actions: [
           MaterialButton(
@@ -130,7 +130,9 @@ class _HistoryItem extends StatelessWidget {
             arguments: ThreadPageRouterData(kz: info.tid, pid: null));
       },
       child: Container(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.light
+            ? Colors.white
+            : Theme.of(context).backgroundColor,
         padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 5),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Container(

@@ -24,7 +24,10 @@ class SearchThreadCard extends StatelessWidget {
         margin: const EdgeInsets.all(5),
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
         decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(8)),
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.white
+                : Theme.of(context).backgroundColor,
+            borderRadius: BorderRadius.circular(8)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           //作者
           Container(

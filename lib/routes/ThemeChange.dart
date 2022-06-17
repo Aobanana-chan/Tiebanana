@@ -64,7 +64,6 @@ class _SelectThemeItem extends StatelessWidget {
       hoverElevation: 0,
       highlightElevation: 0,
       highlightColor: Global.themes[theme],
-      color: Colors.white,
       padding: EdgeInsets.zero,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       onPressed: () {

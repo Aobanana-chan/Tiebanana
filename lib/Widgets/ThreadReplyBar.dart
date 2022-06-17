@@ -56,8 +56,10 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-      decoration: const BoxDecoration(
-          color: Colors.white,
+      decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : Theme.of(context).backgroundColor,
           border: Border(top: BorderSide(color: Color(0xFFF0F1F2)))),
       child: Row(
         children: [
@@ -167,7 +169,7 @@ class InnerFloorReplyBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       decoration: const BoxDecoration(
-          color: Colors.white,
+          // color: Colors.white,
           border: Border(top: BorderSide(color: Color(0xFFF0F1F2)))),
       child: Row(
         children: [
@@ -298,12 +300,14 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
         right: 20,
       ),
       margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      decoration: const BoxDecoration(
-          borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20.0),
             topRight: Radius.circular(20.0),
           ),
-          color: Colors.white),
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : Theme.of(context).backgroundColor),
       child: ChangeNotifierProvider.value(
         value: imagesUpload,
         builder: (context, child) => Column(
@@ -348,7 +352,7 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 10),
                                 filled: true,
-                                fillColor: const Color(0xFFF5F5F5),
+                                // fillColor: const Color(0xFFF5F5F5),
                                 border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                     borderSide: BorderSide.none),

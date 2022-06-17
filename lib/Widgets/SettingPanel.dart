@@ -12,7 +12,10 @@ class _SettingPanelState extends State<SettingPanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      // color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.white
+          : Theme.of(context).colorScheme.background,
       child: Column(
         children: [
           MaterialButton(
@@ -22,7 +25,7 @@ class _SettingPanelState extends State<SettingPanel> {
             hoverElevation: 0,
             highlightElevation: 0,
             disabledElevation: 0,
-            color: Colors.white,
+            // color: Colors.white,
             onPressed: () {
               Navigator.pushNamed(context, PageRouter.threadStore);
             },
@@ -44,7 +47,7 @@ class _SettingPanelState extends State<SettingPanel> {
             hoverElevation: 0,
             highlightElevation: 0,
             disabledElevation: 0,
-            color: Colors.white,
+            // color: Colors.white,
             onPressed: () {
               Navigator.pushNamed(context, PageRouter.viewHistory);
             },
@@ -66,7 +69,7 @@ class _SettingPanelState extends State<SettingPanel> {
             hoverElevation: 0,
             highlightElevation: 0,
             disabledElevation: 0,
-            color: Colors.white,
+            // color: Colors.white,
             onPressed: () {
               Navigator.pushNamed(context, PageRouter.themeChange);
             },
@@ -88,9 +91,9 @@ class _SettingPanelState extends State<SettingPanel> {
             hoverElevation: 0,
             highlightElevation: 0,
             disabledElevation: 0,
-            color: Colors.white,
+            // color: Colors.white,
             onPressed: () {
-              //TODO：贴吧服务中心
+              Navigator.pushNamed(context, PageRouter.serviceCenter);
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -110,7 +113,7 @@ class _SettingPanelState extends State<SettingPanel> {
             hoverElevation: 0,
             highlightElevation: 0,
             disabledElevation: 0,
-            color: Colors.white,
+            // color: Colors.white,
             onPressed: () {
               //TODO:软件设置
             },

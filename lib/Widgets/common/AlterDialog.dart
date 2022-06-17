@@ -5,7 +5,9 @@ import 'package:tiebanana/Json_Model/provider.dart';
 
 class TiebaAlterDialog extends StatelessWidget {
   final String title;
-  const TiebaAlterDialog({Key? key, required this.title}) : super(key: key);
+  final Widget? content;
+  const TiebaAlterDialog({Key? key, required this.title, this.content})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +16,7 @@ class TiebaAlterDialog extends StatelessWidget {
           style: TextStyle(
               fontSize: Provider.of<APPSettingProvider>(context, listen: false)
                   .fontSize)),
+      content: content,
       actions: [
         TextButton(
             onPressed: () {

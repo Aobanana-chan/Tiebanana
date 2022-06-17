@@ -67,7 +67,9 @@ class _ForumHeaderState extends State<ForumHeader> {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.white
+          : Theme.of(context).backgroundColor,
       padding: const EdgeInsets.all(5),
       child: Row(
         children: [

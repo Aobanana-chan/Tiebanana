@@ -106,8 +106,6 @@ class _ThreadStorePageState extends State<ThreadStorePage> {
 
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
           title: const Text("我的收藏"),
           actions: [
             MaterialButton(

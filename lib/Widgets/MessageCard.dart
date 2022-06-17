@@ -1,6 +1,9 @@
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/ThemeExtension/QuoteTheme.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
@@ -12,7 +15,7 @@ class MessageCard extends StatelessWidget {
   final AtMe? atME;
   const MessageCard({Key? key, this.replyMe, this.atME}) : super(key: key);
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
     String text = replyMe?.quoteContent ?? atME!.quoteContent!;
     if (replyMe != null && replyMe!.quoteContent! == "") {
       text = "回复我的主题: ${replyMe!.title!}";
@@ -25,7 +28,9 @@ class MessageCard extends StatelessWidget {
       text,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+      style: TextStyle(
+          color: Theme.of(context).extension<QuoteTheme>()!.textColor!,
+          fontSize: Provider.of<APPSettingProvider>(context).fontSize),
       specialTextSpanBuilder: TiebaSpanBuilder(),
     );
   }
@@ -35,7 +40,10 @@ class MessageCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          color: Colors.white,
+          // color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : Theme.of(context).backgroundColor,
           border: Border.all(width: 0.05)),
       // padding: EdgeInsets.all(5),
       margin: const EdgeInsets.only(top: 3, bottom: 3),
@@ -85,10 +93,11 @@ class MessageCard extends StatelessWidget {
               margin: const EdgeInsets.only(top: 5),
               padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
-                  color: const Color(0xFFF0F3F5),
+                  // color: const Color(0xFFF0F3F5),
+                  color: Theme.of(context).extension<QuoteTheme>()!.backgorund!,
                   borderRadius: BorderRadius.circular(3)),
               child: Wrap(
-                children: [_buildBody()],
+                children: [_buildBody(context)],
               ),
             ),
             //回复信息

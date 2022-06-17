@@ -263,161 +263,165 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          elevation: 0,
+    return Theme(
+      data: ThemeData.dark(),
+      child: Container(
+        color: Colors.black,
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          actions: [
-            IconButton(
-                padding: const EdgeInsets.all(3),
-                onPressed: () async {
-                  //TODO:保存图片
-                  PhotoManager.editor.saveImageWithPath(
-                      (await getCachedImageFile(qualitySelect(currentIndex)))
-                              ?.path ??
-                          "",
-                      title: DateTime.now().toString());
-                },
-                icon: const Icon(Icons.save))
-          ],
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_sharp),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          title: Text("${currentIndex + 1}/${widget.imgUrls.length}"),
-        ),
-        body: Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(5),
-              child: ExtendedImageGesturePageView.builder(
-                canScrollPage: (gestureDetails) {
-                  if (gestureDetails!.totalScale! > 1.0 &&
-                      gestureDetails.layoutRect ==
-                          gestureDetails.destinationRect) {
-                    return false;
-                  }
-                  return true;
-                },
-                itemBuilder: (itemBuilder, index) {
-                  final GlobalKey<ExtendedImageGestureState> gestureKey =
-                      GlobalKey<ExtendedImageGestureState>();
-                  return Hero(
-                      tag: widget.imgUrls[index] + widget.heroTagSalt,
-                      child: ExtendedImage.network(
-                        qualitySelect(index),
-                        extendedImageGestureKey: gestureKey,
-                        mode: ExtendedImageMode.gesture,
-                        initGestureConfigHandler: (state) {
-                          return GestureConfig(
-                            inPageView: true,
-                            initialScale: 1.0,
-                            cacheGesture: true,
-                          );
-                        },
-                        handleLoadingProgress: true,
-                        loadStateChanged: (state) {
-                          // state.returnLoadStateChangedWidget = true;
-                          switch (state.extendedImageLoadState) {
-                            case LoadState.completed:
-                              highQualityCacheCheck();
-                              return null;
-                            case LoadState.loading:
-                              if (state.loadingProgress == null ||
-                                  state.loadingProgress!.expectedTotalBytes ==
-                                      null) {
-                                highQualityLoadState = null;
-                              } else {
-                                highQualityLoadState = (state.loadingProgress!
-                                        .cumulativeBytesLoaded /
-                                    state.loadingProgress!.expectedTotalBytes!);
-                              }
-                              //未加载完前显示低质量图片
-                              return ExtendedImage.network(
-                                widget.imgUrls[index],
-                                extendedImageGestureKey: gestureKey,
-                                mode: ExtendedImageMode.gesture,
-                                initGestureConfigHandler: (_) {
-                                  return GestureConfig(
-                                      inPageView: true,
-                                      initialScale: 1.0,
-                                      cacheGesture: true);
-                                },
-                                handleLoadingProgress: true,
-                              );
-                            case LoadState.failed:
-                              wantShowScrImg[index] = false;
-                              Fluttertoast.showToast(msg: "原图加载失败");
-                              return ExtendedImage.network(
-                                widget.imgUrls[index],
-                                extendedImageGestureKey: gestureKey,
-                                mode: ExtendedImageMode.gesture,
-                                initGestureConfigHandler: (_) {
-                                  return GestureConfig(
-                                      inPageView: true,
-                                      initialScale: 1.0,
-                                      cacheGesture: true);
-                                },
-                                handleLoadingProgress: true,
-                              );
-                            default:
-                          }
-                          return null;
-                        },
-                      ));
-                },
-                controller: widget.pageController,
-                itemCount: widget.imgUrls.length,
-                onPageChanged: (index) {
-                  currentIndex = index;
-                  setState(() {});
-                },
-                // physics: const BouncingScrollPhysics(),
-                pageSnapping: true,
-              ),
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            actions: [
+              IconButton(
+                  padding: const EdgeInsets.all(3),
+                  onPressed: () async {
+                    //TODO:保存图片
+                    PhotoManager.editor.saveImageWithPath(
+                        (await getCachedImageFile(qualitySelect(currentIndex)))
+                                ?.path ??
+                            "",
+                        title: DateTime.now().toString());
+                  },
+                  icon: const Icon(Icons.save))
+            ],
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_sharp),
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
-            SizedBox.expand(
-              child: Visibility(
-                  visible: shouldShowOriginSrc(),
-                  child: FractionallySizedBox(
-                      alignment: Alignment.bottomCenter,
-                      heightFactor: 0.2,
-                      child: FractionallySizedBox(
-                        heightFactor: 0.3,
-                        widthFactor: 0.5,
-                        child: Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 0.3,
-                              ),
-                              borderRadius: BorderRadius.circular(10)),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: MaterialButton(
-                              onPressed: () {
-                                wantShowScrImg[currentIndex] = true;
-                                setState(() {
-                                  highQualityCacheCheck();
-                                });
-                              },
-                              child: Text(
-                                wantShowScrImg[currentIndex] == false
-                                    ? "查看原图"
-                                    : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
-                                style: const TextStyle(color: Colors.white),
+            title: Text("${currentIndex + 1}/${widget.imgUrls.length}"),
+          ),
+          body: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                child: ExtendedImageGesturePageView.builder(
+                  canScrollPage: (gestureDetails) {
+                    if (gestureDetails!.totalScale! > 1.0 &&
+                        gestureDetails.layoutRect ==
+                            gestureDetails.destinationRect) {
+                      return false;
+                    }
+                    return true;
+                  },
+                  itemBuilder: (itemBuilder, index) {
+                    final GlobalKey<ExtendedImageGestureState> gestureKey =
+                        GlobalKey<ExtendedImageGestureState>();
+                    return Hero(
+                        tag: widget.imgUrls[index] + widget.heroTagSalt,
+                        child: ExtendedImage.network(
+                          qualitySelect(index),
+                          extendedImageGestureKey: gestureKey,
+                          mode: ExtendedImageMode.gesture,
+                          initGestureConfigHandler: (state) {
+                            return GestureConfig(
+                              inPageView: true,
+                              initialScale: 1.0,
+                              cacheGesture: true,
+                            );
+                          },
+                          handleLoadingProgress: true,
+                          loadStateChanged: (state) {
+                            // state.returnLoadStateChangedWidget = true;
+                            switch (state.extendedImageLoadState) {
+                              case LoadState.completed:
+                                highQualityCacheCheck();
+                                return null;
+                              case LoadState.loading:
+                                if (state.loadingProgress == null ||
+                                    state.loadingProgress!.expectedTotalBytes ==
+                                        null) {
+                                  highQualityLoadState = null;
+                                } else {
+                                  highQualityLoadState = (state.loadingProgress!
+                                          .cumulativeBytesLoaded /
+                                      state.loadingProgress!
+                                          .expectedTotalBytes!);
+                                }
+                                //未加载完前显示低质量图片
+                                return ExtendedImage.network(
+                                  widget.imgUrls[index],
+                                  extendedImageGestureKey: gestureKey,
+                                  mode: ExtendedImageMode.gesture,
+                                  initGestureConfigHandler: (_) {
+                                    return GestureConfig(
+                                        inPageView: true,
+                                        initialScale: 1.0,
+                                        cacheGesture: true);
+                                  },
+                                  handleLoadingProgress: true,
+                                );
+                              case LoadState.failed:
+                                wantShowScrImg[index] = false;
+                                Fluttertoast.showToast(msg: "原图加载失败");
+                                return ExtendedImage.network(
+                                  widget.imgUrls[index],
+                                  extendedImageGestureKey: gestureKey,
+                                  mode: ExtendedImageMode.gesture,
+                                  initGestureConfigHandler: (_) {
+                                    return GestureConfig(
+                                        inPageView: true,
+                                        initialScale: 1.0,
+                                        cacheGesture: true);
+                                  },
+                                  handleLoadingProgress: true,
+                                );
+                              default:
+                            }
+                            return null;
+                          },
+                        ));
+                  },
+                  controller: widget.pageController,
+                  itemCount: widget.imgUrls.length,
+                  onPageChanged: (index) {
+                    currentIndex = index;
+                    setState(() {});
+                  },
+                  // physics: const BouncingScrollPhysics(),
+                  pageSnapping: true,
+                ),
+              ),
+              SizedBox.expand(
+                child: Visibility(
+                    visible: shouldShowOriginSrc(),
+                    child: FractionallySizedBox(
+                        alignment: Alignment.bottomCenter,
+                        heightFactor: 0.2,
+                        child: FractionallySizedBox(
+                          heightFactor: 0.3,
+                          widthFactor: 0.5,
+                          child: Container(
+                            decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 0.3,
+                                ),
+                                borderRadius: BorderRadius.circular(10)),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: MaterialButton(
+                                onPressed: () {
+                                  wantShowScrImg[currentIndex] = true;
+                                  setState(() {
+                                    highQualityCacheCheck();
+                                  });
+                                },
+                                child: Text(
+                                  wantShowScrImg[currentIndex] == false
+                                      ? "查看原图"
+                                      : "加载中... ${highQualityLoadState == null ? "" : "${(highQualityLoadState! * 100).toStringAsFixed(2)}%"}",
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ))),
-            )
-          ],
+                        ))),
+              )
+            ],
+          ),
         ),
       ),
     );
