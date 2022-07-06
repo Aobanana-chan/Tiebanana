@@ -7,7 +7,7 @@ const defaultAPPSetting = {
   "useBuildinBrowser": true,
   "checkUpdateAutomaticlly": true,
   "usePostTail": false,
-  "postTail": "",
+  "postTail": null,
   "fontSize": 16.0
 };
 

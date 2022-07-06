@@ -27,7 +27,9 @@ class UserPostWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : Theme.of(context).backgroundColor,
           border: Border.all(width: 0.05)),
       // padding: EdgeInsets.all(5),
       margin: const EdgeInsets.only(top: 3, bottom: 3),

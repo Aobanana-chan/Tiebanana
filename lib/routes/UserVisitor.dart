@@ -45,8 +45,6 @@ class _UserVisitorState extends State<UserVisitor> {
           title: userinfo == null
               ? const Text("")
               : Text(userinfo!.user?.nameShow ?? userinfo!.user?.name ?? ""),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
           elevation: 0.5,
         ),
         body: ExtendedNestedScrollView(
@@ -62,7 +60,7 @@ class _UserVisitorState extends State<UserVisitor> {
             ];
           },
           body: Container(
-            color: Colors.white,
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: _BottomView(
               uid: widget.uid,
               myLikeNum: userinfo?.user!.myLikeNum ?? "0",
@@ -90,7 +88,9 @@ class __UserInfomationState extends State<_UserInfomation> {
     }
     return FadeIn(
         child: Container(
-      color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.white
+          : Theme.of(context).backgroundColor,
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
@@ -116,25 +116,43 @@ class __UserInfomationState extends State<_UserInfomation> {
                           text: widget.userinfo?.userAgreeInfo?.totalAgreeNum ??
                               widget.userinfo?.user?.totalAgreeNum ??
                               "0",
-                          style: const TextStyle(
-                              color: Colors.black, fontSize: 17)),
-                      const TextSpan(
+                          style: TextStyle(
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                      .fontSize +
+                                  1)),
+                      TextSpan(
                           text: " 获赞     ",
-                          style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                      .fontSize -
+                                  3)),
                       TextSpan(
                           text: widget.userinfo?.user?.fansNum ?? "0",
-                          style: const TextStyle(
-                              color: Colors.black, fontSize: 17)),
-                      const TextSpan(
+                          style: TextStyle(
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                      .fontSize +
+                                  1)),
+                      TextSpan(
                           text: " 粉丝     ",
-                          style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                      .fontSize -
+                                  3)),
                       TextSpan(
                           text: widget.userinfo?.user?.concernNum ?? "0",
-                          style: const TextStyle(
-                              color: Colors.black, fontSize: 17)),
-                      const TextSpan(
+                          style: TextStyle(
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                      .fontSize +
+                                  1)),
+                      TextSpan(
                           text: " 关注     ",
-                          style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                      .fontSize -
+                                  3)),
                     ])),
                   ),
                 ],
@@ -155,7 +173,10 @@ class __UserInfomationState extends State<_UserInfomation> {
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
           margin: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8), color: Colors.white),
+              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.white
+                  : Theme.of(context).backgroundColor),
           child: Row(
             children: [
               //TODO:复制到剪切板
@@ -254,12 +275,18 @@ class _BottomViewState extends State<_BottomView>
                   ))
               .toList(),
           controller: _controller,
-          labelColor: Colors.blue,
+          labelColor: Theme.of(context).brightness == Brightness.light
+              ? Theme.of(context).primaryColor
+              : Theme.of(context).colorScheme.onSurface,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           indicator: CustomUnderlineTabIndicator(
               wantWidth: 36,
               insets: const EdgeInsets.only(left: 15, right: 15),
-              borderSide: const BorderSide(width: 4, color: Colors.green)),
+              borderSide: BorderSide(
+                  width: 4,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).colorScheme.onSurface)),
         ),
         Expanded(
             child: TabBarView(controller: _controller, children: [

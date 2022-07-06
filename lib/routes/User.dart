@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/SettingPanel.dart';
 import 'package:tiebanana/Widgets/UserCard.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
@@ -44,6 +47,10 @@ class _UserPageState extends State<UserPage> {
               default:
                 if (snapshot.hasData) {
                   myInfo = snapshot.data;
+                  SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+                    Provider.of<User>(context, listen: false).name =
+                        myInfo?.nameShow ?? myInfo?.name ?? "";
+                  });
                   return Column(
                     children: [
                       SearchBar(

@@ -154,6 +154,15 @@ class TiebaAPI {
     }
   }
 
+  ///退出登陆
+  void logout() {
+    if (isLogin) {
+      cookieJar.deleteAll();
+      _token = "";
+      isLogin = false;
+    }
+  }
+
   ///模拟web入口的账号密码登陆
   Future<LoginErrCode> loginByPassword(String username, String password) async {
     if (isLogin) {

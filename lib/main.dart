@@ -62,6 +62,10 @@ class App extends StatelessWidget {
                         unselectedLabelColor: Colors.black26,
                       ),
                       scaffoldBackgroundColor: const Color(0xFFF2F2F5),
+                      buttonTheme: const ButtonThemeData(
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: EdgeInsets.zero),
                       extensions: [QuoteTheme.bright]),
 
                   darkTheme: ThemeData(
@@ -77,6 +81,10 @@ class App extends StatelessWidget {
                         labelColor: darkThemeScheme.onSurface,
                         unselectedLabelColor: darkThemeScheme.onSurface,
                       ),
+                      buttonTheme: const ButtonThemeData(
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: EdgeInsets.zero),
                       extensions: [QuoteTheme.dark]),
                   localizationsDelegates: const [
                     GlobalMaterialLocalizations.delegate,

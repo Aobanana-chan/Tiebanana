@@ -265,7 +265,7 @@ class Ext {
   Ext.fromJson(Map<String, dynamic> json) {
     img = json['img'];
     info = json['info'];
-    sup = (json['sup'] as double).toInt();
+    sup = (json['sup'] as num).toInt();
   }
 
   Map<String, dynamic> toJson() {

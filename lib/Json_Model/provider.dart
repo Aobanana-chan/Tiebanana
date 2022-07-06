@@ -9,6 +9,18 @@ class User with ChangeNotifier {
   bool _islogin = Global.tiebaAPI.isLogin;
   bool get isLogin => Global.tiebaAPI.isLogin;
 
+  String _name = "";
+  String get name {
+    return _name;
+  }
+
+  set name(String n) {
+    if (_name != n) {
+      _name = n;
+      notifyListeners();
+    }
+  }
+
   String? _uid;
   String get uid {
     if (_uid != null) {

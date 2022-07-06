@@ -67,7 +67,7 @@ class _AuthwidgetverifyState extends State<Authwidgetverify> {
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 10),
                             filled: true,
-                            fillColor: const Color(0xFFF5F5F5),
+                            // fillColor: const Color(0xFFF5F5F5),
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(64),
                                 borderSide: BorderSide.none),

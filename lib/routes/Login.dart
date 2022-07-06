@@ -91,7 +91,8 @@ class _LoginPageState extends State<LoginPage>
           ),
           Container(
               decoration: BoxDecoration(
-                  color: Colors.white, borderRadius: BorderRadius.circular(32)),
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(32)),
               padding: const EdgeInsets.all(20),
               margin: const EdgeInsets.only(left: 10, right: 10),
               constraints: const BoxConstraints(maxHeight: 300),
@@ -160,7 +161,7 @@ class _PasswordLogin extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               filled: true,
-              fillColor: const Color(0xFFF5F5F5),
+              // fillColor: const Color(0xFFF5F5F5),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(64),
                   borderSide: BorderSide.none),
@@ -180,7 +181,7 @@ class _PasswordLogin extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               filled: true,
-              fillColor: const Color(0xFFF5F5F5),
+              // fillColor: const Color(0xFFF5F5F5),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(64),
                   borderSide: BorderSide.none),
@@ -285,7 +286,7 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               filled: true,
-              fillColor: const Color(0xFFF5F5F5),
+              // fillColor: const Color(0xFFF5F5F5),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(64),
                   borderSide: BorderSide.none),
@@ -305,7 +306,7 @@ class __PhoneNumberLoginState extends State<_PhoneNumberLogin> {
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                 filled: true,
-                fillColor: const Color(0xFFF5F5F5),
+                // fillColor: const Color(0xFFF5F5F5),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(64),
                     borderSide: BorderSide.none),

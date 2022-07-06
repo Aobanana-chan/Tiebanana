@@ -115,7 +115,7 @@ class _SettingPanelState extends State<SettingPanel> {
             disabledElevation: 0,
             // color: Colors.white,
             onPressed: () {
-              //TODO:软件设置
+              Navigator.pushNamed(context, PageRouter.appSetting);
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

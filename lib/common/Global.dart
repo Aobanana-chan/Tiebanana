@@ -75,8 +75,10 @@ class Global {
     //初始化贴吧API
     await tiebaAPI.init().then((value) async {
       //初始化用户uid
-      var userInfo = await value.getMyInfo();
-      profile.setString("uid", userInfo.id!.toString());
+      if (value.isLogin) {
+        var userInfo = await value.getMyInfo();
+        profile.setString("uid", userInfo.id!.toString());
+      }
     });
 
     //初始化数据库
