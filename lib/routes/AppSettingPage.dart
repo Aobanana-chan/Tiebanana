@@ -136,7 +136,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   child: ListTile(
                     leading: Icon(Icons.image_search_outlined),
                     title: Text("图片浏览模式"),
-                    subtitle: Text(Global.setting.postTail ?? "你还没有设置小尾巴"),
+                    subtitle: Text(Global.setting.pictureLoadMode),
                   ),
                 ),
               ),
@@ -259,6 +259,20 @@ class _AppSettingPageState extends State<AppSettingPage> {
                       },
                     ),
                     subtitle: Text("收藏贴浏览后自动缓存（防止帖子被删后找不到内容）预计之后上线"),
+                  ),
+                ),
+              ),
+              Container(
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.background,
+                child: MaterialButton(
+                  onPressed: () {
+                    //TODO:关于
+                  },
+                  child: ListTile(
+                    leading: Icon(Icons.warning_amber_outlined),
+                    title: Text("关于"),
                   ),
                 ),
               )

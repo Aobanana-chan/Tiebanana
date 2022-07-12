@@ -88,6 +88,10 @@ class APPSetting {
     data['fontSize'] = fontSize;
     return data;
   }
+
+  String get pictureLoadMode {
+    return _pictureLoadType[pictureLoadSetting!]!;
+  }
 }
 
 const Map<String, String> themeName = {
@@ -98,4 +102,11 @@ const Map<String, String> themeName = {
   "yellow": "咸蛋黄",
   "pink": "胭脂粉",
   "white": "简洁白"
+};
+
+const Map<int, String> _pictureLoadType = {
+  0: "智能省流量",
+  1: "智能无图",
+  2: "始终高质量",
+  3: "始终无图"
 };

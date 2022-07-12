@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:tiebanana/Json_Model/PageModel/MessagePageModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
@@ -179,7 +180,9 @@ class _MessagePanState extends State<MessagePan>
                       itemCount: replyMessage.length,
                       // physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
-                        return MessageCard(replyMe: replyMessage[index]);
+                        return MessageCard(
+                            message: MessagePageModel.fromReplyMe(
+                                replyMessage[index]));
                       }));
             } else if (snapshot.hasError) {
               return GestureDetector(
@@ -232,7 +235,9 @@ class _MessagePanState extends State<MessagePan>
                       itemCount: atMeMessage.length,
                       // physics: const BouncingScrollPhysics(),
                       itemBuilder: (itemBuilder, index) {
-                        return MessageCard(atME: atMeMessage[index]);
+                        return MessageCard(
+                            message:
+                                MessagePageModel.fromAtMe(atMeMessage[index]));
                       }));
             } else if (snapshot.hasError) {
               return GestureDetector(

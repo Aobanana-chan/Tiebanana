@@ -1,4 +1,4 @@
-package com.example.tieba_flutter
+package pers.aobanana.Tiebanana
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -60,13 +60,12 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
               : Theme.of(context).backgroundColor,
-          border: Border(top: BorderSide(color: Color(0xFFF0F1F2)))),
+          border: const Border(top: BorderSide(color: Color(0xFFF0F1F2)))),
       child: Row(
         children: [
           Expanded(
               child: GestureDetector(
             onTap: () {
-              //TODO:打开回复框
               showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.transparent,

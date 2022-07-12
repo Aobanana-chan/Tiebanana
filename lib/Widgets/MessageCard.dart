@@ -1,7 +1,7 @@
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/PageModel/MessagePageModel.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/ThemeExtension/QuoteTheme.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
@@ -11,17 +11,15 @@ import 'package:tiebanana/common/API/TiebaParser.dart';
 
 ///消息Widget
 class MessageCard extends StatelessWidget {
-  final ReplyMe? replyMe;
-  final AtMe? atME;
-  const MessageCard({Key? key, this.replyMe, this.atME}) : super(key: key);
+  // final ReplyMe? replyMe;
+  // final AtMe? atME;
+  final MessagePageModel message;
+  const MessageCard({Key? key, required this.message}) : super(key: key);
 
   Widget _buildBody(BuildContext context) {
-    String text = replyMe?.quoteContent ?? atME!.quoteContent!;
-    if (replyMe != null && replyMe!.quoteContent! == "") {
-      text = "回复我的主题: ${replyMe!.title!}";
-    }
-    if (atME != null && atME!.quoteContent == "") {
-      text = "回复我的主题: ${atME!.title!}";
+    String text = message.quoteContent;
+    if (message.quoteContent == "") {
+      text = "回复我的主题: ${message.title}";
     }
     //TODO:回复跳转
     return ExtendedText(
@@ -56,8 +54,7 @@ class MessageCard extends StatelessWidget {
             Row(
               children: [
                 Avatar(
-                  imgUrl: AUTHOR_AVATAR +
-                      (replyMe?.replyer!.portrait! ?? atME!.replyer!.portrait!),
+                  imgUrl: AUTHOR_AVATAR + message.portrait,
                   height: 45,
                   width: 45,
                 ),
@@ -69,15 +66,14 @@ class MessageCard extends StatelessWidget {
                       children: <Widget>[
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(
-                              "${replyMe?.replyer!.name ?? atME!.replyer!.name}"),
+                          child: Text(message.name),
                         ),
                       ],
                     ),
                     Row(
                       children: [
                         Text(
-                          TiebaParser.getPostTime(strTime: replyMe!.time!),
+                          TiebaParser.getPostTime(dateTime: message.time),
                           style: const TextStyle(color: Colors.grey),
                         ),
                       ],
@@ -103,7 +99,7 @@ class MessageCard extends StatelessWidget {
             //回复信息
             Container(
               padding: const EdgeInsets.all(5),
-              child: ExtendedText(replyMe?.content ?? atME!.content!,
+              child: ExtendedText(message.content,
                   specialTextSpanBuilder: TiebaSpanBuilder(),
                   style: const TextStyle(fontSize: 16)),
             ),
@@ -111,7 +107,7 @@ class MessageCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(5),
               child: Text(
-                "来自${replyMe?.fname ?? atME!.fname}吧",
+                "来自${message.fname}吧",
                 style: TextStyle(
                     color: Colors.grey[600], overflow: TextOverflow.ellipsis),
               ),

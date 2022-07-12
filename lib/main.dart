@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tiebanana/Callback/LifeTimeCallback.dart';
+import 'package:tiebanana/Exceptions/Exception.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/ThemeExtension/QuoteTheme.dart';
 import 'package:tiebanana/Widgets/common/ClipBordObserve.dart';
@@ -10,7 +12,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  TiebananaErrorProcesser.init();
   await Global.init();
+  LifeTimeCallback().afterInit();
   runApp(const App());
 }
 

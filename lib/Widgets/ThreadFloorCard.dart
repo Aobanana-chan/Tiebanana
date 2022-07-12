@@ -11,7 +11,6 @@ import 'package:tiebanana/Widgets/ThreadReplyBar.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
-import 'package:tiebanana/common/DefaultConfig.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
@@ -67,9 +66,11 @@ class ThreadFloorComment extends StatelessWidget {
             });
       },
       child: Container(
-        // decoration: const BoxDecoration(
-        //   color: Colors.white,
-        // ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : null,
+        ),
         padding: const EdgeInsets.only(left: 8, right: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -348,6 +349,9 @@ class InnerPost extends StatelessWidget {
           text: TextSpan(
               children: w,
               style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.black
+                      : Colors.white,
                   fontSize:
                       Provider.of<APPSettingProvider>(context).fontSize - 1)))
     ];

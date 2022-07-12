@@ -204,11 +204,15 @@ class ZoomedImgExplorer extends StatefulWidget {
   _ZoomedImgExplorerState createState() => _ZoomedImgExplorerState();
 }
 
-class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
+class _ZoomedImgExplorerState extends State<ZoomedImgExplorer>
+    with TickerProviderStateMixin {
   late int currentIndex;
   late List<bool> highQualityLoaded;
   double? highQualityLoadState;
   late List<bool> wantShowScrImg;
+  Animation<double>? _doubleClickAnimation;
+  late AnimationController _doubleClickAnimationController;
+  late void Function() _doubleClickAnimationListener;
   Future<void> highQualityCacheCheck() async {
     int i = 0;
     bool shouldupdate = false;
@@ -253,6 +257,8 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
     wantShowScrImg = List.filled(widget.imgUrls.length, false);
     highQualityCacheCheck();
     currentIndex = widget.pageController?.initialPage ?? 0;
+    _doubleClickAnimationController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 100));
   }
 
   @override
@@ -276,12 +282,18 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
               IconButton(
                   padding: const EdgeInsets.all(3),
                   onPressed: () async {
-                    //TODO:保存图片
-                    PhotoManager.editor.saveImageWithPath(
+                    var res = await PhotoManager.editor.saveImageWithPath(
                         (await getCachedImageFile(qualitySelect(currentIndex)))
                                 ?.path ??
                             "",
-                        title: DateTime.now().toString());
+                        title: "${keyToMd5(qualitySelect(currentIndex))}.jpg");
+                    if (res != null) {
+                      Fluttertoast.showToast(
+                          msg:
+                              "图片保存在${(await getCachedImageFile(qualitySelect(currentIndex)))?.path}");
+                    } else {
+                      Fluttertoast.showToast(msg: "图片保存失败");
+                    }
                   },
                   icon: const Icon(Icons.save))
             ],
@@ -324,7 +336,6 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                           },
                           handleLoadingProgress: true,
                           loadStateChanged: (state) {
-                            // state.returnLoadStateChangedWidget = true;
                             switch (state.extendedImageLoadState) {
                               case LoadState.completed:
                                 highQualityCacheCheck();
@@ -364,6 +375,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                                     return GestureConfig(
                                         inPageView: true,
                                         initialScale: 1.0,
+                                        minScale: 1.0,
                                         cacheGesture: true);
                                   },
                                   handleLoadingProgress: true,
@@ -371,6 +383,53 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                               default:
                             }
                             return null;
+                          },
+                          onDoubleTap: (state) {
+                            const List<double> targetScale = [1.0, 1.3, 1.6];
+                            var pointerDownPosition = state.pointerDownPosition;
+                            double begin = state.gestureDetails!.totalScale!;
+                            late double end;
+
+                            //remove old
+                            _doubleClickAnimation
+                                ?.removeListener(_doubleClickAnimationListener);
+
+                            //stop pre
+                            _doubleClickAnimationController.stop();
+
+                            //reset to use
+                            _doubleClickAnimationController.reset();
+
+                            if (begin == targetScale[2]) {
+                              end = targetScale[0];
+                            } else if (begin == targetScale[1]) {
+                              end = targetScale[2];
+                            } else if (begin == targetScale[0]) {
+                              end = targetScale[1];
+                            } else {
+                              var tmp = double.infinity;
+                              for (var scale in targetScale) {
+                                if ((begin - scale).abs() <= tmp) {
+                                  tmp = (begin - scale).abs();
+                                  end = scale;
+                                }
+                              }
+                            }
+
+                            _doubleClickAnimationListener = () {
+                              //print(_animation.value);
+                              state.handleDoubleTap(
+                                  scale: _doubleClickAnimation?.value,
+                                  doubleTapPosition: pointerDownPosition);
+                            };
+                            _doubleClickAnimation =
+                                _doubleClickAnimationController.drive(
+                                    Tween<double>(begin: begin, end: end));
+
+                            _doubleClickAnimation
+                                ?.addListener(_doubleClickAnimationListener);
+
+                            _doubleClickAnimationController.forward();
                           },
                         ));
                   },

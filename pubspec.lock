@@ -148,6 +148,48 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.16.0"
+  connectivity_plus:
+    dependency: "direct main"
+    description:
+      name: connectivity_plus
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.3.5"
+  connectivity_plus_linux:
+    dependency: transitive
+    description:
+      name: connectivity_plus_linux
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.3.1"
+  connectivity_plus_macos:
+    dependency: transitive
+    description:
+      name: connectivity_plus_macos
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.2.4"
+  connectivity_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: connectivity_plus_platform_interface
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.2.1"
+  connectivity_plus_web:
+    dependency: transitive
+    description:
+      name: connectivity_plus_web
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.2.2"
+  connectivity_plus_windows:
+    dependency: transitive
+    description:
+      name: connectivity_plus_windows
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.2.2"
   convert:
     dependency: transitive
     description:
@@ -414,7 +456,7 @@ packages:
     source: hosted
     version: "4.0.0"
   intl:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: intl
       url: "https://pub.flutter-io.cn"
@@ -518,6 +560,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.0"
+  nm:
+    dependency: transitive
+    description:
+      name: nm
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.5.0"
   objectbox:
     dependency: "direct main"
     description:
@@ -615,7 +664,7 @@ packages:
       name: photo_manager
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.0+1"
+    version: "2.1.4"
   platform:
     dependency: transitive
     description:

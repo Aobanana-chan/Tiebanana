@@ -1,22 +1,33 @@
 part of json_model;
 
 ///楼中楼数据Model
-class InnerFloorModel extends ThreadPageData {
+class InnerFloorModel implements ThreadPageData {
   List<SubpostList>? subpostList;
+  @override
   List<PostList>? postList;
   InnerFloorPost? post;
+  @override
   Anti? anti;
   // Page? page;
+  @override
   Thread? thread;
+  @override
   Forum? forum;
   // List<UserList>? user;
   PermModel? perm;
+  @override
   DisplayForum? displayForum;
+  @override
   String? isBlackWhite;
+  @override
   String? serverTime;
+  @override
   int? time;
+  @override
   int? ctime;
+  @override
   int? logid;
+  @override
   String? errorCode;
 
   InnerFloorModel(
@@ -72,6 +83,7 @@ class InnerFloorModel extends ThreadPageData {
     errorCode = json['error_code'];
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     if (subpostList != null) {
@@ -112,19 +124,79 @@ class InnerFloorModel extends ThreadPageData {
     data['error_code'] = errorCode;
     return data;
   }
+
+  @override
+  List<AlaInfo>? alaInfo;
+
+  @override
+  BannerList? bannerList;
+
+  @override
+  String? foldTip;
+
+  @override
+  String? hasFloor;
+
+  @override
+  String? hasFoldComment;
+
+  @override
+  String? isNewUrl;
+
+  @override
+  String? isOfficialForum;
+
+  @override
+  String? isPurchase;
+
+  @override
+  List? newsInfo;
+
+  @override
+  ThreadPage? page;
+
+  @override
+  String? partialVisibleToast;
+
+  @override
+  List<PbSortInfo>? pbSortInfo;
+
+  @override
+  List? sampleSidsTemp;
+
+  @override
+  String? showAdsense;
+
+  @override
+  String? sortType;
+
+  @override
+  String? switchReadOpen;
+
+  @override
+  ThreadUser? user;
+
+  @override
+  List<UserList>? userList;
 }
 
-class SubpostList extends SubPostList {
+class SubpostList implements SubPostList {
+  @override
   String? id;
+  @override
   List<Content>? content;
+  @override
   String? time;
+  @override
   String? ptype;
   String? isGiftpost;
   Agree? agree;
   // List<Null> location;
   UserList? author;
   String? isAuthorView;
+  @override
   String? title;
+  @override
   String? floor;
 
   SubpostList(
@@ -164,6 +236,7 @@ class SubpostList extends SubPostList {
     floor = json['floor'];
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
@@ -187,26 +260,41 @@ class SubpostList extends SubPostList {
     data['floor'] = floor;
     return data;
   }
+
+  @override
+  String? authorId;
+
+  @override
+  String? isVoice;
 }
 
-class InnerFloorPost extends SubpostList {
+class InnerFloorPost implements SubpostList {
+  @override
   String? id;
+  @override
   String? title;
+  @override
   String? floor;
+  @override
   String? time;
+  @override
   List<Content>? content;
   // List<Null> lbsInfo;
   String? isVote;
+  @override
   String? ptype;
   // List<Null> voiceInfo;
+  @override
   Agree? agree;
   String? showSquared;
   String? baijiahaoInfo;
   String? isPostVisible;
+  @override
   String? isVoice;
   // List<Null> arrVideo;
   String? isBubbleThread;
   String? isColorfullThread;
+  @override
   UserList? author;
   String? bimgUrl;
   String? iosBimgFormat;
@@ -282,6 +370,7 @@ class InnerFloorPost extends SubpostList {
     skinInfo = json['skin_info'];
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
@@ -320,6 +409,15 @@ class InnerFloorPost extends SubpostList {
     data['skin_info'] = skinInfo;
     return data;
   }
+
+  @override
+  String? authorId;
+
+  @override
+  String? isAuthorView;
+
+  @override
+  String? isGiftpost;
 }
 
 class PermModel {

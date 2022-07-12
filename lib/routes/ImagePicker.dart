@@ -8,6 +8,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'dart:math' as math;
 import 'package:uuid/uuid.dart';
 
+//TODO:相册页面连续加载
 ///图片选择和上传路由
 class ImagePickerRoute extends StatefulWidget {
   const ImagePickerRoute({Key? key}) : super(key: key);
@@ -28,6 +29,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
   bool _sendOriginImg = false;
   Set<AssetEntity> fileSelected = {};
   late Future<PermissionState> permission;
+  int page = 0;
   @override
   void initState() {
     super.initState();
@@ -41,14 +43,14 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
 
   Future<void> addSelected(int index) async {
     fileSelected.add(
-        (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF) ??
+        (await pathSelected?.getAssetListPaged(page: 0, size: 0xFFFFFFFF) ??
             [])[index]);
     setState(() {});
   }
 
   Future<void> removeSelected(int index) async {
     fileSelected.remove(
-        (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF) ??
+        (await pathSelected?.getAssetListPaged(page: 0, size: 0xFFFFFFFF) ??
             [])[index]);
     setState(() {});
   }
@@ -95,13 +97,11 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
   Future<List<AssetEntity>> loadImage() async {
     imageFileList.clear();
     for (AssetEntity entity
-        in (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF)) ??
-            []) {
+        in (await pathSelected?.getAssetListPaged(page: 0, size: 2)) ?? []) {
       var file = entity.file;
       imageFileList.add(file);
     }
-    return (await pathSelected?.getAssetListPaged(page: 1, size: 0xFFFFFFFF) ??
-        []);
+    return (await pathSelected?.getAssetListPaged(page: 0, size: 2) ?? []);
   }
 
   @override
@@ -153,6 +153,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<AssetPathEntity>(
+                  focusColor: Colors.transparent,
                   items: pathSelectItems,
                   onChanged: (value) {
                     if (pathSelected != value) {

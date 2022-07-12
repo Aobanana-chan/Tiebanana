@@ -17,7 +17,6 @@ import 'package:tiebanana/Widgets/TopThread.dart';
 import 'package:tiebanana/Widgets/PushToRefreshHeader.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
-import 'package:tiebanana/common/Util/AppUtil.dart';
 
 ///吧页面
 class ForumHomePage extends StatefulWidget {

@@ -342,7 +342,7 @@ class ForumHomeInfo {
   }
 }
 
-class ForumThreadList extends ThreadRecommendSummary {
+class ForumThreadList implements ThreadRecommendSummary {
   // String id;
   // String tid;
   String? nid;
@@ -359,9 +359,11 @@ class ForumThreadList extends ThreadRecommendSummary {
   String? agreeNum;
   String? disagreeNum;
   String? isPartialVisible;
+  @override
   String? shareNum;
   String? isProThread;
   String? tiebaplusCantDelete;
+  @override
   List<FirstPostContent>? firstPostContent;
   String? topAgreePostId;
   String? isTop;
@@ -380,6 +382,7 @@ class ForumThreadList extends ThreadRecommendSummary {
   String? isVote;
   // String mediaNum;
   String? meizhiPic;
+  @override
   List<Media>? media;
   List<Abstract>? abstract;
   String? firstPostId;
@@ -389,6 +392,7 @@ class ForumThreadList extends ThreadRecommendSummary {
   String? threadType;
   List? voiceInfo;
   String? isActivity;
+  @override
   Agree? agree;
   // String fid;
   String? postList;
@@ -542,6 +546,7 @@ class ForumThreadList extends ThreadRecommendSummary {
     agree = Agree(agreeNum: agreeNum, disagreeNum: disagreeNum);
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
@@ -613,6 +618,51 @@ class ForumThreadList extends ThreadRecommendSummary {
     data['tab_name'] = tabName;
     return data;
   }
+
+  @override
+  Author? author;
+
+  @override
+  String? createTime;
+
+  @override
+  String? fid;
+
+  @override
+  String? fname;
+
+  @override
+  String? id;
+
+  @override
+  String? isDeleted;
+
+  @override
+  String? lastTimeInt;
+
+  @override
+  MediaNum? mediaNum;
+
+  @override
+  String? replyNum;
+
+  @override
+  List<ThreadPersonalized>? threadPersonalized;
+
+  @override
+  String? tid;
+
+  @override
+  String? title;
+
+  @override
+  String? userId;
+
+  @override
+  VideoInfo? videoInfo;
+
+  @override
+  String? viewNum;
 }
 
 class Abstract {
@@ -2409,14 +2459,20 @@ class FrsTabInfo {
   }
 }
 
-class UserList extends Author {
+class UserList implements Author {
+  @override
   String? id;
+  @override
   String? portrait;
+  @override
   String? name;
+  @override
   String? nameShow;
   String? sex;
+  @override
   String? gender;
   String? type;
+  @override
   List<Iconinfo>? iconinfo;
   // List<ForumIconinfo>? iconinfo;
   // List<TshowIcon> tshowIcon;
@@ -2554,6 +2610,7 @@ class UserList extends Author {
     // }
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;

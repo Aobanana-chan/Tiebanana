@@ -82,24 +82,37 @@ class SearchUserModelData {
   }
 }
 
-class ExactMatch extends UserMatch {
+class ExactMatch implements UserMatch {
+  @override
   int? id;
+  @override
   String? intro;
+  @override
   String? userNickname;
+  @override
   String? name;
+  @override
   String? showNickname;
+  @override
   String? portrait;
+  @override
   String? encryUid;
+  @override
   int? fansNum;
+  @override
   int? isBjh;
+  @override
   String? bjhVIntro;
+  @override
   int? isGod;
   // Null businessAccountInfo;
   // Null bazhuGrade;
   // Null displayAuthType;
   // Null workCreatorInfo;
+  @override
   AlaInfo? alaInfo;
   int? isExact;
+  @override
   int? hasConcerned;
 
   ExactMatch(
@@ -144,6 +157,7 @@ class ExactMatch extends UserMatch {
     hasConcerned = json['has_concerned'];
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
@@ -186,23 +200,36 @@ class ExactMatch extends UserMatch {
 //   }
 // }
 
-class FuzzyMatch extends UserMatch {
+class FuzzyMatch implements UserMatch {
+  @override
   int? id;
+  @override
   String? intro;
+  @override
   String? userNickname;
+  @override
   String? name;
+  @override
   String? showNickname;
+  @override
   String? portrait;
+  @override
   String? encryUid;
+  @override
   int? fansNum;
+  @override
   int? isBjh;
+  @override
   String? bjhVIntro;
+  @override
   int? isGod;
   // Null businessAccountInfo;
   // Null bazhuGrade;
   // Null displayAuthType;
   // Null workCreatorInfo;
+  @override
   AlaInfo? alaInfo;
+  @override
   int? hasConcerned;
 
   FuzzyMatch(
@@ -269,6 +296,7 @@ class FuzzyMatch extends UserMatch {
     hasConcerned = json['has_concerned'];
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;

@@ -389,7 +389,7 @@ class UserProfileModelUser {
   String? fansNum;
   String? hasConcerned;
   TwAnchorInfo? twAnchorInfo;
-  String? profitList;
+  // String? profitList;
   BusinessAccountInfo? businessAccountInfo;
   String? displayAuthType;
   // String? workCreatorInfo;
@@ -458,7 +458,7 @@ class UserProfileModelUser {
       this.fansNum,
       this.hasConcerned,
       this.twAnchorInfo,
-      this.profitList,
+      // this.profitList,
       this.businessAccountInfo,
       this.displayAuthType,
       // this.workCreatorInfo,
@@ -582,7 +582,7 @@ class UserProfileModelUser {
     twAnchorInfo = json['tw_anchor_info'] != null
         ? TwAnchorInfo.fromJson(json['tw_anchor_info'])
         : null;
-    profitList = json['profit_list'];
+    // profitList = json['profit_list'];
     businessAccountInfo = json['business_account_info'] != null
         ? BusinessAccountInfo.fromJson(json['business_account_info'])
         : null;
@@ -725,7 +725,7 @@ class UserProfileModelUser {
     if (twAnchorInfo != null) {
       data['tw_anchor_info'] = twAnchorInfo?.toJson();
     }
-    data['profit_list'] = profitList;
+    // data['profit_list'] = profitList;
     if (businessAccountInfo != null) {
       data['business_account_info'] = businessAccountInfo?.toJson();
     }

@@ -7,7 +7,6 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
-import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///帖子组件-楼主

@@ -1,6 +1,4 @@
-import 'package:dio/dio.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
@@ -138,6 +136,7 @@ class ThreadPageMain extends StatefulWidget {
 
 class ThreadPageMainState extends State<ThreadPageMain> {
   late ThreadPageModel info;
+  ThreadPageModel? prevState;
 
   late List<Widget> appBarAction;
   final ScrollController _controller = ScrollController();
@@ -157,6 +156,9 @@ class ThreadPageMainState extends State<ThreadPageMain> {
     appBarAction = [
       StatefulBuilder(
         builder: (BuildContext context, setState) {
+          var colors = ColorScheme.fromSeed(
+              seedColor: Theme.of(context).primaryColor,
+              brightness: Theme.of(context).brightness);
           return IconButton(
               padding: const EdgeInsets.all(6),
               onPressed: () {
@@ -164,26 +166,20 @@ class ThreadPageMainState extends State<ThreadPageMain> {
                 setState(() {
                   lz = !lz;
                 });
+                onlyLz();
               },
               icon: Container(
                 padding: const EdgeInsets.all(1),
                 decoration: BoxDecoration(
-                  border: Border.all(
-                      width: 2,
-                      color:
-                          lz ? Theme.of(context).primaryColor : Colors.black),
+                  border: Border.all(width: 2, color: colors.primary),
                   borderRadius: BorderRadius.circular(5),
-                  color: lz
-                      ? Theme.of(context).primaryColor
-                      : Theme.of(context).colorScheme.onPrimary,
+                  color: !lz ? colors.onPrimary : colors.primary,
                 ),
                 child: Text(
                   "楼主",
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: lz
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Colors.black),
+                      color: !lz ? colors.primary : colors.onPrimary),
                 ),
               ));
         },
@@ -273,7 +269,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
         list.add(t);
       }
-      info.postPage[info.bottomPn!] = list;
+      info.postPage[info.bottomPn! * (lz ? -1 : 1)] = list;
 
       // postList.addAll(l.postList!);
       info.hasMore = l.page?.hasMore == "1";
@@ -301,7 +297,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
         list.add(t);
       }
-      info.postPage[info.topPn!] = list;
+      info.postPage[info.topPn! * (lz ? -1 : 1)] = list;
       // postList.addAll(l.postList!);
       info.hasPrev = l.page?.hasPrev == "1";
       // hasPrev = l.page?.hasPrev == "1";
@@ -313,6 +309,47 @@ class ThreadPageMainState extends State<ThreadPageMain> {
         collectImages();
       });
     }
+  }
+
+  ///只看楼主
+  void onlyLz() {
+    if (prevState != null) {
+      var t = prevState;
+      prevState = info;
+      info = t!;
+      setState(() {});
+    } else {
+      prevState = info;
+      refresh();
+    }
+  }
+
+  void refresh() async {
+    info.topPn = 1;
+    info.bottomPn = 1;
+    info.hasMore = true;
+    //TODO:改为合并
+    info.postPage.clear();
+    var l = await Global.tiebaAPI
+        .getThreadPage(widget.kz, pn: info.topPn!, onlyLz: lz);
+
+    var list = <ThreadPagePost>[];
+    for (var i in l.postList!) {
+      var t = ThreadPagePost.fromPostList(i);
+
+      list.add(t);
+    }
+    info.postPage[info.topPn! * (lz ? -1 : 1)] = list;
+    // postList.addAll(l.postList!);
+    info.hasPrev = l.page?.hasPrev == "1";
+    // hasPrev = l.page?.hasPrev == "1";
+    //添加新的user列表
+    for (UserList user in l.userList ?? []) {
+      info.userListSet[user.id!] = user;
+    }
+    setState(() {
+      collectImages();
+    });
   }
 
   void collectImages() {
@@ -332,7 +369,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
   List<Widget> buildFloor() {
     List<Widget> w = [];
-    for (var floor in info.postList) {
+    for (var floor in lz ? info.lzPostList : info.postList) {
       if (floor.floor != "1") {
         w.add(ThreadFloorComment(
           allImgs: info.imgs,
@@ -366,77 +403,73 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
           return true;
         },
-        child: Container(
-          // color: const Color(0xFFF2F2F5),
-          child: Column(
-            children: [
-              Expanded(
-                  child: CustomScrollView(
-                // physics: const BouncingScrollPhysics(),
-                controller: _controller,
-                slivers: <Widget>[
-                  SliverAppBar(
-                    //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
-                    // expandedHeight: .00001,
-                    elevation: 0.5,
-                    pinned: true,
-                    snap: true,
-                    floating: true,
-                    actions: appBarAction,
-                    title: AnimatedOpacity(
-                      alwaysIncludeSemantics: true,
-                      opacity: scrollOffset < 36 ? 0 : 1,
-                      duration: const Duration(milliseconds: 200),
-                      child: GestureDetector(
-                          onTap: () {
-                            _controller.animateTo(0,
-                                duration: const Duration(milliseconds: 200),
-                                curve: Curves.easeIn);
-                          },
-                          child: Text(
-                            info.title,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 17),
-                          )),
-                    ),
-                  ),
-
-                  //一楼
-                  SliverToBoxAdapter(
-                    child: Visibility(
-                        visible: info.postList[0].floor! == "1",
-                        child: ThreadFirstComment(
-                          postMain: info.postList[0],
-                          author: info.userListSet[info.postList[0].uid]!,
-                          videoInfo: info.videoInfo,
-                          allImgs: info.imgs,
-                          allOrgImgs: info.imgsOrgSrc,
-                          threadID: info.tid,
-                          thread: widget.thread,
+        child: Column(
+          children: [
+            Expanded(
+                child: CustomScrollView(
+              controller: _controller,
+              slivers: <Widget>[
+                SliverAppBar(
+                  //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
+                  // expandedHeight: .00001,
+                  elevation: 0.5,
+                  pinned: true,
+                  snap: true,
+                  floating: true,
+                  actions: appBarAction,
+                  title: AnimatedOpacity(
+                    alwaysIncludeSemantics: true,
+                    opacity: scrollOffset < 36 ? 0 : 1,
+                    duration: const Duration(milliseconds: 200),
+                    child: GestureDetector(
+                        onTap: () {
+                          _controller.animateTo(0,
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeIn);
+                        },
+                        child: Text(
+                          info.title,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 17),
                         )),
                   ),
-                  SliverToBoxAdapter(
-                    child: FourmBar(
-                      avatar: info.avatar,
-                      name: info.forumName,
-                    ),
-                  ),
+                ),
 
-                  //其他楼
-                  SliverList(delegate: SliverChildListDelegate(buildFloor()))
-                ],
-              )),
-              //回复条
-              ThreadReplyBar(
-                fid: info.fid,
-                tid: info.tid,
-                kw: info.forumName,
-                replyText: info.title,
-                isThreadStored: info.isStored,
-              )
-            ],
-          ),
+                //一楼
+                SliverToBoxAdapter(
+                  child: Visibility(
+                      visible: info.postList[0].floor! == "1",
+                      child: ThreadFirstComment(
+                        postMain: info.postList[0],
+                        author: info.userListSet[info.postList[0].uid]!,
+                        videoInfo: info.videoInfo,
+                        allImgs: info.imgs,
+                        allOrgImgs: info.imgsOrgSrc,
+                        threadID: info.tid,
+                        thread: widget.thread,
+                      )),
+                ),
+                SliverToBoxAdapter(
+                  child: FourmBar(
+                    avatar: info.avatar,
+                    name: info.forumName,
+                  ),
+                ),
+
+                //其他楼
+                SliverList(delegate: SliverChildListDelegate(buildFloor()))
+              ],
+            )),
+            //回复条
+            ThreadReplyBar(
+              fid: info.fid,
+              tid: info.tid,
+              kw: info.forumName,
+              replyText: info.title,
+              isThreadStored: info.isStored,
+            )
+          ],
         ));
   }
 

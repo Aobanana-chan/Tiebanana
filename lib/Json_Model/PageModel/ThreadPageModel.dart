@@ -24,12 +24,30 @@ class ThreadPageModel implements common.Forum {
   ///使用PID进入帖子
   String? initPid;
 
-  ///页管理的Post
+  ///页管理的Post，正数页面表示正常页面，负数页面表示只看楼主的页面
   SplayTreeMap<int, List<ThreadPagePost>> postPage = SplayTreeMap();
+
+  ///正常页面List
   List<ThreadPagePost> get postList {
     var l = <ThreadPagePost>[];
-    for (var i in postPage.values) {
-      l.addAll(i);
+    for (var i in postPage.keys) {
+      if (i > 0) {
+        l.addAll(postPage[i]!);
+      }
+    }
+
+    return l;
+  }
+
+  ///只看楼主页面List
+  List<ThreadPagePost> get lzPostList {
+    var l = <ThreadPagePost>[];
+    for (var i in postPage.keys) {
+      if (i < 0) {
+        l.addAll(postPage[i]!);
+      } else {
+        break;
+      }
     }
 
     return l;

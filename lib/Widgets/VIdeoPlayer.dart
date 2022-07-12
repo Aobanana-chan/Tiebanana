@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:fijkplayer_skin/schema.dart';
 import 'package:fijkplayer_skin/slider.dart';

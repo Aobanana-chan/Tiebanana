@@ -6,7 +6,6 @@ import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchThreadCard.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
-import 'package:tiebanana/common/Util/AppUtil.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 ///搜索页面
