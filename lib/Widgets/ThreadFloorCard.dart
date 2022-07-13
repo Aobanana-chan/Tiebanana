@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
@@ -14,6 +18,9 @@ import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+import '../common/Util/AppUtil.dart';
 
 ///帖子-楼层组件
 class ThreadFloorComment extends StatelessWidget {
@@ -181,7 +188,7 @@ class ThreadFloorComment extends StatelessWidget {
                           padding: const EdgeInsets.all(5),
                           child: Wrap(
                             children: TiebaParser.parseContent(
-                                postMain.content, allImgs, allOrgImgs,
+                                context, postMain.content, allImgs, allOrgImgs,
                                 selectable: true),
                           ),
                         ),
@@ -322,16 +329,22 @@ class InnerPost extends StatelessWidget {
   List<Widget> buildContent(BuildContext context) {
     List<InlineSpan> w = [];
     w.add(AtUserSpan(
-      text: "${author.nameShow} :",
+      context,
+      uid: author.id!,
+      text: "${author.nameShow ?? author.name} :",
       style: const TextStyle(color: Colors.blue),
     ));
     for (Content content in posts) {
       //用户
-      if ((content.uid != null || content.uid != null) && content.type == "0") {
+      if (content.uid != null && content.type == "0") {
         w.add(TextSpan(
-          text: "${content.text}",
-          style: const TextStyle(color: Colors.blue),
-        ));
+            text: "${content.text}",
+            style: const TextStyle(color: Colors.blue),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                Navigator.pushNamed(context, PageRouter.user,
+                    arguments: content.uid);
+              }));
       } else if (content.type == "0") {
         w.add(TextSpan(
           text: "${content.text}",
@@ -339,9 +352,46 @@ class InnerPost extends StatelessWidget {
       } else if (content.type == "2") {
         w.add(EmojiSpan(
           content.text!,
-          imageWidth: 18,
-          imageHeight: 18,
+          imageWidth: Provider.of<APPSettingProvider>(context).fontSize + 2,
+          imageHeight: Provider.of<APPSettingProvider>(context).fontSize + 2,
         ));
+      } else if (content.type == "1" || content.type == "18") {
+        w.add(TextSpan(
+            text: content.text,
+            style: TextStyle(
+                fontSize: Provider.of<APPSettingProvider>(context).fontSize,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () async {
+                if (await AppUtil.urlRoute(
+                      true,
+                      context,
+                      content.link!,
+                    ) ==
+                    false) {
+                  Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                          builder: (builder) => WebView(
+                                // initialCookies: data,
+                                backgroundColor: Colors.white,
+                                initialUrl: content.link,
+                                javascriptMode: JavascriptMode.unrestricted,
+                                navigationDelegate: (request) async {
+                                  if (await AppUtil.urlRoute(
+                                    true,
+                                    context,
+                                    request.url,
+                                  )) {
+                                    return NavigationDecision.prevent;
+                                  }
+
+                                  return NavigationDecision.navigate;
+                                },
+                              )));
+                }
+              }));
       }
     }
     return [
@@ -359,6 +409,9 @@ class InnerPost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Platform.isAndroid) {
+      WebView.platform = AndroidWebView();
+    }
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
@@ -790,8 +843,11 @@ class InnerFloorCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(5),
                           child: Wrap(
-                            children: TiebaParser.parseContent(postMain.content,
-                                _imgCollect(), _originImgCollect(),
+                            children: TiebaParser.parseContent(
+                                context,
+                                postMain.content,
+                                _imgCollect(),
+                                _originImgCollect(),
                                 selectable: true),
                           ),
                         ),

@@ -1,14 +1,22 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:io';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/common/Util/AppUtil.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 ///贴吧数据生成Widget工具类
 class TiebaParser {
@@ -26,7 +34,7 @@ class TiebaParser {
   }
 
   ///通用Content生成Widget
-  static List<Widget> parseContent(
+  static List<Widget> parseContent(BuildContext context,
       List<Content>? contents, List<String> allImgs, List<String> allOrgImgs,
       {VideoInfo? videoInfo,
       bool selectable = false,
@@ -54,6 +62,8 @@ class TiebaParser {
           case 0:
             if (elem.type == "4" && elem.originSrc == null) {
               richText.add(AtUserSpan(
+                context,
+                uid: elem.uid!,
                 text: elem.text!,
                 style: const TextStyle(color: Colors.blue),
               ));
@@ -79,7 +89,6 @@ class TiebaParser {
           //智能无图
           case 1:
             if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
               richText.add(TextSpan(
                 text: elem.text!,
                 style: const TextStyle(color: Colors.blue),
@@ -109,7 +118,6 @@ class TiebaParser {
           //始终高质量
           case 2:
             if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
               richText.add(TextSpan(
                 text: elem.text!,
                 style: const TextStyle(color: Colors.blue),
@@ -158,6 +166,46 @@ class TiebaParser {
             imageHeight: 18,
             imageWidth: 18,
             actualText: "#(${elem.c})"));
+      } else if (elem.type == "1" || elem.type == "18") {
+        if (Platform.isAndroid) {
+          WebView.platform = AndroidWebView();
+        }
+        //type1-链接
+        //type18-话题
+        richText.add(TextSpan(
+            text: elem.text,
+            style: TextStyle(
+                fontSize: Provider.of<APPSettingProvider>(context).fontSize,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () async {
+                if (await AppUtil.urlRoute(true, context, elem.link!) ==
+                    false) {
+                  Navigator.push(context,
+                      CupertinoPageRoute(builder: (builder) {
+                    return WebView(
+                      // initialCookies: data,
+                      backgroundColor: Colors.white,
+                      initialUrl: elem.link,
+                      javascriptMode: JavascriptMode.unrestricted,
+                      navigationDelegate: (request) async {
+                        if (await AppUtil.urlRoute(
+                          true,
+                          context,
+                          request.url,
+                        )) {
+                          return NavigationDecision.prevent;
+                        }
+
+                        return NavigationDecision.navigate;
+                      },
+                    );
+                  }));
+                }
+              }));
+      } else {
+        throw Exception("未知类型");
       }
     }
     return [
@@ -169,8 +217,13 @@ class TiebaParser {
   }
 
   ///生成回复贴Widget
-  static List<Widget> parseReplyContent(Quota? quota, List<Content>? contents,
-      String title, List<String> allImgs, List<String> allOrgImgs,
+  static List<Widget> parseReplyContent(
+      BuildContext context,
+      Quota? quota,
+      List<Content>? contents,
+      String title,
+      List<String> allImgs,
+      List<String> allOrgImgs,
       {VideoInfo? videoInfo,
       bool selectable = false,
       int mediaLimit = 1 << 31}) {
@@ -220,7 +273,8 @@ class TiebaParser {
     //回复
     richText.add(Container(
       padding: const EdgeInsets.all(5),
-      child: Column(children: parseContent(contents, allImgs, allOrgImgs)),
+      child: Column(
+          children: parseContent(context, contents, allImgs, allOrgImgs)),
     ));
 
     return richText;

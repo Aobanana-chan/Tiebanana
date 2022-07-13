@@ -2481,7 +2481,7 @@ class UserList implements Author {
   String? fansNum;
   String? fansNickname;
   String? godData;
-  ForumPrivSets? privSets;
+  // ForumPrivSets? privSets;
   // ThemeCard? themeCard;
   // List<Null> tbVip;
   String? isBawu;
@@ -2513,7 +2513,7 @@ class UserList implements Author {
       this.fansNum,
       this.fansNickname,
       this.godData,
-      this.privSets,
+      // this.privSets,
       // this.themeCard,
       // this.tbVip,
       this.isBawu,
@@ -2567,9 +2567,9 @@ class UserList implements Author {
       godData = json['god_data'];
     }
 
-    privSets = json['priv_sets'] != ""
-        ? ForumPrivSets.fromJson(json['priv_sets'])
-        : null;
+    // privSets = json['priv_sets'] != ""
+    //     ? ForumPrivSets.fromJson(json['priv_sets'])
+    //     : null;
     // themeCard = json['theme_card'] != null
     //     ? new ThemeCard.fromJson(json['theme_card'])
     //     : null;
@@ -2635,9 +2635,9 @@ class UserList implements Author {
     data['fans_num'] = fansNum;
     data['fans_nickname'] = fansNickname;
     data['god_data'] = godData;
-    if (privSets != null) {
-      data['priv_sets'] = privSets?.toJson();
-    }
+    // if (privSets != null) {
+    //   data['priv_sets'] = privSets?.toJson();
+    // }
     // if (this.themeCard != null) {
     //   data['theme_card'] = this.themeCard?.toJson();
     // }

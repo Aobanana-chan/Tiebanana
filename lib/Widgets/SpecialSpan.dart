@@ -1,5 +1,6 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
@@ -7,6 +8,7 @@ import 'dart:ui' as ui show PlaceholderAlignment;
 
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/AssetList.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 ///富文本Span和构造
 
@@ -164,8 +166,19 @@ class _EmojiLoader extends StatelessWidget {
 
 class AtUserSpan extends TextSpan {
   //TODO:点击进入@的用户界面
-  const AtUserSpan({required String text, TextStyle? style})
-      : super(text: text, style: style ?? const TextStyle(color: Colors.blue));
+  final String uid;
+  final BuildContext context;
+  const AtUserSpan(this.context,
+      {required String text, TextStyle? style, required this.uid})
+      : super(
+          text: text,
+          style: style ?? const TextStyle(color: Colors.blue),
+        );
+  @override
+  GestureRecognizer? get recognizer => TapGestureRecognizer()
+    ..onTap = () {
+      Navigator.pushNamed(context, PageRouter.user, arguments: uid);
+    };
 }
 
 abstract class TiebaSpecialText extends SpecialText {

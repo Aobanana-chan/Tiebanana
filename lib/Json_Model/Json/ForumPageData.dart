@@ -531,7 +531,7 @@ class PostList {
   String? showSquared;
   String? isWonderfulPost;
   String? item;
-  String? outerItem;
+  // String? outerItem;
   String? itemStar;
   // String? advertisement;
   String? foldCommentStatus;
@@ -573,7 +573,7 @@ class PostList {
       this.showSquared,
       this.isWonderfulPost,
       this.item,
-      this.outerItem,
+      // this.outerItem,
       this.itemStar,
       // this.advertisement,
       this.foldCommentStatus,
@@ -657,7 +657,7 @@ class PostList {
     showSquared = json['show_squared'];
     isWonderfulPost = json['is_wonderful_post'];
     item = json['item'];
-    outerItem = json['outer_item'];
+    // outerItem = json['outer_item'];
     itemStar = json['item_star'];
     // advertisement = json['advertisement'];
     foldCommentStatus = json['fold_comment_status'];
@@ -713,7 +713,7 @@ class PostList {
     data['show_squared'] = showSquared;
     data['is_wonderful_post'] = isWonderfulPost;
     data['item'] = item;
-    data['outer_item'] = outerItem;
+    // data['outer_item'] = outerItem;
     data['item_star'] = itemStar;
     // data['advertisement'] = this.advertisement;
     data['fold_comment_status'] = foldCommentStatus;
@@ -742,6 +742,7 @@ class Content {
   String? c;
   String? uid;
   String? uname;
+  String? link;
   Content(
       {this.type,
       this.bsize,
@@ -758,7 +759,8 @@ class Content {
       this.text,
       this.c,
       this.uid,
-      this.uname});
+      this.uname,
+      this.link});
 
   Content.fromJson(Map<String, dynamic> json) {
     uid = json["uid"];
@@ -790,6 +792,7 @@ class Content {
     }
     text = json['text'];
     c = json['c'];
+    link = json['link'];
   }
 
   Map<String, dynamic> toJson() {
@@ -812,6 +815,7 @@ class Content {
     }
     data['text'] = text;
     data['c'] = c;
+    data['link'] = link;
     return data;
   }
 }

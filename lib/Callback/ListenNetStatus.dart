@@ -1,6 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/navigator.dart';
+import 'package:flutter/material.dart';
+
 import 'package:tiebanana/Callback/LifeTimeCallback.dart';
 import 'package:tiebanana/common/Global.dart';
 

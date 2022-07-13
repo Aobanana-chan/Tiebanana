@@ -1357,7 +1357,7 @@ class TiebaAPI {
       "BDUSS": bduss,
       "_client_id": "",
       "_client_type": "2",
-      "_client_version": "9.9.8.32",
+      "_client_version": "12.24.1.0",
       "_phone_imei": "000000000000000",
       "back": "0",
       "cuid": "baidutiebaapp${const Uuid().v4()}",

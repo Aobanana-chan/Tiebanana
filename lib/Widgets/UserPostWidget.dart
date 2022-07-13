@@ -111,10 +111,10 @@ class UserPostWidget extends StatelessWidget {
                 // crossAxisAlignment: CrossAxisAlignment.start,
                 children: info.isThread == "1"
                     ? TiebaParser.parseContent(
-                        info.content, allImgs, allOrgImgs,
+                        context, info.content, allImgs, allOrgImgs,
                         mediaLimit: 1, videoInfo: info.videoInfo)
-                    : TiebaParser.parseReplyContent(info.quota, info.content,
-                        info.title!, allImgs, allOrgImgs),
+                    : TiebaParser.parseReplyContent(context, info.quota,
+                        info.content, info.title!, allImgs, allOrgImgs),
               ),
             ),
             //底部
