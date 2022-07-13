@@ -36,6 +36,7 @@ class App extends StatelessWidget {
                   initialRoute: PageRouter.home,
                   //配置命名路由
                   onGenerateRoute: (settings) {
+                    LifeTimeCallback().route(settings);
                     if (PageRouter.routes.containsKey(settings.name)) {
                       return CupertinoPageRoute(
                           settings: settings,

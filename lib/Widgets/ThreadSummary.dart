@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/Json_Model/json.dart';
@@ -474,8 +475,6 @@ class _ThumbnailState extends State<Thumbnail> {
                         (BuildContext context, BoxConstraints constraints) {
                       return Container(
                         constraints: constraints,
-                        // height: constraints.maxHeight,
-                        // width: constraints.maxWidth,
                         child: ExtendedImage.network(
                           widget.img,
                           fit: widget.fit,

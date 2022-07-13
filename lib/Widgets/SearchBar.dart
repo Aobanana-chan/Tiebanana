@@ -66,9 +66,6 @@ class _SearchBarState extends State<SearchBar> {
           top: showBody ? 0 : MediaQuery.of(context).viewPadding.top),
       child: FloatingSearchAppBar(
         color: Theme.of(context).appBarTheme.backgroundColor,
-        // colorOnScroll: Colors.white,
-        // color: Theme.of(context).primaryColor,
-        // colorOnScroll: Theme.of(context).primaryColor,
         controller: barController,
         clearQueryOnClose: false,
         onSubmitted: (searchText) {
@@ -109,9 +106,7 @@ class _SearchBarState extends State<SearchBar> {
                 Center(
                   child: Text(
                     "签",
-                    style: TextStyle(
-                        // color: Colors.blueGrey.shade800,
-                        fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

@@ -50,6 +50,7 @@ class TiebaParser {
         mediaNum++;
         //图片
         switch (Global.setting.pictureLoadSetting) {
+          //智能省流量
           case 0:
             if (elem.type == "4" && elem.originSrc == null) {
               richText.add(AtUserSpan(
@@ -75,6 +76,7 @@ class TiebaParser {
                 actualText: "#(图片)"));
             index++;
             break;
+          //智能无图
           case 1:
             if (elem.type == "4" && elem.originSrc == null) {
               //@用户
@@ -104,6 +106,7 @@ class TiebaParser {
               index++;
             }
             break;
+          //始终高质量
           case 2:
             if (elem.type == "4" && elem.originSrc == null) {
               //@用户
@@ -122,7 +125,7 @@ class TiebaParser {
                   child: Thumbnail(
                     imgs: allImgs,
                     controller: controller,
-                    img: elem.bigCdnSrc ?? elem.originSrc!,
+                    img: elem.originSrc!,
                     imgsOriginSrc: allOrgImgs,
                     fit: BoxFit.fitWidth,
                   ),

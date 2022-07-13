@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:tiebanana/Callback/LifeTimeCallback.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/ForumTag.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
@@ -161,6 +162,7 @@ class __HomeState extends State<_Home> {
 
   @override
   Widget build(BuildContext context) {
+    LifeTimeCallback().onHomeFormPageCreate(context);
     return Container(
       // decoration: const BoxDecoration(color: Color(0xFFF2F2F5)),
       child: LayoutBuilder(

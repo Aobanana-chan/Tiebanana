@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:json5/json5.dart';
@@ -29,6 +30,9 @@ const _themes = <String, MaterialColor>{
 };
 
 class Global {
+  //网络状态
+  static ConnectivityResult netStatus = ConnectivityResult.mobile;
+
   static TiebaAPI tiebaAPI = TiebaAPI();
   //判断是否是Release版
   // static bool get isRelease => const bool.fromEnvironment("dart.vm.product");

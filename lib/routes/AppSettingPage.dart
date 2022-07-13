@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/common/Global.dart';
@@ -54,6 +55,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                 child: MaterialButton(
                   onPressed: () {
                     //TODO:多账号
+                    Fluttertoast.showToast(msg: "多账号预计之后添加");
                   },
                   child: ListTile(
                       leading: Icon(Icons.change_circle),
@@ -130,8 +132,63 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
-                  onPressed: () {
+                  onPressed: () async {
                     //TODO:设置浏览模式
+                    await showDialog(
+                        context: context,
+                        builder: (builder) => SimpleDialog(
+                              title: Text("图片浏览模式"),
+                              children: [
+                                RadioListTile<int>(
+                                  value: 0,
+                                  groupValue:
+                                      Global.setting.pictureLoadSetting!,
+                                  onChanged: (value) {
+                                    Global.setting.pictureLoadSetting = value;
+                                    Global.saveProfile();
+                                    setState(() {});
+                                    Navigator.pop(context);
+                                  },
+                                  title: Text("智能省流量"),
+                                ),
+                                RadioListTile<int>(
+                                  value: 1,
+                                  groupValue:
+                                      Global.setting.pictureLoadSetting!,
+                                  onChanged: (value) {
+                                    Global.setting.pictureLoadSetting = value;
+                                    Global.saveProfile();
+                                    setState(() {});
+                                    Navigator.pop(context);
+                                  },
+                                  title: Text("智能无图"),
+                                ),
+                                RadioListTile<int>(
+                                  value: 2,
+                                  groupValue:
+                                      Global.setting.pictureLoadSetting!,
+                                  onChanged: (value) {
+                                    Global.setting.pictureLoadSetting = value;
+                                    Global.saveProfile();
+                                    setState(() {});
+                                    Navigator.pop(context);
+                                  },
+                                  title: Text("始终高质量"),
+                                ),
+                                RadioListTile<int>(
+                                  value: 3,
+                                  groupValue:
+                                      Global.setting.pictureLoadSetting!,
+                                  onChanged: (value) {
+                                    Global.setting.pictureLoadSetting = value;
+                                    Global.saveProfile();
+                                    setState(() {});
+                                    Navigator.pop(context);
+                                  },
+                                  title: Text("始终无图"),
+                                )
+                              ],
+                            ));
                   },
                   child: ListTile(
                     leading: Icon(Icons.image_search_outlined),

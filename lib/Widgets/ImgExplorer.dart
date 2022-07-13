@@ -1,7 +1,9 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:tiebanana/common/Global.dart';
 
 class ImgExplorer extends StatefulWidget {
   final String heroTagSalt;
@@ -39,6 +41,13 @@ class _ImgExplorerState extends State<ImgExplorer> {
   }
 
   String qualitySelect() {
+    if (Global.setting.pictureLoadSetting == 2) {
+      return widget.highQualityUrl!;
+    }
+    if (Global.setting.pictureLoadSetting == 0 &&
+        Global.netStatus != ConnectivityResult.mobile) {
+      return widget.highQualityUrl!;
+    }
     if (highQualityLoaded == false && shouldShowOriginSrc == false) {
       // print(widget.imgUrls[index]);
       return widget.imgUrl;
@@ -231,6 +240,13 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer>
   }
 
   bool shouldShowOriginSrc() {
+    if (Global.setting.pictureLoadSetting == 2) {
+      return false;
+    }
+    if (Global.setting.pictureLoadSetting == 0 &&
+        Global.netStatus != ConnectivityResult.mobile) {
+      return false;
+    }
     if (widget.highQualityUrls?[currentIndex] == null) {
       return false;
     }
@@ -241,6 +257,13 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer>
   }
 
   String qualitySelect(int index) {
+    if (Global.setting.pictureLoadSetting == 2) {
+      return widget.highQualityUrls![index]!;
+    }
+    if (Global.setting.pictureLoadSetting == 0 &&
+        Global.netStatus != ConnectivityResult.mobile) {
+      return widget.highQualityUrls![index]!;
+    }
     if (highQualityLoaded[index] == false && wantShowScrImg[index] == false) {
       // print(widget.imgUrls[index]);
       return widget.imgUrls[index];
@@ -257,8 +280,8 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer>
     wantShowScrImg = List.filled(widget.imgUrls.length, false);
     highQualityCacheCheck();
     currentIndex = widget.pageController?.initialPage ?? 0;
-    _doubleClickAnimationController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 100));
+    _doubleClickAnimationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 100));
   }
 
   @override
