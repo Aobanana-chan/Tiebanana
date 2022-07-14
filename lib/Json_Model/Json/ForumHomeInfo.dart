@@ -2498,6 +2498,7 @@ class UserList implements Author {
   // NewGodData? newGodData;
   // List<Null> businessAccountInfo;
   String? levelID;
+  String? ipAddress;
   UserList(
       {this.id,
       this.portrait,
@@ -2529,7 +2530,8 @@ class UserList implements Author {
       this.isDefaultAvatar,
       // this.newGodData,
       // this.businessAccountInfo
-      this.levelID});
+      this.levelID,
+      this.ipAddress});
 
   UserList.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -2608,6 +2610,7 @@ class UserList implements Author {
     //     businessAccountInfo.add(new Null.fromJson(v));
     //   });
     // }
+    ipAddress = json['ip_address'];
   }
 
   @override
@@ -2666,6 +2669,7 @@ class UserList implements Author {
     //   data['business_account_info'] =
     //       this.businessAccountInfo.map((v) => v.toJson()).toList();
     // }
+    data['ip_address'] = ipAddress;
     return data;
   }
 }

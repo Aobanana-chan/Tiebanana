@@ -8,7 +8,7 @@ import 'package:tiebanana/common/Global.dart';
 class AutoSign extends APPStateCallback {
   @override
   void afterInit() {
-    if (Global.setting.signAllsinceOpen == true) {
+    if (Global.setting.signAllsinceOpen == true && Global.tiebaAPI.isLogin) {
       LifeTimeCallback().regist(SignRefresh(Global.tiebaAPI.signAll()));
     }
 

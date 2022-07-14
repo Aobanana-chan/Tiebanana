@@ -392,6 +392,13 @@ class InnerPost extends StatelessWidget {
                               )));
                 }
               }));
+      } else if (content.type == "9") {
+        w.add(TextSpan(
+          text: content.text!,
+          style: TextStyle(fontSize: Global.setting.fontSize),
+        ));
+      } else {
+        throw Exception("未知类型");
       }
     }
     return [

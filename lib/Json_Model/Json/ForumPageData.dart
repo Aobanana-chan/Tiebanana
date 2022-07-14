@@ -955,7 +955,7 @@ class Thread {
   String? nid;
   String? pbLinkInfo;
   String? pbGoodsInfo;
-  String? worksInfo;
+  // String? worksInfo;
   String? collectNum;
   String? isFrsMask;
   String? isPartialVisible;
@@ -1011,7 +1011,7 @@ class Thread {
       this.nid,
       this.pbLinkInfo,
       this.pbGoodsInfo,
-      this.worksInfo,
+      // this.worksInfo,
       this.collectNum,
       this.isFrsMask,
       this.isPartialVisible});
@@ -1083,7 +1083,7 @@ class Thread {
     nid = json['nid'];
     pbLinkInfo = json['pb_link_info'];
     pbGoodsInfo = json['pb_goods_info'];
-    worksInfo = json['works_info'];
+    // worksInfo = json['works_info'];
     collectNum = json['collect_num'];
     isFrsMask = json['is_frs_mask'];
     isPartialVisible = json['is_partial_visible'];
@@ -1155,7 +1155,7 @@ class Thread {
     data['nid'] = nid;
     data['pb_link_info'] = pbLinkInfo;
     data['pb_goods_info'] = pbGoodsInfo;
-    data['works_info'] = worksInfo;
+    // data['works_info'] = worksInfo;
     data['collect_num'] = collectNum;
     data['is_frs_mask'] = isFrsMask;
     data['is_partial_visible'] = isPartialVisible;

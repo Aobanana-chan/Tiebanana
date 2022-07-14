@@ -204,6 +204,14 @@ class TiebaParser {
                   }));
                 }
               }));
+      } else if (elem.type == "27") {
+        //TODO:范例 kz=7919486246 kz = 7909655252
+      } else if (elem.type == "9") {
+        //手机号码？
+        richText.add(TextSpan(
+          text: elem.text!,
+          style: TextStyle(fontSize: Global.setting.fontSize),
+        ));
       } else {
         throw Exception("未知类型");
       }
