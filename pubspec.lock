@@ -347,10 +347,10 @@ packages:
   flukit:
     dependency: "direct main"
     description:
-      path: "dependencyOverrides/flukit/package_src"
-      relative: true
-    source: path
-    version: "2.0.0"
+      name: flukit
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.1"
   flutter:
     dependency: "direct main"
     description: flutter
