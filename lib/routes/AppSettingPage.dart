@@ -289,7 +289,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     trailing: Consumer<APPSettingProvider>(
                       builder: (context, value, child) => SizedBox.square(
                         dimension: 50,
-                        child: Text(value.fontSize.toStringAsFixed(1)),
+                        child: Text(fontSize.toStringAsFixed(1)),
                       ),
                     ),
                     subtitle: Slider(
@@ -297,9 +297,8 @@ class _AppSettingPageState extends State<AppSettingPage> {
                       max: 32,
                       value: fontSize,
                       onChanged: (value) {
-                        setState(() {
-                          fontSize = value;
-                        });
+                        fontSize = value;
+                        setState(() {});
                       },
                       onChangeEnd: (value) {
                         Provider.of<APPSettingProvider>(context, listen: false)
