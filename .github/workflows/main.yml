@@ -36,7 +36,7 @@ jobs:
         uses: subosito/flutter-action@v2.3.0
         with:
           channel: "stable"
-          flutter-version: "3.0.1"
+          flutter-version: "3.0.5"
       #setup key
       - run: echo "${{ secrets.KEYSTORE2 }}" | base64 --decode > key.jks
       # Creating the key.properties file
