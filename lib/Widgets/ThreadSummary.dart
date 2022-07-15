@@ -2,7 +2,9 @@ import 'package:animate_do/animate_do.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/Widgets/ImgExplorer.dart';
@@ -96,7 +98,8 @@ class ThreadSummary extends StatelessWidget {
     body.add(
       Text.rich(
         TextSpan(children: richText),
-        style: const TextStyle(fontSize: 16),
+        style: TextStyle(
+            fontSize: Provider.of<APPSettingProvider>(context).fontSize),
         overflow: TextOverflow.ellipsis,
         softWrap: true,
         maxLines: 12,
@@ -321,8 +324,10 @@ class ThreadSummary extends StatelessWidget {
                 children: [
                   Text(
                     info.title!,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize:
+                            Provider.of<APPSettingProvider>(context).fontSize,
+                        fontWeight: FontWeight.w600),
                   )
                 ],
               ),

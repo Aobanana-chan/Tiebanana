@@ -71,6 +71,9 @@ class App extends StatelessWidget {
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                           padding: EdgeInsets.zero),
+                      textTheme: TextTheme(
+                          bodyText1: TextStyle(fontSize: theme.fontSize),
+                          bodyText2: TextStyle(fontSize: theme.fontSize - 2)),
                       extensions: [QuoteTheme.bright]),
 
                   darkTheme: ThemeData(

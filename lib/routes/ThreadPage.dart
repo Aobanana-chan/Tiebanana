@@ -178,6 +178,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
                 child: Text(
                   "楼主",
                   style: TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: !lz ? colors.primary : colors.onPrimary),
                 ),

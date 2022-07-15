@@ -13,17 +13,27 @@ class AppSettingPage extends StatefulWidget {
 
 class _AppSettingPageState extends State<AppSettingPage> {
   TextEditingController controller = TextEditingController();
+  late double fontSize;
+  @override
+  void initState() {
+    super.initState();
+    fontSize = Provider.of<APPSettingProvider>(context, listen: false).fontSize;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
-        data: Theme.of(context).copyWith(
-            listTileTheme: ListTileThemeData(
-                iconColor: Theme.of(context).brightness == Brightness.light
-                    ? Theme.of(context).primaryColor
-                    : Theme.of(context).colorScheme.onSurface)),
-        child: Scaffold(
+      data: Theme.of(context).copyWith(
+        listTileTheme: ListTileThemeData(
+            iconColor: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).primaryColor
+                : Theme.of(context).colorScheme.onSurface),
+      ),
+      child: Scaffold(
           appBar: AppBar(
-            title: const Text("应用设置"),
+            title: const Text(
+              "应用设置",
+            ),
           ),
           body: ListView(
             children: [
@@ -31,8 +41,13 @@ class _AppSettingPageState extends State<AppSettingPage> {
                 color: Theme.of(context).brightness == Brightness.light
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
-                child: const ListTile(
-                  title: Text("账号设置"),
+                child: ListTile(
+                  title: Text(
+                    "账号设置",
+                    style: TextStyle(
+                        fontSize:
+                            Provider.of<APPSettingProvider>(context).fontSize),
+                  ),
                 ),
               ),
               Container(
@@ -43,9 +58,12 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   onPressed: () {
                     //TODO:进入个人资料界面
                   },
-                  child: const ListTile(
+                  child: ListTile(
                     leading: Icon(Icons.person_outline_outlined),
-                    title: Text("个人资料"),
+                    title: Text("个人资料",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                   ),
                 ),
               ),
@@ -60,7 +78,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                       leading: const Icon(Icons.change_circle),
-                      title: const Text("切换账号"),
+                      title: Text("切换账号",
+                          style: TextStyle(
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                  .fontSize)),
                       subtitle: Consumer<User>(
                         builder: (context, value, child) => Text(value.name),
                       )),
@@ -78,7 +99,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                       leading: const Icon(Icons.exit_to_app),
-                      title: const Text("退出登陆"),
+                      title: Text("退出登陆",
+                          style: TextStyle(
+                              fontSize: Provider.of<APPSettingProvider>(context)
+                                  .fontSize)),
                       subtitle: Consumer<User>(
                         builder: (context, value, child) => Text(value.name),
                       )),
@@ -88,8 +112,11 @@ class _AppSettingPageState extends State<AppSettingPage> {
                 color: Theme.of(context).brightness == Brightness.light
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
-                child: const ListTile(
-                  title: Text("应用设置"),
+                child: ListTile(
+                  title: Text("应用设置",
+                      style: TextStyle(
+                          fontSize: Provider.of<APPSettingProvider>(context)
+                              .fontSize)),
                 ),
               ),
               Container(
@@ -101,7 +128,11 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     showDialog(
                         context: context,
                         builder: (builder) => SimpleDialog(
-                              title: const Text("我的小尾巴"),
+                              title: Text("我的小尾巴",
+                                  style: TextStyle(
+                                      fontSize: Provider.of<APPSettingProvider>(
+                                              context)
+                                          .fontSize)),
                               children: [
                                 Container(
                                   height: 80,
@@ -138,7 +169,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                     leading: const Icon(Icons.tag_outlined),
-                    title: const Text("小尾巴"),
+                    title: Text("小尾巴",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                     subtitle: Text(Global.setting.postTail ?? "你还没有设置小尾巴"),
                     trailing: Switch(
                       value: Global.setting.usePostTail!,
@@ -171,7 +205,11 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     await showDialog(
                         context: context,
                         builder: (builder) => SimpleDialog(
-                              title: const Text("图片浏览模式"),
+                              title: Text("图片浏览模式",
+                                  style: TextStyle(
+                                      fontSize: Provider.of<APPSettingProvider>(
+                                              context)
+                                          .fontSize)),
                               children: [
                                 RadioListTile<int>(
                                   value: 0,
@@ -226,7 +264,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                     leading: const Icon(Icons.image_search_outlined),
-                    title: const Text("图片浏览模式"),
+                    title: Text("图片浏览模式",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                     subtitle: Text(Global.setting.pictureLoadMode),
                   ),
                 ),
@@ -241,7 +282,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                     leading: const Icon(Icons.font_download_outlined),
-                    title: const Text("字体大小"),
+                    title: Text("字体大小",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                     trailing: Consumer<APPSettingProvider>(
                       builder: (context, value, child) => SizedBox.square(
                         dimension: 50,
@@ -249,17 +293,19 @@ class _AppSettingPageState extends State<AppSettingPage> {
                       ),
                     ),
                     subtitle: Slider(
-                        min: 1,
-                        max: 32,
-                        value: Provider.of<APPSettingProvider>(context,
-                                listen: false)
-                            .fontSize,
-                        onChanged: (value) {
-                          setState(() {});
-                          Provider.of<APPSettingProvider>(context,
-                                  listen: false)
-                              .fontSize = value;
-                        }),
+                      min: 3,
+                      max: 32,
+                      value: fontSize,
+                      onChanged: (value) {
+                        setState(() {
+                          fontSize = value;
+                        });
+                      },
+                      onChangeEnd: (value) {
+                        Provider.of<APPSettingProvider>(context, listen: false)
+                            .fontSize = value;
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -273,7 +319,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                     leading: const Icon(Icons.web_asset),
-                    title: const Text("使用内置浏览器"),
+                    title: Text("使用内置浏览器",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                     trailing: Switch(
                       value: Global.setting.useBuildinBrowser!,
                       onChanged: (bool value) {
@@ -295,7 +344,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                     leading: const Icon(Icons.update),
-                    title: const Text("自动检查更新"),
+                    title: Text("自动检查更新",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                     trailing: Switch(
                       value: Global.setting.checkUpdateAutomaticlly!,
                       onChanged: (bool value) {
@@ -317,7 +369,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                     leading: const Icon(Icons.signpost_outlined),
-                    title: const Text("自动签到"),
+                    title: Text("自动签到",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                     trailing: Switch(
                       value: Global.setting.signAllsinceOpen!,
                       onChanged: (bool value) {
@@ -340,7 +395,10 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   },
                   child: ListTile(
                     leading: const Icon(Icons.cached_outlined),
-                    title: const Text("自动缓存收藏贴"),
+                    title: Text("自动缓存收藏贴",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                     trailing: Switch(
                       value: Global.setting.signAllsinceOpen!,
                       onChanged: (bool value) {
@@ -361,14 +419,17 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   onPressed: () {
                     //TODO:关于
                   },
-                  child: const ListTile(
+                  child: ListTile(
                     leading: Icon(Icons.warning_amber_outlined),
-                    title: Text("关于"),
+                    title: Text("关于",
+                        style: TextStyle(
+                            fontSize: Provider.of<APPSettingProvider>(context)
+                                .fontSize)),
                   ),
                 ),
               )
             ],
-          ),
-        ));
+          )),
+    );
   }
 }

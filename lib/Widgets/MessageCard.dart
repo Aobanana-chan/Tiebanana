@@ -38,12 +38,10 @@ class MessageCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          // color: Colors.white,
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
               : Theme.of(context).backgroundColor,
           border: Border.all(width: 0.05)),
-      // padding: EdgeInsets.all(5),
       margin: const EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(
         padding: const EdgeInsets.all(5),
@@ -101,7 +99,9 @@ class MessageCard extends StatelessWidget {
               padding: const EdgeInsets.all(5),
               child: ExtendedText(message.content,
                   specialTextSpanBuilder: TiebaSpanBuilder(),
-                  style: const TextStyle(fontSize: 16)),
+                  style: TextStyle(
+                      fontSize:
+                          Provider.of<APPSettingProvider>(context).fontSize)),
             ),
             //底部
             Container(
@@ -109,7 +109,10 @@ class MessageCard extends StatelessWidget {
               child: Text(
                 "来自${message.fname}吧",
                 style: TextStyle(
-                    color: Colors.grey[600], overflow: TextOverflow.ellipsis),
+                    color: Colors.grey[600],
+                    overflow: TextOverflow.ellipsis,
+                    fontSize:
+                        Provider.of<APPSettingProvider>(context).fontSize),
               ),
             )
           ],

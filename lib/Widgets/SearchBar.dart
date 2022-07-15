@@ -106,7 +106,7 @@ class _SearchBarState extends State<SearchBar> {
                 Center(
                   child: Text(
                     "签",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
               ],
