@@ -905,7 +905,7 @@ class ExtendedNestedScrollViewState extends State<ExtendedNestedScrollViewEx> {
   /// The [ScrollController] provided to the [ScrollView] in
   /// [ExtendedNestedScrollView.headerSliverBuilder].
   ///
-  /// This is equivalent to [ExtendedNestedScrollView.controller], if provided.
+  /// This is equivalent to [ExtendedNestedScrollView.tailController], if provided.
   ///
   /// Manipulating the [ScrollPosition] of this controller pushes the inner body
   /// sliver(s) down. The position of the [innerController] will be set to

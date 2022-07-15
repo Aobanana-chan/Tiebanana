@@ -1058,11 +1058,6 @@ class Thread {
     extTails = json['ext_tails'];
     pushStatus = json['push_status'];
     cartoonInfo = json['cartoon_info'];
-    //TODO:有bug,案例json
-    //[{type: 18, text: #刀剑神域进击篇#, link: http://tieba.baidu.com/mo/q/hotMessage?topic_id=0&fid=7012688&topic_name=刀剑神域进击篇&is_video_topic=0}, {type: 0, text:   《无星之夜的咏叹调》先蹲起来 二楼补脑}]
-    //部分贴会带有话题Tag,不带话题Tag时候是String
-    // richTitle = json['rich_title'];
-
     // originThreadInfo = json['origin_thread_info'] != null
     //     ? new OriginThreadInfo.fromJson(json['origin_thread_info'])
     //     : null;

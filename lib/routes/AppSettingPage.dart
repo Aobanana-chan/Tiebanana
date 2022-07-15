@@ -12,7 +12,8 @@ class AppSettingPage extends StatefulWidget {
 }
 
 class _AppSettingPageState extends State<AppSettingPage> {
-  TextEditingController controller = TextEditingController();
+  TextEditingController tailController = TextEditingController(); //小尾巴控制器
+  TextEditingController fontSizeController = TextEditingController(); //字体大小控制器
   late double fontSize;
   @override
   void initState() {
@@ -138,7 +139,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                                   height: 80,
                                   margin: const EdgeInsets.all(5),
                                   child: TextField(
-                                      controller: controller,
+                                      controller: tailController,
                                       expands: true,
                                       maxLines: null,
                                       minLines: null,
@@ -158,7 +159,8 @@ class _AppSettingPageState extends State<AppSettingPage> {
                                 ),
                                 TextButton(
                                     onPressed: () {
-                                      Global.setting.postTail = controller.text;
+                                      Global.setting.postTail =
+                                          tailController.text;
                                       Global.saveProfile();
                                       Navigator.pop(context);
                                       setState(() {});
@@ -278,7 +280,60 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
                   onPressed: () {
-                    //TODO:设置浏览模式
+                    showDialog(
+                        context: context,
+                        builder: (builder) => SimpleDialog(
+                              title: Text("字体大小",
+                                  style: TextStyle(
+                                      fontSize: Provider.of<APPSettingProvider>(
+                                              context)
+                                          .fontSize)),
+                              children: [
+                                Container(
+                                  alignment: Alignment.center,
+                                  height: 32,
+                                  margin: const EdgeInsets.all(5),
+                                  child: TextField(
+                                      controller: fontSizeController,
+                                      expands: false,
+                                      maxLines: 1,
+                                      autofocus: true,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        hintText: "字体大小",
+                                        isCollapsed: true,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 10),
+                                        filled: true,
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: BorderSide.none),
+                                      )),
+                                ),
+                                TextButton(
+                                    onPressed: () {
+                                      double? size = double.tryParse(
+                                          fontSizeController.text);
+                                      if (size == null ||
+                                          size < 3 ||
+                                          size > 32) {
+                                        Fluttertoast.showToast(msg: "非法数值");
+                                        Navigator.pop(context);
+                                        return;
+                                      }
+                                      Global.setting.fontSize = size;
+                                      fontSize = size;
+                                      Global.saveProfile();
+                                      Navigator.pop(context);
+                                      setState(() {});
+                          Provider.of<APPSettingProvider>(context, listen: false)
+                            .fontSize = size;
+                                    },
+                                    child: const Text("确定"))
+                              ],
+                            ));
                   },
                   child: ListTile(
                     leading: const Icon(Icons.font_download_outlined),
@@ -313,9 +368,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
-                  onPressed: () {
-                    //TODO:设置浏览模式
-                  },
+                  onPressed: null,
                   child: ListTile(
                     leading: const Icon(Icons.web_asset),
                     title: Text("使用内置浏览器",
@@ -338,9 +391,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
-                  onPressed: () {
-                    //TODO:设置浏览模式
-                  },
+                  onPressed: null,
                   child: ListTile(
                     leading: const Icon(Icons.update),
                     title: Text("自动检查更新",

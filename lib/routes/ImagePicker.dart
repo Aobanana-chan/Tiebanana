@@ -96,12 +96,22 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
 
   Future<List<AssetEntity>> loadImage() async {
     imageFileList.clear();
-    for (AssetEntity entity
-        in (await pathSelected?.getAssetListPaged(page: 0, size: 2)) ?? []) {
+    var l = (await pathSelected?.getAssetListPaged(page: 0, size: 0xFFFFFFFF));
+    PhotoCachingManager.instance.requestCacheAssets(assets: l ?? []);
+    for (AssetEntity entity in l ?? []) {
       var file = entity.file;
       imageFileList.add(file);
     }
-    return (await pathSelected?.getAssetListPaged(page: 0, size: 2) ?? []);
+    return (await pathSelected?.getAssetListPaged(page: 0, size: 0xFFFFFFFF) ??
+        []);
+    // for (AssetEntity entity
+    //     in (await pathSelected?.getAssetListPaged(page: 0, size: 0xFFFFFFFF)) ??
+    //         []) {
+    //   var file = entity.file;
+    //   imageFileList.add(file);
+    // }
+    // return (await pathSelected?.getAssetListPaged(page: 0, size: 0xFFFFFFFF) ??
+    //     []);
   }
 
   @override

@@ -88,30 +88,42 @@ class _SearchBarState extends State<SearchBar> {
         body: _buildBody(),
         actions: [
           RawMaterialButton(
-            shape: const CircleBorder(),
-            onPressed: () async {
-              Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
-              await Global.tiebaAPI.signAll();
-              if (mounted) {
-                Provider.of<ForumState>(context, listen: false).refresh();
-              }
-            },
-            child: Stack(
-              alignment: AlignmentDirectional.center,
-              children: const [
-                Icon(
-                  Icons.circle_outlined,
-                  size: 32,
+              shape: const CircleBorder(),
+              onPressed: () async {
+                Fluttertoast.showToast(msg: "签到开始，可前往通知栏查看签到进度");
+                await Global.tiebaAPI.signAll();
+                if (mounted) {
+                  Provider.of<ForumState>(context, listen: false).refresh();
+                }
+              },
+              child: Container(
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(width: 2.5, color: Colors.black)),
+                child: Text(
+                  "签",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                Center(
-                  child: Text(
-                    "签",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-          )
+              )
+
+              //  Stack(
+              //   alignment: AlignmentDirectional.center,
+              //   children: const [
+              //     Icon(
+              //       Icons.circle_outlined,
+              //       size: 32,
+              //     ),
+              //     Center(
+              //       child: Text(
+              //         "签",
+              //         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              //       ),
+              //     ),
+              //   ],
+              // ),
+              )
         ],
 
         onFocusChanged: (focused) {
