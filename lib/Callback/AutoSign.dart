@@ -8,8 +8,12 @@ import 'package:tiebanana/common/Global.dart';
 class AutoSign extends APPStateCallback {
   @override
   void afterInit() {
-    if (Global.setting.signAllsinceOpen == true && Global.tiebaAPI.isLogin) {
+    if (Global.setting.signAllsinceOpen == true &&
+        Global.tiebaAPI.isLogin &&
+        !isSigned()) {
       LifeTimeCallback().regist(SignRefresh(Global.tiebaAPI.signAll()));
+      Global.profile
+          .setInt("latestAutoSigned", DateTime.now().millisecondsSinceEpoch);
     }
 
     done = true;
@@ -20,6 +24,19 @@ class AutoSign extends APPStateCallback {
 
   @override
   void onHomeFormPageCreate(BuildContext context) {}
+  bool isSigned() {
+    var time = Global.profile.getInt("latestAutoSigned");
+    if (time != null) {
+      var date = DateTime.fromMillisecondsSinceEpoch(time);
+      var now = DateTime.now();
+      if (date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 ///签到后刷新页面回调
