@@ -30,6 +30,27 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- 打开贴吧的网页时启动APP跳转 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="tieba.baidu.com"
+                    android:scheme="tbfrs" />
+                <data
+                    android:host="tieba.baidu.com"
+                    android:scheme="tbpb" />
+                <data
+                    android:host="tieba.baidu.com"
+                    android:scheme="http" />
+                <data
+                    android:host="tieba.baidu.com"
+                    android:scheme="https" />
+                <data
+                    android:host="unidispatch"
+                    android:scheme="com.baidu.tieba" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

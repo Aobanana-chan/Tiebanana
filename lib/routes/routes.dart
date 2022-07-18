@@ -62,7 +62,13 @@ abstract class PageRouter {
     }
   };
   static const String home = "/";
+
+  ///参数
+  ///String
   static const String forumHome = "forumHome";
+
+  ///参数
+  ///ThreadPageRouterData
   static const String threadPage = "threadPage";
   static const String login = "login";
   static const String search = "search";

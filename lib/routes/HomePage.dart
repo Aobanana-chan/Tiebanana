@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flukit/flukit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +16,8 @@ import 'package:tiebanana/routes/Login.dart';
 import 'package:tiebanana/routes/Message.dart';
 import 'package:tiebanana/routes/Recommend.dart';
 import 'package:tiebanana/routes/User.dart';
+import 'package:tiebanana/routes/routes.dart';
+import 'package:uni_links/uni_links.dart';
 
 ///首页
 class HomePage extends StatefulWidget {
@@ -30,6 +35,9 @@ class _HomePageState extends State<HomePage> {
   DateTime? lastPopTime;
   late Future<bool> Function() onWillPop;
   List<FloatingSearchBarController> barController = [];
+
+  late StreamSubscription _sub;
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +81,45 @@ class _HomePageState extends State<HomePage> {
         controller: barController[3],
       ))
     ];
+
+    //监听Scheme
+    initPlatformStateForStringUniLinks();
+  }
+
+  Future<void> initPlatformStateForStringUniLinks() async {
+    String? initialLink;
+    void process(String url) {
+      var uri = Uri.parse(url);
+      if (uri.path.endsWith("/pb")) {
+        //进入贴
+        Navigator.pushNamed(context, PageRouter.threadPage,
+            arguments: ThreadPageRouterData(
+                kz: uri.queryParameters['tid']!, pid: null));
+      } else if (uri.path.endsWith("/frs")) {
+        Navigator.pushNamed(context, PageRouter.forumHome,
+            arguments: uri.queryParameters['kw']);
+        //进入吧
+      }
+    }
+
+    // App未打开的状态在这个地方捕获scheme
+    try {
+      initialLink = await getInitialLink();
+      if (initialLink != null) {
+        process(initialLink);
+      }
+    } on PlatformException {
+      initialLink = 'Failed to get initial link.';
+    } on FormatException {
+      initialLink = 'Failed to parse the initial link as Uri.';
+    }
+    // App打开的状态监听scheme
+    _sub = linkStream.listen((String? link) {
+      if (!mounted || link == null) return;
+      process(link);
+    }, onError: (Object err) {
+      if (!mounted) return;
+    });
   }
 
   @override
@@ -141,6 +188,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     controller.dispose();
+    _sub.cancel();
     super.dispose();
   }
 }
