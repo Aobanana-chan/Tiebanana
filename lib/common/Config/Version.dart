@@ -6,9 +6,9 @@ import 'package:tiebanana/Json_Model/Json/GithunGetLatestVersion.dart';
 ///APP版本
 
 class Version {
-  static const String version = "v0.1";
+  static const String version = "v0.2.1";
 
-  static final Version _instance = Version.init();
+  static final Version _instance = Version._init();
 
   //最新stable版
   final String _latestUrl =
@@ -18,29 +18,40 @@ class Version {
   final String _latestUrlPreInclude =
       "https://api.github.com/repos/Aobanana-chan/Tiebanana/releases";
 
-  Dio _dio = Dio();
+  final Dio _dio = Dio();
 
   factory Version() {
     return _instance;
   }
-  Version.init();
+  Version._init();
 
-  bool hasUpdate = false;
-  List<String> downloadUrl = [];
+  bool? hasUpdate;
+  String? lastestVersion;
+
+  Map<String, String> downloadUrl = {};
   late String changeLog;
 
-  void checkUpdate() async {
+  Future<void> checkUpdate() async {
     var res = await _dio.get(
       _latestUrl,
     );
 
-    var resJson = GetLatestVersion.fromJson(jsonDecode(res.data));
+    var resJson = GetLatestVersion.fromJson(res.data);
+    lastestVersion = resJson.name;
     if (resJson.name != version) {
       hasUpdate = true;
+      final List arch = ["arm64-v8a", "armeabi-v7a", "x86_64"];
       for (Assets i in resJson.assets ?? []) {
-        downloadUrl.add(i.browserDownloadUrl!);
+        for (var j in arch) {
+          if (i.name!.contains(j)) {
+            downloadUrl[j] = i.browserDownloadUrl!;
+            break;
+          }
+        }
       }
       changeLog = resJson.body!;
+    } else {
+      hasUpdate = false;
     }
   }
 }

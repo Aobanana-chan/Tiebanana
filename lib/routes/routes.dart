@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/routes/AppSettingPage.dart';
+import 'package:tiebanana/routes/AppUpdatePage.dart';
 import 'package:tiebanana/routes/ForumHomePage.dart';
 import 'package:tiebanana/routes/HomePage.dart';
 import 'package:tiebanana/routes/ImagePicker.dart';
@@ -55,6 +56,9 @@ abstract class PageRouter {
     },
     "appSetting": (context) {
       return const AppSettingPage();
+    },
+    "appUpdate": (context) {
+      return const UpdatePage();
     }
   };
   static const String home = "/";
@@ -69,6 +73,7 @@ abstract class PageRouter {
   static const String themeChange = "themeChange";
   static const String serviceCenter = "serviceCenter";
   static const String appSetting = "appSetting";
+  static const String appUpdate = "appUpdate";
 }
 
 ///贴界面路由传值

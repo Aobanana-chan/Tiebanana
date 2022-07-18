@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:tiebanana/Callback/AutoSign.dart';
+import 'package:tiebanana/Callback/CheckUpdate.dart';
 import 'package:tiebanana/Callback/ClearCache.dart';
 import 'package:tiebanana/Callback/ListenNetStatus.dart';
 
@@ -16,6 +17,7 @@ class LifeTimeCallback {
     regist(AutoSign());
     regist(ClearCache());
     regist(ListenNetStatus());
+    regist(AutoCheckUpdate());
   }
   //注册回调
   void regist(APPStateCallback callback) {

@@ -3,6 +3,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/common/Global.dart';
+import 'package:tiebanana/routes/AppUpdatePage.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 class AppSettingPage extends StatefulWidget {
   const AppSettingPage({Key? key}) : super(key: key);
@@ -328,8 +330,9 @@ class _AppSettingPageState extends State<AppSettingPage> {
                                       Global.saveProfile();
                                       Navigator.pop(context);
                                       setState(() {});
-                          Provider.of<APPSettingProvider>(context, listen: false)
-                            .fontSize = size;
+                                      Provider.of<APPSettingProvider>(context,
+                                              listen: false)
+                                          .fontSize = size;
                                     },
                                     child: const Text("确定"))
                               ],
@@ -391,13 +394,16 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
-                  onPressed: null,
+                  onPressed: () {
+                    Navigator.pushNamed(context, PageRouter.appUpdate);
+                  },
                   child: ListTile(
                     leading: const Icon(Icons.update),
                     title: Text("自动检查更新",
                         style: TextStyle(
                             fontSize: Provider.of<APPSettingProvider>(context)
                                 .fontSize)),
+                    subtitle: const Text("检查更新"),
                     trailing: Switch(
                       value: Global.setting.checkUpdateAutomaticlly!,
                       onChanged: (bool value) {
