@@ -14,9 +14,11 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter/foundation.dart' as runmode;
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:tiebanana/Exceptions/NetAPIError.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/LG_DV_ARG.dart';
 import 'package:tiebanana/common/API/TBSManager.dart';
@@ -37,7 +39,7 @@ class TiebaAPI {
     },
     // receiveTimeout: 0x7FFFFFFFF
   ));
-  late PersistCookieJar cookieJar;
+  late PersistCookieJar _cookieJar;
 
   bool _isLogin = false;
   bool get isLogin {
@@ -48,7 +50,7 @@ class TiebaAPI {
     _isLogin = val;
     if (val == true) {
       //登陆后加载用户信息
-      cookieJar.loadForRequest(Uri.parse(BAIDU_URL)).then((value) {
+      _cookieJar.loadForRequest(Uri.parse(BAIDU_URL)).then((value) {
         for (var i in value) {
           if (i.name == "BDUSS") {
             bduss = i.value;
@@ -57,7 +59,7 @@ class TiebaAPI {
         }
         userInfomation.init(bduss);
       });
-      cookieJar.loadForRequest(Uri.parse(BAIDU_PASSPORT_URL)).then((value) {
+      _cookieJar.loadForRequest(Uri.parse(BAIDU_PASSPORT_URL)).then((value) {
         for (var i in value) {
           if (i.name == "STOKEN") {
             stoken = i.value;
@@ -103,20 +105,20 @@ class TiebaAPI {
 
   String _gid = "";
 
-  WindowsDv windowsDv = WindowsDv();
+  final WindowsDv _windowsDv = WindowsDv();
   PassMachine passMachine = PassMachine(dio);
-  FingerPrint fuid = FingerPrint();
+  final FingerPrint _fuid = FingerPrint();
   AuthVerifyManager authVerifyManager = AuthVerifyManager(dio);
-  TBSMagager tbsMagager = TBSMagager(dio);
+  final TBSMagager _tbsMagager = TBSMagager(dio);
   UserInfomation userInfomation = UserInfomation(dio);
 
   ///类在用之前先初始化
   Future<TiebaAPI> init() async {
     //设置cookie保存目录
     Directory? cookiedir = await getApplicationDocumentsDirectory();
-    cookieJar =
+    _cookieJar =
         PersistCookieJar(storage: FileStorage("${cookiedir.path}/cookies/"));
-    dio.interceptors.add(CookieManager(cookieJar));
+    dio.interceptors.add(CookieManager(_cookieJar));
 
     //Debug模式下设置抓包调试
     if (runmode.kDebugMode) {
@@ -157,7 +159,7 @@ class TiebaAPI {
   ///退出登陆
   void logout() {
     if (isLogin) {
-      cookieJar.deleteAll();
+      _cookieJar.deleteAll();
       _token = "";
       isLogin = false;
     }
@@ -167,12 +169,12 @@ class TiebaAPI {
   Future<LoginErrCode> loginByPassword(String username, String password) async {
     if (isLogin) {
       //删除cookie和token
-      await cookieJar.deleteAll();
+      await _cookieJar.deleteAll();
       _token = "";
       isLogin = false;
     }
     var cookies =
-        (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
+        (await _cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
     //没有BAIDUID就浏览百度首页,以设置BAIDUID等Cookie
     if (!cookies.contains("BAIDUID")) {
       await dio.get(BAIDU_URL);
@@ -223,8 +225,8 @@ class TiebaAPI {
       "supportdv": "1",
       "ds": passMachine.ds,
       "tk": passMachine.tk,
-      "dv": windowsDv.dv,
-      "fuid": fuid.fuid, //fuid是由fingerprint2js算出来的浏览器唯一标识
+      "dv": _windowsDv.dv,
+      "fuid": _fuid.fuid, //fuid是由fingerprint2js算出来的浏览器唯一标识
       "alg": "v3",
       "time": time ~/ 1000,
     };
@@ -264,8 +266,8 @@ class TiebaAPI {
           "supportdv": 1,
           "ds": passMachine.ds,
           "tk": passMachine.tk,
-          "dv": windowsDv.dv,
-          "fuid": fuid.fuid,
+          "dv": _windowsDv.dv,
+          "fuid": _fuid.fuid,
           "traceid": _getTraceID(),
           //"callback":
           "time": time ~/ 1000,
@@ -274,7 +276,7 @@ class TiebaAPI {
           "shaOne": _getshaOne(time),
           "elapsed": DateTime.now().millisecondsSinceEpoch - time,
           "rinfo": {
-            "fuid": md5.convert(utf8.encode(fuid.fuid)).toString()
+            "fuid": md5.convert(utf8.encode(_fuid.fuid)).toString()
           } //这里的fuid是上面的fuid的md5值
         },
         options: Options(headers: {
@@ -297,12 +299,12 @@ class TiebaAPI {
       {String? smsvcodesign, String? smsvcodestr}) async {
     if (isLogin) {
       //删除cookie和token
-      await cookieJar.deleteAll();
+      await _cookieJar.deleteAll();
       _token = "";
       isLogin = false;
     }
     var cookies =
-        (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
+        (await _cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
     //没有BAIDUID就浏览百度首页,以设置BAIDUID等Cookie
     if (!cookies.contains("BAIDUID")) {
       await dio.get(BAIDU_URL);
@@ -331,8 +333,8 @@ class TiebaAPI {
       "fp_uid": "",
       "fp_info": "",
       "loginversion": "v4",
-      "dv": windowsDv.dv,
-      "fuid": fuid.fuid, //fuid是由fingerprint2js算出来的浏览器唯一标识
+      "dv": _windowsDv.dv,
+      "fuid": _fuid.fuid, //fuid是由fingerprint2js算出来的浏览器唯一标识
       "alg": "v3",
       "time": time ~/ 1000,
       "isdpass": 1,
@@ -365,8 +367,8 @@ class TiebaAPI {
       "fp_uid": "",
       "fp_info": "",
       "loginversion": "v4",
-      "dv": windowsDv.dv,
-      "fuid": fuid.fuid,
+      "dv": _windowsDv.dv,
+      "fuid": _fuid.fuid,
       "traceid": _getTraceID(),
       "time": time ~/ 1000,
       "alg": "v3",
@@ -374,7 +376,7 @@ class TiebaAPI {
       "shaOne": _getshaOne(time),
       "elapsed": DateTime.now().millisecondsSinceEpoch - time,
       "rinfo": {
-        "fuid": md5.convert(utf8.encode(fuid.fuid)).toString()
+        "fuid": md5.convert(utf8.encode(_fuid.fuid)).toString()
       } //这里的fuid是上面的fuid的md5值
       ,
       "isdpass": 1,
@@ -409,18 +411,19 @@ class TiebaAPI {
   Future<LoginErrCode> wapLoginByPhone(String phoneNumber, String vCode) async {
     if (isLogin) {
       //删除cookie和token
-      await cookieJar.deleteAll();
+      await _cookieJar.deleteAll();
       _token = "";
       isLogin = false;
     }
     var cookies =
-        (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
+        (await _cookieJar.loadForRequest(Uri.parse(BAIDU_URL))).toString();
     //没有BAIDUID就浏览百度首页,以设置BAIDUID等Cookie
     if (!cookies.contains("BAIDUID")) {
       await dio.get(BAIDU_URL);
     }
     String baiduID = "";
-    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+    for (var cookie
+        in (await _cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
       if (cookie.name.toUpperCase() == "BAIDUID") {
         baiduID = cookie.value;
         break;
@@ -446,7 +449,7 @@ class TiebaAPI {
       "encryptedType": "living",
       "extrajson": "",
       "from": "sms",
-      "fuid": fuid.fuid,
+      "fuid": _fuid.fuid,
       "gid": gid,
       "isVoiceSmsLogin": 0,
       "lang": "zh-cn",
@@ -483,7 +486,7 @@ class TiebaAPI {
       "encryptedType": "living",
       "extrajson": "",
       "from": "sms",
-      "fuid": fuid.fuid,
+      "fuid": _fuid.fuid,
       "gid": gid,
       "isVoiceSmsLogin": 0,
       "lang": "zh-cn",
@@ -493,7 +496,7 @@ class TiebaAPI {
       "passAppHash": "",
       "passAppVersion": "",
       "regfrom": "page",
-      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()},
+      "rinfo": {"fuid": md5.convert(utf8.encode(_fuid.fuid)).toString()},
       "session_id": "$gid-v2-$time-insert_account",
       "shaOne": _getshaOne(time),
       "sig": _getSig(_mapSrot(sigArgs)),
@@ -563,7 +566,7 @@ class TiebaAPI {
       "codeMobile": "",
       "countryCode": "",
       "extrajson": "",
-      "fuid": fuid.fuid,
+      "fuid": _fuid.fuid,
       "gid": gid,
       "lang": "zh-cn",
       "liveAbility": "",
@@ -590,11 +593,11 @@ class TiebaAPI {
       "countryCode": "",
       "elapsed": DateTime.now().millisecondsSinceEpoch - time,
       "extrajson": "",
-      "fuid": fuid.fuid,
+      "fuid": _fuid.fuid,
       "gid": gid,
       "lang": "zh-cn",
       "liveAbility": "",
-      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()},
+      "rinfo": {"fuid": md5.convert(utf8.encode(_fuid.fuid)).toString()},
       "session_id": "$gid-v2-$time-insert_account",
       "shaOne": _getshaOne(time),
       "sig": _getSig(_mapSrot(sigParams)),
@@ -650,7 +653,7 @@ class TiebaAPI {
       "sig": _getSig(_mapSrot(sigParams)),
       "elapsed": DateTime.now().millisecondsSinceEpoch - time,
       "shaOne": _getshaOne(time),
-      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()}
+      "rinfo": {"fuid": md5.convert(utf8.encode(_fuid.fuid)).toString()}
     };
     var res = await dio.get(GET_PHONE_NUMBER_STATUS,
         queryParameters: args,
@@ -692,7 +695,7 @@ class TiebaAPI {
       "client": "",
       "countrycode": "",
       "ds": passMachine.ds,
-      "dv": windowsDv.dv,
+      "dv": _windowsDv.dv,
       "flag_code": "0",
       "gid": gid,
       "loginVersion": "v4",
@@ -724,7 +727,7 @@ class TiebaAPI {
       "ds": passMachine.ds,
       "tk": passMachine.tk,
       "supportdv": "1",
-      "dv": windowsDv.dv,
+      "dv": _windowsDv.dv,
       "apiver": "v3",
       "tt": time,
       "traceid": "",
@@ -733,7 +736,7 @@ class TiebaAPI {
       "sig": _getSig(_mapSrot(sigParams)),
       "elapsed": DateTime.now().millisecondsSinceEpoch - time,
       "shaOne": _getshaOne(time),
-      "rinfo": {"fuid": md5.convert(utf8.encode(fuid.fuid)).toString()}
+      "rinfo": {"fuid": md5.convert(utf8.encode(_fuid.fuid)).toString()}
     };
     if (needVerify) {
       verify.forEach(((key, value) {
@@ -1083,7 +1086,7 @@ class TiebaAPI {
 
   //获取随机参数
   Future<String> _getTBS() async {
-    return await tbsMagager.getTBS();
+    return await _tbsMagager.getTBS();
   }
 
   ///获取关注的贴吧
@@ -1425,7 +1428,7 @@ class TiebaAPI {
       "post_id": postID,
       "start_scheme": "",
       "stoken": stoken,
-      "tbs": await tbsMagager.getTBS(),
+      "tbs": await _tbsMagager.getTBS(),
       "thread_id": threadID,
       "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
@@ -1499,7 +1502,8 @@ class TiebaAPI {
     }
     //获取baiduID
     String baiduID = "";
-    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+    for (var cookie
+        in (await _cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
       if (cookie.name.toUpperCase() == "BAIDUID") {
         baiduID = cookie.value;
         break;
@@ -1533,7 +1537,7 @@ class TiebaAPI {
       "reply_uid": "null",
       "stoken": stoken,
       "takephoto_num": photos == null ? 0 : photos.length,
-      "tbs": await tbsMagager.getTBS(),
+      "tbs": await _tbsMagager.getTBS(),
       "tid": tid,
       "timestamp": DateTime.now().millisecondsSinceEpoch,
       "v_fid": "",
@@ -1568,7 +1572,8 @@ class TiebaAPI {
     }
     //获取baiduID
     String baiduID = "";
-    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+    for (var cookie
+        in (await _cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
       if (cookie.name.toUpperCase() == "BAIDUID") {
         baiduID = cookie.value;
         break;
@@ -1603,7 +1608,7 @@ class TiebaAPI {
       "reply_uid": replyUID,
       "stoken": stoken,
       "takephoto_num": photos == null ? 0 : photos.length,
-      "tbs": await tbsMagager.getTBS(),
+      "tbs": await _tbsMagager.getTBS(),
       "tid": tid,
       "timestamp": DateTime.now().millisecondsSinceEpoch,
       "v_fid": "null",
@@ -1658,7 +1663,8 @@ class TiebaAPI {
     }
     //获取baiduID
     String baiduID = "";
-    for (var cookie in (await cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
+    for (var cookie
+        in (await _cookieJar.loadForRequest(Uri.parse(BAIDU_URL)))) {
       if (cookie.name.toUpperCase() == "BAIDUID") {
         baiduID = cookie.value;
         break;
@@ -1879,8 +1885,8 @@ class TiebaAPI {
     return LikeFourmModel.fromJson(jsonDecode(res.data));
   }
 
-  ///TODO:取消关注一个吧
-  Future unfavoForum(String fid, String forumName) async {
+  Future<bool> unfavoForum(
+      {required String fid, required String forumName}) async {
     var arg = {
       "BDUSS": bduss,
       "stoken": stoken,
@@ -1903,6 +1909,17 @@ class TiebaAPI {
           contentType: "application/x-www-form-urlencoded",
         ));
     var jsonRes = jsonDecode(res.data);
+    if (jsonRes['error_code'] == "0") {
+      return true;
+    } else {
+      throw NetAPIError(
+          type: NetAPIErrorType.actionFalied,
+          redoTimes: 2,
+          redoFunction: () async {
+            Fluttertoast.showToast(msg: "取消关注失败,正在重试(最大2次)");
+            await unfavoForum(fid: fid, forumName: forumName);
+          });
+    }
   }
 
   ///获取用户收藏贴API

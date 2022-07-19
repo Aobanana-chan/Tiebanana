@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/common/Config/License.dart';
+import 'package:tiebanana/common/Config/Version.dart';
 import 'package:tiebanana/common/Global.dart';
-import 'package:tiebanana/routes/AppUpdatePage.dart';
 import 'package:tiebanana/routes/routes.dart';
 
 class AppSettingPage extends StatefulWidget {
@@ -420,9 +421,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
-                  onPressed: () {
-                    //TODO:设置浏览模式
-                  },
+                  onPressed: null,
                   child: ListTile(
                     leading: const Icon(Icons.signpost_outlined),
                     title: Text("自动签到",
@@ -441,14 +440,13 @@ class _AppSettingPageState extends State<AppSettingPage> {
                   ),
                 ),
               ),
+              //TODO:缓存管理
               Container(
                 color: Theme.of(context).brightness == Brightness.light
                     ? Colors.white
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
-                  onPressed: () {
-                    //TODO:设置浏览模式
-                  },
+                  onPressed: null,
                   child: ListTile(
                     leading: const Icon(Icons.cached_outlined),
                     title: Text("自动缓存收藏贴",
@@ -473,10 +471,19 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     : Theme.of(context).colorScheme.background,
                 child: MaterialButton(
                   onPressed: () {
-                    //TODO:关于
+                    showAboutDialog(
+                        context: context,
+                        applicationName: "Tiebanana",
+                        applicationVersion: Version.version,
+                        applicationIcon: Image.asset(
+                          "assets/icon/ic_launcher_round.png",
+                          height: 30,
+                          width: 30,
+                        ),
+                        applicationLegalese: license);
                   },
                   child: ListTile(
-                    leading: Icon(Icons.warning_amber_outlined),
+                    leading: const Icon(Icons.warning_amber_outlined),
                     title: Text("关于",
                         style: TextStyle(
                             fontSize: Provider.of<APPSettingProvider>(context)

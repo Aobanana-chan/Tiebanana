@@ -12,8 +12,10 @@ class TopThread extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.all(0),
       padding: const EdgeInsets.all(0),
-      decoration:
-          BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor),
+      decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : Theme.of(context).scaffoldBackgroundColor),
       child: MaterialButton(
         onPressed: () {
           Navigator.pushNamed(context, PageRouter.threadPage,

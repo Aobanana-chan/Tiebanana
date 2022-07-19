@@ -36,14 +36,16 @@ class _ForumHomePageState extends State<ForumHomePage>
   late TabController tabbarController;
   final List _tab = ["看帖", "精品"];
 
-  late List<Widget> appBarAction;
   void Function(void Function())? threadState;
   int pn = 1;
   int sortType = 0;
   GoodClassifyProviderModel goodClassify = GoodClassifyProviderModel();
   Future<ForumHomeInfo>? initForum;
+  late ForumHomeInfo forumData;
   List<ForumThreadList>? forumThreadList; //普通贴
   late ThreadListProviderModel goodThreadList; //精品贴
+
+  late RenderBox overlay;
 
   void init() {
     pn = 1;
@@ -59,18 +61,8 @@ class _ForumHomePageState extends State<ForumHomePage>
     //初始化用户设置-分类
     sortType = Global.profile.getInt("ThreadSortType") ?? 0;
 
-    appBarAction = [
-      IconButton(
-          onPressed: () {
-            //TODO:进入吧内搜索界面
-          },
-          icon: const Icon(Icons.search)),
-      IconButton(
-          onPressed: () {
-            //TODO:更多菜单
-          },
-          icon: const Icon(Icons.more_vert)),
-    ];
+    overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+
     init();
     //进入精品贴后加载精品贴页面
     tabbarController = TabController(length: _tab.length, vsync: this);
@@ -158,6 +150,58 @@ class _ForumHomePageState extends State<ForumHomePage>
     }
   }
 
+  List<Widget> buildAction() {
+    return [
+      IconButton(
+          onPressed: () {
+            //TODO:进入吧内搜索界面
+          },
+          icon: const Icon(Icons.search)),
+      IconButton(
+          onPressed: () {
+            showMenu(
+                context: context,
+                position: RelativeRect.fromLTRB(overlay.size.width - 100, 0,
+                    overlay.size.width, overlay.size.height),
+                shape: RoundedRectangleBorder(
+                    side: const BorderSide(width: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
+                items: [
+                  PopupMenuItem(
+                    // padding: EdgeInsets.zero,
+                    onTap: () async {
+                      if (forumData.forum?.isLike == "1") {
+                        Global.tiebaAPI.unfavoForum(
+                            fid: forumData.forum!.id!,
+                            forumName: forumData.forum!.name!);
+                      } else {
+                        Global.tiebaAPI.favoForum(
+                            forumData.forum!.id!, forumData.forum!.name!);
+                      }
+                    },
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: forumData.forum?.isLike == "1"
+                          ? const Text("取消关注")
+                          : const Text("关注"),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    // padding: EdgeInsets.zero,
+                    onTap: () async {
+                      //TODO:分享贴吧
+                    },
+                    child: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("分享"),
+                    ),
+                  ),
+                ]);
+          },
+          icon: const Icon(Icons.more_vert)),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -165,6 +209,7 @@ class _ForumHomePageState extends State<ForumHomePage>
       initialData: null,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         if (snapshot.hasData) {
+          forumData = snapshot.data;
           forumThreadList ??= (snapshot.data as ForumHomeInfo).threadList;
           return ChangeNotifierProvider.value(
             value: APPBarTitle(),
@@ -173,7 +218,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                 elevation: 0.5,
                 // backgroundColor: Colors.white,
                 // foregroundColor: Colors.black,
-                actions: appBarAction,
+                actions: buildAction(),
                 title: Consumer<APPBarTitle>(
                   builder: (context, value, child) {
                     return AnimatedOpacity(
@@ -477,8 +522,8 @@ class _ForumHomePageState extends State<ForumHomePage>
 
   @override
   void dispose() {
-    innerController.dispose();
-    outerController.dispose();
+    // innerController.dispose();
+    // outerController.dispose();
     tabbarController.dispose();
     super.dispose();
   }

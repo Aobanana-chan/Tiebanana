@@ -13,13 +13,13 @@ class TiebananaErrorProcesser {
     return _instance;
   }
   TiebananaErrorProcesser.init() {
-    var nativeErrorProcess = FlutterError.onError;
-    FlutterError.onError = ((details) {
-      for (TiebananaErrorHandler handler in handlers[details.exception] ?? []) {
-        handler.process(details);
-      }
-      nativeErrorProcess?.call(details);
-    });
+    // var nativeErrorProcess = FlutterError.onError;
+    // FlutterError.onError = ((details) {
+    //   for (TiebananaErrorHandler handler in handlers[details.exception] ?? []) {
+    //     handler.process(details);
+    //   }
+    //   nativeErrorProcess?.call(details);
+    // });
 
     regist(NetAPIErrorHandle());
   }
@@ -35,6 +35,13 @@ class TiebananaErrorProcesser {
       }
     }
   }
+
+  ///处理异常
+  void handle(Object error) {
+    for (TiebananaErrorHandler handler in handlers[error.runtimeType] ?? []) {
+      handler.process(error);
+    }
+  }
 }
 
 abstract class TiebananaErrorHandler {
@@ -42,5 +49,5 @@ abstract class TiebananaErrorHandler {
   late List<Object> types;
 
   ///异常处理
-  void process(FlutterErrorDetails details);
+  void process(Object error);
 }

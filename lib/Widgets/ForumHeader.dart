@@ -39,9 +39,8 @@ class _ForumHeaderState extends State<ForumHeader> {
           onPressed: () async {
             var msg = await Global.tiebaAPI.signOneForum(widget.info.name!);
             Fluttertoast.showToast(msg: msg["TiebananaMsg"]);
-            info.levelupScore = (msg["user_info"]["levelup_score"] as double)
-                .toInt()
-                .toString();
+            info.levelupScore =
+                (msg["user_info"]["levelup_score"] as num).toInt().toString();
             info.curScore = (int.parse(info.curScore!) +
                     (msg["user_info"]["sign_bonus_point"]))
                 .toInt()

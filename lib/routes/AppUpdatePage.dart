@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:tiebanana/common/AssetList.dart';
 import 'package:tiebanana/common/Config/Version.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 

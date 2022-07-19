@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:json5/json5.dart';
 import 'package:tiebanana/DAO/DAOApi.dart';
+import 'package:tiebanana/Exceptions/NetAPIError.dart';
 import 'package:tiebanana/common/API/TiebaNetAPI.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiebanana/common/DefaultConfig.dart';
@@ -77,13 +78,29 @@ class Global {
     await localNotifications.initialize(initializationSettings);
 
     //初始化贴吧API
-    await tiebaAPI.init().then((value) async {
-      //初始化用户uid
-      if (value.isLogin) {
-        var userInfo = await value.getMyInfo();
-        profile.setString("uid", userInfo.id!.toString());
-      }
-    });
+
+    try {
+      await tiebaAPI.init().then((value) async {
+        //初始化用户uid
+        if (value.isLogin) {
+          var userInfo = await value.getMyInfo();
+          profile.setString("uid", userInfo.id!.toString());
+        }
+      });
+    } catch (e) {
+      throw NetAPIError(
+          type: NetAPIErrorType.initFailed,
+          redoTimes: double.maxFinite.toInt(),
+          redoFunction: () async {
+            await tiebaAPI.init().then((value) async {
+              //初始化用户uid
+              if (value.isLogin) {
+                var userInfo = await value.getMyInfo();
+                profile.setString("uid", userInfo.id!.toString());
+              }
+            });
+          });
+    }
 
     //初始化数据库
     await daoapi.init();

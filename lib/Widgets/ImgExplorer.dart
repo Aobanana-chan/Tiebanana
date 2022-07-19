@@ -258,11 +258,11 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer>
 
   String qualitySelect(int index) {
     if (Global.setting.pictureLoadSetting == 2) {
-      return widget.highQualityUrls![index]!;
+      return widget.highQualityUrls?[index] ?? widget.imgUrls[index];
     }
     if (Global.setting.pictureLoadSetting == 0 &&
         Global.netStatus != ConnectivityResult.mobile) {
-      return widget.highQualityUrls![index]!;
+      return widget.highQualityUrls?[index] ?? widget.imgUrls[index];
     }
     if (highQualityLoaded[index] == false && wantShowScrImg[index] == false) {
       // print(widget.imgUrls[index]);

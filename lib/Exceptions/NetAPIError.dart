@@ -1,34 +1,38 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tiebanana/Exceptions/Exception.dart';
 
 ///处理网络API错误
 class NetAPIErrorHandle implements TiebananaErrorHandler {
   @override
-  void process(FlutterErrorDetails details) {
-    var e = details.exception as NetAPIError;
-    switch (e.type) {
-      case NetAPIErrorType.initFailed:
-        try {
-          e.redoFunction?.call();
-        } catch (e) {
-          throw NetAPIError(type: NetAPIErrorType.initFailed, needRedo: true);
+  void process(Object error) async {
+    NetAPIError e = error as NetAPIError;
+    for (var i = 0; i < e.redoTimes; i++) {
+      try {
+        if (e.redoTimes > 0) {
+          await e.redoFunction?.call();
+          return;
         }
-        break;
-      default:
+      } catch (_) {}
     }
   }
 
   @override
-  List<Object> types = [DioError];
+  List<Object> types = [NetAPIError];
 }
 
 ///异常类型
 class NetAPIError implements Exception {
-  late NetAPIErrorType type;
-  late bool needRedo;
+  final NetAPIErrorType type;
+  final int redoTimes;
   Function? redoFunction;
-  NetAPIError({required this.type, required this.needRedo, this.redoFunction});
+  String? errorMessage;
+  NetAPIError(
+      {required this.type,
+      required this.redoTimes,
+      this.redoFunction,
+      this.errorMessage});
 }
 
-enum NetAPIErrorType { initFailed }
+enum NetAPIErrorType { initFailed, actionFalied }

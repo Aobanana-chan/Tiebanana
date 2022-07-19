@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,12 +12,25 @@ import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  TiebananaErrorProcesser.init();
-  await Global.init();
-  LifeTimeCallback().afterInit();
-  runApp(const App());
+void main() {
+  runZoned(() async {
+    TiebananaErrorProcesser.init();
+    WidgetsFlutterBinding.ensureInitialized();
+    var init = false;
+    while (!init) {
+      try {
+        await Global.init();
+        init = true;
+      } catch (_) {}
+    }
+
+    LifeTimeCallback().afterInit();
+    runApp(const App());
+  }, zoneSpecification: ZoneSpecification(
+    handleUncaughtError: (self, parent, zone, error, stackTrace) {
+      TiebananaErrorProcesser().handle(error);
+    },
+  ));
 }
 
 class App extends StatelessWidget {
@@ -33,6 +48,7 @@ class App extends StatelessWidget {
                 ColorScheme darkThemeScheme = ColorScheme.fromSeed(
                     brightness: Brightness.dark, seedColor: Colors.black54);
                 return MaterialApp(
+                  title: "Tiebanana",
                   initialRoute: PageRouter.home,
                   //配置命名路由
                   onGenerateRoute: (settings) {

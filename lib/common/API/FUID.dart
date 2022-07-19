@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 
-///生成百度的fuid,待完善
+///TODO:生成百度的fuid,待完善
 ///fuid是浏览器唯一标识
 class FingerPrint {
   var ofuid = {};
