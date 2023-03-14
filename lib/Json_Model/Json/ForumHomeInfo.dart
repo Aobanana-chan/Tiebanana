@@ -105,12 +105,12 @@ class ForumHomeInfo {
       });
     }
     forum = json['forum'] != null ? Forum.fromJson(json['forum']) : null;
-    fortuneBag = json['fortune_bag'];
+    fortuneBag = json['fortune_bag'].toString();
     fortuneDesc = json['fortune_desc'];
     userExtend = json['user_extend'] != null
         ? UserExtend.fromJson(json['user_extend'])
         : null;
-    videoAutoPlay = json['video_auto_play'];
+    videoAutoPlay = json['video_auto_play'].toString();
     filterSwanThread = json['filter_swan_thread'];
     // if (json['smart_app_avatar'] != null) {
     //   smartAppAvatar = [];
@@ -118,7 +118,7 @@ class ForumHomeInfo {
     //     smartAppAvatar?.add(new Null.fromJson(v));
     //   });
     // }
-    voiceRoomConfig = json['voice_room_config'];
+    voiceRoomConfig = json['voice_room_config'].toString();
     // if (json['star_enter'] != null) {
     //   starEnter = [];
     //   json['star_enter'].forEach((v) {
@@ -146,26 +146,26 @@ class ForumHomeInfo {
         : null;
     frsStar =
         json['frs_star'] != null ? FrsStar.fromJson(json['frs_star']) : null;
-    gameDefaultTabId = json['game_default_tab_id'];
+    gameDefaultTabId = json['game_default_tab_id'].toString();
     if (json['thread_id_list'] != null) {
       threadIdList = [];
       json['thread_id_list'].forEach((v) {
         threadIdList?.add(v);
       });
     }
-    isNewUrl = json['is_new_url'];
+    isNewUrl = json['is_new_url'].toString();
     if (json['user_polled_record'] != null) {
       userPolledRecord = [];
       json['user_polled_record'].forEach((v) {
         userPolledRecord?.add(v);
       });
     }
-    if (json['activityhead'] != null) {
-      activityhead = [];
-      json['activityhead'].forEach((v) {
-        activityhead?.add(v);
-      });
-    }
+    // if (json['activityhead'] != null) {
+    //   activityhead = [];
+    //   json['activityhead'].forEach((v) {
+    //     activityhead?.add(v);
+    //   });
+    // }
     // agreeBanner = json['agree_banner'] != null
     //     ? new AgreeBanner.fromJson(json['agree_banner'])
     //     : null;
@@ -184,7 +184,7 @@ class ForumHomeInfo {
         throw Exception("未知形态frs_tab_info");
       }
     }
-    frsTabDefault = json['frs_tab_default'];
+    frsTabDefault = json['frs_tab_default'].toString();
     alaLiveCount = json['ala_live_count'];
     if (json['recom_post_topic'] != null) {
       recomPostTopic = [];
@@ -204,11 +204,11 @@ class ForumHomeInfo {
         bannerThreadList?.add(v);
       });
     }
-    showAdsense = json['show_adsense'];
+    // showAdsense = json['show_adsense'];
     aspShownInfo = json['asp_shown_info'];
     twzhiboPos = json['twzhibo_pos'];
-    sortType = json['sort_type'];
-    needLog = json['need_log'];
+    sortType = json['sort_type'].toString();
+    // needLog = json['need_log'];
     partialVisibleToast = json['partial_visible_toast'];
     if (json['user_list'] != null) {
       userList = [];
@@ -222,11 +222,11 @@ class ForumHomeInfo {
         frsGameTabInfo?.add(v);
       });
     }
-    serverTime = json['server_time'];
+    serverTime = json['server_time'].toString();
     time = (json['time'] as num).toInt();
     ctime = json['ctime'];
     logid = (json['logid'] as num).toInt();
-    errorCode = json['error_code'];
+    errorCode = json['error_code'].toString();
     for (var thread in threadList ?? []) {
       for (var user in userList ?? []) {
         if (thread.authorId == user.id) {
@@ -455,56 +455,60 @@ class ForumThreadList implements ThreadRecommendSummary {
     this.tabName,
   });
   ForumThreadList.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    tid = json['tid'];
-    nid = json['nid'];
-    threadId = json['thread_id'];
-    originalTid = json['original_tid'];
+    author = Author.fromJson(json["author"]);
+    id = json['id'].toString();
+    tid = json['tid'].toString();
+    nid = json['nid'].toString();
+    threadId = json['thread_id'].toString();
+    originalTid = json['original_tid'].toString();
     title = json['title'];
-    replyNum = json['reply_num'];
-    viewNum = json['view_num'];
-    lastTime = json['last_time'];
-    lastTimeInt = json['last_time_int'];
-    threadTypes = json['thread_types'];
-    createTime = json['create_time'];
+    replyNum = json['reply_num'].toString();
+    viewNum = json['view_num'].toString();
+    lastTime = json['last_time'].toString();
+    lastTimeInt = json['last_time_int'].toString();
+    threadTypes = json['thread_types'].toString();
+    createTime = json['create_time'].toString();
     tShareImg = json['t_share_img'];
-    agreeNum = json['agree_num'];
-    disagreeNum = json['disagree_num'];
-    isPartialVisible = json['is_partial_visible'];
-    shareNum = json['share_num'];
-    isProThread = json['is_pro_thread'];
-    tiebaplusCantDelete = json['tiebaplus_cant_delete'];
-    if (json['first_post_content'] != "") {
+    agreeNum = json['agree_num'].toString();
+    disagreeNum = json['disagree_num'].toString();
+    isPartialVisible = json['is_partial_visible'].toString();
+    shareNum = json['share_num'].toString();
+    isProThread = json['is_pro_thread'].toString();
+    tiebaplusCantDelete = json['tiebaplus_cant_delete'].toString();
+    if (json['first_post_content'] != "" &&
+        json['first_post_content'] != null) {
       firstPostContent = [];
       json['first_post_content'].forEach((v) {
         firstPostContent?.add(FirstPostContent.fromJson(v));
       });
     }
     topAgreePostId = json['top_agree_post_id'];
-    isTop = json['is_top'];
-    isGood = json['is_good'];
-    isNtitle = json['is_ntitle'];
-    isMembertop = json['is_membertop'];
-    isNovel = json['is_novel'];
-    isNovelThank = json['is_novel_thank'];
-    isNovelReward = json['is_novel_reward'];
-    isBookChapter = json['is_book_chapter'];
+    isTop = json['is_top'].toString();
+    isGood = json['is_good'].toString();
+    isNtitle = json['is_ntitle'].toString();
+    isMembertop = json['is_membertop'].toString();
+    isNovel = json['is_novel'].toString();
+    isNovelThank = json['is_novel_thank'].toString();
+    isNovelReward = json['is_novel_reward'].toString();
+    isBookChapter = json['is_book_chapter'].toString();
     // if (json['book_chapter'] != null) {
     //   bookChapter = [];
     //   json['book_chapter'].forEach((v) {
     //     bookChapter.add(v);
     //   });
     // }
-    isNotice = json['is_notice'];
-    commentNum = json['comment_num'];
-    isProtal = json['is_protal'];
-    isBakan = json['is_bakan'];
-    isVote = json['is_vote'];
-    mediaNum = json['media_num'] == "" ? null : json['media_num'];
+    isNotice = json['is_notice'].toString();
+    commentNum = json['comment_num'].toString();
+    isProtal = json['is_protal'].toString();
+    isBakan = json['is_bakan'].toString();
+    isVote = json['is_vote'].toString();
+    mediaNum = json['media_num'] == "" && json['media_num'] == null
+        ? null
+        : json['media_num'];
     meizhiPic = json['meizhi_pic'];
     if (json['media'] != "") {
       media = [];
-      json['media'].forEach((v) {
+      json['media']?.forEach((v) {
         media?.add(Media.fromJson(v));
       });
     }
@@ -523,24 +527,26 @@ class ForumThreadList implements ThreadRecommendSummary {
     //   });
     // }
     isVoiceThread = json['is_voice_thread'];
-    threadType = json['thread_type'];
+    threadType = json['thread_type'].toString();
     if (json['voice_info'] is String && json['voice_info'] != "") {
       voiceInfo = [];
       json['voice_info'].forEach((v) {
         voiceInfo?.add(v);
       });
     }
-    isActivity = json['is_activity'];
-    agree = json['agree'] != "" ? Agree.fromJson(json['agree']) : null;
-    fid = json['fid'];
-    postList = json['post_list'];
-    authorId = json['author_id'];
-    tabId = json['tab_id'];
+    isActivity = json['is_activity'].toString();
+    agree = json['agree'] != "" && json["agree"] != null
+        ? Agree.fromJson(json['agree'])
+        : null;
+    fid = json['fid'].toString();
+    postList = json['post_list'].toString();
+    authorId = json['author_id'].toString();
+    tabId = json['tab_id'].toString();
     tabName = json['tab_name'];
-    videoInfo = json['video_info'] != ""
+    videoInfo = json['video_info'] != "" && json['video_info'] != null
         ? VideoInfo.fromJson(json['video_info'])
         : null;
-    userId = json['user_id'];
+    userId = json['user_id'].toString();
     fname = json['fname'];
 
     agree = Agree(agreeNum: agreeNum, disagreeNum: disagreeNum);
@@ -672,7 +678,7 @@ class Abstract {
   Abstract({this.type, this.text});
 
   Abstract.fromJson(Map<String, dynamic> json) {
-    type = json['type'];
+    type = json['type'].toString();
     text = json['text'];
   }
 
@@ -783,22 +789,22 @@ class Forum {
     //   });
     // }
     accelerateCotent = json['accelerate_cotent'];
-    canUseAccelerate = json['can_use_accelerate'];
-    id = json['id'];
+    canUseAccelerate = json['can_use_accelerate'].toString();
+    id = json['id'].toString();
     name = json['name'];
     fShareImg = json['f_share_img'];
     firstClass = json['first_class'];
     secondClass = json['second_class'];
-    isLike = json['is_like'];
-    userLevel = json['user_level'];
-    levelId = json['level_id'];
+    isLike = json['is_like'].toString();
+    userLevel = json['user_level'].toString();
+    levelId = json['level_id'].toString();
     levelName = json['level_name'];
-    curScore = json['cur_score'];
-    levelupScore = json['levelup_score'];
-    memberNum = json['member_num'];
-    isExists = json['is_exists'];
-    threadNum = json['thread_num'];
-    postNum = json['post_num'];
+    curScore = json['cur_score'].toString();
+    levelupScore = json['levelup_score'].toString();
+    memberNum = json['member_num'].toString();
+    isExists = json['is_exists'].toString();
+    threadNum = json['thread_num'].toString();
+    postNum = json['post_num'].toString();
     if (json['good_classify'] != null) {
       goodClassify = [];
       json['good_classify'].forEach((v) {
@@ -814,15 +820,15 @@ class Forum {
     signInInfo = json['sign_in_info'] != null
         ? SignInInfo.fromJson(json['sign_in_info'])
         : null;
-    albumOpenPhotoFrs = json['album_open_photo_frs'];
-    isReadonly = json['is_readonly'];
-    isSearchPeople = json['is_search_people'];
-    isStageForum = json['is_stage_forum'];
+    albumOpenPhotoFrs = json['album_open_photo_frs'].toString();
+    isReadonly = json['is_readonly'].toString();
+    isSearchPeople = json['is_search_people'].toString();
+    isStageForum = json['is_stage_forum'].toString();
     forumvipShowIcon = json['forumvip_show_icon'] != null
         ? ForumvipShowIcon.fromJson(json['forumvip_show_icon'])
         : null;
-    isLiveGameForum = json['is_live_game_forum'];
-    isNewGameForum = json['is_new_game_forum'];
+    isLiveGameForum = json['is_live_game_forum'].toString();
+    isNewGameForum = json['is_new_game_forum'].toString();
     forumGameLabel = json['forum_game_label'];
     // if (json['top_notice'] != null) {
     //   topNotice = new List<Null>();
@@ -833,7 +839,7 @@ class Forum {
     slogan = json['slogan'];
     avatar = json['avatar'];
     hasGame = json['has_game'];
-    hasFrsStar = json['has_frs_star'];
+    hasFrsStar = json['has_frs_star'].toString();
     // themeColor = json['theme_color'] != null
     //     ? new ThemeColor.fromJson(json['theme_color'])
     //     : null;
@@ -854,11 +860,11 @@ class Forum {
         : null;
     // banner =
     //     json['banner'] != null ? new Banner.fromJson(json['banner']) : null;
-    isShowAllTopThread = json['is_show_all_top_thread'];
+    isShowAllTopThread = json['is_show_all_top_thread'].toString();
     bannerList = json['banner_list'] != null
         ? BannerList.fromJson(json['banner_list'])
         : null;
-    tids = json['tids'];
+    tids = json['tids'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -944,7 +950,7 @@ class GoodClassify {
   GoodClassify({this.classId, this.className});
 
   GoodClassify.fromJson(Map<String, dynamic> json) {
-    classId = json['class_id'];
+    classId = json['class_id'].toString();
     className = json['class_name'];
   }
 
@@ -965,7 +971,7 @@ class Managers {
   Managers({this.id, this.name, this.showName, this.portrait});
 
   Managers.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     name = json['name'];
     showName = json['show_name'];
     portrait = json['portrait'];
@@ -1035,17 +1041,17 @@ class ForumUserInfo {
       this.missSignNum});
 
   ForumUserInfo.fromJson(Map<String, dynamic> json) {
-    userId = json['user_id'];
-    isSignIn = json['is_sign_in'];
-    userSignRank = json['user_sign_rank'];
-    signTime = json['sign_time'];
-    contSignNum = json['cont_sign_num'];
-    coutTotalSingNum = json['cout_total_sing_num'];
-    hunSignNum = json['hun_sign_num'];
-    totalResignNum = json['total_resign_num'];
-    isOrgDisabled = json['is_org_disabled'];
-    cSignNum = json['c_sign_num'];
-    missSignNum = json['miss_sign_num'];
+    userId = json['user_id'].toString();
+    isSignIn = json['is_sign_in'].toString();
+    userSignRank = json['user_sign_rank'].toString();
+    signTime = json['sign_time'].toString();
+    contSignNum = json['cont_sign_num'].toString();
+    coutTotalSingNum = json['cout_total_sing_num'].toString();
+    hunSignNum = json['hun_sign_num'].toString();
+    totalResignNum = json['total_resign_num'].toString();
+    isOrgDisabled = json['is_org_disabled'].toString();
+    cSignNum = json['c_sign_num'].toString();
+    missSignNum = json['miss_sign_num'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1073,8 +1079,8 @@ class ForumInfo {
   ForumInfo({this.isOn, this.isFilter, this.currentRankInfo});
 
   ForumInfo.fromJson(Map<String, dynamic> json) {
-    isOn = json['is_on'];
-    isFilter = json['is_filter'];
+    isOn = json['is_on'].toString();
+    isFilter = json['is_filter'].toString();
     currentRankInfo = json['current_rank_info'] != null
         ? CurrentRankInfo.fromJson(json['current_rank_info'])
         : null;
@@ -1098,8 +1104,8 @@ class CurrentRankInfo {
   CurrentRankInfo({this.signCount, this.signRank});
 
   CurrentRankInfo.fromJson(Map<String, dynamic> json) {
-    signCount = json['sign_count'];
-    signRank = json['sign_rank'];
+    signCount = json['sign_count'].toString();
+    signRank = json['sign_rank'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1236,9 +1242,9 @@ class TagInfo {
   TagInfo({this.tagId, this.tagName, this.color});
 
   TagInfo.fromJson(Map<String, dynamic> json) {
-    tagId = json['tag_id'];
+    tagId = json['tag_id'].toString();
     tagName = json['tag_name'];
-    color = json['color'];
+    color = json['color'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1637,7 +1643,7 @@ class GconAccount {
   GconAccount({this.hasAccount, this.menuName});
 
   GconAccount.fromJson(Map<String, dynamic> json) {
-    hasAccount = json['has_account'];
+    hasAccount = json['has_account'].toString();
     menuName = json['menu_name'];
   }
 
@@ -1697,20 +1703,20 @@ class Anti {
 
   Anti.fromJson(Map<String, dynamic> json) {
     tbs = json['tbs'];
-    ifpost = json['ifpost'];
-    ifposta = json['ifposta'];
-    forbidFlag = json['forbid_flag'];
-    forbidInfo = json['forbid_info'];
-    hideStat = json['hide_stat'];
-    vcodeStat = json['vcode_stat'];
-    daysTofree = json['days_tofree'];
-    hasChance = json['has_chance'];
-    ifxiaoying = json['ifxiaoying'];
-    pollMessage = json['poll_message'];
-    videoMessage = json['video_message'];
-    videoLocalMessage = json['video_local_message'];
-    pollLevel = json['poll_level'];
-    blockStat = json['block_stat'];
+    ifpost = json['ifpost'].toString();
+    ifposta = json['ifposta'].toString();
+    forbidFlag = json['forbid_flag'].toString();
+    forbidInfo = json['forbid_info'].toString();
+    hideStat = json['hide_stat'].toString();
+    vcodeStat = json['vcode_stat'].toString();
+    daysTofree = json['days_tofree'].toString();
+    hasChance = json['has_chance'].toString();
+    ifxiaoying = json['ifxiaoying'].toString();
+    pollMessage = json['poll_message'].toString();
+    videoMessage = json['video_message'].toString();
+    videoLocalMessage = json['video_local_message'].toString();
+    pollLevel = json['poll_level'].toString();
+    blockStat = json['block_stat'].toString();
     blockPopInfo = json['block_pop_info'] != null
         ? BlockPopInfo.fromJson(json['block_pop_info'])
         : null;
@@ -1720,10 +1726,10 @@ class Anti {
         delThreadText?.add(DelThreadText.fromJson(v));
       });
     }
-    multiDelthread = json['multi_delthread'];
-    ifvoice = json['ifvoice'];
+    multiDelthread = json['multi_delthread'].toString();
+    ifvoice = json['ifvoice'].toString();
     voiceMessage = json['voice_message'];
-    canGoods = json['can_goods'];
+    canGoods = json['can_goods'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1778,14 +1784,14 @@ class BlockPopInfo {
       this.appealMsg});
 
   BlockPopInfo.fromJson(Map<String, dynamic> json) {
-    canPost = json['can_post'];
+    canPost = json['can_post'].toString();
     blockInfo = json['block_info'];
     aheadInfo = json['ahead_info'];
     aheadUrl = json['ahead_url'];
     okInfo = json['ok_info'];
-    aheadType = json['ahead_type'];
-    appealStatus = json['appeal_status'];
-    appealMsg = json['appeal_msg'];
+    aheadType = json['ahead_type'].toString();
+    appealStatus = json['appeal_status'].toString();
+    appealMsg = json['appeal_msg'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1809,7 +1815,7 @@ class DelThreadText {
   DelThreadText({this.textId, this.textInfo});
 
   DelThreadText.fromJson(Map<String, dynamic> json) {
-    textId = json['text_id'];
+    textId = json['text_id'].toString();
     textInfo = json['text_info'];
   }
 
@@ -1863,23 +1869,23 @@ class ForumUser {
   });
 
   ForumUser.fromJson(Map<String, dynamic> json) {
-    isLogin = json['is_login'];
-    id = json['id'];
+    isLogin = json['is_login'].toString();
+    id = json['id'].toString();
     name = json['name'];
     nameShow = json['name_show'];
     portrait = json['portrait'];
-    noUn = json['no_un'];
-    isManager = json['is_manager'];
-    type = json['type'];
-    userhide = json['userhide'];
+    noUn = json['no_un'].toString();
+    isManager = json['is_manager'].toString();
+    type = json['type'].toString();
+    userhide = json['userhide'].toString();
     balv = json['balv'] != null ? Balv.fromJson(json['balv']) : null;
-    isBawu = json['is_bawu'];
+    isBawu = json['is_bawu'].toString();
     bawuType = json['bawu_type'];
     bimgUrl = json['bimg_url'];
     iosBimgFormat = json['ios_bimg_format'];
-    isMem = json['is_mem'];
-    isSelectTail = json['is_select_tail'];
-    privThread = json['priv_thread'];
+    isMem = json['is_mem'].toString();
+    isSelectTail = json['is_select_tail'].toString();
+    privThread = json['priv_thread'].toString();
     // if (json['business_account_info'] != null) {
     //   businessAccountInfo = new List<Null>();
     //   json['business_account_info'].forEach((v) {
@@ -1925,9 +1931,9 @@ class Balv {
   Balv({this.isBlock, this.isBlack, this.daysTofree});
 
   Balv.fromJson(Map<String, dynamic> json) {
-    isBlock = json['is_block'];
-    isBlack = json['is_black'];
-    daysTofree = json['days_tofree'];
+    isBlock = json['is_block'].toString();
+    isBlack = json['is_black'].toString();
+    daysTofree = json['days_tofree'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -2260,14 +2266,14 @@ class ForumPage {
       this.curGoodId});
 
   ForumPage.fromJson(Map<String, dynamic> json) {
-    pageSize = json['page_size'];
-    offset = json['offset'];
-    currentPage = json['current_page'];
-    totalCount = json['total_count'];
-    totalPage = json['total_page'];
-    hasMore = json['has_more'];
-    hasPrev = json['has_prev'];
-    curGoodId = json['cur_good_id'];
+    pageSize = json['page_size'].toString();
+    offset = json['offset'].toString();
+    currentPage = json['current_page'].toString();
+    totalCount = json['total_count'].toString();
+    totalPage = json['total_page'].toString();
+    hasMore = json['has_more'].toString();
+    hasPrev = json['has_prev'].toString();
+    curGoodId = json['cur_good_id'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -2327,7 +2333,7 @@ class FrsStar {
   });
 
   FrsStar.fromJson(Map<String, dynamic> json) {
-    hasFrsStar = json['has_frs_star'];
+    hasFrsStar = json['has_frs_star'].toString();
     starForumHeadimg = json['star_forum_headimg'];
     top = json['top'];
     // topSize = json['top_size'];
@@ -2445,8 +2451,8 @@ class FrsTabInfo {
   FrsTabInfo.fromJson(Map<String, dynamic> json) {
     tabName = json['tab_name'];
     tabUrl = json['tab_url'];
-    tabType = json['tab_type'];
-    tabId = json['tab_id'];
+    tabType = json['tab_type'].toString();
+    tabId = json['tab_id'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -2534,13 +2540,13 @@ class UserList implements Author {
       this.ipAddress});
 
   UserList.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     portrait = json['portrait'];
     name = json['name'];
     nameShow = json['name_show'];
-    sex = json['sex'];
-    gender = json['gender'];
-    type = json['type'];
+    sex = json['sex'].toString();
+    gender = json['gender'].toString();
+    type = json['type'].toString();
     if (json['iconinfo'] != null && json['iconinfo'] != "") {
       iconinfo = [];
       json['iconinfo'].forEach((v) {
@@ -2560,8 +2566,8 @@ class UserList implements Author {
     //     newTshowIcon.add(new NewTshowIcon.fromJson(v));
     //   });
     // }
-    isMem = json['is_mem'];
-    fansNum = json['fans_num'];
+    isMem = json['is_mem'].toString();
+    fansNum = json['fans_num'].toString();
     fansNickname = json['fans_nickname'];
     if (json['god_data'] is List && json['god_data'].length == 0) {
       godData = "";
@@ -2581,8 +2587,8 @@ class UserList implements Author {
     //     tbVip.add(new Null.fromJson(v));
     //   });
     // }
-    levelID = json["level_id"];
-    isBawu = json['is_bawu'];
+    levelID = json["level_id"].toString();
+    isBawu = json['is_bawu'].toString();
     bawuType = json['bawu_type'];
     if (json['baijiahao_info'] is Map) {
       baijiahaoInfo = jsonEncode(json['baijiahao_info']);
@@ -2598,9 +2604,9 @@ class UserList implements Author {
     sealPrefix = json['seal_prefix'];
     isVideobiggie = json['is_videobiggie'];
     // bazhuGrade = json['bazhu_grade'];
-    displayAuthType = json['display_auth_type'];
+    displayAuthType = json['display_auth_type'].toString();
     // workCreatorInfo = json['work_creator_info'];
-    isDefaultAvatar = json['is_default_avatar'];
+    isDefaultAvatar = json['is_default_avatar'].toString();
     // newGodData = json['new_god_data'] != null
     //     ? new NewGodData.fromJson(json['new_god_data'])
     //     : null;

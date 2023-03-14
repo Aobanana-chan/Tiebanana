@@ -43,17 +43,18 @@ class ThreadRecommendSummary {
       this.videoInfo});
 
   ThreadRecommendSummary.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    tid = json['tid'];
+    id = json['id'].toString();
+    tid = json['tid'].toString();
     title = json['title'];
-    replyNum = json['reply_num'];
-    viewNum = json['view_num'];
-    lastTimeInt = json['last_time_int'];
-    createTime = json['create_time'];
+    replyNum = json['reply_num'].toString();
+    viewNum = json['view_num'].toString();
+    lastTimeInt = json['last_time_int'].toString();
+    createTime = json['create_time'].toString();
     userId = json['user_id'];
-    isDeleted = json['is_deleted'];
-    mediaNum =
-        json['media_num'] != "" ? MediaNum.fromJson(json['media_num']) : null;
+    isDeleted = json['is_deleted'].toString();
+    mediaNum = json['media_num'] != "" && json['media_num'] != null
+        ? MediaNum.fromJson(json['media_num'])
+        : null;
     author = json['author'] != null ? Author.fromJson(json['author']) : null;
     if (json['media'] != null) {
       media = <Media>[];
@@ -62,8 +63,8 @@ class ThreadRecommendSummary {
       });
     }
     agree = json['agree'] != null ? Agree.fromJson(json['agree']) : null;
-    shareNum = json['share_num'];
-    fid = json['fid'];
+    shareNum = json['share_num'].toString();
+    fid = json['fid'].toString();
     fname = json['fname'];
     if (json['first_post_content'] != null) {
       firstPostContent = <FirstPostContent>[];
@@ -156,9 +157,9 @@ class Author {
       this.iconinfo});
 
   Author.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     name = json['name'];
-    gender = json['gender'];
+    gender = json['gender'].toString();
     nameShow = json['name_show'];
     portrait = json['portrait'];
     if (json['iconinfo'] != null) {
@@ -247,19 +248,19 @@ class Media {
       this.vpic});
 
   Media.fromJson(Map<String, dynamic> json) {
-    type = json['type'];
-    width = json['width'];
-    height = json['height'];
+    type = json['type'].toString();
+    width = json['width'].toString();
+    height = json['height'].toString();
     showOriginalBtn = json['show_original_btn'];
     isLongPic = json['is_long_pic'];
     bigPic = json['big_pic'];
     dynamicPic = json['dynamic_pic'];
     srcPic = json['src_pic'];
     originPic = json['origin_pic'];
-    originSize = json['origin_size'];
-    postId = json['post_id'];
-    wthMidLoc = json['wth_mid_loc'];
-    hthMidLoc = json['hth_mid_loc'];
+    originSize = json['origin_size'].toString();
+    postId = json['post_id'].toString();
+    wthMidLoc = json['wth_mid_loc'].toString();
+    hthMidLoc = json['hth_mid_loc'].toString();
 
     size = json['size'];
 
@@ -316,11 +317,11 @@ class Agree {
       this.diffAgreeNum});
 
   Agree.fromJson(Map<String, dynamic> json) {
-    agreeNum = json['agree_num'];
-    hasAgree = json['has_agree'];
-    agreeType = json['agree_type'];
-    disagreeNum = json['disagree_num'];
-    diffAgreeNum = json['diff_agree_num'];
+    agreeNum = json['agree_num'].toString();
+    hasAgree = json['has_agree'].toString();
+    agreeType = json['agree_type'].toString();
+    disagreeNum = json['disagree_num'].toString();
+    diffAgreeNum = json['diff_agree_num'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -366,11 +367,11 @@ class FirstPostContent {
     //2 - 图片表情?
     //3 - 图片
     //5 - 视频
-    type = json['type'];
+    type = json['type'].toString();
     bsize = json['bsize'];
     size = json['size'];
     originSrc = json['origin_src'];
-    originSize = json['origin_size'];
+    originSize = json['origin_size'].toString();
     isLongPic = json['is_long_pic'];
     showOriginalBtn = json['show_original_btn'];
     cdnSrc = json['cdn_src'];
@@ -521,10 +522,10 @@ class VideoInfo {
     auditing = json['auditing'];
     formatMatched = json['format_matched'];
     ptid = json['ptid'];
-    thumbnailHeight = json['thumbnail_height'];
+    thumbnailHeight = json['thumbnail_height'].toString();
     thumbnailPicid = json['thumbnail_picid'];
     thumbnailUrl = json['thumbnail_url'];
-    thumbnailWidth = json['thumbnail_width'];
+    thumbnailWidth = json['thumbnail_width'].toString();
     versionH265 = json['version_h265'];
     if (json['video_desc'] != null) {
       videoDesc = [];
@@ -552,19 +553,19 @@ class VideoInfo {
         videoDescH265?.add(VideoDescH265.fromJson(v));
       });
     }
-    videoDuration = json['video_duration'];
+    videoDuration = json['video_duration'].toString();
     videoFormat = json['video_format'];
     videoFrom = json['video_from'];
-    videoHeight = json['video_height'];
-    videoLogId = json['video_log_id'];
+    videoHeight = json['video_height'].toString();
+    videoLogId = json['video_log_id'].toString();
     videoMd5 = json['video_md5'];
-    videoType = json['video_type'];
+    videoType = json['video_type'].toString();
     videoUrl = json['video_url'];
-    videoWidth = json['video_width'];
-    playCount = json['play_count'];
-    playTime = json['play_time'];
-    videoLength = json['video_length'];
-    isVertical = json['is_vertical'];
+    videoWidth = json['video_width'].toString();
+    playCount = json['play_count'].toString();
+    playTime = json['play_time'].toString();
+    videoLength = json['video_length'].toString();
+    isVertical = json['is_vertical'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -619,7 +620,7 @@ class VideoDesc {
 
   VideoDesc.fromJson(Map<String, dynamic> json) {
     videoHeight = json['video_height'];
-    videoId = json['video_id'];
+    videoId = json['video_id'].toString();
     videoSize = json['video_size'];
     videoUrl = json['video_url'];
     videoWidth = json['video_width'];

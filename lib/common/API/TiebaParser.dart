@@ -1,4 +1,4 @@
-// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names, use_build_context_synchronously
 
 import 'dart:io';
 
@@ -167,9 +167,9 @@ class TiebaParser {
             imageWidth: 18,
             actualText: "#(${elem.c})"));
       } else if (elem.type == "1" || elem.type == "18") {
-        if (Platform.isAndroid) {
-          WebView.platform = AndroidWebView();
-        }
+        // if (Platform.isAndroid) {
+        //   WebView.platform = AndroidWebView();
+        // }
         //type1-链接
         //type18-话题
         richText.add(TextSpan(
@@ -184,22 +184,38 @@ class TiebaParser {
                     false) {
                   Navigator.push(context,
                       CupertinoPageRoute(builder: (builder) {
-                    return WebView(
-                      // initialCookies: data,
-                      backgroundColor: Colors.white,
-                      initialUrl: elem.link,
-                      javascriptMode: JavascriptMode.unrestricted,
-                      navigationDelegate: (request) async {
-                        if (await AppUtil.urlRoute(
-                          true,
-                          context,
-                          request.url,
-                        )) {
-                          return NavigationDecision.prevent;
-                        }
+                    return WebViewWidget(
+                      controller: WebViewController()
+                        ..setBackgroundColor(Colors.white)
+                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                        ..setNavigationDelegate(NavigationDelegate(
+                            onNavigationRequest: (request) async {
+                          if (await AppUtil.urlRoute(
+                            true,
+                            context,
+                            request.url,
+                          )) {
+                            return NavigationDecision.prevent;
+                          }
 
-                        return NavigationDecision.navigate;
-                      },
+                          return NavigationDecision.navigate;
+                        }))
+                        ..loadRequest(Uri.parse(elem.link!)),
+                      // initialCookies: data,
+                      // backgroundColor: Colors.white,
+                      // initialUrl: elem.link,
+                      // javascriptMode: JavascriptMode.unrestricted,
+                      // navigationDelegate: (request) async {
+                      //   if (await AppUtil.urlRoute(
+                      //     true,
+                      //     context,
+                      //     request.url,
+                      //   )) {
+                      //     return NavigationDecision.prevent;
+                      //   }
+
+                      //   return NavigationDecision.navigate;
+                      // },
                     );
                   }));
                 }

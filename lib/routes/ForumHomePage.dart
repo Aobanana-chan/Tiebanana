@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -9,13 +10,13 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_notification/pull_to_refresh_notification.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
-import 'package:tiebanana/Widgets/ExtendedNestedScrollViewEx.dart';
 import 'package:tiebanana/Widgets/ForumHeader.dart';
 import 'package:tiebanana/Widgets/GlowNotificationWidget.dart';
 import 'package:tiebanana/Widgets/ThreadControlBar.dart';
 import 'package:tiebanana/Widgets/TopThread.dart';
 import 'package:tiebanana/Widgets/PushToRefreshHeader.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
+import 'package:tiebanana/Widgets/common/ExtendedNestedScrollViewWrapper.dart';
 import 'package:tiebanana/common/Global.dart';
 
 ///吧页面
@@ -46,6 +47,8 @@ class _ForumHomePageState extends State<ForumHomePage>
   late ThreadListProviderModel goodThreadList; //精品贴
 
   late RenderBox overlay;
+
+  final maxDragOffset = 80.0;
 
   void init() {
     pn = 1;
@@ -309,198 +312,203 @@ class _ForumHomePageState extends State<ForumHomePage>
                       builder: (context, commonThreadScrollView) {
                         return ChangeNotifierProvider.value(
                           value: goodThreadList,
-                          builder: (context, child) =>
-                              ExtendedNestedScrollViewEx(
-                            onlyOneScrollInBody: true,
-                            initStateCallback: (state) {
-                              innerController = state.innerController;
-                              outerController = state.outerController;
-                              state.innerController.addListener(() {
-                                if (threadState != null) {
-                                  //普通帖监听
-                                  if (innerController.positions
-                                          .toList()[0]
-                                          .pixels >
-                                      innerController.positions
-                                              .toList()[0]
-                                              .maxScrollExtent -
-                                          innerController.positions
-                                              .toList()[0]
-                                              .viewportDimension) {
-                                    Throttle.seconds(5, nextPage);
-                                    threadState?.call(() {});
-                                  } else if (innerController.positions
-                                          .toList()[0]
-                                          .pixels >
-                                      innerController.positions
-                                              .toList()[0]
-                                              .maxScrollExtent +
-                                          40) {
-                                    Throttle.seconds(5, nextPage);
-                                    threadState?.call(() {});
-                                  }
-                                  //精品贴监听
-                                  if (innerController.positions.length == 2) {
-                                    if (innerController.positions
-                                            .toList()[1]
-                                            .pixels >
-                                        innerController.positions
-                                                .toList()[1]
-                                                .maxScrollExtent -
-                                            innerController.positions
-                                                .toList()[1]
-                                                .viewportDimension) {
-                                      Throttle.seconds(5, nextPage);
-                                      threadState?.call(() {});
-                                    } else if (innerController.positions
-                                            .toList()[1]
-                                            .pixels >
-                                        innerController.positions
-                                                .toList()[1]
-                                                .maxScrollExtent +
-                                            40) {
-                                      Throttle.seconds(5, nextPage);
-                                      threadState?.call(() {});
-                                    }
-                                  }
-                                }
-                              });
-                            },
-                            floatHeaderSlivers: false,
-                            headerSliverBuilder: (context, innerBoxIsScrolled) {
-                              return <Widget>[
-                                SliverFlexibleHeader(
-                                  visibleExtent: 64,
-                                  builder: (BuildContext context,
-                                      double maxExtent,
-                                      ScrollDirection direction) {
-                                    if (maxExtent == 0) {
-                                      //使用回调安全更新
-                                      SchedulerBinding.instance
-                                          .addPostFrameCallback((timeStamp) {
-                                        Provider.of<APPBarTitle>(context,
-                                                listen: false)
-                                            .title = "${widget.kw}吧";
-                                      });
-                                    } else {
-                                      SchedulerBinding.instance
-                                          .addPostFrameCallback((timeStamp) {
-                                        Provider.of<APPBarTitle>(context,
-                                                listen: false)
-                                            .title = "";
-                                      });
-                                    }
-                                    return Opacity(
-                                      opacity: maxExtent / 64,
-                                      child: ForumHeader(
-                                        info: (snapshot.data as ForumHomeInfo)
-                                            .forum!,
-                                      ),
-                                    );
-                                  },
-                                ),
-                                SliverToBoxAdapter(
-                                  child: Consumer<GoodClassifyProviderModel>(
-                                    builder: (context, value, child) {
-                                      return ThreadControlBar(
-                                        classSelect: value.goodClassify,
-                                        showClass: value.shouldShow,
-                                        controller: tabbarController,
-                                        tabs: _tab,
-                                        goodClassify:
-                                            (snapshot.data as ForumHomeInfo)
-                                                .forum!
-                                                .goodClassify,
-                                        kw: widget.kw,
-                                        sortType: sortType,
-                                        changeSortType: changeSortType,
+                          builder: (context, child) => ExtendedNestedScrollView(
+                              onlyOneScrollInBody: true,
+                              floatHeaderSlivers: false,
+                              headerSliverBuilder:
+                                  (context, innerBoxIsScrolled) {
+                                return <Widget>[
+                                  SliverFlexibleHeader(
+                                    visibleExtent: 64,
+                                    builder: (BuildContext context,
+                                        double maxExtent,
+                                        ScrollDirection direction) {
+                                      if (maxExtent == 0) {
+                                        //使用回调安全更新
+                                        SchedulerBinding.instance
+                                            .addPostFrameCallback((timeStamp) {
+                                          Provider.of<APPBarTitle>(context,
+                                                  listen: false)
+                                              .title = "${widget.kw}吧";
+                                        });
+                                      } else {
+                                        SchedulerBinding.instance
+                                            .addPostFrameCallback((timeStamp) {
+                                          Provider.of<APPBarTitle>(context,
+                                                  listen: false)
+                                              .title = "";
+                                        });
+                                      }
+                                      return Opacity(
+                                        opacity: maxExtent / 64,
+                                        child: ForumHeader(
+                                          info: (snapshot.data as ForumHomeInfo)
+                                              .forum!,
+                                        ),
                                       );
                                     },
                                   ),
-                                ),
-                              ];
-                            },
-                            body: TabBarView(
-                              // physics: const BouncingScrollPhysics(),
-                              controller: tabbarController,
-                              children: [
-                                //普通帖列表
-                                commonThreadScrollView!,
-                                //精品贴列表
-                                KeepAliveWrapper(
-                                    child: PullToRefreshNotification(
-                                  onRefresh: () async {
-                                    goodThreadList.goodpn = 1;
-                                    goodThreadList.setList =
-                                        (await Global.tiebaAPI.getForumPage(
-                                                kw: widget.kw,
-                                                pn: goodThreadList.goodpn,
-                                                cid: goodClassify.goodClassify,
-                                                sortType: sortType,
-                                                isgood: true))
-                                            .threadList;
-
-                                    return true;
-                                  },
-                                  maxDragOffset: maxDragOffset,
-                                  child: GlowNotificationWidget(Column(
-                                    children: [
-                                      PullToRefreshContainer((info) {
-                                        final double offset =
-                                            info?.dragOffset ?? 0.0;
-                                        double width = min(48, offset);
-                                        return SizedBox(
-                                          height: offset,
-                                          width: width,
-                                          child: const Center(
-                                            child: RefreshProgressIndicator(
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                      Colors.blue),
-                                              strokeWidth: 2.0,
-                                            ),
-                                          ),
+                                  SliverToBoxAdapter(
+                                    child: Consumer<GoodClassifyProviderModel>(
+                                      builder: (context, value, child) {
+                                        return ThreadControlBar(
+                                          classSelect: value.goodClassify,
+                                          showClass: value.shouldShow,
+                                          controller: tabbarController,
+                                          tabs: _tab,
+                                          goodClassify:
+                                              (snapshot.data as ForumHomeInfo)
+                                                  .forum!
+                                                  .goodClassify,
+                                          kw: widget.kw,
+                                          sortType: sortType,
+                                          changeSortType: changeSortType,
                                         );
-                                      }),
-                                      Expanded(child:
-                                          Consumer<ThreadListProviderModel>(
-                                        builder: (context, value, child) {
-                                          return CustomScrollView(
-                                            // physics:
-                                            //     const BouncingScrollPhysics(),
-                                            slivers: <Widget>[
-                                              SliverList(
-                                                  delegate:
-                                                      SliverChildBuilderDelegate(
-                                                          (builder, index) {
-                                                //置顶帖
-                                                if (value.threadList![index]
-                                                        .isTop ==
-                                                    "1") {
-                                                  return TopThread(
-                                                      info: value
-                                                          .threadList![index]);
-                                                } else {
-                                                  //不是置顶帖
-                                                  return ThreadSummary(
-                                                      info: value
-                                                          .threadList![index]);
-                                                }
-                                              },
-                                                          childCount: value
-                                                                  .threadList
-                                                                  ?.length ??
-                                                              0))
-                                            ],
-                                          );
-                                        },
-                                      ))
-                                    ],
-                                  )),
-                                )),
-                              ],
-                            ),
-                          ),
+                                      },
+                                    ),
+                                  ),
+                                ];
+                              },
+                              body: ExtendedNestedScrollViewInject(
+                                initCallback: (state) {
+                                  innerController = state.innerController;
+                                  outerController = state.outerController;
+                                  state.innerController.addListener(() {
+                                    if (threadState != null) {
+                                      //普通帖监听
+                                      if (innerController.positions
+                                              .toList()[0]
+                                              .pixels >
+                                          innerController.positions
+                                                  .toList()[0]
+                                                  .maxScrollExtent -
+                                              innerController.positions
+                                                  .toList()[0]
+                                                  .viewportDimension) {
+                                        Throttle.seconds(5, nextPage);
+                                        threadState?.call(() {});
+                                      } else if (innerController.positions
+                                              .toList()[0]
+                                              .pixels >
+                                          innerController.positions
+                                                  .toList()[0]
+                                                  .maxScrollExtent +
+                                              40) {
+                                        Throttle.seconds(5, nextPage);
+                                        threadState?.call(() {});
+                                      }
+                                      //精品贴监听
+                                      if (innerController.positions.length ==
+                                          2) {
+                                        if (innerController.positions
+                                                .toList()[1]
+                                                .pixels >
+                                            innerController.positions
+                                                    .toList()[1]
+                                                    .maxScrollExtent -
+                                                innerController.positions
+                                                    .toList()[1]
+                                                    .viewportDimension) {
+                                          Throttle.seconds(5, nextPage);
+                                          threadState?.call(() {});
+                                        } else if (innerController.positions
+                                                .toList()[1]
+                                                .pixels >
+                                            innerController.positions
+                                                    .toList()[1]
+                                                    .maxScrollExtent +
+                                                40) {
+                                          Throttle.seconds(5, nextPage);
+                                          threadState?.call(() {});
+                                        }
+                                      }
+                                    }
+                                  });
+                                },
+                                child: TabBarView(
+                                  // physics: const BouncingScrollPhysics(),
+                                  controller: tabbarController,
+                                  children: [
+                                    //普通帖列表
+                                    commonThreadScrollView!,
+                                    //精品贴列表
+                                    KeepAliveWrapper(
+                                        child: PullToRefreshNotification(
+                                      onRefresh: () async {
+                                        goodThreadList.goodpn = 1;
+                                        goodThreadList.setList =
+                                            (await Global.tiebaAPI.getForumPage(
+                                                    kw: widget.kw,
+                                                    pn: goodThreadList.goodpn,
+                                                    cid: goodClassify
+                                                        .goodClassify,
+                                                    sortType: sortType,
+                                                    isgood: true))
+                                                .threadList;
+
+                                        return true;
+                                      },
+                                      maxDragOffset: maxDragOffset,
+                                      child: GlowNotificationWidget(Column(
+                                        children: [
+                                          PullToRefreshContainer((info) {
+                                            final double offset =
+                                                info?.dragOffset ?? 0.0;
+                                            double width = min(48, offset);
+                                            return SizedBox(
+                                              height: offset,
+                                              width: width,
+                                              child: const Center(
+                                                child: RefreshProgressIndicator(
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                          Color>(Colors.blue),
+                                                  strokeWidth: 2.0,
+                                                ),
+                                              ),
+                                            );
+                                          }),
+                                          Expanded(child:
+                                              Consumer<ThreadListProviderModel>(
+                                            builder: (context, value, child) {
+                                              return CustomScrollView(
+                                                // physics:
+                                                //     const BouncingScrollPhysics(),
+                                                slivers: <Widget>[
+                                                  SliverList(
+                                                      delegate:
+                                                          SliverChildBuilderDelegate(
+                                                              (builder, index) {
+                                                    //置顶帖
+                                                    if (value.threadList![index]
+                                                            .isTop ==
+                                                        "1") {
+                                                      return TopThread(
+                                                          info:
+                                                              value.threadList![
+                                                                  index]);
+                                                    } else {
+                                                      //不是置顶帖
+                                                      return ThreadSummary(
+                                                          info:
+                                                              value.threadList![
+                                                                  index]);
+                                                    }
+                                                  },
+                                                              childCount: value
+                                                                      .threadList
+                                                                      ?.length ??
+                                                                  0))
+                                                ],
+                                              );
+                                            },
+                                          ))
+                                        ],
+                                      )),
+                                    )),
+                                  ],
+                                ),
+                              )),
                         );
                       },
                     ),

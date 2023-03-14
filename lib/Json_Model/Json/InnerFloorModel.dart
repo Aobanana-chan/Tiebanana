@@ -24,7 +24,7 @@ class InnerFloorModel implements ThreadPageData {
   @override
   int? time;
   @override
-  int? ctime;
+  String? ctime;
   @override
   int? logid;
   @override

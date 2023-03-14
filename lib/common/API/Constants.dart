@@ -281,6 +281,10 @@ const String REMOVE_THREAD_STORE = "http://c.tieba.baidu.com/c/c/post/rmstore";
 const String SERVICE_CENTER =
     "http://tieba.baidu.com/n/apage-runtime/page/ueg_service_center";
 
+///获取音频
+///参数:voice_md5
+const String VOVICE_MESSAGE = "http://c.tieba.baidu.com/c/p/voice";
+
 ///不喜欢首页推荐贴 参数：
 ///
 ///BDUSS

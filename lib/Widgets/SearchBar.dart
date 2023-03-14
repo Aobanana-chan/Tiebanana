@@ -1,5 +1,4 @@
 import 'package:animate_do/animate_do.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
@@ -98,11 +97,11 @@ class _SearchBarState extends State<SearchBar> {
               },
               child: Container(
                 alignment: Alignment.center,
-                padding: EdgeInsets.all(4),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(width: 2.5, color: Colors.black)),
-                child: Text(
+                child: const Text(
                   "签",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
@@ -171,7 +170,7 @@ class _AnimatedDropDownState extends State<AnimatedDropDown>
   void initState() {
     super.initState();
     getHistory();
-    overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+    overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     bar = context.findAncestorStateOfType<_SearchBarState>();
     bar!.controller =
         AnimationController(duration: widget.duration, vsync: this);

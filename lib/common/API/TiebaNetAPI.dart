@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import 'package:dio/dio.dart';
-import 'package:dio/adapter.dart';
+import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
@@ -122,16 +122,16 @@ class TiebaAPI {
 
     //Debug模式下设置抓包调试
     if (runmode.kDebugMode) {
-      (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-          (client) {
-        client.findProxy = (uri) {
-          return "PROXY 10.0.2.2:10888";
+      dio.httpClientAdapter = IOHttpClientAdapter()
+        ..onHttpClientCreate = (client) {
+          client.findProxy = (uri) {
+            return "PROXY 10.0.2.2:10888";
+          };
+          //代理工具会提供一个抓包的自签名证书，会通不过证书校验，所以我们禁用证书校验
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
+          return null;
         };
-        //代理工具会提供一个抓包的自签名证书，会通不过证书校验，所以我们禁用证书校验
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-        return null;
-      };
     }
     //判断是否已经登陆
     if (await checkLogin()) {
@@ -1219,7 +1219,7 @@ class TiebaAPI {
             responseType: ResponseType.plain,
             headers: {"Content-Type": "application/x-www-form-urlencoded"}));
     var resJson = json5Decode(res.data);
-    if (resJson['error_code'] != "0") {
+    if (resJson['error_code'] != "0" && resJson['error_code'] != 0) {
       throw Exception("获取失败");
     }
     List<ThreadRecommendSummary> threads = [];
@@ -1337,10 +1337,11 @@ class TiebaAPI {
     args['sign'] = _signArgs(args);
     var res = await dio.post(GET_FORUM_PAGE,
         data: args,
-        options: Options(responseType: ResponseType.bytes, //这个bytes有点故事
+        options: Options(
+            responseType: ResponseType.plain,
             headers: {"Content-Type": "application/x-www-form-urlencoded"}));
-    var resJson = json5Decode(String.fromCharCodes(res.data));
-    if (resJson['error_code'] != "0") {
+    var resJson = json5Decode(res.data);
+    if (resJson['error_code'] != "0" && resJson['error_code'] != 0) {
       throw Exception("获取失败,${resJson["error_msg"]}");
     }
     return ForumHomeInfo.fromJson(resJson);
@@ -1392,7 +1393,7 @@ class TiebaAPI {
               "User-Agent": "bdtb for Android 9.9.8.32",
             }));
     var resJson = json5Decode(res.data);
-    if (resJson["error_code"] != "0") {
+    if (resJson["error_code"] != "0" && resJson["error_code"] != 0) {
       throw Exception(resJson["error_msg"]);
     }
     return ThreadPageData.fromJson(resJson);

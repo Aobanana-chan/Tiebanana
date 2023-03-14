@@ -66,15 +66,11 @@ class Global {
     //通知栏消息插件初始化
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const IOSInitializationSettings initializationSettingsIOS =
-        IOSInitializationSettings();
-    const MacOSInitializationSettings initializationSettingsMacOS =
-        MacOSInitializationSettings();
+
     const InitializationSettings initializationSettings =
         InitializationSettings(
-            android: initializationSettingsAndroid,
-            iOS: initializationSettingsIOS,
-            macOS: initializationSettingsMacOS);
+      android: initializationSettingsAndroid,
+    );
     await localNotifications.initialize(initializationSettings);
 
     //初始化贴吧API
@@ -117,11 +113,10 @@ class Global {
     AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(id.toString(), 'Tiebanana',
             channelDescription: 'Tiebanana notification', playSound: false);
-    IOSNotificationDetails iOSPlatformChannelSpecifics =
-        const IOSNotificationDetails();
+
     NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: iOSPlatformChannelSpecifics);
+      android: androidPlatformChannelSpecifics,
+    );
 
     await Global.localNotifications
         .show(id, title, body, platformChannelSpecifics);

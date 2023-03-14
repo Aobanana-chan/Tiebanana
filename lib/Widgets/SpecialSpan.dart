@@ -164,6 +164,7 @@ class _EmojiLoader extends StatelessWidget {
   }
 }
 
+///@用户的span
 class AtUserSpan extends TextSpan {
   //TODO:点击进入@的用户界面
   final String uid;

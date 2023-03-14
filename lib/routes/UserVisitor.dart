@@ -60,7 +60,9 @@ class _UserVisitorState extends State<UserVisitor> {
             ];
           },
           body: Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.white
+                : Theme.of(context).scaffoldBackgroundColor,
             child: _BottomView(
               uid: widget.uid,
               myLikeNum: userinfo?.user!.myLikeNum ?? "0",

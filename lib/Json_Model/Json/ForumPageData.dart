@@ -30,7 +30,7 @@ class ThreadPageData {
   List<PbSortInfo>? pbSortInfo;
   String? serverTime;
   int? time;
-  int? ctime;
+  String? ctime;
   int? logid;
   String? errorCode;
 
@@ -68,8 +68,8 @@ class ThreadPageData {
       this.errorCode});
 
   ThreadPageData.fromJson(Map<String, dynamic> json) {
-    hasFloor = json['has_floor'];
-    isNewUrl = json['is_new_url'];
+    hasFloor = json['has_floor'].toString();
+    isNewUrl = json['is_new_url'].toString();
     if (json['news_info'] != null) {
       newsInfo = [];
       json['news_info'].forEach((v) {
@@ -105,9 +105,9 @@ class ThreadPageData {
     // businessPromotInfo = json['business_promot_info'] != null
     //     ? new BusinessPromotInfo.fromJson(json['business_promot_info'])
     //     : null;
-    switchReadOpen = json['switch_read_open'];
-    isOfficialForum = json['is_official_forum'];
-    isPurchase = json['is_purchase'];
+    switchReadOpen = json['switch_read_open'].toString();
+    isOfficialForum = json['is_official_forum'].toString();
+    isPurchase = json['is_purchase'].toString();
     // twzhiboAnti = json['twzhibo_anti'] != null
     //     ? new TwzhiboAnti.fromJson(json['twzhibo_anti'])
     //     : null;
@@ -117,26 +117,26 @@ class ThreadPageData {
         sampleSidsTemp?.add(v);
       });
     }
-    showAdsense = json['show_adsense'];
-    isBlackWhite = json['is_black_white'];
+    showAdsense = json['show_adsense'].toString();
+    isBlackWhite = json['is_black_white'].toString();
     bannerList = json['banner_list'] != null
         ? BannerList.fromJson(json['banner_list'])
         : null;
-    hasFoldComment = json['has_fold_comment'];
+    hasFoldComment = json['has_fold_comment'].toString();
     partialVisibleToast = json['partial_visible_toast'];
     foldTip = json['fold_tip'];
-    sortType = json['sort_type'];
+    sortType = json['sort_type'].toString();
     if (json['pb_sort_info'] != null) {
       pbSortInfo = [];
       json['pb_sort_info'].forEach((v) {
         pbSortInfo?.add(PbSortInfo.fromJson(v));
       });
     }
-    serverTime = json['server_time'];
+    serverTime = json['server_time'].toString();
     time = (json['time'] as num).toInt();
-    ctime = json['ctime'];
-    logid = (json['logid'] as num).toInt();
-    errorCode = json['error_code'];
+    ctime = json['ctime'].toString();
+    logid = int.tryParse(json['logid']);
+    errorCode = json['error_code'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -269,14 +269,14 @@ class DisplayForum {
       this.isBrandForum});
 
   DisplayForum.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     name = json['name'];
-    isExists = json['is_exists'];
+    isExists = json['is_exists'].toString();
     avatar = json['avatar'];
     firstClass = json['first_class'];
     secondClass = json['second_class'];
-    isLiked = json['is_liked'];
-    isBrandForum = json['is_brand_forum'];
+    isLiked = json['is_liked'].toString();
+    isBrandForum = json['is_brand_forum'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -314,11 +314,11 @@ class ThreadUser {
       this.showPbPrivateFlag});
 
   ThreadUser.fromJson(Map<String, dynamic> json) {
-    isManager = json['is_manager'];
-    bimgEndTime = json['bimg_end_time'];
-    isSelectTail = json['is_select_tail'];
+    isManager = json['is_manager'].toString();
+    bimgEndTime = json['bimg_end_time'].toString();
+    isSelectTail = json['is_select_tail'].toString();
     muteUser = json['mute_user'];
-    leftCallNum = json['left_call_num'];
+    leftCallNum = json['left_call_num'].toString();
     // callFansInfo = json['call_fans_info'] != null
     //     ? new CallFansInfo.fromJson(json['call_fans_info'])
     //     : null;
@@ -468,17 +468,17 @@ class ThreadPage {
       this.hasPrev});
 
   ThreadPage.fromJson(Map<String, dynamic> json) {
-    reqNum = json['req_num'];
-    pageSize = json['page_size'];
-    offset = json['offset'];
-    currentPage = json['current_page'];
-    totalPage = json['total_page'];
-    totalNum = json['total_num'];
-    pnum = json['pnum'];
-    tnum = json['tnum'];
-    newTotalPage = json['new_total_page'];
-    hasMore = json['has_more'];
-    hasPrev = json['has_prev'];
+    reqNum = json['req_num'].toString();
+    pageSize = json['page_size'].toString();
+    offset = json['offset'].toString();
+    currentPage = json['current_page'].toString();
+    totalPage = json['total_page'].toString();
+    totalNum = json['total_num'].toString();
+    pnum = json['pnum'].toString();
+    tnum = json['tnum'].toString();
+    newTotalPage = json['new_total_page'].toString();
+    hasMore = json['has_more'].toString();
+    hasPrev = json['has_prev'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -583,17 +583,17 @@ class PostList {
       this.foldTip});
 
   PostList.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     title = json['title'];
-    floor = json['floor'];
-    time = json['time'];
+    floor = json['floor'].toString();
+    time = json['time'].toString();
     if (json['content'] != null) {
       content = [];
       json['content'].forEach((v) {
         content?.add(Content.fromJson(v));
       });
     }
-    subPostNumber = json['sub_post_number'];
+    subPostNumber = json['sub_post_number'].toString();
     if (json['sub_post_list'] is Map) {
       if (json['sub_post_list']['sub_post_list'] is List &&
           json['sub_post_list']['sub_post_list'].length > 0) {
@@ -609,7 +609,7 @@ class PostList {
     bimgUrl = json['bimg_url'];
     iosBimgFormat = json['ios_bimg_format'];
     addPostList = json['add_post_list'];
-    hasSignature = json['has_signature'];
+    hasSignature = json['has_signature'].toString();
     if (json['signature'] != null) {
       if (json['signature'] is Map) {
         signature = json['signature'] != null
@@ -649,13 +649,13 @@ class PostList {
     skinInfo = json['skin_info'];
     agree = json['agree'] != null ? Agree.fromJson(json['agree']) : null;
     fromForum = json['from_forum'];
-    isPostVisible = json['is_post_visible'];
-    isFirstFloor = json['is_first_floor'];
-    needLog = json['need_log'];
-    isFold = json['is_fold'];
-    isTopAgreePost = json['is_top_agree_post'];
-    showSquared = json['show_squared'];
-    isWonderfulPost = json['is_wonderful_post'];
+    isPostVisible = json['is_post_visible'].toString();
+    isFirstFloor = json['is_first_floor'].toString();
+    needLog = json['need_log'].toString();
+    isFold = json['is_fold'].toString();
+    isTopAgreePost = json['is_top_agree_post'].toString();
+    showSquared = json['show_squared'].toString();
+    isWonderfulPost = json['is_wonderful_post'].toString();
     item = json['item'];
     // outerItem = json['outer_item'];
     itemStar = json['item_star'];
@@ -663,7 +663,7 @@ class PostList {
     foldCommentStatus = json['fold_comment_status'];
     foldCommentApplyUrl = json['fold_comment_apply_url'];
     novelInfo = json['novel_info'];
-    authorId = json['author_id'];
+    authorId = json['author_id'].toString();
     foldTip = json['fold_tip'];
   }
 
@@ -743,6 +743,9 @@ class Content {
   String? uid;
   String? uname;
   String? link;
+  String? duringTime;
+  String? isSub;
+  String? voiceMd5;
   Content(
       {this.type,
       this.bsize,
@@ -760,22 +763,25 @@ class Content {
       this.c,
       this.uid,
       this.uname,
-      this.link});
+      this.link,
+      this.duringTime,
+      this.isSub,
+      this.voiceMd5});
 
   Content.fromJson(Map<String, dynamic> json) {
-    uid = json["uid"];
-    uname = json["uid"];
-    type = json['type'];
-    bsize = json['bsize'];
-    size = json['size'];
+    uid = json["uid"].toString();
+    uname = json["uid"].toString();
+    type = json['type'].toString();
+    bsize = json['bsize'].toString();
+    size = json['size'].toString();
     originSrc = json['origin_src'];
-    originSize = json['origin_size'];
-    isLongPic = json['is_long_pic'];
-    showOriginalBtn = json['show_original_btn'];
+    originSize = json['origin_size'].toString();
+    isLongPic = json['is_long_pic'].toString();
+    showOriginalBtn = json['show_original_btn'].toString();
     cdnSrc = json['cdn_src'];
     cdnSrcActive = json['cdn_src_active'];
     bigCdnSrc = json['big_cdn_src'];
-    isNativeApp = json['is_native_app'];
+    isNativeApp = json['is_native_app'].toString();
     if (json['native_app'] != null) {
       nativeApp = [];
       if (json['native_app'] is Map) {
@@ -793,6 +799,9 @@ class Content {
     text = json['text'];
     c = json['c'];
     link = json['link'];
+    duringTime = json['during_time'];
+    isSub = json['is_sub'];
+    voiceMd5 = json['voice_md5'];
   }
 
   Map<String, dynamic> toJson() {
@@ -816,6 +825,9 @@ class Content {
     data['text'] = text;
     data['c'] = c;
     data['link'] = link;
+    data['during_time'] = duringTime;
+    data['is_sub'] = isSub;
+    data['voice_md5'] = voiceMd5;
     return data;
   }
 }
@@ -835,7 +847,7 @@ class Signature {
         content?.add(Content.fromJson(v));
       });
     }
-    signatureId = json['signature_id'];
+    signatureId = json['signature_id'].toString();
     fontKeyName = json['fontKeyName'];
     fontColor = json['fontColor'];
   }
@@ -1017,19 +1029,19 @@ class Thread {
       this.isPartialVisible});
 
   Thread.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     title = json['title'];
-    replyNum = json['reply_num'];
-    collectStatus = json['collect_status'];
-    collectMarkPid = json['collect_mark_pid'];
+    replyNum = json['reply_num'].toString();
+    collectStatus = json['collect_status'].toString();
+    collectMarkPid = json['collect_mark_pid'].toString();
     author = json['author'] != null ? Author.fromJson(json['author']) : null;
-    isGood = json['is_good'];
-    isTop = json['is_top'];
+    isGood = json['is_good'].toString();
+    isTop = json['is_top'].toString();
     topic = json['topic'] != null ? Topic.fromJson(json['topic']) : null;
     zan = json['zan'] != null ? Zan.fromJson(json['zan']) : null;
-    postId = json['post_id'];
-    createTime = json['create_time'];
-    isNtitle = json['is_ntitle'];
+    postId = json['post_id'].toString();
+    createTime = json['create_time'].toString();
+    isNtitle = json['is_ntitle'].toString();
     if (json['location'] != null) {
       location = [];
       json['location'].forEach((v) {
@@ -1037,8 +1049,8 @@ class Thread {
       });
     }
     actInfo = json['act_info'];
-    isActivity = json['is_activity'];
-    lastTimeInt = json['last_time_int'];
+    isActivity = json['is_activity'].toString();
+    lastTimeInt = json['last_time_int'].toString();
     storecount = json['storecount'];
     livecoverSrc = json['livecover_src'];
     // twzhiboInfo = json['twzhibo_info'] != null
@@ -1050,9 +1062,9 @@ class Thread {
     }
 
     videoChannelInfo = json['video_channel_info'];
-    threadType = json['thread_type'];
+    threadType = json['thread_type'].toString();
     taskInfo = json['task_info'];
-    jid = json['jid'];
+    jid = json['jid'].toString();
     categoryName = json['category_name'];
     yulePostActivity = json['yule_post_activity'];
     extTails = json['ext_tails'];
@@ -1061,27 +1073,27 @@ class Thread {
     // originThreadInfo = json['origin_thread_info'] != null
     //     ? new OriginThreadInfo.fromJson(json['origin_thread_info'])
     //     : null;
-    isShareThread = json['is_share_thread'];
+    isShareThread = json['is_share_thread'].toString();
     richAbstract = json['rich_abstract'];
     declareList = json['declare_list'];
     agree = json['agree'] != null ? Agree.fromJson(json['agree']) : null;
-    isMultiforumThread = json['is_multiforum_thread'];
-    isLinkThread = json['is_link_thread'];
+    isMultiforumThread = json['is_multiforum_thread'].toString();
+    isLinkThread = json['is_link_thread'].toString();
     linkInfo = json['link_info'];
-    shareNum = json['share_num'];
-    isCalled = json['is_called'];
+    shareNum = json['share_num'].toString();
+    isCalled = json['is_called'].toString();
     swanInfo = json['swan_info'];
     noSmartPb = json['no_smart_pb'];
     tShareImg = json['t_share_img'];
-    isBazhuApply = json['is_bazhu_apply'];
+    isBazhuApply = json['is_bazhu_apply'].toString();
     threadShareLink = json['thread_share_link'];
-    nid = json['nid'];
+    nid = json['nid'].toString();
     pbLinkInfo = json['pb_link_info'];
     pbGoodsInfo = json['pb_goods_info'];
     // worksInfo = json['works_info'];
-    collectNum = json['collect_num'];
-    isFrsMask = json['is_frs_mask'];
-    isPartialVisible = json['is_partial_visible'];
+    collectNum = json['collect_num'].toString();
+    isFrsMask = json['is_frs_mask'].toString();
+    isPartialVisible = json['is_partial_visible'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1761,7 +1773,7 @@ class Topic {
   Topic({this.isLpost, this.link});
 
   Topic.fromJson(Map<String, dynamic> json) {
-    isLpost = json['is_lpost'];
+    isLpost = json['is_lpost'].toString();
     link = json['link'];
   }
 
@@ -1781,9 +1793,9 @@ class Zan {
   Zan({this.num, this.lastTime, this.isLiked});
 
   Zan.fromJson(Map<String, dynamic> json) {
-    num = json['num'];
-    lastTime = json['last_time'];
-    isLiked = json['is_liked'];
+    num = json['num'].toString();
+    lastTime = json['last_time'].toString();
+    isLiked = json['is_liked'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -2254,7 +2266,7 @@ class PbSortInfo {
 
   PbSortInfo.fromJson(Map<String, dynamic> json) {
     sortName = json['sort_name'];
-    sortType = json['sort_type'];
+    sortType = json['sort_type'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -2286,19 +2298,19 @@ class SubPostList {
       this.authorId});
 
   SubPostList.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     if (json['content'] != null) {
       content = [];
       json['content'].forEach((v) {
         content?.add(Content.fromJson(v));
       });
     }
-    time = json['time'];
+    time = json['time'].toString();
     ptype = json['ptype'];
-    floor = json['floor'];
+    floor = json['floor'].toString();
     title = json['title'];
-    isVoice = json['is_voice'];
-    authorId = json['author_id'];
+    isVoice = json['is_voice'].toString();
+    authorId = json['author_id'].toString();
   }
 
   Map<String, dynamic> toJson() {

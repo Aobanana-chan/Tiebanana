@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,9 +21,9 @@ class _ServiceCenterPageState extends State<ServiceCenterPage> {
   void initState() {
     super.initState();
 
-    if (Platform.isAndroid) {
-      WebView.platform = AndroidWebView();
-    }
+    // if (Platform.isAndroid) {
+    //   WebView.platform = AndroidWebView();
+    // }
   }
 
   // Future<List<WebViewCookie>> setCookie() async {
@@ -48,18 +50,30 @@ class _ServiceCenterPageState extends State<ServiceCenterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(title: const Text("服务中心")),
-        body: WebView(
+        body: WebViewWidget(
           // initialCookies: data,
-          backgroundColor: Colors.white,
-          initialUrl: SERVICE_CENTER,
-          javascriptMode: JavascriptMode.unrestricted,
-          navigationDelegate: (request) async {
-            if (await AppUtil.urlRoute(mounted, context, request.url)) {
-              return NavigationDecision.prevent;
-            }
+          controller: WebViewController()
+            ..setBackgroundColor(Colors.white)
+            ..setJavaScriptMode(JavaScriptMode.unrestricted)
+            ..setNavigationDelegate(
+                NavigationDelegate(onNavigationRequest: (request) async {
+              if (await AppUtil.urlRoute(mounted, context, request.url)) {
+                return NavigationDecision.prevent;
+              }
 
-            return NavigationDecision.navigate;
-          },
+              return NavigationDecision.navigate;
+            }))
+            ..loadRequest(Uri.parse(SERVICE_CENTER)),
+          // backgroundColor: Colors.white,
+          // initialUrl: SERVICE_CENTER,
+          // javascriptMode: JavascriptMode.unrestricted,
+          // navigationDelegate: (request) async {
+          //   if (await AppUtil.urlRoute(mounted, context, request.url)) {
+          //     return NavigationDecision.prevent;
+          //   }
+
+          //   return NavigationDecision.navigate;
+          // },
         )
 
         //  FutureBuilder(

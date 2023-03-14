@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:tiebanana/Callback/LifeTimeCallback.dart';
 import 'package:tiebanana/Widgets/common/AlterDialog.dart';
 import 'package:tiebanana/common/Config/Version.dart';

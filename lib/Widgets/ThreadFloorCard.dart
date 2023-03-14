@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -373,22 +375,39 @@ class InnerPost extends StatelessWidget {
                   Navigator.push(
                       context,
                       CupertinoPageRoute(
-                          builder: (builder) => WebView(
+                          builder: (builder) => WebViewWidget(
                                 // initialCookies: data,
-                                backgroundColor: Colors.white,
-                                initialUrl: content.link,
-                                javascriptMode: JavascriptMode.unrestricted,
-                                navigationDelegate: (request) async {
-                                  if (await AppUtil.urlRoute(
-                                    true,
-                                    context,
-                                    request.url,
-                                  )) {
-                                    return NavigationDecision.prevent;
-                                  }
+                                controller: WebViewController()
+                                  ..setBackgroundColor(Colors.white)
+                                  ..setJavaScriptMode(
+                                      JavaScriptMode.unrestricted)
+                                  ..setNavigationDelegate(NavigationDelegate(
+                                      onNavigationRequest: (request) async {
+                                    if (await AppUtil.urlRoute(
+                                      true,
+                                      context,
+                                      request.url,
+                                    )) {
+                                      return NavigationDecision.prevent;
+                                    }
 
-                                  return NavigationDecision.navigate;
-                                },
+                                    return NavigationDecision.navigate;
+                                  }))
+                                  ..loadRequest(Uri.parse(content.link!)),
+                                // backgroundColor: Colors.white,
+                                // initialUrl: content.link,
+                                // javascriptMode: JavascriptMode.unrestricted,
+                                // navigationDelegate: (request) async {
+                                //   if (await AppUtil.urlRoute(
+                                //     true,
+                                //     context,
+                                //     request.url,
+                                //   )) {
+                                //     return NavigationDecision.prevent;
+                                //   }
+
+                                //   return NavigationDecision.navigate;
+                                // },
                               )));
                 }
               }));
@@ -397,6 +416,12 @@ class InnerPost extends StatelessWidget {
           text: content.text!,
           style: TextStyle(fontSize: Global.setting.fontSize),
         ));
+      } else if (content.type == "4") {
+        //楼中楼@用户
+        w.add(AtUserSpan(context, text: content.text!, uid: content.uid!));
+      } else if (content.type == "10") {
+        //TODO:语音
+        // player
       } else {
         throw Exception("未知类型");
       }
@@ -416,9 +441,9 @@ class InnerPost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isAndroid) {
-      WebView.platform = AndroidWebView();
-    }
+    // if (Platform.isAndroid) {
+    //   WebView.platform = AndroidWebView();
+    // }
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
