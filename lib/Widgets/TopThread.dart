@@ -4,8 +4,11 @@ import 'package:tiebanana/routes/routes.dart';
 
 //置顶帖部件
 class TopThread extends StatelessWidget {
-  final ThreadRecommendSummary info;
-  const TopThread({Key? key, required this.info}) : super(key: key);
+  // final ThreadRecommendSummary info;
+  final String tid;
+  final String title;
+  const TopThread({Key? key, required this.tid, required this.title})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +22,7 @@ class TopThread extends StatelessWidget {
       child: MaterialButton(
         onPressed: () {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: ThreadPageRouterData(kz: info.tid!, pid: null));
+              arguments: ThreadPageRouterData(kz: tid, pid: null));
         },
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: const EdgeInsets.all(8),
@@ -38,7 +41,7 @@ class TopThread extends StatelessWidget {
                 child: Container(
               padding: const EdgeInsets.only(left: 5),
               child: Text(
-                info.title!,
+                title,
                 style: const TextStyle(fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
               ),

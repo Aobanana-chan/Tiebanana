@@ -8,6 +8,9 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 
+import '../Json_Model/WidgetModel/SearchForumModel.dart';
+import '../Json_Model/WidgetModel/SearchPostModel.dart';
+
 ///搜索页面
 class SearchPage extends StatefulWidget {
   final String searchWords;
@@ -187,7 +190,7 @@ class _FourmSearchState extends State<FourmSearch> {
         // },
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverToBoxAdapter(
-            child: ForumCard(forum: f!),
+            child: ForumCard(forum: SearchForumWidgetModel.fromSearch(f!)),
           )
         ],
         body: Container(
@@ -196,7 +199,7 @@ class _FourmSearchState extends State<FourmSearch> {
               borderRadius: BorderRadius.circular(8),
               color: Theme.of(context).brightness == Brightness.light
                   ? Colors.white
-                  : Theme.of(context).backgroundColor),
+                  : Theme.of(context).colorScheme.background),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -209,7 +212,8 @@ class _FourmSearchState extends State<FourmSearch> {
                 // physics: const BouncingScrollPhysics(),
                 children: related
                     .map((e) => ForumCardRelated(
-                          searchForumModelForum: e,
+                          searchForumModelForum:
+                              SearchForumWidgetModel.fromSearch(e),
                         ))
                     .toList(),
               ))
@@ -222,7 +226,7 @@ class _FourmSearchState extends State<FourmSearch> {
         // physics: const BouncingScrollPhysics(),
         children: related
             .map((e) => ForumCardRelated(
-                  searchForumModelForum: e,
+                  searchForumModelForum: SearchForumWidgetModel.fromSearch(e),
                 ))
             .toList(),
       );
@@ -420,7 +424,7 @@ class _ThreadSearchState extends State<ThreadSearch> {
                 delegate: SliverChildBuilderDelegate(
                     (BuildContext context, int index) {
               return SearchThreadCard(
-                post: thread[index],
+                post: SearchPostWidgetModel.fromPostList(thread[index]),
               );
             }, childCount: thread.length))
           ],

@@ -34,10 +34,12 @@ class TiebaAPI {
   static Dio dio = Dio(BaseOptions(
     headers: {
       "User-Agent": ChromeUA,
-
-      // "Connection": "keep-alive",
     },
-    // receiveTimeout: 0x7FFFFFFFF
+  ));
+  static Dio dioWap = Dio(BaseOptions(
+    headers: {
+      "User-Agent": ChromeUA,
+    },
   ));
   late PersistCookieJar _cookieJar;
 
@@ -119,10 +121,25 @@ class TiebaAPI {
     _cookieJar =
         PersistCookieJar(storage: FileStorage("${cookiedir.path}/cookies/"));
     dio.interceptors.add(CookieManager(_cookieJar));
+    dioWap.interceptors.add(CookieManager(_cookieJar));
+
+    //添加拦截器
+    dioWap.interceptors
+        .addAll([UserInfoInterceptors(), AutoSignInterceptors()]);
 
     //Debug模式下设置抓包调试
     if (runmode.kDebugMode) {
       dio.httpClientAdapter = IOHttpClientAdapter()
+        ..onHttpClientCreate = (client) {
+          client.findProxy = (uri) {
+            return "PROXY 10.0.2.2:10888";
+          };
+          //代理工具会提供一个抓包的自签名证书，会通不过证书校验，所以我们禁用证书校验
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
+          return null;
+        };
+      dioWap.httpClientAdapter = IOHttpClientAdapter()
         ..onHttpClientCreate = (client) {
           client.findProxy = (uri) {
             return "PROXY 10.0.2.2:10888";
@@ -1060,30 +1077,6 @@ class TiebaAPI {
 
   String getTraceID() => _getTraceID();
 
-  //map按照key的字典顺序排序
-  Map<String, dynamic> _mapSrot(Map<String, dynamic> map) {
-    var keys = map.keys.toList();
-    // key排序
-    keys.sort((a, b) {
-      List<int> al = a.codeUnits;
-      List<int> bl = b.codeUnits;
-      for (int i = 0; i < al.length; i++) {
-        if (bl.length <= i) return 1;
-        if (al[i] > bl[i]) {
-          return 1;
-        } else if (al[i] < bl[i]) {
-          return -1;
-        }
-      }
-      return 0;
-    });
-    var sortedMap = <String, dynamic>{};
-    for (var element in keys) {
-      sortedMap[element] = map[element];
-    }
-    return sortedMap;
-  }
-
   //获取随机参数
   Future<String> _getTBS() async {
     return await _tbsMagager.getTBS();
@@ -1147,11 +1140,10 @@ class TiebaAPI {
       "net_type": 1,
       "tbs": await _getTBS()
     };
-    args["sign"] = _signArgs(args);
     Response res;
     Map<String, dynamic> resJson;
     try {
-      res = await dio.post(FORUM_SIGN_IN,
+      res = await dioWap.post(FORUM_SIGN_IN,
           data: args,
           options: Options(headers: {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -1180,17 +1172,6 @@ class TiebaAPI {
     return resJson;
   }
 
-  ///sign签名算法
-  String _signArgs(Map<String, dynamic> map) {
-    var sortedmap = _mapSrot(map);
-    var str = "";
-    for (var key in sortedmap.keys) {
-      str += "$key=${sortedmap[key]}";
-    }
-    str += "tiebaclient!!!";
-    return md5.convert(utf8.encode(str)).toString();
-  }
-
   ///主页-获取动态贴
   ///
   ///[pageThreadCount]一页有多少帖子
@@ -1201,19 +1182,17 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "page_thread_count": pageThreadCount,
       "pn": pn,
       "pre_ad_thread_count": 0,
       "request_time": DateTime.now().millisecondsSinceEpoch,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "invoke_source": "",
       "load_type": 1,
       "_client_version": "8.0.8.0",
     };
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(FORUM_DYNMANIC,
+    var res = await dioWap.post(FORUM_DYNMANIC,
         data: args,
         options: Options(
             responseType: ResponseType.plain,
@@ -1240,14 +1219,12 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "pn": pn,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "_client_version": "8.2.2",
     };
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(GET_REPLY,
+    var res = await dioWap.post(GET_REPLY,
         data: args,
         options: Options(
             responseType: ResponseType.plain,
@@ -1267,14 +1244,12 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "pn": pn,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "_client_version": "8.2.2",
     };
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(GET_ATME,
+    var res = await dioWap.post(GET_ATME,
         data: args,
         options: Options(
             responseType: ResponseType.plain,
@@ -1321,12 +1296,11 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "kw": kw,
       "pn": pn,
       "rn": rn,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "_client_version": "8.2.2",
       "sort_type": sortType
     };
@@ -1334,8 +1308,7 @@ class TiebaAPI {
       args["is_good"] = "1";
       args["cid"] = cid;
     }
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(GET_FORUM_PAGE,
+    var res = await dioWap.post(GET_FORUM_PAGE,
         data: args,
         options: Options(
             responseType: ResponseType.plain,
@@ -1357,25 +1330,16 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.24.1.0",
-      "_phone_imei": "000000000000000",
       "back": "0",
-      "cuid": "baidutiebaapp${const Uuid().v4()}",
-      "cuid_galaxy2": "",
-      "cuid_gid": "",
       "floor_rn": "3",
       "kz": kz,
       "lz": onlyLz ? "1" : "0",
       "mark": "0",
-      "net_type": "1",
       // "pn": pn,
       "rn": rn,
       "st_type": "tb_frslist",
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "with_floor": "1",
     };
     if (pid == null) {
@@ -1383,8 +1347,7 @@ class TiebaAPI {
     } else {
       args["pid"] = pid;
     }
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(F_PAGE,
+    var res = await dioWap.post(F_PAGE,
         data: args,
         options: Options(
             responseType: ResponseType.plain,
@@ -1417,13 +1380,7 @@ class TiebaAPI {
     }
     var args = {
       "BDUSS": bduss,
-      "_client_version": "12.15.1.0",
-      "_phone_imei": "000000000000000",
       "agree_type": agreeType,
-      "c3_aid": "",
-      "cuid": "baidutiebaapp${const Uuid().v4()}",
-      "cuid_galaxy2": "",
-      "cuid_gid": "",
       "obj_type": objType,
       "op_type": opType,
       "post_id": postID,
@@ -1431,11 +1388,8 @@ class TiebaAPI {
       "stoken": stoken,
       "tbs": await _tbsMagager.getTBS(),
       "thread_id": threadID,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
-
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(AGREE_URL,
+    var res = await dioWap.post(AGREE_URL,
         data: args,
         options: Options(
           responseType: ResponseType.plain,
@@ -1512,22 +1466,14 @@ class TiebaAPI {
     }
     var args = {
       "BDUSS": bduss,
-      "_client_type": "2",
-      "_client_version": "12.15.1.0",
-      "_phone_imei": "000000000000000",
       "active_timestamp": DateTime.now().millisecondsSinceEpoch,
       "anonymous": "1",
       "authsid": "null",
       "baiduid": baiduID,
       "barrage_time": "0",
-      "brand": "Android",
-      "c3_aid": "",
       "can_no_forum": "0",
       "cmode": "1",
       "content": content,
-      "cuid": "baidutiebaapp${const Uuid().v4()}",
-      "cuid_galaxy2": "",
-      "cuid_gid": "",
       "entrance_type": "0",
       "fid": fid,
       "is_ad": "0",
@@ -1540,12 +1486,10 @@ class TiebaAPI {
       "takephoto_num": photos == null ? 0 : photos.length,
       "tbs": await _tbsMagager.getTBS(),
       "tid": tid,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "v_fid": "",
       "v_fname": "",
     };
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(WAP_POST_REPLY,
+    var res = await dioWap.post(WAP_POST_REPLY,
         data: args,
         options: Options(
           responseType: ResponseType.plain,
@@ -1582,21 +1526,13 @@ class TiebaAPI {
     }
     var args = {
       "BDUSS": bduss,
-      "_client_type": "2",
-      "_client_version": "12.15.1.0",
-      "_phone_imei": "000000000000000",
       "active_timestamp": DateTime.now().millisecondsSinceEpoch,
       "anonymous": "1",
       "authsid": "null",
       "baiduid": baiduID,
-      "brand": "Android",
-      "c3_aid": "",
       "can_no_forum": "0",
       "cmode": "1",
       "content": content,
-      "cuid": "baidutiebaapp${const Uuid().v4()}",
-      "cuid_galaxy2": "",
-      "cuid_gid": "",
       "entrance_type": "0",
       "fid": fid,
       "is_ad": "0",
@@ -1611,15 +1547,13 @@ class TiebaAPI {
       "takephoto_num": photos == null ? 0 : photos.length,
       "tbs": await _tbsMagager.getTBS(),
       "tid": tid,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "v_fid": "null",
       "v_fname": "null",
       "floor_num": "0",
       "quote_id": floorId,
       "repostid": floorId
     };
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(WAP_POST_REPLY,
+    var res = await dioWap.post(WAP_POST_REPLY,
         data: args,
         options: Options(
           responseType: ResponseType.plain,
@@ -1638,16 +1572,13 @@ class TiebaAPI {
       {String spid = "", int pn = 1, int rn = 20}) async {
     var args = {
       "BDUSS": bduss,
-      "_client_version": "12.15.1.0",
       "kz": kz,
       "pn": pn,
       "rn": rn,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "pid": pid,
       "spid": spid
     };
-    args['sign'] = _signArgs(args);
-    var res = await dio.post(FLOOR_POST_URL,
+    var res = await dioWap.post(FLOOR_POST_URL,
         data: args,
         options: Options(
           responseType: ResponseType.plain,
@@ -1673,21 +1604,12 @@ class TiebaAPI {
     }
     var args = {
       "BDUSS": bduss,
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.15.1.0",
-      "_phone_imei": "000000000000000",
       "active_timestamp": DateTime.now().millisecondsSinceEpoch,
       "alt": "json",
       // "android_id": "", //
       "baiduid": baiduID,
-      "brand": "Android",
-      "c3_aid": "",
       "chunkNo": "1",
       "cmode": "1",
-      "cuid": "baidutiebaapp${const Uuid().v4()}",
-      "cuid_galaxy2": "",
-      "cuid_gid": "",
       // "event_day": "", //
       "forum_name": forumName,
       "height": file.height,
@@ -1700,25 +1622,21 @@ class TiebaAPI {
       "size": await (await file.file)!.length(),
       "small_flow_fname": forumName,
       "stoken": stoken,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
-    args['sign'] = _signArgs(args);
     args["chunk"] =
         await MultipartFile.fromFile((await file.file)!.path, filename: "file");
     var data = FormData.fromMap(args);
-    var res = await dio.post(WAP_UPLOAD_PICTURE, data: data);
+    var res = await dioWap.post(WAP_UPLOAD_PICTURE, data: data);
 
     return UploadImageModel.fromJson(json5Decode(res.data));
   }
 
   Future<SearchUserModel> searchUser(String keyword) async {
     var args = {
-      "_client_version": "12.15.1.0",
       "word": keyword,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
 
-    var res = await dio.get(WEB_SEARCH_USER, queryParameters: args);
+    var res = await dioWap.get(WEB_SEARCH_USER, queryParameters: args);
 
     return SearchUserModel.fromJson(res.data);
   }
@@ -1732,24 +1650,18 @@ class TiebaAPI {
     }
     var arg = {
       "BDUSS": bduss,
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.15.1.0",
-      "_phone_imei": "000000000000000",
       "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
       "is_thread": "1",
       "need_content": "1",
       "pn": pn,
       "rn": rn,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "uid": uid,
       "stoken": stoken,
       "is_view_card": 1,
       "q_type": 80
     };
-    arg['sign'] = _signArgs(arg);
-    var res = await dio.post(WAP_USER_POST,
+    var res = await dioWap.post(WAP_USER_POST,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1768,21 +1680,14 @@ class TiebaAPI {
     }
     var arg = {
       "BDUSS": bduss,
-      "_client_id": "",
-      "_client_type": "2",
       "_client_version": "7.2.0",
-      "_phone_imei": "000000000000000",
-      "cuid": "baidutiebaapp${const Uuid().v4()}",
-      "cuid_galaxy2": "",
       "is_thread": "0",
       "need_content": "1",
       "pn": pn,
       "rn": rn,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "uid": uid,
     };
-    arg['sign'] = _signArgs(arg);
-    var res = await dio.post(WAP_USER_POST,
+    var res = await dioWap.post(WAP_USER_POST,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1799,22 +1704,17 @@ class TiebaAPI {
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.15.1.0",
-      "_phone_imei": "000000000000000",
       "cuid": "",
       "cuid_galaxy2": "",
       "page": pn,
       "pn": pn,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "uid": uid,
       "need_post_count": "1",
       "q_type": "80",
       "is_from_usercenter": "0"
     };
-    arg['sign'] = _signArgs(arg);
-    var res = await dio.post(USER_PROFILE,
+
+    var res = await dioWap.post(USER_PROFILE,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1830,25 +1730,17 @@ class TiebaAPI {
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.24.1.0",
-      "_phone_imei": "000000000000000",
-      "cuid": "",
-      "cuid_galaxy2": "",
       "allow_guest": 1,
       "is_guest": uid == myUid ? "" : 1,
       "page_no": pn,
       "page_size": pageSize,
       "need_member": 1,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
       "uid": myUid,
       "friend_uid": uid == myUid ? "" : uid,
       "q_type": "80",
     };
-    arg['sign'] = _signArgs(arg);
 
-    var res = await dio.post(GET_USER_TIEBA,
+    var res = await dioWap.post(GET_USER_TIEBA,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1863,21 +1755,11 @@ class TiebaAPI {
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.24.1.0",
-      "_phone_imei": "000000000000000",
-      "cuid": "",
-      "cuid_galaxy2": "",
       "kw": forumName,
       "fid": fid,
       "forum_name": forumName,
-      // "user_id":
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
-    arg['sign'] = _signArgs(arg);
-
-    var res = await dio.post(LIKE_TIEBA_URL,
+    var res = await dioWap.post(LIKE_TIEBA_URL,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1892,18 +1774,10 @@ class TiebaAPI {
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.24.1.0",
-      "_phone_imei": "000000000000000",
-      "cuid": "",
-      "cuid_galaxy2": "",
       "kw": forumName,
       "fid": fid,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
-    arg['sign'] = _signArgs(arg);
-    var res = await dio.post(UNFAVO_TIEBA_URL_NEW,
+    var res = await dioWap.post(UNFAVO_TIEBA_URL_NEW,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1926,23 +1800,15 @@ class TiebaAPI {
   ///获取用户收藏贴API
   Future<ThreadStoreModel> getThreadStore(int offset, String myUid,
       {int rn = 20}) async {
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.24.1.0",
-      "_phone_imei": "000000000000000",
-      "cuid": "",
-      "cuid_galaxy2": "",
       "offset": offset,
       "rn": rn,
       "user_id": myUid,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
-    arg['sign'] = _signArgs(arg);
-    var res = await dio.post(USER_THREAD_STORE,
+    var res = await dioWap.post(USER_THREAD_STORE,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1961,18 +1827,9 @@ class TiebaAPI {
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.24.1.0",
-      "_phone_imei": "000000000000000",
-      "cuid": "",
-      "cuid_galaxy2": "",
       "data": jsonEncode([data]),
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
-    arg['sign'] = _signArgs(arg);
-
-    var res = await dio.post(ADD_THREAD_STORE,
+    var res = await dioWap.post(ADD_THREAD_STORE,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -1990,18 +1847,9 @@ class TiebaAPI {
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
-      "_client_id": "",
-      "_client_type": "2",
-      "_client_version": "12.24.1.0",
-      "_phone_imei": "000000000000000",
-      "cuid": "",
-      "cuid_galaxy2": "",
       "tid": tid,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
-    arg['sign'] = _signArgs(arg);
-
-    var res = await dio.post(REMOVE_THREAD_STORE,
+    var res = await dioWap.post(REMOVE_THREAD_STORE,
         data: arg,
         options: Options(
           responseType: ResponseType.plain,
@@ -2012,4 +1860,73 @@ class TiebaAPI {
         RemoveThreadStoreModel.fromJson(jsonDecode(res.data));
     return resJson;
   }
+}
+
+///签名拦截器
+class AutoSignInterceptors extends Interceptor {
+  ///sign签名算法
+  String _signArgs(Map<String, dynamic> map) {
+    var sortedmap = _mapSrot(map);
+    var str = "";
+    for (var key in sortedmap.keys) {
+      str += "$key=${sortedmap[key]}";
+    }
+    str += "tiebaclient!!!";
+    return md5.convert(utf8.encode(str)).toString();
+  }
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    var arg = options.data;
+    options.data['sign'] = _signArgs(arg);
+    super.onRequest(options, handler);
+  }
+}
+
+///Wap基本请求信息拦截器
+class UserInfoInterceptors extends Interceptor {
+  final imei = "000000000000000";
+  final version = "12.24.1.0";
+  final cuid = "baidutiebaapp${const Uuid().v4()}";
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    var baseInfo = {
+      "brand": "Android",
+      "_client_id": "",
+      "_client_type": "2",
+      "_client_version": options.data["_client_version"] ?? version,
+      "_phone_imei": options.data["_phone_imei"] ?? imei,
+      "cuid": cuid,
+      "net_type": "1",
+      "cuid_galaxy2": "",
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+    (options.data as Map).addAll(baseInfo);
+    super.onRequest(options, handler);
+  }
+}
+
+///map按照key的字典顺序排序
+Map<String, dynamic> _mapSrot(Map<String, dynamic> map) {
+  var keys = map.keys.toList();
+  // key排序
+  keys.sort((a, b) {
+    List<int> al = a.codeUnits;
+    List<int> bl = b.codeUnits;
+    for (int i = 0; i < al.length; i++) {
+      if (bl.length <= i) return 1;
+      if (al[i] > bl[i]) {
+        return 1;
+      } else if (al[i] < bl[i]) {
+        return -1;
+      }
+    }
+    return 0;
+  });
+  var sortedMap = <String, dynamic>{};
+  for (var element in keys) {
+    sortedMap[element] = map[element];
+  }
+  return sortedMap;
 }

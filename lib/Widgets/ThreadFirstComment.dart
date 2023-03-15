@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
-import 'package:tiebanana/Json_Model/json.dart';
+
 import 'package:tiebanana/Widgets/LikeButtonEx.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
@@ -9,12 +8,16 @@ import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
+import '../Json_Model/WidgetModel/ThreadPageModel.dart';
+
 ///帖子组件-楼主
 class ThreadFirstComment extends StatelessWidget {
   // final PostList postMain;
   final ThreadPagePost postMain;
-  final UserList author;
-  final VideoInfo? videoInfo;
+  final AuthorWidgetModel author;
+  final VedioInfoWidgetModel? videoInfo;
   final List<String> allImgs;
   final List<String> allOrgImgs;
   final String threadID;
@@ -62,7 +65,7 @@ class ThreadFirstComment extends StatelessWidget {
             child: Row(
               children: [
                 Avatar(
-                  imgUrl: AUTHOR_AVATAR + author.portrait!,
+                  imgUrl: AUTHOR_AVATAR + author.portrait,
                   height: 45,
                   width: 45,
                   onTap: () {
@@ -78,7 +81,7 @@ class ThreadFirstComment extends StatelessWidget {
                       children: <Widget>[
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text("${author.nameShow}"),
+                              child: Text(author.name),
                             ),
                           ] +
                           (TiebaParser.processIcon(author) ?? <Widget>[]) +
@@ -118,7 +121,7 @@ class ThreadFirstComment extends StatelessWidget {
                               maxHeight: 1000, maxWidth: 1000),
                           child: Visibility(
                               visible: postMain.lbsInfo != null,
-                              child: Text("${postMain.lbsInfo?.name}",
+                              child: Text("${postMain.lbsInfo}",
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                       color: Colors.grey, fontSize: 14))),

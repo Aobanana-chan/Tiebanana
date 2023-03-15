@@ -1,14 +1,12 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
-import 'package:tiebanana/Json_Model/json.dart';
+
+// import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/ThemeExtension/QuoteTheme.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
@@ -22,18 +20,22 @@ import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/json.dart';
 import '../common/Util/AppUtil.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
+import '../Json_Model/WidgetModel/ThreadPageModel.dart';
 
 ///帖子-楼层组件
 class ThreadFloorComment extends StatelessWidget {
   final ForumData forum;
   final ThreadPagePost postMain;
   // final SubPostList? subPostList;
-  final UserList author;
-  final VideoInfo? videoInfo;
+  final AuthorWidgetModel author;
+  final VedioInfoWidgetModel? videoInfo;
   final List<String> allImgs;
   final List<String> allOrgImgs;
-  final Map<String, UserList> userList;
+  final Map<String, AuthorWidgetModel> userList;
   final String threadID;
   const ThreadFloorComment({
     Key? key,
@@ -93,7 +95,7 @@ class ThreadFloorComment extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 0, vertical: 7),
                   child: Avatar(
-                    imgUrl: AUTHOR_AVATAR + author.portrait!,
+                    imgUrl: AUTHOR_AVATAR + author.portrait,
                     height: 35,
                     width: 35,
                     onTap: () {
@@ -160,7 +162,7 @@ class ThreadFloorComment extends StatelessWidget {
                                         maxHeight: 1000, maxWidth: 1000),
                                     child: Visibility(
                                         visible: postMain.lbsInfo != null,
-                                        child: Text("${postMain.lbsInfo?.name}",
+                                        child: Text("${postMain.lbsInfo}",
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                                 color: Colors.grey,
@@ -203,7 +205,7 @@ class ThreadFloorComment extends StatelessWidget {
                                   subPostList: postMain.subPostList,
                                   userlist: userList,
                                   subPostNumber: postMain.subPostNumber,
-                                  floorNum: postMain.floor!,
+                                  floorNum: postMain.floor.toString(),
                                   kz: threadID,
                                   pid: postMain.id,
                                   forum: forum,
@@ -226,7 +228,7 @@ class ThreadFloorComment extends StatelessWidget {
 
 ///楼中楼
 class InnerFloor extends StatelessWidget {
-  final Map<String, UserList> userlist;
+  final Map<String, AuthorWidgetModel> userlist;
   final List<SubPost> subPostList;
   final String subPostNumber;
   final String floorNum;
@@ -315,8 +317,8 @@ class InnerPost extends StatelessWidget {
   final String kz;
   final String pid;
   final String spid;
-  final Author author;
-  final List<Content> posts;
+  final AuthorWidgetModel author;
+  final List<PostContentBaseWidgetModel> posts;
   final ForumData forum;
   const InnerPost(
       {Key? key,
@@ -332,32 +334,124 @@ class InnerPost extends StatelessWidget {
     List<InlineSpan> w = [];
     w.add(AtUserSpan(
       context,
-      uid: author.id!,
-      text: "${author.nameShow ?? author.name} :",
+      uid: author.id,
+      text: "${author.name} :",
       style: const TextStyle(color: Colors.blue),
     ));
-    for (Content content in posts) {
+    // for (PostContentBaseWidgetModel content in posts) {
+    //   //用户
+    //   if (content.uid != null && content.type == "0") {
+    //     w.add(TextSpan(
+    //         text: "${content.text}",
+    //         style: const TextStyle(color: Colors.blue),
+    //         recognizer: TapGestureRecognizer()
+    //           ..onTap = () {
+    //             Navigator.pushNamed(context, PageRouter.user,
+    //                 arguments: content.uid);
+    //           }));
+    //   } else if (content.type == "0") {
+    //     w.add(TextSpan(
+    //       text: "${content.text}",
+    //     ));
+    //   } else if (content.type == "2") {
+    //     w.add(EmojiSpan(
+    //       content.text!,
+    //       imageWidth: Provider.of<APPSettingProvider>(context).fontSize + 2,
+    //       imageHeight: Provider.of<APPSettingProvider>(context).fontSize + 2,
+    //     ));
+    //   } else if (content.type == "1" || content.type == "18") {
+    //     w.add(TextSpan(
+    //         text: content.text,
+    //         style: TextStyle(
+    //             fontSize: Provider.of<APPSettingProvider>(context).fontSize,
+    //             fontWeight: FontWeight.bold,
+    //             color: Colors.blue),
+    //         recognizer: TapGestureRecognizer()
+    //           ..onTap = () async {
+    //             if (await AppUtil.urlRoute(
+    //                   true,
+    //                   context,
+    //                   content.link!,
+    //                 ) ==
+    //                 false) {
+    //               Navigator.push(
+    //                   context,
+    //                   CupertinoPageRoute(
+    //                       builder: (builder) => WebViewWidget(
+    //                             // initialCookies: data,
+    //                             controller: WebViewController()
+    //                               ..setBackgroundColor(Colors.white)
+    //                               ..setJavaScriptMode(
+    //                                   JavaScriptMode.unrestricted)
+    //                               ..setNavigationDelegate(NavigationDelegate(
+    //                                   onNavigationRequest: (request) async {
+    //                                 if (await AppUtil.urlRoute(
+    //                                   true,
+    //                                   context,
+    //                                   request.url,
+    //                                 )) {
+    //                                   return NavigationDecision.prevent;
+    //                                 }
+
+    //                                 return NavigationDecision.navigate;
+    //                               }))
+    //                               ..loadRequest(Uri.parse(content.link!)),
+    //                             // backgroundColor: Colors.white,
+    //                             // initialUrl: content.link,
+    //                             // javascriptMode: JavascriptMode.unrestricted,
+    //                             // navigationDelegate: (request) async {
+    //                             //   if (await AppUtil.urlRoute(
+    //                             //     true,
+    //                             //     context,
+    //                             //     request.url,
+    //                             //   )) {
+    //                             //     return NavigationDecision.prevent;
+    //                             //   }
+
+    //                             //   return NavigationDecision.navigate;
+    //                             // },
+    //                           )));
+    //             }
+    //           }));
+    //   } else if (content.type == "9") {
+    //     w.add(TextSpan(
+    //       text: content.text!,
+    //       style: TextStyle(fontSize: Global.setting.fontSize),
+    //     ));
+    //   } else if (content.type == "4") {
+    //     //楼中楼@用户
+    //     w.add(AtUserSpan(context, text: content.text!, uid: content.uid!));
+    //   } else if (content.type == "10") {
+    //     //TODO:语音
+    //     // player
+    //   } else {
+    //     throw Exception("未知类型");
+    //   }
+    // }
+    for (PostContentBaseWidgetModel content in posts) {
       //用户
-      if (content.uid != null && content.type == "0") {
-        w.add(TextSpan(
-            text: "${content.text}",
-            style: const TextStyle(color: Colors.blue),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () {
-                Navigator.pushNamed(context, PageRouter.user,
-                    arguments: content.uid);
-              }));
-      } else if (content.type == "0") {
-        w.add(TextSpan(
-          text: "${content.text}",
-        ));
-      } else if (content.type == "2") {
+      if (content is TextContentWidgetModel) {
+        if (content.uid != null) {
+          w.add(TextSpan(
+              text: content.text,
+              style: const TextStyle(color: Colors.blue),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  Navigator.pushNamed(context, PageRouter.user,
+                      arguments: content.uid);
+                }));
+        } else {
+          w.add(TextSpan(
+            text: content.text,
+          ));
+        }
+      } else if (content is EmojiContentWidgetModel) {
         w.add(EmojiSpan(
-          content.text!,
+          content.text,
           imageWidth: Provider.of<APPSettingProvider>(context).fontSize + 2,
           imageHeight: Provider.of<APPSettingProvider>(context).fontSize + 2,
         ));
-      } else if (content.type == "1" || content.type == "18") {
+      } else if (content is LinkContentWidgetModel) {
         w.add(TextSpan(
             text: content.text,
             style: TextStyle(
@@ -369,7 +463,7 @@ class InnerPost extends StatelessWidget {
                 if (await AppUtil.urlRoute(
                       true,
                       context,
-                      content.link!,
+                      content.link,
                     ) ==
                     false) {
                   Navigator.push(
@@ -393,32 +487,18 @@ class InnerPost extends StatelessWidget {
 
                                     return NavigationDecision.navigate;
                                   }))
-                                  ..loadRequest(Uri.parse(content.link!)),
-                                // backgroundColor: Colors.white,
-                                // initialUrl: content.link,
-                                // javascriptMode: JavascriptMode.unrestricted,
-                                // navigationDelegate: (request) async {
-                                //   if (await AppUtil.urlRoute(
-                                //     true,
-                                //     context,
-                                //     request.url,
-                                //   )) {
-                                //     return NavigationDecision.prevent;
-                                //   }
-
-                                //   return NavigationDecision.navigate;
-                                // },
+                                  ..loadRequest(Uri.parse(content.link)),
                               )));
                 }
               }));
-      } else if (content.type == "9") {
+      } else if (content is PhoneNumberContentWidgetModel) {
         w.add(TextSpan(
-          text: content.text!,
+          text: content.text,
           style: TextStyle(fontSize: Global.setting.fontSize),
         ));
-      } else if (content.type == "4") {
+      } else if (content is AtContentWidgetModel) {
         //楼中楼@用户
-        w.add(AtUserSpan(context, text: content.text!, uid: content.uid!));
+        w.add(AtUserSpan(context, text: content.text, uid: content.uid));
       } else if (content.type == "10") {
         //TODO:语音
         // player
@@ -499,7 +579,7 @@ class InnerFloorBottomSheet extends StatefulWidget {
 class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
     with SingleTickerProviderStateMixin {
   late InnerFloor post;
-  late List<SubpostList> subPosts;
+  late List<SubPost> subPosts;
   late Future<InnerFloorModel> dataLoader;
   Map<int, InnerFloorModel> floorPages = {};
   late int pn;
@@ -542,8 +622,8 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
           Container(
               padding: const EdgeInsets.only(left: 10, right: 10),
               child: InnerFloorCard(
-                author: value.post!.author!,
-                postMain: value.post!,
+                author: AuthorWidgetModel.fromData(value.post!.author!),
+                postMain: PostListWidgetModel.fromInnerFloorPost(value.post!),
                 threadID: value.thread!.id!,
                 isSpid: false,
                 forum: widget.forum,
@@ -563,8 +643,8 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
       for (SubpostList subpost in value.subpostList ?? []) {
         w.add(
           InnerFloorCard(
-            author: subpost.author!,
-            postMain: subpost,
+            author: AuthorWidgetModel.fromData(subpost.author!),
+            postMain: PostListWidgetModel.fromSubpostList(subpost),
             threadID: value.thread!.id!,
             isSpid: subpost.id == widget.spid,
             forum: widget.forum,
@@ -597,7 +677,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
               ),
               color: Theme.of(context).brightness == Brightness.light
                   ? Colors.white
-                  : Theme.of(context).backgroundColor),
+                  : Theme.of(context).colorScheme.background),
           child: child,
         );
       },
@@ -672,17 +752,15 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
                           overscroll!.disallowIndicator();
                           return true;
                         },
-                        child: Container(
-                          child: ListView.builder(
-                            controller: controller,
-                            physics: animationcontroller.value > 0
-                                ? const NeverScrollableScrollPhysics()
-                                : const ClampingScrollPhysics(),
-                            itemCount: floors.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return floors[index];
-                            },
-                          ),
+                        child: ListView.builder(
+                          controller: controller,
+                          physics: animationcontroller.value > 0
+                              ? const NeverScrollableScrollPhysics()
+                              : const ClampingScrollPhysics(),
+                          itemCount: floors.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return floors[index];
+                          },
                         ),
                       ),
                     )),
@@ -700,8 +778,9 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
                           }
 
                           return InnerFloorReplyBar(
-                            author: author,
-                            postMain: postMain,
+                            author: AuthorWidgetModel.fromData(author),
+                            postMain:
+                                PostListWidgetModel.fromPostList(postMain),
                             threadID: threadID,
                             forum: widget.forum,
                           );
@@ -723,8 +802,8 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
 
 ///楼中楼楼层组件
 class InnerFloorCard extends StatelessWidget {
-  final UserList author;
-  final SubpostList postMain;
+  final AuthorWidgetModel author;
+  final PostListWidgetModel postMain;
   final String threadID;
   final bool isSpid;
   final ForumData forum;
@@ -741,9 +820,14 @@ class InnerFloorCard extends StatelessWidget {
 
   List<String> _imgCollect() {
     List<String> l = [];
-    for (var content in postMain.content ?? []) {
-      if (content.type == "3" ||
-          (content.type == "4" && content.originSrc != null)) {
+    // for (PostContentBaseWidgetModel content in postMain.content) {
+    //   if (content.type == "3" ||
+    //       (content.type == "4" && content.originSrc != null)) {
+    //     l.add(content.bigCdnSrc!);
+    //   }
+    // }
+    for (PostContentBaseWidgetModel content in postMain.content) {
+      if (content is ImageContentWidgetModel) {
         l.add(content.bigCdnSrc!);
       }
     }
@@ -752,9 +836,8 @@ class InnerFloorCard extends StatelessWidget {
 
   List<String> _originImgCollect() {
     List<String> l = [];
-    for (var content in postMain.content ?? []) {
-      if (content.type == "3" ||
-          (content.type == "4" && content.originSrc != null)) {
+    for (PostContentBaseWidgetModel content in postMain.content) {
+      if (content is ImageContentWidgetModel) {
         l.add(content.originSrc!);
       }
     }
@@ -772,7 +855,7 @@ class InnerFloorCard extends StatelessWidget {
             builder: (context) {
               return ReplyBottomSheet(
                 replyText:
-                    "${author.nameShow ?? author.name}： ${TiebaParser.parserContentString(postMain.content)}",
+                    "${author.name}： ${TiebaParser.parserContentString(postMain.content)}",
                 kw: forum.forumName,
                 fid: forum.fid,
                 tid: threadID,
@@ -788,7 +871,7 @@ class InnerFloorCard extends StatelessWidget {
               ? Colors.amber.shade100
               : (Theme.of(context).brightness == Brightness.light
                   ? Colors.white
-                  : Theme.of(context).backgroundColor),
+                  : Theme.of(context).colorScheme.background),
         ),
         padding: const EdgeInsets.only(left: 18, right: 18),
         child: Column(
@@ -803,7 +886,7 @@ class InnerFloorCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 0, vertical: 7),
                   child: Avatar(
-                    imgUrl: AUTHOR_AVATAR + author.portrait!,
+                    imgUrl: AUTHOR_AVATAR + author.portrait,
                     height: 35,
                     width: 35,
                   ),
@@ -827,9 +910,9 @@ class InnerFloorCard extends StatelessWidget {
                                         child: Text("${author.nameShow}"),
                                       ),
                                     ] +
-                                    (TiebaParser.processIcon(author) ??
-                                        <Widget>[]) +
                                     [
+                                      ...(TiebaParser.processIcon(author) ??
+                                          <Widget>[]),
                                       Container(
                                         margin: const EdgeInsets.only(left: 5),
                                         child: Rank(
@@ -844,7 +927,7 @@ class InnerFloorCard extends StatelessWidget {
                                   //发帖时间
                                   Text(
                                     TiebaParser.getPostTime(
-                                        strTime: postMain.time),
+                                        strTime: postMain.createTime),
                                     style: const TextStyle(
                                         color: Colors.grey, fontSize: 14),
                                   ),
@@ -856,14 +939,13 @@ class InnerFloorCard extends StatelessWidget {
                             ],
                           )),
                           AgreeAndDisagreeBar(
-                            agreeNum: int.parse(postMain.agree!.agreeNum!),
-                            disagreeNum:
-                                int.parse(postMain.agree!.disagreeNum!),
-                            agreeType: int.parse(postMain.agree!.agreeType!),
-                            postID: postMain.id!,
+                            agreeNum: int.parse(postMain.agreeNum),
+                            disagreeNum: int.parse(postMain.disagreeNum),
+                            agreeType: int.parse(postMain.agreeType),
+                            postID: postMain.id,
                             threadID: threadID,
                             objType: 2,
-                            hasAgree: postMain.agree!.hasAgree!,
+                            hasAgree: postMain.hasAgree,
                           )
                         ],
                       ),

@@ -5,9 +5,11 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/routes/routes.dart';
 
+import '../Json_Model/WidgetModel/SearchPostModel.dart';
+
 ///搜索贴Widget
 class SearchThreadCard extends StatelessWidget {
-  final SearchPostModelPostList post;
+  final SearchPostWidgetModel post;
   const SearchThreadCard({Key? key, required this.post}) : super(key: key);
 
   @override
@@ -17,7 +19,7 @@ class SearchThreadCard extends StatelessWidget {
         //主题帖
         if (post.type == 1) {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: ThreadPageRouterData(kz: post.tid!, pid: null));
+              arguments: ThreadPageRouterData(kz: post.tid, pid: null));
         }
       },
       child: Container(
@@ -26,7 +28,7 @@ class SearchThreadCard extends StatelessWidget {
         decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.light
                 ? Colors.white
-                : Theme.of(context).backgroundColor,
+                : Theme.of(context).colorScheme.background,
             borderRadius: BorderRadius.circular(8)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           //作者
@@ -35,7 +37,7 @@ class SearchThreadCard extends StatelessWidget {
             child: Row(
               children: [
                 Avatar(
-                  imgUrl: post.user?.portrait ?? post.user!.portraith!,
+                  imgUrl: post.userAvatar,
                   height: 36,
                   width: 36,
                 ),
@@ -47,8 +49,7 @@ class SearchThreadCard extends StatelessWidget {
                       children: <Widget>[
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(
-                              "${post.user?.showNickname ?? post.user?.userName}"),
+                          child: Text(post.username),
                         ),
                       ],
                     ),
@@ -61,7 +62,7 @@ class SearchThreadCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
-              post.title!,
+              post.title,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ),
@@ -69,16 +70,14 @@ class SearchThreadCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
-              post.mainPost?.content ?? post.content ?? "",
+              post.content,
               style: const TextStyle(fontSize: 17),
             ),
           ),
           //底部
           LeftRightBox(
             left: Text("${post.forumName}吧"),
-            right: Text(post.time == null
-                ? ""
-                : TiebaParser.getPostTime(strTime: post.time)),
+            right: Text(TiebaParser.getPostTime(strTime: post.time)),
           )
         ]),
       ),

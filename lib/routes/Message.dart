@@ -4,7 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/PageModel/MessagePageModel.dart';
+
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
@@ -12,6 +12,8 @@ import 'package:tiebanana/Widgets/MessageCard.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
 import 'package:tiebanana/common/DefaultConfig.dart';
 import 'package:tiebanana/common/Global.dart';
+
+import '../Json_Model/WidgetModel/MessagePageModel.dart';
 
 ///消息页
 class MessagePan extends StatefulWidget {

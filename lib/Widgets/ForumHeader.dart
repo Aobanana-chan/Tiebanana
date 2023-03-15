@@ -7,11 +7,29 @@ import 'package:tiebanana/common/Global.dart';
 
 ///吧页面的头部
 class ForumHeader extends StatefulWidget {
-  final Forum info;
+  final String fName; //吧名
+  final String levelupScore; //升级所需经验
+  final bool isLike;
+  final bool isSigned;
+  final String fid;
+  final String curScore; //现在的经验
+  final String avatar; //吧头像 widget.info.avatar ?? widget.info.fShareImg!
+  final String levelId;
+  final String levelName;
+  // final Forum info;
 
   const ForumHeader({
     Key? key,
-    required this.info,
+    required this.fName,
+    required this.levelupScore,
+    required this.isLike,
+    required this.isSigned,
+    required this.fid,
+    required this.curScore,
+    required this.avatar,
+    required this.levelId,
+    required this.levelName,
+    // required this.info,
   }) : super(key: key);
 
   @override
@@ -19,16 +37,24 @@ class ForumHeader extends StatefulWidget {
 }
 
 class _ForumHeaderState extends State<ForumHeader> {
-  late Forum info;
+  late bool isSignIn;
+  late String levelupScore;
+  late String curScore;
+  late String levelId;
+  late String levelName;
   @override
   void initState() {
     super.initState();
-    info = widget.info;
+    isSignIn = widget.isSigned;
+    levelupScore = widget.levelupScore;
+    curScore = widget.curScore;
+    levelId = widget.levelId;
+    levelName = widget.levelName;
   }
 
   Widget buildButton() {
-    if (info.isLike == "1") {
-      if (info.signInInfo!.userInfo!.isSignIn == "1") {
+    if (widget.isLike) {
+      if (isSignIn) {
         return GradientButton(
             borderRadius: BorderRadius.circular(18),
             onPressed: null,
@@ -37,17 +63,19 @@ class _ForumHeaderState extends State<ForumHeader> {
       return GradientButton(
           borderRadius: BorderRadius.circular(18),
           onPressed: () async {
-            var msg = await Global.tiebaAPI.signOneForum(widget.info.name!);
+            var msg = await Global.tiebaAPI.signOneForum(widget.fName);
             Fluttertoast.showToast(msg: msg["TiebananaMsg"]);
-            info.levelupScore =
+            levelupScore =
                 (msg["user_info"]["levelup_score"] as num).toInt().toString();
-            info.curScore = (int.parse(info.curScore!) +
-                    (msg["user_info"]["sign_bonus_point"]))
-                .toInt()
-                .toString();
-            if (msg["user_info"]["is_sign_in"] == 1) {
-              info.signInInfo?.userInfo?.isSignIn = "1";
+            curScore =
+                (int.parse(curScore) + (msg["user_info"]["sign_bonus_point"]))
+                    .toInt()
+                    .toString();
+            if (msg["user_info"]["is_sign_in"].toString() == "1") {
+              isSignIn = true;
             }
+
+            // TODO:更新levelId和name
             setState(() {});
           },
           child: const Text("签到"));
@@ -56,7 +84,7 @@ class _ForumHeaderState extends State<ForumHeader> {
           borderRadius: BorderRadius.circular(18),
           onPressed: () async {
             //TODO:关注吧
-            var res = await Global.tiebaAPI.favoForum(info.id!, info.name!);
+            var res = await Global.tiebaAPI.favoForum(widget.fid, widget.fName);
           },
           child: const Text("关注"));
     }
@@ -68,14 +96,14 @@ class _ForumHeaderState extends State<ForumHeader> {
       duration: const Duration(milliseconds: 200),
       color: Theme.of(context).brightness == Brightness.light
           ? Colors.white
-          : Theme.of(context).backgroundColor,
+          : Theme.of(context).colorScheme.background,
       padding: const EdgeInsets.all(5),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(2),
             child: Avatar(
-              imgUrl: widget.info.avatar ?? widget.info.fShareImg!,
+              imgUrl: widget.avatar,
               height: 50,
               width: 50,
             ),
@@ -89,21 +117,20 @@ class _ForumHeaderState extends State<ForumHeader> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "${widget.info.name}吧",
+                  "${widget.fName}吧",
                   overflow: TextOverflow.ellipsis,
                 ),
                 LimitedBox(
                   maxWidth: 100,
                   child: LinearProgressIndicator(
-                    value: int.parse(widget.info.curScore!) /
-                        int.parse(widget.info.levelupScore!),
+                    value: int.parse(curScore) / int.parse(levelupScore),
                   ),
                 ),
                 Row(
                   children: [
-                    Text("LV${widget.info.levelId}"),
+                    Text("LV$levelId"),
                     const SizedBox(width: 5),
-                    Text(widget.info.levelName!)
+                    Text(levelName)
                   ],
                 )
               ],

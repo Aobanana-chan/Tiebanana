@@ -18,6 +18,11 @@ import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/common/Util/AppUtil.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../Json_Model/WidgetModel/PostContentModel.dart';
+import '../../Json_Model/WidgetModel/QuotaModel.dart';
+import '../../Json_Model/WidgetModel/ThreadCommentModel.dart';
+import '../../Json_Model/WidgetModel/commonModel.dart';
+
 ///贴吧数据生成Widget工具类
 class TiebaParser {
   //获取图片的index
@@ -34,126 +39,149 @@ class TiebaParser {
   }
 
   ///通用Content生成Widget
-  static List<Widget> parseContent(BuildContext context,
-      List<Content>? contents, List<String> allImgs, List<String> allOrgImgs,
-      {VideoInfo? videoInfo,
+  static List<Widget> parseContent(
+      BuildContext context,
+      List<PostContentBaseWidgetModel>? contents,
+      List<String> allImgs,
+      List<String> allOrgImgs,
+      {VedioInfoWidgetModel? videoInfo,
       bool selectable = false,
-      int mediaLimit = 1 << 31}) {
+      int mediaLimit = 1 << 31,
+      bool isRecommend = false}) {
     List<InlineSpan> richText = [];
+
+    //=======主页推荐贴
+    List<Widget> media = <Widget>[];
+    List<String> images = [];
+    List<String>? imgsOriginSrc = [];
+    Widget imgLeft = const SizedBox(
+      width: 0,
+      height: 0,
+    );
+    //=======
     int index = 0;
     int? offset;
     int mediaNum = 0;
-    for (Content elem in contents ?? []) {
-      if (elem.type == "0") //文字内容
+    for (PostContentBaseWidgetModel elem in contents ?? []) {
+      if (elem is TextContentWidgetModel) //文字内容
       {
         richText.add(TextSpan(
-          text: elem.text!,
+          text: (elem).text,
           style: TextStyle(fontSize: Global.setting.fontSize),
         ));
-      } else if (elem.type == "4" || elem.type == "3") {
+      } else if (elem is ImageContentWidgetModel) {
         //媒体数量限制
         if (mediaNum >= mediaLimit) {
           continue;
         }
-        mediaNum++;
+
         //图片
         switch (Global.setting.pictureLoadSetting) {
           //智能省流量
           case 0:
-            if (elem.type == "4" && elem.originSrc == null) {
-              richText.add(AtUserSpan(
-                context,
-                uid: elem.uid!,
-                text: elem.text!,
-                style: const TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            offset ??= _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
+            offset ??=
+                _getImgIndex((elem).bigCdnSrc ?? elem.originSrc!, allImgs);
             ExtendedPageController controller =
                 ExtendedPageController(initialPage: index + offset);
-            richText.add(ExtendedWidgetSpan(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 3, bottom: 3),
-                  child: Thumbnail(
-                    imgs: allImgs,
-                    controller: controller,
-                    img: elem.bigCdnSrc ?? elem.originSrc!,
-                    imgsOriginSrc: allOrgImgs,
-                    fit: BoxFit.fitWidth,
-                  ),
-                ),
-                actualText: "#(图片)"));
-            index++;
-            break;
-          //智能无图
-          case 1:
-            if (elem.type == "4" && elem.originSrc == null) {
-              richText.add(TextSpan(
-                text: elem.text!,
-                style: const TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            offset ??= _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
-            if (int.parse(elem.bsize!.replaceAll(",", "")) < 0x100000) {
-              //小于1mb就加载
-              ExtendedPageController controller =
-                  ExtendedPageController(initialPage: index + offset);
+            if (isRecommend) {
+              images.add((elem).bigCdnSrc ?? elem.originSrc!);
+              imgsOriginSrc.add(elem.originSrc!);
+            } else {
               richText.add(ExtendedWidgetSpan(
                   child: Container(
                     margin: const EdgeInsets.only(top: 3, bottom: 3),
                     child: Thumbnail(
                       imgs: allImgs,
                       controller: controller,
-                      img: elem.bigCdnSrc ?? elem.originSrc!,
+                      img: (elem).bigCdnSrc ?? elem.originSrc!,
                       imgsOriginSrc: allOrgImgs,
                       fit: BoxFit.fitWidth,
                     ),
                   ),
                   actualText: "#(图片)"));
+            }
+            index++;
+            mediaNum++;
+            break;
+          //智能无图
+          case 1:
+            offset ??=
+                _getImgIndex((elem).bigCdnSrc ?? elem.originSrc!, allImgs);
+            if (int.parse((elem).bsize!.replaceAll(",", "")) < 0x100000) {
+              //小于1mb就加载
+              if (isRecommend) {
+                images.add((elem).bigCdnSrc ?? elem.originSrc!);
+                imgsOriginSrc.add(elem.originSrc!);
+              } else {
+                ExtendedPageController controller =
+                    ExtendedPageController(initialPage: index + offset);
+                richText.add(ExtendedWidgetSpan(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 3, bottom: 3),
+                      child: Thumbnail(
+                        imgs: allImgs,
+                        controller: controller,
+                        img: elem.bigCdnSrc ?? elem.originSrc!,
+                        imgsOriginSrc: allOrgImgs,
+                        fit: BoxFit.fitWidth,
+                      ),
+                    ),
+                    actualText: "#(图片)"));
+              }
+
               index++;
+              mediaNum++;
             }
             break;
           //始终高质量
           case 2:
-            if (elem.type == "4" && elem.originSrc == null) {
-              richText.add(TextSpan(
-                text: elem.text!,
-                style: const TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            offset ??= _getImgIndex(elem.bigCdnSrc ?? elem.originSrc!, allImgs);
+            offset ??=
+                _getImgIndex((elem).bigCdnSrc ?? elem.originSrc!, allImgs);
             ExtendedPageController controller =
                 ExtendedPageController(initialPage: index + offset);
-            richText.add(ExtendedWidgetSpan(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 3, bottom: 3),
-                  child: Thumbnail(
-                    imgs: allImgs,
-                    controller: controller,
-                    img: elem.originSrc!,
-                    imgsOriginSrc: allOrgImgs,
-                    fit: BoxFit.fitWidth,
+            if (isRecommend) {
+              images.add(elem.bigCdnSrc ?? elem.originSrc!);
+              imgsOriginSrc.add(elem.originSrc!);
+            } else {
+              richText.add(ExtendedWidgetSpan(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 3, bottom: 3),
+                    child: Thumbnail(
+                      imgs: allImgs,
+                      controller: controller,
+                      img: (elem).originSrc!,
+                      imgsOriginSrc: allOrgImgs,
+                      fit: BoxFit.fitWidth,
+                    ),
                   ),
-                ),
-                actualText: "#(图片)"));
+                  actualText: "#(图片)"));
+            }
+
             index++;
+            mediaNum++;
             break;
 
           default:
         }
-      } else if (elem.type == "5") {
+      } else if (elem is AtContentWidgetModel) {
+        richText.add(TextSpan(
+          text: (elem).text,
+          style: const TextStyle(color: Colors.blue),
+        ));
+      } else if (elem is VideoContentWidgetModel) {
         //视频
         // print("find vedio");
         if (videoInfo?.videoUrl == null) {
-          //TODO:外链视频
-          throw Exception("外链视频");
+          richText.add(ExtendedWidgetSpan(
+              child: VideoPlayer(
+                cover: elem.cover,
+                url: elem.link!,
+              ),
+              actualText: "#(视频)"));
         } else {
           richText.add(ExtendedWidgetSpan(
               child: VideoPlayer(
-                cover: videoInfo!.thumbnailUrl!,
+                cover: videoInfo!.thumbnailUrl,
                 url: videoInfo.videoUrl!,
               ),
               actualText: "#(视频)"));
@@ -161,27 +189,26 @@ class TiebaParser {
       } else if (elem.type == "2") {
         //表情包
 
-        richText.add(EmojiSpan("${elem.text}",
+        richText.add(EmojiSpan((elem as EmojiContentWidgetModel).text,
             cache: true,
             imageHeight: 18,
             imageWidth: 18,
             actualText: "#(${elem.c})"));
-      } else if (elem.type == "1" || elem.type == "18") {
+      } else if (elem is LinkContentWidgetModel) {
         // if (Platform.isAndroid) {
         //   WebView.platform = AndroidWebView();
         // }
         //type1-链接
         //type18-话题
         richText.add(TextSpan(
-            text: elem.text,
+            text: (elem).text,
             style: TextStyle(
                 fontSize: Provider.of<APPSettingProvider>(context).fontSize,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue),
             recognizer: TapGestureRecognizer()
               ..onTap = () async {
-                if (await AppUtil.urlRoute(true, context, elem.link!) ==
-                    false) {
+                if (await AppUtil.urlRoute(true, context, elem.link) == false) {
                   Navigator.push(context,
                       CupertinoPageRoute(builder: (builder) {
                     return WebViewWidget(
@@ -200,51 +227,107 @@ class TiebaParser {
 
                           return NavigationDecision.navigate;
                         }))
-                        ..loadRequest(Uri.parse(elem.link!)),
-                      // initialCookies: data,
-                      // backgroundColor: Colors.white,
-                      // initialUrl: elem.link,
-                      // javascriptMode: JavascriptMode.unrestricted,
-                      // navigationDelegate: (request) async {
-                      //   if (await AppUtil.urlRoute(
-                      //     true,
-                      //     context,
-                      //     request.url,
-                      //   )) {
-                      //     return NavigationDecision.prevent;
-                      //   }
-
-                      //   return NavigationDecision.navigate;
-                      // },
+                        ..loadRequest(Uri.parse(elem.link)),
                     );
                   }));
                 }
               }));
       } else if (elem.type == "27") {
         //TODO:范例 kz=7919486246 kz = 7909655252
-      } else if (elem.type == "9") {
+      } else if (elem is PhoneNumberContentWidgetModel) {
         //手机号码？
         richText.add(TextSpan(
-          text: elem.text!,
+          text: (elem).text,
           style: TextStyle(fontSize: Global.setting.fontSize),
         ));
       } else {
         throw Exception("未知类型");
       }
     }
-    return [
-      ExtendedText.rich(
-        TextSpan(children: richText),
-        selectionEnabled: selectable,
-      ),
-    ];
+
+    if (isRecommend) {
+      index = 0;
+      for (var img in images) {
+        ExtendedPageController controller =
+            ExtendedPageController(initialPage: index);
+
+        media.add(Expanded(
+            child: Thumbnail(
+          imgs: images,
+          controller: controller,
+          img: img,
+          imgsOriginSrc: imgsOriginSrc,
+        )));
+        index++;
+      }
+
+      if (allImgs.length > 3) {
+        imgLeft = Container(
+          padding: const EdgeInsets.all(5),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(color: Color(0x8E8E8E8E)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.photo_size_select_actual_rounded,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                  Text(
+                    "${allImgs.length}",
+                    style: const TextStyle(color: Colors.white),
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return [
+        Text.rich(
+          TextSpan(children: richText),
+          style: TextStyle(
+              fontSize: Provider.of<APPSettingProvider>(context).fontSize),
+          overflow: TextOverflow.ellipsis,
+          softWrap: true,
+          maxLines: 12,
+        ),
+        Offstage(
+          offstage: media.isEmpty,
+          child: LimitedBox(
+              maxHeight: 160,
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: <Widget>[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: media,
+                  ),
+                  imgLeft
+                ],
+              )),
+        )
+      ];
+    } else {
+      return [
+        ExtendedText.rich(
+          TextSpan(children: richText),
+          selectionEnabled: selectable,
+        ),
+      ];
+    }
   }
 
   ///生成回复贴Widget
   static List<Widget> parseReplyContent(
       BuildContext context,
-      Quota? quota,
-      List<Content>? contents,
+      QuotaModel? quota,
+      List<PostContentBaseWidgetModel>? contents,
       String title,
       List<String> allImgs,
       List<String> allOrgImgs,
@@ -304,11 +387,11 @@ class TiebaParser {
     return richText;
   }
 
-  static List<Widget>? processIcon(Author author) {
-    List<Widget>? icons = author.iconinfo?.map((e) {
+  static List<Widget>? processIcon(UserIconData author) {
+    List<Widget>? icons = author.icons.map((e) {
       return FadeIn(
           child: ExtendedImage.network(
-        e.icon!,
+        e,
         width: 16,
         height: 16,
         cache: true,
@@ -355,33 +438,38 @@ class TiebaParser {
     return createText;
   }
 
-  static String parserContentString(List<Content>? contents) {
+  static String parserContentString(
+      List<PostContentBaseWidgetModel>? contents) {
     String text = "";
 
-    for (Content elem in contents ?? []) {
+    for (PostContentBaseWidgetModel elem in contents ?? []) {
       if (elem.type == "0") //文字内容
       {
-        text += elem.text!;
-      } else if (elem.type == "4" || elem.type == "3") {
-        //图片
-        if (elem.type == "4" && elem.originSrc == null) {
-          //@用户
-          text += elem.text!;
-        } else {
-          text += "#(图片)";
-        }
+        text += (elem as TextContentWidgetModel).text;
+        // } else if (elem.type == "4" || elem.type == "3") {
+        //   //图片
+        //   if (elem.type == "4" && elem.originSrc == null) {
+        //     //@用户
+        //     text += elem.text!;
+        //   } else {
+        //     text += "#(图片)";
+        //   }
+      } else if (elem.type == "3") {
+        text += "#(图片)";
+      } else if (elem.type == "4") {
+        text += (elem as AtContentWidgetModel).text;
       } else if (elem.type == "5") {
         text += "#(视频)";
       } else if (elem.type == "2") {
         //表情包
-        text += "#(${elem.c})";
+        text += "#(${(elem as EmojiContentWidgetModel).c})";
       }
     }
     return text;
   }
 
   static String contentBuilder(ContentBuilderType type,
-      {Author? replyUser, UploadImageModel? image}) {
+      {AuthorWidgetModel? replyUser, UploadImageModel? image}) {
     switch (type) {
       case ContentBuilderType.Reply:
         return "回复 #(reply, ${replyUser!.portrait}, ${replyUser.nameShow ?? replyUser.name}) :";

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:provider/provider.dart';
+import 'package:tiebanana/Json_Model/WidgetModel/MediaModel.dart';
+import 'package:tiebanana/Json_Model/WidgetModel/QuotaModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
@@ -13,6 +15,9 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/UserPostWidget.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
+
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
 
 ///用户界面-访客
 class UserVisitor extends StatefulWidget {
@@ -408,8 +413,35 @@ class __ThreadViewState extends State<_ThreadView> {
       itemBuilder: (BuildContext context, int index) {
         // return Container();
         return UserPostWidget(
-          info: posts[index],
-          username: username,
+          username: username!,
+          content: () {
+            var result = <PostContentBaseWidgetModel>[];
+            for (var element in posts[index].content ?? []) {
+              result.add(createContentModel(element));
+            }
+            return result;
+          }(),
+          images: () {
+            var result = <MediaModel>[];
+            for (Media element in posts[index].media ?? []) {
+              result.add(MediaModel(
+                  bigPic: element.bigPic!, originPic: element.originPic!));
+            }
+            return result;
+          }(),
+          videoInfo:
+              VedioInfoWidgetModel.fromVideoInfo(posts[index].videoInfo!),
+          threadId: posts[index].threadId!,
+          userId: posts[index].userId!,
+          userPortrait: posts[index].userPortrait!,
+          isThread: posts[index].isThread != "0",
+          title: posts[index].title!,
+          createTime: posts[index].createTime!,
+          quota: QuotaModel(content: posts[index].quota!.content!),
+          forumName: posts[index].forumName!,
+          agreeNum: posts[index].agree!.agreeNum!,
+          disagreeNum: posts[index].agree!.disagreeNum!,
+          replyNum: posts[index].replyNum!,
         );
       },
     );
@@ -517,8 +549,35 @@ class __PostviewState extends State<_Postview> {
       itemBuilder: (BuildContext context, int index) {
         // return Container();
         return UserPostWidget(
-          info: posts[index],
-          username: username,
+          username: username!,
+          content: () {
+            var result = <PostContentBaseWidgetModel>[];
+            for (var element in posts[index].content ?? []) {
+              result.add(createContentModel(element));
+            }
+            return result;
+          }(),
+          images: () {
+            var result = <MediaModel>[];
+            for (Media element in posts[index].media ?? []) {
+              result.add(MediaModel(
+                  bigPic: element.bigPic!, originPic: element.originPic!));
+            }
+            return result;
+          }(),
+          videoInfo:
+              VedioInfoWidgetModel.fromVideoInfo(posts[index].videoInfo!),
+          threadId: posts[index].threadId!,
+          userId: posts[index].userId!,
+          userPortrait: posts[index].userPortrait!,
+          isThread: posts[index].isThread != "0",
+          title: posts[index].title!,
+          createTime: posts[index].createTime!,
+          quota: QuotaModel(content: posts[index].quota!.content!),
+          forumName: posts[index].forumName!,
+          agreeNum: posts[index].agree!.agreeNum!,
+          disagreeNum: posts[index].agree!.disagreeNum!,
+          replyNum: posts[index].replyNum!,
         );
       },
     );

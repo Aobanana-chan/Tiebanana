@@ -1,13 +1,15 @@
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/PageModel/MessagePageModel.dart';
+
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/ThemeExtension/QuoteTheme.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
+
+import '../Json_Model/WidgetModel/MessagePageModel.dart';
 
 ///消息Widget
 class MessageCard extends StatelessWidget {
@@ -40,7 +42,7 @@ class MessageCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(5),
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
-              : Theme.of(context).backgroundColor,
+              : Theme.of(context).colorScheme.background,
           border: Border.all(width: 0.05)),
       margin: const EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(

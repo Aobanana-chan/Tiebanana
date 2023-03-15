@@ -46,8 +46,8 @@ class _TiebaAudioPlayerState extends State<TiebaAudioPlayer>
           borderRadius: BorderRadius.circular(64)),
       child: Row(children: [
         player.playing
-            ? Icon(Icons.stop_circle_outlined)
-            : Icon(Icons.play_circle_outline_outlined),
+            ? const Icon(Icons.stop_circle_outlined)
+            : const Icon(Icons.play_circle_outline_outlined),
         Visibility(
           child: ValueListenableBuilder<double>(
             valueListenable: progress,

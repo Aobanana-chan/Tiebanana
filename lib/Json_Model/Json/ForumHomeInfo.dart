@@ -364,7 +364,7 @@ class ForumThreadList implements ThreadRecommendSummary {
   String? isProThread;
   String? tiebaplusCantDelete;
   @override
-  List<FirstPostContent>? firstPostContent;
+  List<Content>? firstPostContent;
   String? topAgreePostId;
   String? isTop;
   String? isGood;
@@ -479,7 +479,7 @@ class ForumThreadList implements ThreadRecommendSummary {
         json['first_post_content'] != null) {
       firstPostContent = [];
       json['first_post_content'].forEach((v) {
-        firstPostContent?.add(FirstPostContent.fromJson(v));
+        firstPostContent?.add(Content.fromJson(v));
       });
     }
     topAgreePostId = json['top_agree_post_id'];
@@ -518,7 +518,7 @@ class ForumThreadList implements ThreadRecommendSummary {
         abstract?.add(Abstract.fromJson(v));
       });
     }
-    firstPostId = json['first_post_id'];
+    firstPostId = json['first_post_id'].toString();
     // zan = json['zan'];
     // if (json['location'] != null) {
     //   location = new List<Null>();
@@ -526,7 +526,7 @@ class ForumThreadList implements ThreadRecommendSummary {
     //     location.add(new Null.fromJson(v));
     //   });
     // }
-    isVoiceThread = json['is_voice_thread'];
+    isVoiceThread = json['is_voice_thread'].toString();
     threadType = json['thread_type'].toString();
     if (json['voice_info'] is String && json['voice_info'] != "") {
       voiceInfo = [];
@@ -2339,7 +2339,7 @@ class FrsStar {
     // topSize = json['top_size'];
     head = json['head'];
     // headSize = json['head_size'];
-    gender = json['gender'];
+    gender = json['gender'].toString();
     // fans = json['fans'];
     // if (json['trade'] != null) {
     //   trade = new List<Null>();
@@ -2602,7 +2602,7 @@ class UserList implements Author {
     //     ? new AlaInfo.fromJson(json['ala_info'])
     //     : null;
     sealPrefix = json['seal_prefix'];
-    isVideobiggie = json['is_videobiggie'];
+    isVideobiggie = json['is_videobiggie'].toString();
     // bazhuGrade = json['bazhu_grade'];
     displayAuthType = json['display_auth_type'].toString();
     // workCreatorInfo = json['work_creator_info'];

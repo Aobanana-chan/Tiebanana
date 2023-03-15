@@ -14,10 +14,13 @@ import 'package:tiebanana/Widgets/ForumHeader.dart';
 import 'package:tiebanana/Widgets/GlowNotificationWidget.dart';
 import 'package:tiebanana/Widgets/ThreadControlBar.dart';
 import 'package:tiebanana/Widgets/TopThread.dart';
-import 'package:tiebanana/Widgets/PushToRefreshHeader.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/common/ExtendedNestedScrollViewWrapper.dart';
 import 'package:tiebanana/common/Global.dart';
+
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
+import '../Json_Model/WidgetModel/ThreadControlBarModel.dart';
 
 ///吧页面
 class ForumHomePage extends StatefulWidget {
@@ -64,7 +67,7 @@ class _ForumHomePageState extends State<ForumHomePage>
     //初始化用户设置-分类
     sortType = Global.profile.getInt("ThreadSortType") ?? 0;
 
-    overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+    overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
     init();
     //进入精品贴后加载精品贴页面
@@ -210,9 +213,9 @@ class _ForumHomePageState extends State<ForumHomePage>
     return FutureBuilder(
       future: initForum,
       initialData: null,
-      builder: (BuildContext context, AsyncSnapshot snapshot) {
+      builder: (BuildContext context, AsyncSnapshot<ForumHomeInfo?> snapshot) {
         if (snapshot.hasData) {
-          forumData = snapshot.data;
+          forumData = snapshot.data!;
           forumThreadList ??= (snapshot.data as ForumHomeInfo).threadList;
           return ChangeNotifierProvider.value(
             value: APPBarTitle(),
@@ -297,11 +300,66 @@ class _ForumHomePageState extends State<ForumHomePage>
                                   //置顶帖
                                   if (forumThreadList![index].isTop == "1") {
                                     return TopThread(
-                                        info: forumThreadList![index]);
+                                      tid: forumThreadList![index].tid!,
+                                      title: forumThreadList![index].title!,
+                                    );
                                   } else {
                                     //不是置顶帖
                                     return ThreadSummary(
-                                        info: forumThreadList![index]);
+                                      firstPostContent: () {
+                                        var result =
+                                            <PostContentBaseWidgetModel>[];
+                                        for (Content element
+                                            in forumThreadList![index]
+                                                .firstPostContent!) {
+                                          result
+                                              .add(createContentModel(element));
+                                        }
+                                        return result;
+                                      }(),
+                                      author: AuthorWidgetModel(
+                                        icons: () {
+                                          var icon = <String>[];
+                                          for (Iconinfo element
+                                              in forumThreadList![index]
+                                                      .author!
+                                                      .iconinfo ??
+                                                  []) {
+                                            icon.add(element.icon!);
+                                          }
+                                          return icon;
+                                        }(),
+                                        nameShow: forumThreadList![index]
+                                            .author!
+                                            .nameShow,
+                                        username: forumThreadList![index]
+                                            .author!
+                                            .name,
+                                        uid:
+                                            forumThreadList![index].author!.id!,
+                                        portrait: forumThreadList![index]
+                                            .author!
+                                            .portrait!,
+                                        levelID: "",
+                                      ),
+                                      createTime:
+                                          forumThreadList![index].createTime!,
+                                      latestTime:
+                                          forumThreadList![index].lastTimeInt!,
+                                      tid: forumThreadList![index].id!,
+                                      fname:
+                                          forumThreadList![index].fname ?? "",
+                                      viewNum: forumThreadList![index].viewNum!,
+                                      title: forumThreadList![index].title!,
+                                      agreeNum: forumThreadList![index]
+                                          .agree!
+                                          .agreeNum!,
+                                      disagreeNum: forumThreadList![index]
+                                          .agree!
+                                          .disagreeNum!,
+                                      replyNum:
+                                          forumThreadList![index].replyNum!,
+                                    );
                                   }
                                 }, childCount: forumThreadList?.length ?? 0))
                               ],
@@ -342,8 +400,29 @@ class _ForumHomePageState extends State<ForumHomePage>
                                       return Opacity(
                                         opacity: maxExtent / 64,
                                         child: ForumHeader(
-                                          info: (snapshot.data as ForumHomeInfo)
-                                              .forum!,
+                                          avatar: snapshot
+                                                  .data!.forum!.avatar ??
+                                              snapshot.data!.forum!.fShareImg!,
+                                          fName: snapshot.data!.forum!.name!,
+                                          levelupScore: snapshot
+                                              .data!.forum!.levelupScore!,
+                                          curScore:
+                                              snapshot.data!.forum!.curScore!,
+                                          isLike:
+                                              snapshot.data!.forum!.isLike !=
+                                                  "0",
+                                          isSigned: snapshot
+                                                  .data!
+                                                  .forum!
+                                                  .signInInfo
+                                                  ?.userInfo
+                                                  ?.isSignIn !=
+                                              "0",
+                                          fid: snapshot.data!.forum!.id!,
+                                          levelId:
+                                              snapshot.data!.forum!.levelId!,
+                                          levelName:
+                                              snapshot.data!.forum!.levelName!,
                                         ),
                                       );
                                     },
@@ -356,10 +435,18 @@ class _ForumHomePageState extends State<ForumHomePage>
                                           showClass: value.shouldShow,
                                           controller: tabbarController,
                                           tabs: _tab,
-                                          goodClassify:
-                                              (snapshot.data as ForumHomeInfo)
-                                                  .forum!
-                                                  .goodClassify,
+                                          goodClassify: () {
+                                            var cls = <GoodPostClassify>[];
+                                            for (GoodClassify goodClassify
+                                                in snapshot.data!.forum!
+                                                        .goodClassify ??
+                                                    []) {
+                                              cls.add(GoodPostClassify
+                                                  .fromGoodClassify(
+                                                      goodClassify));
+                                            }
+                                            return cls;
+                                          }(),
                                           kw: widget.kw,
                                           sortType: sortType,
                                           changeSortType: changeSortType,
@@ -484,15 +571,99 @@ class _ForumHomePageState extends State<ForumHomePage>
                                                             .isTop ==
                                                         "1") {
                                                       return TopThread(
-                                                          info:
-                                                              value.threadList![
-                                                                  index]);
+                                                        tid: value
+                                                            .threadList![index]
+                                                            .tid!,
+                                                        title: value
+                                                            .threadList![index]
+                                                            .title!,
+                                                      );
                                                     } else {
                                                       //不是置顶帖
                                                       return ThreadSummary(
-                                                          info:
-                                                              value.threadList![
-                                                                  index]);
+                                                        firstPostContent: () {
+                                                          var result = <
+                                                              PostContentBaseWidgetModel>[];
+                                                          for (Content element
+                                                              in forumThreadList![
+                                                                      index]
+                                                                  .firstPostContent!) {
+                                                            result.add(
+                                                                createContentModel(
+                                                                    element));
+                                                          }
+                                                          return result;
+                                                        }(),
+                                                        author:
+                                                            AuthorWidgetModel(
+                                                          icons: () {
+                                                            var icon =
+                                                                <String>[];
+                                                            for (var element
+                                                                in value
+                                                                    .threadList![
+                                                                        index]
+                                                                    .author!
+                                                                    .iconinfo!) {
+                                                              icon.add(element
+                                                                  .icon!);
+                                                            }
+                                                            return icon;
+                                                          }(),
+                                                          nameShow: value
+                                                              .threadList![
+                                                                  index]
+                                                              .author!
+                                                              .nameShow,
+                                                          username: value
+                                                              .threadList![
+                                                                  index]
+                                                              .author!
+                                                              .name,
+                                                          uid: value
+                                                              .threadList![
+                                                                  index]
+                                                              .author!
+                                                              .id!,
+                                                          portrait: value
+                                                              .threadList![
+                                                                  index]
+                                                              .author!
+                                                              .portrait!,
+                                                          levelID: "",
+                                                        ),
+                                                        createTime: value
+                                                            .threadList![index]
+                                                            .createTime!,
+                                                        latestTime: value
+                                                            .threadList![index]
+                                                            .lastTimeInt!,
+                                                        tid: value
+                                                            .threadList![index]
+                                                            .id!,
+                                                        fname: value
+                                                                .threadList![
+                                                                    index]
+                                                                .fname ??
+                                                            "",
+                                                        viewNum: value
+                                                            .threadList![index]
+                                                            .viewNum!,
+                                                        title: value
+                                                            .threadList![index]
+                                                            .title!,
+                                                        agreeNum: value
+                                                            .threadList![index]
+                                                            .agree!
+                                                            .agreeNum!,
+                                                        disagreeNum: value
+                                                            .threadList![index]
+                                                            .agree!
+                                                            .disagreeNum!,
+                                                        replyNum: value
+                                                            .threadList![index]
+                                                            .replyNum!,
+                                                      );
                                                     }
                                                   },
                                                               childCount: value

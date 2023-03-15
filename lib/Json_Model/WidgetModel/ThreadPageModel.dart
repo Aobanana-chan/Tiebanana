@@ -1,7 +1,10 @@
 import 'dart:collection';
 
-import 'package:tiebanana/Json_Model/PageModel/commonModel.dart' as common;
-import 'package:tiebanana/Json_Model/json.dart';
+import 'package:tiebanana/Json_Model/WidgetModel/PostContentModel.dart';
+import 'package:tiebanana/Json_Model/WidgetModel/ThreadCommentModel.dart';
+
+import '../json.dart';
+import 'commonModel.dart' as common;
 
 ///贴页面数据Model
 
@@ -54,7 +57,7 @@ class ThreadPageModel implements common.Forum {
   }
 
   ///页面的用户
-  Map<String, UserList> userListSet = {};
+  Map<String, AuthorWidgetModel> userListSet = {};
 
   ///两端的页码
   int? topPn;
@@ -69,7 +72,7 @@ class ThreadPageModel implements common.Forum {
   List<String> imgs = []; // 贴中所有图片列表
   List<String> imgsOrgSrc = []; // 贴中所有高清图片列表
 
-  VideoInfo? videoInfo;
+  VedioInfoWidgetModel? videoInfo;
 
   ///只看楼主
   bool onlyLz;
@@ -107,7 +110,7 @@ class ThreadPagePost implements common.Post {
   ///楼层数
   String? floor;
 
-  LbsInfo? lbsInfo;
+  String? lbsInfo;
 
   @override
   String? nameShow;
@@ -134,7 +137,7 @@ class ThreadPagePost implements common.Post {
   String? agreeNum;
 
   @override
-  late List<Content> content;
+  late List<PostContentBaseWidgetModel> content;
 
   @override
   late String createTime;
@@ -181,10 +184,13 @@ class ThreadPagePost implements common.Post {
     title = postList.title!;
     uid = postList.authorId!;
     id = postList.id!;
-    content = postList.content!;
+    content = [];
+    for (Content element in postList.content!) {
+      content.add(createContentModel(element));
+    }
     isFirstFloor = postList.floor == "1";
     createTime = postList.time!;
-    lbsInfo = postList.lbsInfo;
+    lbsInfo = postList.lbsInfo?.name ?? "";
     hasAgree = postList.agree?.hasAgree;
     agreeNum = postList.agree?.agreeNum;
     disagreeNum = postList.agree?.disagreeNum;
@@ -232,7 +238,7 @@ class SubPost implements common.Post {
   String? agreeType;
 
   @override
-  late List<Content> content;
+  late List<PostContentBaseWidgetModel> content;
 
   @override
   late String createTime;
@@ -275,8 +281,10 @@ class SubPost implements common.Post {
     uid = subPostList.authorId!;
     id = subPostList.id!;
     title = subPostList.title!;
-
-    content = subPostList.content!;
+    content = [];
+    for (var element in subPostList.content!) {
+      content.add(createContentModel(element));
+    }
     createTime = subPostList.time!;
   }
 }

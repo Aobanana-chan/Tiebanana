@@ -7,6 +7,9 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/routes/routes.dart';
 
+import '../Json_Model/WidgetModel/LikeForumModel.dart';
+import '../Json_Model/WidgetModel/SearchForumModel.dart';
+
 ///主页贴合集
 class TagPan extends StatefulWidget {
   const TagPan({Key? key}) : super(key: key);
@@ -16,7 +19,7 @@ class TagPan extends StatefulWidget {
 }
 
 class _TagPanState extends State<TagPan> {
-  List<LikeForumInfo> likeForumInfo = [];
+  List<LikeFormWidgetModel> likeForumInfo = [];
   Future<void> getLikes() async {
     Provider.of<ForumState>(context, listen: false).refresh();
     // likeForumInfo = (await Global.tiebaAPI.userInfomation.likes)!;
@@ -86,7 +89,7 @@ class _TagPanState extends State<TagPan> {
 
 ///主页贴吧tag部件
 class ForumTag extends StatelessWidget {
-  final LikeForumInfo info;
+  final LikeFormWidgetModel info;
   const ForumTag({Key? key, required this.info}) : super(key: key);
 
   @override
@@ -95,7 +98,7 @@ class ForumTag extends StatelessWidget {
       decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
-              : Theme.of(context).backgroundColor,
+              : Theme.of(context).colorScheme.background,
           border: Border.all(
               width: 0.1,
               color: Theme.of(context).brightness == Brightness.light
@@ -117,11 +120,11 @@ class ForumTag extends StatelessWidget {
           children: [
             Expanded(
                 child: Text(
-              info.forumName!,
+              info.forumName,
               overflow: TextOverflow.ellipsis,
             )),
             _Rank(
-              rank: info.levelId!,
+              rank: info.levelId,
               isSigned: info.isSign == "0" ? false : true,
             )
           ],
@@ -192,7 +195,7 @@ class ForumTagMedium extends StatelessWidget {
 
 ///搜索页面吧Tag部件
 class ForumCardRelated extends StatelessWidget {
-  final SearchForumModelForum searchForumModelForum;
+  final SearchForumWidgetModel searchForumModelForum;
   const ForumCardRelated({Key? key, required this.searchForumModelForum})
       : super(key: key);
   String convertNumber(int number) {
@@ -221,7 +224,7 @@ class ForumCardRelated extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(5),
               child: Avatar(
-                imgUrl: searchForumModelForum.img!,
+                imgUrl: searchForumModelForum.img,
                 width: 48,
                 height: 48,
               ),
@@ -247,14 +250,14 @@ class ForumCardRelated extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      "关注 ${convertNumber(searchForumModelForum.member!)}",
+                      "关注 ${convertNumber(searchForumModelForum.member)}",
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(
                       width: 10,
                     ),
                     Text(
-                      "贴子 ${convertNumber(searchForumModelForum.post!)}",
+                      "贴子 ${convertNumber(searchForumModelForum.post)}",
                       overflow: TextOverflow.ellipsis,
                     )
                   ],
@@ -264,7 +267,7 @@ class ForumCardRelated extends StatelessWidget {
             GradientButton(
                 onPressed: () {},
                 borderRadius: BorderRadius.circular(64),
-                child: searchForumModelForum.isLike!
+                child: searchForumModelForum.isLike
                     ? const Text("已关注")
                     : const Text("关注"))
           ],
@@ -276,7 +279,7 @@ class ForumCardRelated extends StatelessWidget {
 
 ///搜索页面吧Card部件
 class ForumCard extends StatelessWidget {
-  final SearchForumModelForum forum;
+  final SearchForumWidgetModel forum;
   const ForumCard({Key? key, required this.forum}) : super(key: key);
 
   String convertNumber(int number) {
@@ -310,7 +313,7 @@ class ForumCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(5),
                   child: Avatar(
-                    imgUrl: forum.img!,
+                    imgUrl: forum.img,
                     width: 48,
                     height: 48,
                   ),
@@ -337,7 +340,7 @@ class ForumCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          "关注 ${convertNumber(forum.member!)}",
+                          "关注 ${convertNumber(forum.member)}",
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(color: Colors.white),
                         ),
@@ -345,7 +348,7 @@ class ForumCard extends StatelessWidget {
                           width: 10,
                         ),
                         Text(
-                          "贴子 ${convertNumber(forum.post!)}",
+                          "贴子 ${convertNumber(forum.post)}",
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(color: Colors.white),
                         )
@@ -356,7 +359,7 @@ class ForumCard extends StatelessWidget {
                 GradientButton(
                     onPressed: () {},
                     borderRadius: BorderRadius.circular(64),
-                    child: forum.isLike! ? const Text("已关注") : const Text("关注"))
+                    child: forum.isLike ? const Text("已关注") : const Text("关注"))
               ],
             ),
           )),

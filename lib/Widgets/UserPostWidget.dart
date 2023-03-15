@@ -4,39 +4,70 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 
+import '../Json_Model/WidgetModel/MediaModel.dart';
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/WidgetModel/QuotaModel.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
 import '../routes/routes.dart';
 
 ///用户界面Post Widget
 class UserPostWidget extends StatelessWidget {
-  final String? username;
-  final UserPostPostList info;
-  const UserPostWidget({Key? key, required this.info, this.username})
+  final String username;
+  // final UserPostPostList info;
+  final List<PostContentBaseWidgetModel> content;
+  final List<MediaModel> images;
+  final String threadId;
+  final String userId;
+  final String userPortrait;
+  final bool isThread;
+  final String title;
+  final String createTime;
+  final QuotaModel quota;
+  final VedioInfoWidgetModel videoInfo;
+  final String forumName;
+  final String agreeNum;
+  final String disagreeNum;
+  final String replyNum;
+  const UserPostWidget(
+      {Key? key,
+      required this.username,
+      required this.content,
+      required this.images,
+      required this.threadId,
+      required this.userId,
+      required this.userPortrait,
+      required this.isThread,
+      required this.title,
+      required this.createTime,
+      required this.quota,
+      required this.videoInfo,
+      required this.forumName,
+      required this.agreeNum,
+      required this.disagreeNum,
+      required this.replyNum})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     var allImgs = <String>[], allOrgImgs = <String>[];
 
-    for (Media i in info.media ?? []) {
-      //忽略视频
-      if (i.type != "5") {
-        allImgs.add(i.bigPic!);
-        allOrgImgs.add(i.originPic!);
-      }
+    for (MediaModel i in images) {
+      allImgs.add(i.bigPic);
+      allOrgImgs.add(i.originPic);
     }
     return Container(
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
-              : Theme.of(context).backgroundColor,
+              : Theme.of(context).colorScheme.background,
           border: Border.all(width: 0.05)),
       // padding: EdgeInsets.all(5),
       margin: const EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(
         onPressed: () async {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: ThreadPageRouterData(kz: info.threadId!, pid: null));
+              arguments: ThreadPageRouterData(kz: threadId, pid: null));
           // await Global.tiebaAPI.getThreadPage(info.tid!);
         },
         padding: const EdgeInsets.all(5),
@@ -49,9 +80,9 @@ class UserPostWidget extends StatelessWidget {
                 Avatar(
                   onTap: () {
                     Navigator.pushNamed(context, PageRouter.user,
-                        arguments: info.userId!);
+                        arguments: userId);
                   },
-                  imgUrl: AUTHOR_AVATAR + info.userPortrait!,
+                  imgUrl: AUTHOR_AVATAR + userPortrait,
                   height: 45,
                   width: 45,
                 ),
@@ -61,14 +92,13 @@ class UserPostWidget extends StatelessWidget {
                     Row(children: <Widget>[
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                            "${info.nameShow != "" ? (info.nameShow ?? info.userName ?? username) : info.userName ?? username}"),
+                        child: Text(username),
                       ),
                     ]),
                     Row(
                       children: [
                         Text(
-                          TiebaParser.getPostTime(strTime: info.createTime),
+                          TiebaParser.getPostTime(strTime: createTime),
                           style:
                               const TextStyle(color: Colors.grey, fontSize: 14),
                         )
@@ -91,13 +121,13 @@ class UserPostWidget extends StatelessWidget {
             ),
             //标题
             Visibility(
-                visible: info.isThread == "1",
+                visible: isThread,
                 child: Container(
                   padding: const EdgeInsets.all(5),
                   child: Column(
                     children: [
                       Text(
-                        info.title!,
+                        title,
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
                       )
@@ -109,12 +139,12 @@ class UserPostWidget extends StatelessWidget {
               padding: const EdgeInsets.all(5),
               child: Wrap(
                 // crossAxisAlignment: CrossAxisAlignment.start,
-                children: info.isThread == "1"
+                children: isThread
                     ? TiebaParser.parseContent(
-                        context, info.content, allImgs, allOrgImgs,
-                        mediaLimit: 1, videoInfo: info.videoInfo)
-                    : TiebaParser.parseReplyContent(context, info.quota,
-                        info.content, info.title!, allImgs, allOrgImgs),
+                        context, content, allImgs, allOrgImgs,
+                        mediaLimit: 1, videoInfo: videoInfo)
+                    : TiebaParser.parseReplyContent(
+                        context, quota, content, title, allImgs, allOrgImgs),
               ),
             ),
             //底部
@@ -124,9 +154,9 @@ class UserPostWidget extends StatelessWidget {
                 children: [
                   Expanded(
                       child: Visibility(
-                    visible: info.forumName != null && info.forumName != "",
+                    visible: forumName != "",
                     child: Text(
-                      "${info.forumName}吧",
+                      "$forumName吧",
                       style: TextStyle(color: Colors.grey[600]),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -138,22 +168,21 @@ class UserPostWidget extends StatelessWidget {
                   // const SizedBox(width: 5),
                   const Icon(Icons.thumb_up),
                   const SizedBox(width: 2),
-                  Text(info.agreeNum ?? "0"),
+                  Text(agreeNum),
                   const SizedBox(width: 5),
                   Visibility(
-                    visible: info.agree?.disagreeNum != null,
+                    visible: disagreeNum != "",
                     child: const Icon(Icons.thumb_down),
                   ),
                   Visibility(
-                      visible: info.agree?.disagreeNum != null,
+                      visible: disagreeNum != "",
                       child: const SizedBox(width: 2)),
                   Visibility(
-                      visible: info.agree?.disagreeNum != null,
-                      child: Text(info.agree?.disagreeNum ?? "0")),
+                      visible: disagreeNum != "", child: Text(disagreeNum)),
                   const SizedBox(width: 5),
                   const Icon(Icons.speaker_notes),
                   const SizedBox(width: 2),
-                  Text(info.replyNum!),
+                  Text(replyNum),
                 ],
               ),
             )

@@ -18,7 +18,7 @@ class ThreadRecommendSummary {
   String? shareNum;
   String? fid;
   String? fname;
-  List<FirstPostContent>? firstPostContent;
+  List<Content>? firstPostContent;
   List<ThreadPersonalized>? threadPersonalized;
   VideoInfo? videoInfo;
   ThreadRecommendSummary(
@@ -67,9 +67,9 @@ class ThreadRecommendSummary {
     fid = json['fid'].toString();
     fname = json['fname'];
     if (json['first_post_content'] != null) {
-      firstPostContent = <FirstPostContent>[];
+      firstPostContent = <Content>[];
       json['first_post_content'].forEach((v) {
-        firstPostContent!.add(FirstPostContent.fromJson(v));
+        firstPostContent!.add(Content.fromJson(v));
       });
     }
     if (json['thread_personalized'] != null) {
@@ -251,8 +251,8 @@ class Media {
     type = json['type'].toString();
     width = json['width'].toString();
     height = json['height'].toString();
-    showOriginalBtn = json['show_original_btn'];
-    isLongPic = json['is_long_pic'];
+    showOriginalBtn = json['show_original_btn'].toString();
+    isLongPic = json['is_long_pic'].toString();
     bigPic = json['big_pic'];
     dynamicPic = json['dynamic_pic'];
     srcPic = json['src_pic'];
@@ -335,69 +335,69 @@ class Agree {
   }
 }
 
-class FirstPostContent {
-  String? type;
-  String? bsize;
-  String? size;
-  String? originSrc;
-  String? originSize;
-  String? isLongPic;
-  String? showOriginalBtn;
-  String? cdnSrc;
-  String? cdnSrcActive;
-  String? bigCdnSrc;
-  String? text;
-  String? c;
-  FirstPostContent(
-      {this.type,
-      this.bsize,
-      this.size,
-      this.originSrc,
-      this.originSize,
-      this.isLongPic,
-      this.showOriginalBtn,
-      this.cdnSrc,
-      this.cdnSrcActive,
-      this.bigCdnSrc,
-      this.text,
-      this.c});
+// class FirstPostContent {
+//   String? type;
+//   String? bsize;
+//   String? size;
+//   String? originSrc;
+//   String? originSize;
+//   String? isLongPic;
+//   String? showOriginalBtn;
+//   String? cdnSrc;
+//   String? cdnSrcActive;
+//   String? bigCdnSrc;
+//   String? text;
+//   String? c;
+//   FirstPostContent(
+//       {this.type,
+//       this.bsize,
+//       this.size,
+//       this.originSrc,
+//       this.originSize,
+//       this.isLongPic,
+//       this.showOriginalBtn,
+//       this.cdnSrc,
+//       this.cdnSrcActive,
+//       this.bigCdnSrc,
+//       this.text,
+//       this.c});
 
-  FirstPostContent.fromJson(Map<String, dynamic> json) {
-    //0 - 文字
-    //2 - 图片表情?
-    //3 - 图片
-    //5 - 视频
-    type = json['type'].toString();
-    bsize = json['bsize'];
-    size = json['size'];
-    originSrc = json['origin_src'];
-    originSize = json['origin_size'].toString();
-    isLongPic = json['is_long_pic'];
-    showOriginalBtn = json['show_original_btn'];
-    cdnSrc = json['cdn_src'];
-    cdnSrcActive = json['cdn_src_active'];
-    bigCdnSrc = json['big_cdn_src'];
-    text = json['text'];
-    c = json['c'];
-  }
+//   FirstPostContent.fromJson(Map<String, dynamic> json) {
+//     //0 - 文字
+//     //2 - 图片表情?
+//     //3 - 图片
+//     //5 - 视频
+//     type = json['type'].toString();
+//     bsize = json['bsize'];
+//     size = json['size'];
+//     originSrc = json['origin_src'];
+//     originSize = json['origin_size'].toString();
+//     isLongPic = json['is_long_pic'];
+//     showOriginalBtn = json['show_original_btn'];
+//     cdnSrc = json['cdn_src'];
+//     cdnSrcActive = json['cdn_src_active'];
+//     bigCdnSrc = json['big_cdn_src'];
+//     text = json['text'];
+//     c = json['c'];
+//   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['type'] = type;
-    data['bsize'] = bsize;
-    data['size'] = size;
-    data['origin_src'] = originSrc;
-    data['origin_size'] = originSize;
-    data['is_long_pic'] = isLongPic;
-    data['show_original_btn'] = showOriginalBtn;
-    data['cdn_src'] = cdnSrc;
-    data['cdn_src_active'] = cdnSrcActive;
-    data['big_cdn_src'] = bigCdnSrc;
-    data['text'] = text;
-    data['c'] = c;
-    return data;
-  }
-}
+//   Map<String, dynamic> toJson() {
+//     final Map<String, dynamic> data = <String, dynamic>{};
+//     data['type'] = type;
+//     data['bsize'] = bsize;
+//     data['size'] = size;
+//     data['origin_src'] = originSrc;
+//     data['origin_size'] = originSize;
+//     data['is_long_pic'] = isLongPic;
+//     data['show_original_btn'] = showOriginalBtn;
+//     data['cdn_src'] = cdnSrc;
+//     data['cdn_src_active'] = cdnSrcActive;
+//     data['big_cdn_src'] = bigCdnSrc;
+//     data['text'] = text;
+//     data['c'] = c;
+//     return data;
+//   }
+// }
 
 class ThreadPersonalized {
   String? tid;

@@ -2,14 +2,18 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
-import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
+
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/ThreadFirstComment.dart';
-import 'package:tiebanana/Widgets/ThreadFloorCard.dart';
 import 'package:tiebanana/Widgets/ThreadReplyBar.dart';
 import 'package:tiebanana/Widgets/common/AlterDialog.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
+
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
+import '../Widgets/ThreadFloorCard.dart';
+import '../Json_Model/WidgetModel/ThreadPageModel.dart';
 
 ///贴页面
 
@@ -194,7 +198,9 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
     info = ThreadPageModel(
       title: widget.title,
-      videoInfo: widget.videoInfo,
+      videoInfo: widget.videoInfo == null
+          ? null
+          : VedioInfoWidgetModel.fromVideoInfo(widget.videoInfo!),
       hasMore: widget.hasMore,
       hasPrev: widget.hasPrev,
       initPid: widget.pid,
@@ -212,7 +218,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
     // videoInfo = widget.initInfo.thread?.videoInfo;
     //处理用户列表映射关系
     for (UserList user in widget.userList ?? []) {
-      info.userListSet[user.id!] = user;
+      info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
     }
 
     collectImages();
@@ -277,7 +283,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
       // hasMore = l.page?.hasMore == "1";
       //添加新的user列表
       for (UserList user in l.userList ?? []) {
-        info.userListSet[user.id!] = user;
+        info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
       }
       setState(() {
         collectImages();
@@ -304,7 +310,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
       // hasPrev = l.page?.hasPrev == "1";
       //添加新的user列表
       for (UserList user in l.userList ?? []) {
-        info.userListSet[user.id!] = user;
+        info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
       }
       setState(() {
         collectImages();
@@ -346,7 +352,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
     // hasPrev = l.page?.hasPrev == "1";
     //添加新的user列表
     for (UserList user in l.userList ?? []) {
-      info.userListSet[user.id!] = user;
+      info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
     }
     setState(() {
       collectImages();
@@ -356,12 +362,19 @@ class ThreadPageMainState extends State<ThreadPageMain> {
   void collectImages() {
     //整理图片
     for (ThreadPagePost post in info.postList) {
-      for (Content content in post.content) {
-        if ((content.type == "4" && content.originSrc != null) ||
-            content.type == "3") {
-          //type4可能是富文本
-          info.imgs
-              .add(content.text ?? content.bigCdnSrc ?? content.originSrc!);
+      // for (PostContentBaseWidgetModel content in post.content) {
+      //   if ((content.type == "4" && content.originSrc != null) ||
+      //       content.type == "3") {
+      //     //type4可能是富文本
+      //     info.imgs
+      //         .add(content.text ?? content.bigCdnSrc ?? content.originSrc!);
+      //     info.imgsOrgSrc.add(content.originSrc!);
+      //   }
+      // }
+      for (PostContentBaseWidgetModel content in post.content) {
+        if (content.type == "3") {
+          info.imgs.add((content as ImageContentWidgetModel).bigCdnSrc ??
+              content.originSrc!);
           info.imgsOrgSrc.add(content.originSrc!);
         }
       }
@@ -377,7 +390,13 @@ class ThreadPageMainState extends State<ThreadPageMain> {
           allOrgImgs: info.imgsOrgSrc,
           author: info.userListSet[floor.uid]!,
           postMain: floor,
-          userList: info.userListSet,
+          userList: () {
+            var result = <String, AuthorWidgetModel>{};
+            for (var k in info.userListSet.keys) {
+              result[k] = info.userListSet[k]!;
+            }
+            return result;
+          }(),
           threadID: info.tid,
           forum: widget.forum,
         ));

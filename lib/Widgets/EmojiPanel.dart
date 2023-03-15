@@ -104,7 +104,7 @@ class _EmojiPanelState extends State<EmojiPanel> {
                       insertText("#(${emojiFileMapping[emojiName]})");
                     },
                     child: ExtendedImage.asset(
-                      "assets/emoji/" + emojiPage(pageindex)[index],
+                      "assets/emoji/${emojiPage(pageindex)[index]}",
                     ),
                   );
                 },

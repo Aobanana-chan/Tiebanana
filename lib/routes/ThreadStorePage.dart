@@ -2,11 +2,13 @@ import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/PageModel/ThreadStorePageModel.dart';
+
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/StoredThreadWidget.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/Global.dart';
+
+import '../Json_Model/WidgetModel/ThreadStorePageModel.dart';
 
 ///我的收藏页面
 class ThreadStorePage extends StatefulWidget {

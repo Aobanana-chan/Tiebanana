@@ -1,12 +1,13 @@
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/PageModel/ViewHistoryPageModel.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/common/AlterDialog.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
+
+import '../Json_Model/WidgetModel/ViewHistoryPageModel.dart';
 
 class ViewHistoryPage extends StatefulWidget {
   const ViewHistoryPage({Key? key}) : super(key: key);

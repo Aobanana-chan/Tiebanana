@@ -746,6 +746,7 @@ class Content {
   String? duringTime;
   String? isSub;
   String? voiceMd5;
+  String? src;
   Content(
       {this.type,
       this.bsize,
@@ -766,7 +767,8 @@ class Content {
       this.link,
       this.duringTime,
       this.isSub,
-      this.voiceMd5});
+      this.voiceMd5,
+      this.src});
 
   Content.fromJson(Map<String, dynamic> json) {
     uid = json["uid"].toString();
@@ -799,9 +801,10 @@ class Content {
     text = json['text'];
     c = json['c'];
     link = json['link'];
-    duringTime = json['during_time'];
-    isSub = json['is_sub'];
+    duringTime = json['during_time'].toString();
+    isSub = json['is_sub'].toString();
     voiceMd5 = json['voice_md5'];
+    src = json['src'];
   }
 
   Map<String, dynamic> toJson() {
@@ -828,6 +831,7 @@ class Content {
     data['during_time'] = duringTime;
     data['is_sub'] = isSub;
     data['voice_md5'] = voiceMd5;
+    data['src'] = src;
     return data;
   }
 }

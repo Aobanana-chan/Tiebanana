@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:tiebanana/Json_Model/WidgetModel/PostContentModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/Global.dart';
+
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
 
 class RecommendPan extends StatefulWidget {
   final FloatingSearchBarController controller;
@@ -58,7 +61,38 @@ class _RecommendPanState extends State<RecommendPan> {
 
     for (var i = 0; i < recommend.length; i++) {
       if (recommend[i] != null) {
-        threadwidgets.add(ThreadSummary(info: recommend[i]!));
+        threadwidgets.add(ThreadSummary(
+          firstPostContent: () {
+            var result = <PostContentBaseWidgetModel>[];
+            for (Content element in recommend[i]!.firstPostContent!) {
+              result.add(createContentModel(element));
+            }
+            return result;
+          }(),
+          author: AuthorWidgetModel(
+            icons: () {
+              var icon = <String>[];
+              for (Iconinfo element in recommend[i]!.author!.iconinfo ?? []) {
+                icon.add(element.icon!);
+              }
+              return icon;
+            }(),
+            nameShow: recommend[i]!.author!.nameShow,
+            username: recommend[i]!.author!.name,
+            uid: recommend[i]!.author!.id!,
+            portrait: recommend[i]!.author!.portrait!,
+            levelID: "",
+          ),
+          createTime: recommend[i]!.createTime!,
+          latestTime: recommend[i]!.lastTimeInt!,
+          tid: recommend[i]!.id!,
+          fname: recommend[i]!.fname!,
+          viewNum: recommend[i]!.viewNum!,
+          title: recommend[i]!.title!,
+          agreeNum: recommend[i]!.agree!.agreeNum!,
+          disagreeNum: recommend[i]!.agree!.disagreeNum!,
+          replyNum: recommend[i]!.replyNum!,
+        ));
       } else {
         threadwidgets.add(ClipRRect(
           borderRadius: BorderRadius.circular(5),

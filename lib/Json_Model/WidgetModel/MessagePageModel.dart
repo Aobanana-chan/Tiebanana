@@ -1,5 +1,7 @@
-import 'package:tiebanana/Json_Model/PageModel/commonModel.dart';
+
 import 'package:tiebanana/Json_Model/json.dart';
+
+import 'commonModel.dart';
 
 ///消息页面Model
 class MessagePageModel implements User {

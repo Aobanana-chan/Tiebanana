@@ -97,7 +97,9 @@ class _AuthwidgetverifyState extends State<Authwidgetverify> {
                           } else {
                             Fluttertoast.showToast(msg: "验证成功");
                           }
-                          Navigator.pop(context, true);
+                          if (mounted) {
+                            Navigator.pop(context, true);
+                          }
                         } else {
                           Fluttertoast.showToast(
                               msg:
@@ -149,7 +151,6 @@ class __VerifyTypeDropDownState extends State<_VerifyTypeDropDown> {
 
         //   }
         // }
-
       }
       setState(() {
         controller.text = _items.isNotEmpty ? _items[0]["label"] : "";
@@ -225,6 +226,7 @@ class _SendVerifyButtonState extends State<SendVerifyButton> {
                 setState(() {});
               });
             },
+      borderRadius: BorderRadius.circular(64),
       child: Builder(
         builder: (context) {
           if (!isClicked) {
@@ -238,7 +240,6 @@ class _SendVerifyButtonState extends State<SendVerifyButton> {
           }
         },
       ),
-      borderRadius: BorderRadius.circular(64),
     );
   }
 }

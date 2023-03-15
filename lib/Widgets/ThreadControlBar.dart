@@ -1,17 +1,18 @@
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/common/Global.dart';
+
+import '../Json_Model/WidgetModel/ThreadControlBarModel.dart';
 
 ///吧页面帖控制导航栏
 
 class ThreadControlBar extends StatefulWidget {
   final TabController controller;
   final List tabs;
-  final List<GoodClassify>? goodClassify;
+  final List<GoodPostClassify>? goodClassify;
   final String kw;
   final int classSelect;
   final bool showClass;
@@ -50,7 +51,7 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
 
   List<Widget> _buildClassify() {
     List<Widget> classify = <Widget>[];
-    for (GoodClassify c in widget.goodClassify ?? []) {
+    for (GoodPostClassify c in widget.goodClassify ?? []) {
       classify.add(ClassifyButton(
         sortType: widget.sortType,
         kw: widget.kw,
@@ -66,7 +67,7 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
     return Container(
       color: Theme.of(context).brightness == Brightness.light
           ? Colors.white
-          : Theme.of(context).backgroundColor,
+          : Theme.of(context).colorScheme.background,
       child: Column(
         children: [
           //贴控制
@@ -151,7 +152,7 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
 }
 
 class ClassifyButton extends StatelessWidget {
-  final GoodClassify classify;
+  final GoodPostClassify classify;
   final bool seleted;
   final String kw;
   final int sortType;
@@ -180,21 +181,22 @@ class ClassifyButton extends StatelessWidget {
           padding: EdgeInsets.zero,
           onPressed: () async {
             Provider.of<GoodClassifyProviderModel>(context, listen: false)
-                .changeClassify = int.parse(classify.classId!);
+                .changeClassify = int.parse(classify.classId);
             Provider.of<ThreadListProviderModel>(context, listen: false)
                 .setList = (await Global.tiebaAPI.getForumPage(
                     sortType: sortType,
                     kw: kw,
                     pn: 1,
                     isgood: true,
-                    cid: int.parse(classify.classId!)))
+                    cid: int.parse(classify.classId)))
                 .threadList;
-            Provider.of<ThreadListProviderModel>(context, listen: false)
-                .goodpn = 1;
+            if (context.mounted) {
+              Provider.of<ThreadListProviderModel>(context, listen: false)
+                  .goodpn = 1;
+            }
           },
           textColor: seleted ? Colors.white : Colors.black,
-          // onTap: () {},
-          child: Text(classify.className!),
+          child: Text(classify.className),
         ),
       ),
     );

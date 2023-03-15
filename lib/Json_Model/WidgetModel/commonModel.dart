@@ -1,4 +1,4 @@
-import 'package:tiebanana/Json_Model/json.dart';
+import 'PostContentModel.dart';
 
 abstract class User {
   late String portrait;
@@ -16,7 +16,7 @@ abstract class Post implements User {
   late String createTime;
 
   ///内容
-  late List<Content> content;
+  late List<PostContentBaseWidgetModel> content;
 
   ///是否为一楼
   late bool isFirstFloor;
@@ -54,4 +54,8 @@ abstract class Forum {
 
   ///吧头像
   late String avatar;
+}
+
+abstract class UserIconData {
+  late List<String> icons;
 }

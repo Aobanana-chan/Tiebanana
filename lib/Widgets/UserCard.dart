@@ -11,8 +11,26 @@ import 'CustomUnderlineTabIndicator.dart';
 class UserCard extends StatefulWidget {
   //控制器回调
   final TabController? controllerl;
-  final MyUserData info;
-  const UserCard({Key? key, required this.info, this.controllerl})
+  // final MyUserData info;
+  final String concernNum;
+  final String fansNum;
+  final String likeForumNum;
+  final String postNum;
+  final String portraitUrl;
+  final String id;
+  final String name;
+  final String intro;
+  const UserCard(
+      {Key? key,
+      this.controllerl,
+      required this.concernNum,
+      required this.fansNum,
+      required this.likeForumNum,
+      required this.postNum,
+      required this.portraitUrl,
+      required this.id,
+      required this.name,
+      required this.intro})
       : super(key: key);
 
   @override
@@ -25,7 +43,7 @@ class _UserCardState extends State<UserCard> {
     List<Map<String, dynamic>> bodyinfo = [
       {
         "text": "关注",
-        "num": widget.info.concernNum,
+        "num": widget.concernNum,
         "onPress": () {
           //TODO:跳转界面
           //Navigator.push(context, route)
@@ -33,7 +51,7 @@ class _UserCardState extends State<UserCard> {
       },
       {
         "text": "粉丝",
-        "num": widget.info.fansNum,
+        "num": widget.fansNum,
         "onPress": () {
           //TODO:跳转界面
           //Navigator.push(context, route)
@@ -41,7 +59,7 @@ class _UserCardState extends State<UserCard> {
       },
       {
         "text": "关注的吧",
-        "num": widget.info.likeForumNum,
+        "num": widget.likeForumNum,
         "onPress": () {
           //TODO:跳转界面
           //Navigator.push(context, route)
@@ -49,7 +67,7 @@ class _UserCardState extends State<UserCard> {
       },
       {
         "text": "帖子",
-        "num": widget.info.postNum,
+        "num": widget.postNum,
         "onPress": () {
           //TODO:跳转界面
           //Navigator.push(context, route)
@@ -145,12 +163,12 @@ class _UserCardState extends State<UserCard> {
               Container(
                 padding: const EdgeInsets.all(5),
                 child: Avatar(
-                  imgUrl: widget.info.portraitUrl!,
+                  imgUrl: widget.portraitUrl,
                   height: 45,
                   width: 45,
                   onTap: () {
                     Navigator.pushNamed(context, PageRouter.user,
-                        arguments: widget.info.id.toString());
+                        arguments: widget.id.toString());
                   },
                 ),
               ),
@@ -161,7 +179,7 @@ class _UserCardState extends State<UserCard> {
                   Row(
                     children: [
                       Text(
-                        widget.info.name!,
+                        widget.name,
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary),
                       )
@@ -170,7 +188,7 @@ class _UserCardState extends State<UserCard> {
                   Row(
                     children: [
                       Text(
-                        widget.info.intro!,
+                        widget.intro,
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary),
                       )

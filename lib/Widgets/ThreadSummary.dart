@@ -9,192 +9,74 @@ import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/Widgets/ImgExplorer.dart';
 import 'package:tiebanana/common/API/Constants.dart';
+import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 import 'package:uuid/uuid.dart';
 
-///帖子气泡-小部件
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
+
+///帖子气泡(主页推荐贴)-小部件
 class ThreadSummary extends StatelessWidget {
-  final ThreadRecommendSummary info;
-  const ThreadSummary({Key? key, required this.info}) : super(key: key);
-  List<Widget> buildBody(BuildContext context) {
-    List<Widget> body = [];
-    List<Widget> bodyMedia = [];
-    List<String> imgs = [];
-    List<String>? imgsOriginSrc = [];
-    List<String> videos = [];
-    List<InlineSpan> richText = [];
-    //统计与格式化
-    for (FirstPostContent elem in info.firstPostContent ?? []) {
-      if (elem.type == "0") //文字内容
-      {
-        richText.add(TextSpan(text: elem.text!));
-      } else if (elem.type == "4" || elem.type == "3") {
-        //图片
-        switch (Global.setting.pictureLoadSetting) {
-          case 0:
-            if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
-              richText.add(TextSpan(
-                text: elem.text!,
-                style: const TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            imgs.add(elem.bigCdnSrc ?? elem.originSrc!);
-            imgsOriginSrc!.add(elem.originSrc!);
-            break;
-          case 1:
-            if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
-              richText.add(TextSpan(
-                text: elem.text!,
-                style: const TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            if (int.parse(elem.bsize!.replaceAll(",", "")) < 0x100000) {
-              //小于1mb就加载
-              imgs.add(elem.bigCdnSrc!);
-              imgsOriginSrc!.add(elem.originSrc!);
-            }
-            break;
-          case 2:
-            if (elem.type == "4" && elem.originSrc == null) {
-              //@用户
-              richText.add(TextSpan(
-                text: elem.text!,
-                style: const TextStyle(color: Colors.blue),
-              ));
-              break;
-            }
-            imgs.add(elem.originSrc!);
-            imgsOriginSrc = null;
-            break;
+  // final ThreadRecommendSummary info;
+  final List<PostContentBaseWidgetModel> firstPostContent; //一楼Content
+  final AuthorWidgetModel author;
+  final String createTime;
+  final String latestTime; //最近回复时间
+  final String tid;
+  final String fname;
+  final String viewNum;
+  final String title;
+  final String agreeNum;
+  final String disagreeNum;
+  final String replyNum;
+  const ThreadSummary(
+      {Key? key,
+      required this.firstPostContent,
+      required this.author,
+      required this.createTime,
+      required this.latestTime,
+      required this.tid,
+      required this.fname,
+      required this.viewNum,
+      required this.title,
+      required this.agreeNum,
+      required this.disagreeNum,
+      required this.replyNum})
+      : super(key: key);
 
-          default:
-        }
-      } else if (elem.type == "5") {
-        //视频
-        // print("find vedio");
-        if (info.videoInfo?.videoUrl == null) {
-          //TODO:外链视频
-        } else {
-          videos.add(info.videoInfo!.videoUrl!);
-        }
-      } else if (elem.type == "2") {
-        //表情包
-
-        richText.add(EmojiSpan("${elem.text}",
-            cache: true,
-            imageHeight: 18,
-            imageWidth: 18,
-            actualText: "#(${elem.c})"));
+  List<String> _imgCollect() {
+    List<String> l = [];
+    for (PostContentBaseWidgetModel content in firstPostContent) {
+      if (content is ImageContentWidgetModel) {
+        l.add(content.bigCdnSrc!);
       }
     }
+    return l;
+  }
 
-    //生成widget
-    //文字内容
-    body.add(
-      Text.rich(
-        TextSpan(children: richText),
-        style: TextStyle(
-            fontSize: Provider.of<APPSettingProvider>(context).fontSize),
-        overflow: TextOverflow.ellipsis,
-        softWrap: true,
-        maxLines: 12,
-      ),
-    );
-
-    //图片
-    int index = 0;
-    Widget imgLeft = const SizedBox(
-      height: 0,
-      width: 0,
-    );
-    for (var img in imgs) {
-      ExtendedPageController controller =
-          ExtendedPageController(initialPage: index);
-      //最多一次显示三张图片
-      if (index >= 3) {
-        imgLeft = Container(
-          padding: const EdgeInsets.all(5),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Color(0x8E8E8E8E)),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.photo_size_select_actual_rounded,
-                    size: 14,
-                    color: Colors.white,
-                  ),
-                  Text(
-                    "${imgs.length}",
-                    style: const TextStyle(color: Colors.white),
-                  )
-                ],
-              ),
-            ),
-          ),
-        );
-        break;
+  List<String> _originImgCollect() {
+    List<String> l = [];
+    for (PostContentBaseWidgetModel content in firstPostContent) {
+      if (content is ImageContentWidgetModel) {
+        l.add(content.originSrc!);
       }
-      bodyMedia.add(Expanded(
-          child: Thumbnail(
-        imgs: imgs,
-        controller: controller,
-        img: img,
-        imgsOriginSrc: imgsOriginSrc,
-      )));
-      index++;
     }
-    //视频
-    for (var video in videos) {
-      bodyMedia.add(Expanded(
-          child: VideoPlayer(
-        cover: info.videoInfo!.thumbnailUrl!,
-        url: video,
-      )));
-    }
-
-    body.add(LimitedBox(
-        maxHeight: 160,
-        child: Stack(
-          alignment: Alignment.bottomRight,
-          children: <Widget>[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: bodyMedia,
-                ),
-              ] +
-              [imgLeft],
-        )));
-    return body;
+    return l;
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Widget>? icons = info.author?.iconinfo?.map((e) {
-      return FadeIn(
-          child: ExtendedImage.network(
-        e.icon!,
-        width: 16,
-        height: 16,
-        cache: true,
-      ));
-    }).toList();
-    var create = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(
-        int.parse(info.createTime!) * 1000));
+    List<Widget>? icons = TiebaParser.processIcon(author);
+    var create = DateTime.now().difference(
+        DateTime.fromMillisecondsSinceEpoch(int.parse(createTime) * 1000));
     Map timeGranularity = {0: "天", 1: "小时", 2: "分钟", 3: "秒"};
     var f = 0;
     late String createText;
     if (create.inDays > 30) {
-      var date = DateTime.fromMillisecondsSinceEpoch(
-          int.parse(info.createTime!) * 1000);
+      var date =
+          DateTime.fromMillisecondsSinceEpoch(int.parse(createTime) * 1000);
       createText = "${date.year}年${date.month}月${date.day}日";
     } else {
       for (var t in [
@@ -215,13 +97,12 @@ class ThreadSummary extends StatelessWidget {
     }
 
     var lastPost = DateTime.now().difference(
-        DateTime.fromMillisecondsSinceEpoch(
-            int.parse(info.lastTimeInt!) * 1000));
+        DateTime.fromMillisecondsSinceEpoch(int.parse(latestTime) * 1000));
     f = 0;
     late String postText;
     if (lastPost.inDays > 30) {
-      var date = DateTime.fromMillisecondsSinceEpoch(
-          int.parse(info.lastTimeInt!) * 1000);
+      var date =
+          DateTime.fromMillisecondsSinceEpoch(int.parse(latestTime) * 1000);
       postText = "${date.year}年${date.month}月${date.day}日";
     } else {
       for (var t in [
@@ -247,14 +128,14 @@ class ThreadSummary extends StatelessWidget {
           // color: Colors.white,
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
-              : Theme.of(context).backgroundColor,
+              : Theme.of(context).colorScheme.background,
           border: Border.all(width: 0.05)),
       // padding: EdgeInsets.all(5),
       margin: const EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(
         onPressed: () async {
           Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: ThreadPageRouterData(kz: info.tid!, pid: null));
+              arguments: ThreadPageRouterData(kz: tid, pid: null));
           // await Global.tiebaAPI.getThreadPage(info.tid!);
         },
         padding: const EdgeInsets.all(5),
@@ -267,9 +148,9 @@ class ThreadSummary extends StatelessWidget {
                 Avatar(
                   onTap: () {
                     Navigator.pushNamed(context, PageRouter.user,
-                        arguments: info.author!.id!);
+                        arguments: author.id);
                   },
-                  imgUrl: AUTHOR_AVATAR + info.author!.portrait!,
+                  imgUrl: AUTHOR_AVATAR + author.portrait,
                   height: 45,
                   width: 45,
                 ),
@@ -280,7 +161,7 @@ class ThreadSummary extends StatelessWidget {
                       children: <Widget>[
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text("${info.author!.nameShow}"),
+                              child: Text(author.name),
                             ),
                           ] +
                           (icons ?? <Widget>[]),
@@ -323,7 +204,7 @@ class ThreadSummary extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    info.title!,
+                    title,
                     style: TextStyle(
                         fontSize:
                             Provider.of<APPSettingProvider>(context).fontSize,
@@ -337,7 +218,10 @@ class ThreadSummary extends StatelessWidget {
               padding: const EdgeInsets.all(5),
               child: Wrap(
                 // crossAxisAlignment: CrossAxisAlignment.start,
-                children: buildBody(context),
+                // children: buildBody(context),
+                children: TiebaParser.parseContent(context, firstPostContent,
+                    _imgCollect(), _originImgCollect(),
+                    mediaLimit: 3, isRecommend: true),
               ),
             ),
             //底部
@@ -347,9 +231,9 @@ class ThreadSummary extends StatelessWidget {
                 children: [
                   Expanded(
                       child: Visibility(
-                    visible: info.fname != null && info.fname != "",
+                    visible: fname != "",
                     child: Text(
-                      "${info.fname}吧",
+                      "$fname吧",
                       style: TextStyle(color: Colors.grey[600]),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -357,26 +241,25 @@ class ThreadSummary extends StatelessWidget {
                   // Spacer(),
                   const Icon(Icons.remove_red_eye),
                   const SizedBox(width: 2),
-                  Text(info.viewNum ?? "0"),
+                  Text(viewNum),
                   const SizedBox(width: 5),
                   const Icon(Icons.thumb_up),
                   const SizedBox(width: 2),
-                  Text(info.agree?.agreeNum ?? "0"),
+                  Text(agreeNum),
                   const SizedBox(width: 5),
                   Visibility(
-                    visible: info.agree?.disagreeNum != null,
+                    visible: disagreeNum != "",
                     child: const Icon(Icons.thumb_down),
                   ),
                   Visibility(
-                      visible: info.agree?.disagreeNum != null,
+                      visible: disagreeNum != "",
                       child: const SizedBox(width: 2)),
                   Visibility(
-                      visible: info.agree?.disagreeNum != null,
-                      child: Text(info.agree?.disagreeNum ?? "0")),
+                      visible: disagreeNum != "", child: Text(disagreeNum)),
                   const SizedBox(width: 5),
                   const Icon(Icons.speaker_notes),
                   const SizedBox(width: 2),
-                  Text(info.replyNum!)
+                  Text(replyNum)
                 ],
               ),
             )

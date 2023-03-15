@@ -2,12 +2,13 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flukit/flukit.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:tiebanana/Json_Model/PageModel/ThreadStorePageModel.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/common/AlterDialog.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
+
+import '../Json_Model/WidgetModel/ThreadStorePageModel.dart';
 
 ///收藏贴小部件
 class StoredThreadWidget extends StatefulWidget {

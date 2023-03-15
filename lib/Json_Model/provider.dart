@@ -3,6 +3,8 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/Global.dart';
 
+import 'WidgetModel/LikeForumModel.dart';
+
 ///用户信息Model类
 class User with ChangeNotifier {
   //登陆状态
@@ -94,8 +96,8 @@ class APPSettingProvider with ChangeNotifier {
 
 ///吧状态Model
 class ForumState with ChangeNotifier {
-  List<LikeForumInfo> _forums = [];
-  List<LikeForumInfo> get forums {
+  final List<LikeFormWidgetModel> _forums = [];
+  List<LikeFormWidgetModel> get forums {
     return _forums;
   }
 
@@ -105,7 +107,10 @@ class ForumState with ChangeNotifier {
   Future<void> refresh() async {
     if (Global.tiebaAPI.isLogin) {
       await Global.tiebaAPI.userInfomation.refresh();
-      _forums = (await Global.tiebaAPI.userInfomation.likes)!;
+      _forums.clear();
+      for (var f in (await Global.tiebaAPI.userInfomation.likes)!) {
+        _forums.add(LikeFormWidgetModel.fromLikeForumData(f));
+      }
       notifyListeners();
     }
   }

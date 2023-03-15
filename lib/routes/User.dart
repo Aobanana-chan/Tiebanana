@@ -65,7 +65,16 @@ class _UserPageState extends State<UserPage> {
                                 child: Column(
                                   children: [
                                     UserCard(
-                                      info: myInfo!,
+                                      concernNum:
+                                          myInfo!.concernNum!.toString(),
+                                      fansNum: myInfo!.fansNum.toString(),
+                                      likeForumNum:
+                                          myInfo!.likeForumNum.toString(),
+                                      postNum: myInfo!.postNum.toString(),
+                                      portraitUrl: myInfo!.portraitUrl!,
+                                      id: myInfo!.id.toString(),
+                                      name: myInfo!.name ?? myInfo!.nameShow!,
+                                      intro: myInfo!.intro!,
                                     ),
                                     const SettingPanel()
                                   ],

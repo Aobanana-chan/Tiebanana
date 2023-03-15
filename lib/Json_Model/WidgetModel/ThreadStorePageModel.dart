@@ -1,4 +1,4 @@
-import 'package:tiebanana/Json_Model/PageModel/commonModel.dart';
+import 'commonModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 
 ///收藏的贴

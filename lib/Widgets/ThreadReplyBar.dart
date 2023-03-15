@@ -7,7 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:like_button/like_button.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:tiebanana/Json_Model/PageModel/ThreadPageModel.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/EmojiPanel.dart';
@@ -16,6 +15,10 @@ import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/ThreadPage.dart';
 import 'package:tiebanana/routes/routes.dart';
+
+import '../Json_Model/WidgetModel/PostContentModel.dart';
+import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
+import '../Json_Model/WidgetModel/ThreadPageModel.dart';
 
 ///帖子-底端回复栏
 class ThreadReplyBar extends StatefulWidget {
@@ -59,7 +62,7 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
       decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
-              : Theme.of(context).backgroundColor,
+              : Theme.of(context).colorScheme.background,
           border: const Border(top: BorderSide(color: Color(0xFFF0F1F2)))),
       child: Row(
         children: [
@@ -151,10 +154,10 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
 }
 
 class InnerFloorReplyBar extends StatelessWidget {
-  final Author author;
+  final AuthorWidgetModel author;
   final ForumData forum;
   final String threadID;
-  final PostList postMain;
+  final PostListWidgetModel postMain;
   const InnerFloorReplyBar(
       {Key? key,
       required this.author,
@@ -220,7 +223,7 @@ class ReplyBottomSheet extends StatefulWidget {
   final String tid;
   final bool isReplyThread;
   final String? floorId;
-  final Author? replyUser;
+  final AuthorWidgetModel? replyUser;
   const ReplyBottomSheet(
       {Key? key,
       required this.replyText,
@@ -306,7 +309,7 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
           ),
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.white
-              : Theme.of(context).backgroundColor),
+              : Theme.of(context).colorScheme.background),
       child: ChangeNotifierProvider.value(
         value: imagesUpload,
         builder: (context, child) => Column(
@@ -385,7 +388,7 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                                 widget.fid,
                                 widget.tid,
                                 widget.floorId!,
-                                replyUID: widget.replyUser!.id!);
+                                replyUID: widget.replyUser!.id);
                           }
                         }
 
