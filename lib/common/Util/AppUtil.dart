@@ -7,7 +7,7 @@ import 'package:tiebanana/routes/routes.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 abstract class AppUtil {
-  static Future<bool> urlRoute(bool mounted, BuildContext context, String url,
+  static Future<bool> urlRoute(BuildContext context, String url,
       {bool needConfirm = false}) async {
     var uri = Uri.tryParse(url);
     if (uri == null) {
@@ -19,7 +19,7 @@ abstract class AppUtil {
       //清除剪切板
       await Clipboard.setData(const ClipboardData(text: null));
       //进入吧界面
-      if (mounted) {
+      if (context.mounted) {
         Navigator.pushNamed(context, PageRouter.forumHome,
             arguments: qurey["kw"]);
       }
@@ -41,7 +41,7 @@ abstract class AppUtil {
                     tid: tid,
                   ),
                 ));
-        if (q == true && mounted) {
+        if (q == true && context.mounted) {
           Navigator.pushNamed(context, PageRouter.threadPage,
               arguments: ThreadPageRouterData(kz: tid, pid: qurey["pid"]));
           return true;
@@ -49,7 +49,7 @@ abstract class AppUtil {
           return false;
         }
       } else {
-        if (mounted) {
+        if (context.mounted) {
           Navigator.pushNamed(context, PageRouter.threadPage,
               arguments: ThreadPageRouterData(kz: tid, pid: qurey["pid"]));
         }
@@ -66,7 +66,7 @@ abstract class AppUtil {
     if (state == AppLifecycleState.resumed) {
       var data = await Clipboard.getData("text/plain");
       if (mounted) {
-        await urlRoute(mounted, context, data?.text ?? "", needConfirm: true);
+        await urlRoute(context, data?.text ?? "", needConfirm: true);
       }
     }
   }

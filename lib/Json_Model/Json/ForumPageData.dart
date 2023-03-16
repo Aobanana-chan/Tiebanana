@@ -33,7 +33,7 @@ class ThreadPageData {
   String? ctime;
   int? logid;
   String? errorCode;
-
+  PostList? firstFloorPost;
   ThreadPageData(
       {this.hasFloor,
       this.isNewUrl,
@@ -65,7 +65,8 @@ class ThreadPageData {
       this.time,
       this.ctime,
       this.logid,
-      this.errorCode});
+      this.errorCode,
+      this.firstFloorPost});
 
   ThreadPageData.fromJson(Map<String, dynamic> json) {
     hasFloor = json['has_floor'].toString();
@@ -137,6 +138,9 @@ class ThreadPageData {
     ctime = json['ctime'].toString();
     logid = int.tryParse(json['logid']);
     errorCode = json['error_code'].toString();
+    if (json["first_floor_post"] != null) {
+      firstFloorPost = PostList.fromJson(json["first_floor_post"]);
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -203,6 +207,7 @@ class ThreadPageData {
     data['ctime'] = ctime;
     data['logid'] = logid;
     data['error_code'] = errorCode;
+    data["first_floor_post"] = firstFloorPost?.toJson();
     return data;
   }
 }

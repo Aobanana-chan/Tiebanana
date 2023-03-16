@@ -78,9 +78,9 @@ class InnerFloorModel implements ThreadPageData {
     isBlackWhite = json['is_black_white'];
     serverTime = json['server_time'];
     time = (json['time'] as num).toInt();
-    ctime = json['ctime'];
+    ctime = json['ctime'].toString();
     logid = (json['logid'] as num).toInt();
-    errorCode = json['error_code'];
+    errorCode = json['error_code'].toString();
   }
 
   @override
@@ -178,6 +178,9 @@ class InnerFloorModel implements ThreadPageData {
 
   @override
   List<UserList>? userList;
+
+  @override
+  PostList? firstFloorPost;
 }
 
 class SubpostList implements SubPostList {

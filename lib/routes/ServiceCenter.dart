@@ -57,7 +57,7 @@ class _ServiceCenterPageState extends State<ServiceCenterPage> {
             ..setJavaScriptMode(JavaScriptMode.unrestricted)
             ..setNavigationDelegate(
                 NavigationDelegate(onNavigationRequest: (request) async {
-              if (await AppUtil.urlRoute(mounted, context, request.url)) {
+              if (await AppUtil.urlRoute(context, request.url)) {
                 return NavigationDecision.prevent;
               }
 

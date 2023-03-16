@@ -1,7 +1,3 @@
-// ignore_for_file: constant_identifier_names, use_build_context_synchronously
-
-import 'dart:io';
-
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
@@ -16,6 +12,7 @@ import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/common/Util/AppUtil.dart';
+import 'package:tiebanana/routes/routes.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../Json_Model/WidgetModel/PostContentModel.dart';
@@ -186,10 +183,10 @@ class TiebaParser {
               ),
               actualText: "#(视频)"));
         }
-      } else if (elem.type == "2") {
+      } else if (elem is EmojiContentWidgetModel) {
         //表情包
 
-        richText.add(EmojiSpan((elem as EmojiContentWidgetModel).text,
+        richText.add(EmojiSpan((elem).text,
             cache: true,
             imageHeight: 18,
             imageWidth: 18,
@@ -208,40 +205,66 @@ class TiebaParser {
                 color: Colors.blue),
             recognizer: TapGestureRecognizer()
               ..onTap = () async {
-                if (await AppUtil.urlRoute(true, context, elem.link) == false) {
-                  Navigator.push(context,
-                      CupertinoPageRoute(builder: (builder) {
-                    return WebViewWidget(
-                      controller: WebViewController()
-                        ..setBackgroundColor(Colors.white)
-                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                        ..setNavigationDelegate(NavigationDelegate(
-                            onNavigationRequest: (request) async {
-                          if (await AppUtil.urlRoute(
-                            true,
-                            context,
-                            request.url,
-                          )) {
-                            return NavigationDecision.prevent;
-                          }
+                if (!context.mounted) return;
+                // ignore: use_build_context_synchronously
+                if (await AppUtil.urlRoute(context, elem.link) == false) {
+                  if (context.mounted) {
+                    Navigator.push(context,
+                        CupertinoPageRoute(builder: (builder) {
+                      return WebViewWidget(
+                        controller: WebViewController()
+                          ..setBackgroundColor(Colors.white)
+                          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                          ..setNavigationDelegate(NavigationDelegate(
+                              onNavigationRequest: (request) async {
+                            // ignore: use_build_context_synchronously
+                            if (await AppUtil.urlRoute(
+                              context,
+                              request.url,
+                            )) {
+                              return NavigationDecision.prevent;
+                            }
 
-                          return NavigationDecision.navigate;
-                        }))
-                        ..loadRequest(Uri.parse(elem.link)),
-                    );
-                  }));
+                            return NavigationDecision.navigate;
+                          }))
+                          ..loadRequest(Uri.parse(elem.link)),
+                      );
+                    }));
+                  }
                 }
               }));
-      } else if (elem.type == "27") {
+      } else if (elem is ForumQuickLinkContentWidgetModel) {
         //TODO:范例 kz=7919486246 kz = 7909655252
+        richText.add(TextSpan(
+            text: elem.text,
+            children: [
+              ExtendedWidgetSpan(
+                child: const Icon(
+                  Icons.auto_awesome,
+                  size: 18,
+                  color: Colors.blue,
+                ),
+                actualText: "",
+              )
+            ],
+            style: TextStyle(
+                fontSize: Provider.of<APPSettingProvider>(context).fontSize,
+                color: Colors.blue),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                Navigator.pushNamed(context, PageRouter.forumHome,
+                    arguments: elem.text);
+              }));
       } else if (elem is PhoneNumberContentWidgetModel) {
-        //手机号码？
         richText.add(TextSpan(
           text: (elem).text,
           style: TextStyle(fontSize: Global.setting.fontSize),
         ));
-      } else {
-        throw Exception("未知类型");
+      } else if (elem is UnknownontentWidgetModel) {
+        richText.add(TextSpan(
+          text: (elem).text,
+          style: TextStyle(fontSize: Global.setting.fontSize),
+        ));
       }
     }
 
@@ -349,7 +372,7 @@ class TiebaParser {
         child: Wrap(
           children: [
             ExtendedText(
-              quota.content!,
+              quota.content,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: Colors.grey[600], fontSize: 16),
@@ -498,4 +521,5 @@ class TiebaParser {
   }
 }
 
+// ignore: constant_identifier_names
 enum ContentBuilderType { Emoji, Reply, Picture }

@@ -461,7 +461,6 @@ class InnerPost extends StatelessWidget {
             recognizer: TapGestureRecognizer()
               ..onTap = () async {
                 if (await AppUtil.urlRoute(
-                      true,
                       context,
                       content.link,
                     ) ==
@@ -478,7 +477,6 @@ class InnerPost extends StatelessWidget {
                                   ..setNavigationDelegate(NavigationDelegate(
                                       onNavigationRequest: (request) async {
                                     if (await AppUtil.urlRoute(
-                                      true,
                                       context,
                                       request.url,
                                     )) {

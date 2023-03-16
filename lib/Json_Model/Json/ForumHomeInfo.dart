@@ -1624,7 +1624,7 @@ class HotUser {
   HotUser({this.userId, this.portrait});
 
   HotUser.fromJson(Map<String, dynamic> json) {
-    userId = json['user_id'];
+    userId = json['user_id'].toString();
     portrait = json['portrait'];
   }
 

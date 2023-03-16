@@ -77,6 +77,9 @@ class _ThreadPageState extends State<ThreadPageRoute> {
               thread: ThreadData.fromThread(data.thread!),
               initPost: list,
               isStored: data.thread!.collectStatus != "0",
+              firstFloor: data.firstFloorPost == null
+                  ? null
+                  : ThreadPagePost.fromPostList(data.firstFloorPost!),
             ),
           );
         } else if (snapshot.hasError) {
@@ -114,6 +117,7 @@ class ThreadPageMain extends StatefulWidget {
   final List<ThreadPagePost> initPost;
   final ForumData forum;
   final bool isStored;
+  final ThreadPagePost? firstFloor;
   const ThreadPageMain(
       {Key? key,
       required this.kz,
@@ -131,7 +135,8 @@ class ThreadPageMain extends StatefulWidget {
       required this.forum,
       required this.thread,
       required this.initPost,
-      required this.isStored})
+      required this.isStored,
+      this.firstFloor})
       : super(key: key);
 
   @override
@@ -139,7 +144,8 @@ class ThreadPageMain extends StatefulWidget {
 }
 
 class ThreadPageMainState extends State<ThreadPageMain> {
-  late ThreadPageModel info;
+  late ThreadPageModel floorData;
+  ThreadPagePost? firstFloorData; //一楼
   ThreadPageModel? prevState;
 
   late List<Widget> appBarAction;
@@ -196,7 +202,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
           icon: const Icon(Icons.more_vert)),
     ];
 
-    info = ThreadPageModel(
+    floorData = ThreadPageModel(
       title: widget.title,
       videoInfo: widget.videoInfo == null
           ? null
@@ -212,13 +218,19 @@ class ThreadPageMainState extends State<ThreadPageMain> {
       tid: widget.tid,
       isStored: widget.isStored,
     );
-    info.postPage[widget.pn!] = widget.initPost;
+    floorData.postPage[widget.pn!] = widget.initPost;
     // postList = widget.initInfo.postList ?? [];
     // title = widget.initInfo.thread!.title!;
     // videoInfo = widget.initInfo.thread?.videoInfo;
     //处理用户列表映射关系
     for (UserList user in widget.userList ?? []) {
-      info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
+      floorData.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
+    }
+
+    if (floorData.postList[0].floor == "1") {
+      firstFloorData = floorData.postList[0];
+    } else {
+      firstFloorData = widget.firstFloor;
     }
 
     collectImages();
@@ -265,10 +277,10 @@ class ThreadPageMainState extends State<ThreadPageMain> {
   //TODO:页面加载完成后清除Throttle,以便快速滑动
   //下一页
   void nextPage() async {
-    if (info.hasMore) {
-      info.bottomPn = info.bottomPn! + 1;
+    if (floorData.hasMore) {
+      floorData.bottomPn = floorData.bottomPn! + 1;
       var l = await Global.tiebaAPI
-          .getThreadPage(widget.kz, pn: info.bottomPn!, onlyLz: lz);
+          .getThreadPage(widget.kz, pn: floorData.bottomPn!, onlyLz: lz);
 
       var list = <ThreadPagePost>[];
       for (var i in l.postList!) {
@@ -276,14 +288,14 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
         list.add(t);
       }
-      info.postPage[info.bottomPn! * (lz ? -1 : 1)] = list;
+      floorData.postPage[floorData.bottomPn! * (lz ? -1 : 1)] = list;
 
       // postList.addAll(l.postList!);
-      info.hasMore = l.page?.hasMore == "1";
+      floorData.hasMore = l.page?.hasMore == "1";
       // hasMore = l.page?.hasMore == "1";
       //添加新的user列表
       for (UserList user in l.userList ?? []) {
-        info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
+        floorData.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
       }
       setState(() {
         collectImages();
@@ -293,10 +305,10 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
   //上一页
   void prevPage() async {
-    if (info.hasPrev) {
-      info.topPn = info.topPn! - 1;
+    if (floorData.hasPrev) {
+      floorData.topPn = floorData.topPn! - 1;
       var l = await Global.tiebaAPI
-          .getThreadPage(widget.kz, pn: info.topPn!, onlyLz: lz);
+          .getThreadPage(widget.kz, pn: floorData.topPn!, onlyLz: lz);
 
       var list = <ThreadPagePost>[];
       for (var i in l.postList!) {
@@ -304,13 +316,13 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
         list.add(t);
       }
-      info.postPage[info.topPn! * (lz ? -1 : 1)] = list;
+      floorData.postPage[floorData.topPn! * (lz ? -1 : 1)] = list;
       // postList.addAll(l.postList!);
-      info.hasPrev = l.page?.hasPrev == "1";
+      floorData.hasPrev = l.page?.hasPrev == "1";
       // hasPrev = l.page?.hasPrev == "1";
       //添加新的user列表
       for (UserList user in l.userList ?? []) {
-        info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
+        floorData.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
       }
       setState(() {
         collectImages();
@@ -322,23 +334,23 @@ class ThreadPageMainState extends State<ThreadPageMain> {
   void onlyLz() {
     if (prevState != null) {
       var t = prevState;
-      prevState = info;
-      info = t!;
+      prevState = floorData;
+      floorData = t!;
       setState(() {});
     } else {
-      prevState = info;
+      prevState = floorData;
       refresh();
     }
   }
 
   void refresh() async {
-    info.topPn = 1;
-    info.bottomPn = 1;
-    info.hasMore = true;
+    floorData.topPn = 1;
+    floorData.bottomPn = 1;
+    floorData.hasMore = true;
     //TODO:改为合并
-    info.postPage.clear();
+    floorData.postPage.clear();
     var l = await Global.tiebaAPI
-        .getThreadPage(widget.kz, pn: info.topPn!, onlyLz: lz);
+        .getThreadPage(widget.kz, pn: floorData.topPn!, onlyLz: lz);
 
     var list = <ThreadPagePost>[];
     for (var i in l.postList!) {
@@ -346,13 +358,13 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
       list.add(t);
     }
-    info.postPage[info.topPn! * (lz ? -1 : 1)] = list;
+    floorData.postPage[floorData.topPn! * (lz ? -1 : 1)] = list;
     // postList.addAll(l.postList!);
-    info.hasPrev = l.page?.hasPrev == "1";
+    floorData.hasPrev = l.page?.hasPrev == "1";
     // hasPrev = l.page?.hasPrev == "1";
     //添加新的user列表
     for (UserList user in l.userList ?? []) {
-      info.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
+      floorData.userListSet[user.id!] = AuthorWidgetModel.fromData(user);
     }
     setState(() {
       collectImages();
@@ -361,7 +373,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
   void collectImages() {
     //整理图片
-    for (ThreadPagePost post in info.postList) {
+    for (ThreadPagePost post in floorData.postList) {
       // for (PostContentBaseWidgetModel content in post.content) {
       //   if ((content.type == "4" && content.originSrc != null) ||
       //       content.type == "3") {
@@ -373,9 +385,9 @@ class ThreadPageMainState extends State<ThreadPageMain> {
       // }
       for (PostContentBaseWidgetModel content in post.content) {
         if (content.type == "3") {
-          info.imgs.add((content as ImageContentWidgetModel).bigCdnSrc ??
+          floorData.imgs.add((content as ImageContentWidgetModel).bigCdnSrc ??
               content.originSrc!);
-          info.imgsOrgSrc.add(content.originSrc!);
+          floorData.imgsOrgSrc.add(content.originSrc!);
         }
       }
     }
@@ -383,21 +395,21 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
   List<Widget> buildFloor() {
     List<Widget> w = [];
-    for (var floor in lz ? info.lzPostList : info.postList) {
+    for (var floor in lz ? floorData.lzPostList : floorData.postList) {
       if (floor.floor != "1") {
         w.add(ThreadFloorComment(
-          allImgs: info.imgs,
-          allOrgImgs: info.imgsOrgSrc,
-          author: info.userListSet[floor.uid]!,
+          allImgs: floorData.imgs,
+          allOrgImgs: floorData.imgsOrgSrc,
+          author: floorData.userListSet[floor.uid]!,
           postMain: floor,
           userList: () {
             var result = <String, AuthorWidgetModel>{};
-            for (var k in info.userListSet.keys) {
-              result[k] = info.userListSet[k]!;
+            for (var k in floorData.userListSet.keys) {
+              result[k] = floorData.userListSet[k]!;
             }
             return result;
           }(),
-          threadID: info.tid,
+          threadID: floorData.tid,
           forum: widget.forum,
         ));
       }
@@ -448,7 +460,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
                               curve: Curves.easeIn);
                         },
                         child: Text(
-                          info.title,
+                          floorData.title,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 17),
@@ -459,21 +471,22 @@ class ThreadPageMainState extends State<ThreadPageMain> {
                 //一楼
                 SliverToBoxAdapter(
                   child: Visibility(
-                      visible: info.postList[0].floor! == "1",
+                      visible: firstFloorData != null,
                       child: ThreadFirstComment(
-                        postMain: info.postList[0],
-                        author: info.userListSet[info.postList[0].uid]!,
-                        videoInfo: info.videoInfo,
-                        allImgs: info.imgs,
-                        allOrgImgs: info.imgsOrgSrc,
-                        threadID: info.tid,
+                        postMain: firstFloorData ?? floorData.postList[0],
+                        author: floorData.userListSet[
+                            firstFloorData?.uid ?? floorData.postList[0].uid]!,
+                        videoInfo: floorData.videoInfo,
+                        allImgs: floorData.imgs,
+                        allOrgImgs: floorData.imgsOrgSrc,
+                        threadID: floorData.tid,
                         thread: widget.thread,
                       )),
                 ),
                 SliverToBoxAdapter(
                   child: FourmBar(
-                    avatar: info.avatar,
-                    name: info.forumName,
+                    avatar: floorData.avatar,
+                    name: floorData.forumName,
                   ),
                 ),
 
@@ -483,11 +496,11 @@ class ThreadPageMainState extends State<ThreadPageMain> {
             )),
             //回复条
             ThreadReplyBar(
-              fid: info.fid,
-              tid: info.tid,
-              kw: info.forumName,
-              replyText: info.title,
-              isThreadStored: info.isStored,
+              fid: floorData.fid,
+              tid: floorData.tid,
+              kw: floorData.forumName,
+              replyText: floorData.title,
+              isThreadStored: floorData.isStored,
             )
           ],
         ));
@@ -512,7 +525,7 @@ class FourmBar extends StatelessWidget {
       margin: const EdgeInsets.only(top: 5, bottom: 5),
       color: Theme.of(context).brightness == Brightness.light
           ? Colors.white
-          : Theme.of(context).backgroundColor,
+          : Theme.of(context).colorScheme.background,
       child: MaterialButton(
         padding: EdgeInsets.zero,
         onPressed: () {

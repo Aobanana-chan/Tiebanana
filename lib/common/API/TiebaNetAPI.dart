@@ -1570,7 +1570,7 @@ class TiebaAPI {
   ///获取楼中楼内容
   Future<InnerFloorModel> getInnerFloor(String kz, String pid,
       {String spid = "", int pn = 1, int rn = 20}) async {
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "kz": kz,
       "pn": pn,
@@ -1648,7 +1648,7 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "cuid": "baidutiebaapp${const Uuid().v4()}",
       "cuid_galaxy2": "",
@@ -1700,7 +1700,7 @@ class TiebaAPI {
   ///获取用户信息
   Future<UserProfileModel> getUserInfo(
       {required String uid, int pn = 1}) async {
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),

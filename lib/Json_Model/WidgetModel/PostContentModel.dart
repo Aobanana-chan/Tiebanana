@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../json.dart';
 import 'ThreadPageModel.dart';
 
@@ -38,14 +40,14 @@ class PostListWidgetModel {
     disagreeNum = post.agree!.disagreeNum!;
     agreeType = post.agree!.agreeType!;
     hasAgree = post.agree!.hasAgree!;
-    lbsInfo = post.lbsInfo!.name!;
+    lbsInfo = post.lbsInfo?.name ?? "";
     title = post.time!;
     content = [];
     for (var element in post.content!) {
       content.add(createContentModel(element));
     }
     subPostList = [];
-    for (var element in post.subPostList!) {
+    for (SubPostList element in post.subPostList ?? []) {
       subPostList.add(SubPost.formSubPostList(element));
     }
     subPostNumber = post.subPostNumber!;
@@ -122,7 +124,7 @@ class EmojiContentWidgetModel extends PostContentBaseWidgetModel {
 class VideoContentWidgetModel extends PostContentBaseWidgetModel {
   String? link;
   String? cover;
-  VideoContentWidgetModel({this.link,this.cover}) : super(type: "5");
+  VideoContentWidgetModel({this.link, this.cover}) : super(type: "5");
 }
 
 class LinkContentWidgetModel extends PostContentBaseWidgetModel {
@@ -140,6 +142,17 @@ class PhoneNumberContentWidgetModel extends PostContentBaseWidgetModel {
 class VoiceContentWidgetModel extends PostContentBaseWidgetModel {
   String text;
   VoiceContentWidgetModel({required this.text}) : super(type: "10");
+}
+
+///吧跳转快速链接
+class ForumQuickLinkContentWidgetModel extends PostContentBaseWidgetModel {
+  String text;
+  ForumQuickLinkContentWidgetModel({required this.text}) : super(type: "27");
+}
+
+class UnknownontentWidgetModel extends PostContentBaseWidgetModel {
+  String? text;
+  UnknownontentWidgetModel({required this.text}) : super(type: "-1");
 }
 
 PostContentBaseWidgetModel createContentModel(Content content) {
@@ -165,13 +178,19 @@ PostContentBaseWidgetModel createContentModel(Content content) {
       }
       return AtContentWidgetModel(text: content.text!, uid: content.uid!);
     case "5":
-      return VideoContentWidgetModel(link: content.link,cover: content.src);
+      return VideoContentWidgetModel(link: content.link, cover: content.src);
 
     case "9":
       return PhoneNumberContentWidgetModel(text: content.text!);
     case "10":
       return VoiceContentWidgetModel(text: "");
+    case "27":
+      return ForumQuickLinkContentWidgetModel(text: content.text!);
     default:
-      throw Exception("未知Type");
+      if (kDebugMode) {
+        throw Exception("未知Type");
+      } else {
+        return UnknownontentWidgetModel(text: content.text);
+      }
   }
 }
