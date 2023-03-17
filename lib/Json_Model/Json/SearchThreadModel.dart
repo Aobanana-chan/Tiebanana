@@ -508,22 +508,22 @@ class VipInfo {
       aScore = (json['a_score'] as num).toInt().toString();
     }
 
-    eTime = json['e_time'];
-    extScore = json['ext_score'];
+    eTime = json['e_time'].toString();
+    extScore = json['ext_score'].toString();
     iconUrl = json['icon_url'];
     if (json['n_score'] is String) {
       nScore = int.parse(json['n_score']);
     } else if (json['n_score'] is num) {
       nScore = (json['n_score'] as num).toInt();
     }
-    sTime = json['s_time'];
+    sTime = json['s_time'].toString();
     if (json['v_level'] is String) {
       vLevel = json['v_level'];
     } else if (json['v_level'] is num) {
       vLevel = (json['v_level'] as num).toInt().toString();
     }
 
-    vStatus = json['v_status'];
+    vStatus = json['v_status'].toString();
     yScore = (json['y_score'] as num?)?.toInt();
   }
 

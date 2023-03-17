@@ -42,7 +42,7 @@ class _ImgExplorerState extends State<ImgExplorer> {
 
   String qualitySelect() {
     if (Global.setting.pictureLoadSetting == 2) {
-      return widget.highQualityUrl!;
+      return widget.highQualityUrl ?? widget.imgUrl;
     }
     if (Global.setting.pictureLoadSetting == 0 &&
         Global.netStatus != ConnectivityResult.mobile) {

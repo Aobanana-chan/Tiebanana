@@ -1678,7 +1678,7 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "_client_version": "7.2.0",
       "is_thread": "0",
@@ -1726,7 +1726,7 @@ class TiebaAPI {
   ///获取用户关注贴吧
   Future<UserForumLikeModel> getUserForumnLike(
       String uid, String myUid, int pn, int pageSize) async {
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
@@ -1843,7 +1843,7 @@ class TiebaAPI {
 
   ///取消收藏贴
   Future<RemoveThreadStoreModel> threadRemoveStore(String tid) async {
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),

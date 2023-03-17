@@ -72,7 +72,7 @@ class _UserVisitorState extends State<UserVisitor> {
               uid: widget.uid,
               myLikeNum: userinfo?.user!.myLikeNum ?? "0",
               threadNum: userinfo?.user!.threadNum ?? "0",
-              rePostNum: userinfo?.user!.repostNum ?? "0",
+              rePostNum: userinfo?.user!.postNum ?? "0",
             ),
           ),
         ));
@@ -273,42 +273,40 @@ class _BottomViewState extends State<_BottomView>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(children: [
-        TabBar(
-          tabs: _tab
-              .map((e) => Tab(
-                    text: e,
-                  ))
-              .toList(),
-          controller: _controller,
-          labelColor: Theme.of(context).brightness == Brightness.light
-              ? Theme.of(context).primaryColor
-              : Theme.of(context).colorScheme.onSurface,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          indicator: CustomUnderlineTabIndicator(
-              wantWidth: 36,
-              insets: const EdgeInsets.only(left: 15, right: 15),
-              borderSide: BorderSide(
-                  width: 4,
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? Theme.of(context).primaryColor
-                      : Theme.of(context).colorScheme.onSurface)),
-        ),
-        Expanded(
-            child: TabBarView(controller: _controller, children: [
-          KeepAliveWrapper(child: _ThreadView(uid: widget.uid)),
-          KeepAliveWrapper(
-              child: _Postview(
-            uid: widget.uid,
-          )),
-          KeepAliveWrapper(
-              child: _ForumView(
-            uid: widget.uid,
-          ))
-        ]))
-      ]),
-    );
+    return Column(children: [
+      TabBar(
+        tabs: _tab
+            .map((e) => Tab(
+                  text: e,
+                ))
+            .toList(),
+        controller: _controller,
+        labelColor: Theme.of(context).brightness == Brightness.light
+            ? Theme.of(context).primaryColor
+            : Theme.of(context).colorScheme.onSurface,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        indicator: CustomUnderlineTabIndicator(
+            wantWidth: 36,
+            insets: const EdgeInsets.only(left: 15, right: 15),
+            borderSide: BorderSide(
+                width: 4,
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Theme.of(context).primaryColor
+                    : Theme.of(context).colorScheme.onSurface)),
+      ),
+      Expanded(
+          child: TabBarView(controller: _controller, children: [
+        KeepAliveWrapper(child: _ThreadView(uid: widget.uid)),
+        KeepAliveWrapper(
+            child: _Postview(
+          uid: widget.uid,
+        )),
+        KeepAliveWrapper(
+            child: _ForumView(
+          uid: widget.uid,
+        ))
+      ]))
+    ]);
   }
 }
 
@@ -327,7 +325,7 @@ class __ThreadViewState extends State<_ThreadView> {
   int pn = 1;
   bool hasMore = true;
   late ScrollController? _controller;
-  late final String? username;
+  late String? username;
   void init() async {
     info = await Global.tiebaAPI.getUserPost(uid: widget.uid, pn: pn);
     posts.addAll(info?.postList ?? []);
@@ -377,6 +375,9 @@ class __ThreadViewState extends State<_ThreadView> {
     _controller = context
         .findAncestorStateOfType<ExtendedNestedScrollViewState>()
         ?.innerController;
+    var userinfo =
+        context.findAncestorStateOfType<_UserVisitorState>()?.userinfo;
+    username = "${userinfo?.user?.nameShow ?? userinfo?.user?.name}";
     super.didUpdateWidget(oldWidget);
   }
 
@@ -413,36 +414,39 @@ class __ThreadViewState extends State<_ThreadView> {
       itemBuilder: (BuildContext context, int index) {
         // return Container();
         return UserPostWidget(
-          username: username!,
-          content: () {
-            var result = <PostContentBaseWidgetModel>[];
-            for (var element in posts[index].content ?? []) {
-              result.add(createContentModel(element));
-            }
-            return result;
-          }(),
-          images: () {
-            var result = <MediaModel>[];
-            for (Media element in posts[index].media ?? []) {
-              result.add(MediaModel(
-                  bigPic: element.bigPic!, originPic: element.originPic!));
-            }
-            return result;
-          }(),
-          videoInfo:
-              VedioInfoWidgetModel.fromVideoInfo(posts[index].videoInfo!),
-          threadId: posts[index].threadId!,
-          userId: posts[index].userId!,
-          userPortrait: posts[index].userPortrait!,
-          isThread: posts[index].isThread != "0",
-          title: posts[index].title!,
-          createTime: posts[index].createTime!,
-          quota: QuotaModel(content: posts[index].quota!.content!),
-          forumName: posts[index].forumName!,
-          agreeNum: posts[index].agree!.agreeNum!,
-          disagreeNum: posts[index].agree!.disagreeNum!,
-          replyNum: posts[index].replyNum!,
-        );
+            username: username!,
+            content: () {
+              var result = <PostContentBaseWidgetModel>[];
+              for (var element in posts[index].content ?? []) {
+                result.add(createContentModel(element));
+              }
+              return result;
+            }(),
+            images: () {
+              var result = <MediaModel>[];
+              for (Media element in posts[index].media ?? []) {
+                result.add(MediaModel(
+                    bigPic: element.bigPic!, originPic: element.originPic!));
+              }
+              return result;
+            }(),
+            videoInfo: posts[index].videoInfo == null
+                ? null
+                : VedioInfoWidgetModel.fromVideoInfo(posts[index].videoInfo!),
+            threadId: posts[index].threadId!,
+            userId: posts[index].userId!,
+            userPortrait: posts[index].userPortrait!,
+            isThread: posts[index].isThread != "0",
+            title: posts[index].title!,
+            createTime: posts[index].createTime!,
+            quota: posts[index].quota == null
+                ? null
+                : QuotaModel(content: posts[index].quota!.content!),
+            forumName: posts[index].forumName!,
+            agreeNum: posts[index].agree!.agreeNum!,
+            disagreeNum: posts[index].agree!.disagreeNum!,
+            replyNum: posts[index].replyNum!,
+            postId: posts[index].postId);
       },
     );
   }
@@ -565,19 +569,23 @@ class __PostviewState extends State<_Postview> {
             }
             return result;
           }(),
-          videoInfo:
-              VedioInfoWidgetModel.fromVideoInfo(posts[index].videoInfo!),
+          videoInfo: posts[index].videoInfo == null
+              ? null
+              : VedioInfoWidgetModel.fromVideoInfo(posts[index].videoInfo!),
           threadId: posts[index].threadId!,
           userId: posts[index].userId!,
           userPortrait: posts[index].userPortrait!,
           isThread: posts[index].isThread != "0",
           title: posts[index].title!,
           createTime: posts[index].createTime!,
-          quota: QuotaModel(content: posts[index].quota!.content!),
+          quota: posts[index].quota == null
+              ? null
+              : QuotaModel(content: posts[index].quota!.content!),
           forumName: posts[index].forumName!,
-          agreeNum: posts[index].agree!.agreeNum!,
-          disagreeNum: posts[index].agree!.disagreeNum!,
-          replyNum: posts[index].replyNum!,
+          agreeNum: posts[index].agree?.agreeNum ?? "0",
+          disagreeNum: posts[index].agree?.disagreeNum ?? "0",
+          replyNum: posts[index].replyNum ?? "0",
+          postId: posts[index].postId,
         );
       },
     );

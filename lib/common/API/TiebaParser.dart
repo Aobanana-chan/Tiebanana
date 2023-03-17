@@ -234,7 +234,6 @@ class TiebaParser {
                 }
               }));
       } else if (elem is ForumQuickLinkContentWidgetModel) {
-        //TODO:范例 kz=7919486246 kz = 7909655252
         richText.add(TextSpan(
             text: elem.text,
             children: [
@@ -352,14 +351,14 @@ class TiebaParser {
       QuotaModel? quota,
       List<PostContentBaseWidgetModel>? contents,
       String title,
+      String? postid,
+      String tid,
       List<String> allImgs,
       List<String> allOrgImgs,
-      {VideoInfo? videoInfo,
+      {VedioInfoWidgetModel? videoInfo,
       bool selectable = false,
       int mediaLimit = 1 << 31}) {
     List<Widget> richText = [];
-    //TODO:回复跳转
-
     //引用
     if (quota != null) {
       richText.add(Container(
@@ -382,22 +381,28 @@ class TiebaParser {
         ),
       ));
     } else {
-      richText.add(Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(top: 5),
-          padding: const EdgeInsets.all(5),
-          decoration: BoxDecoration(
-              color: const Color(0xFFF0F3F5),
-              borderRadius: BorderRadius.circular(3)),
-          child: Wrap(children: [
-            ExtendedText(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
-              specialTextSpanBuilder: TiebaSpanBuilder(),
-            )
-          ])));
+      richText.add(GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(context, PageRouter.threadPage,
+              arguments: ThreadPageRouterData(kz: tid, pid: postid));
+        },
+        child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(top: 5),
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+                color: const Color(0xFFF0F3F5),
+                borderRadius: BorderRadius.circular(3)),
+            child: Wrap(children: [
+              ExtendedText(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                specialTextSpanBuilder: TiebaSpanBuilder(),
+              )
+            ])),
+      ));
     }
 
     //回复

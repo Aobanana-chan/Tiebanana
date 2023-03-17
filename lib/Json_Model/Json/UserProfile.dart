@@ -173,15 +173,15 @@ class UserProfileModel {
     goodsWin =
         json['goods_win'] != null ? GoodsWin.fromJson(json['goods_win']) : null;
     uk = json['uk'];
-    isBlackWhite = json['is_black_white'];
+    isBlackWhite = json['is_black_white'].toString();
     blockInfo = json['block_info'] != null
         ? BlockInfo.fromJson(json['block_info'])
         : null;
-    serverTime = json['server_time'];
+    serverTime = json['server_time'].toString();
     time = json['time'];
-    ctime = json['ctime'];
-    logid = json['logid'];
-    errorCode = json['error_code'];
+    ctime = int.tryParse(json['ctime']);
+    logid = int.tryParse(json['logid']);
+    errorCode = json['error_code'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -281,7 +281,7 @@ class NicknameInfo {
   NicknameInfo({this.leftDays});
 
   NicknameInfo.fromJson(Map<String, dynamic> json) {
-    leftDays = json['left_days'];
+    leftDays = json['left_days'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -306,11 +306,11 @@ class AntiStat {
       this.hasChance});
 
   AntiStat.fromJson(Map<String, dynamic> json) {
-    blockStat = json['block_stat'];
-    vcodeStat = json['vcode_stat'];
-    hideStat = json['hide_stat'];
-    daysTofree = json['days_tofree'];
-    hasChance = json['has_chance'];
+    blockStat = json['block_stat'].toString();
+    vcodeStat = json['vcode_stat'].toString();
+    hideStat = json['hide_stat'].toString();
+    daysTofree = json['days_tofree'].toString();
+    hasChance = json['has_chance'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -479,11 +479,11 @@ class UserProfileModelUser {
       this.tiebaUid});
 
   UserProfileModelUser.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     name = json['name'];
     nameShow = json['name_show'];
     portrait = json['portrait'];
-    isDefaultAvatar = json['is_default_avatar'];
+    isDefaultAvatar = json['is_default_avatar'].toString();
     portraith = json['portraith'];
     // if (json['user_pics'] != null) {
     //   userPics = <Null>[];
@@ -494,12 +494,12 @@ class UserProfileModelUser {
     privSets =
         json['priv_sets'] != null ? PrivSets.fromJson(json['priv_sets']) : null;
     intro = json['intro'];
-    sex = json['sex'];
-    outerId = json['outer_id'];
-    postNum = json['post_num'];
-    repostNum = json['repost_num'];
-    threadNum = json['thread_num'];
-    totalAgreeNum = json['total_agree_num'];
+    sex = json['sex'].toString();
+    outerId = json['outer_id'].toString();
+    postNum = json['post_num'].toString();
+    repostNum = json['repost_num'].toString();
+    threadNum = json['thread_num'].toString();
+    totalAgreeNum = json['total_agree_num'].toString();
     // if (json['iconinfo'] != null) {
     //   iconinfo = <Null>[];
     //   json['iconinfo'].forEach((v) {
@@ -513,15 +513,15 @@ class UserProfileModelUser {
     //   });
     // }
     tbAge = json['tb_age'];
-    isMask = json['is_mask'];
-    isMem = json['is_mem'];
-    bookmarkCount = json['bookmark_count'];
-    bookmarkNewCount = json['bookmark_new_count'];
+    isMask = json['is_mask'].toString();
+    isMem = json['is_mem'].toString();
+    bookmarkCount = json['bookmark_count'].toString();
+    bookmarkNewCount = json['bookmark_new_count'].toString();
     bgPic = json['bg_pic'];
     vipCloseAd = json['vip_close_ad'] != null
         ? VipCloseAd.fromJson(json['vip_close_ad'])
         : null;
-    hasBottleEnter = json['has_bottle_enter'];
+    hasBottleEnter = json['has_bottle_enter'].toString();
     // if (json['tb_vip'] != null) {
     //   tbVip = <Null>[];
     //   json['tb_vip'].forEach((v) {
@@ -534,8 +534,8 @@ class UserProfileModelUser {
     newGodData = json['new_god_data'] != null
         ? NewGodData.fromJson(json['new_god_data'])
         : null;
-    eachOtherFriend = json['each_other_friend'];
-    canModifyAvatar = json['can_modify_avatar'];
+    eachOtherFriend = json['each_other_friend'].toString();
+    canModifyAvatar = json['can_modify_avatar'].toString();
     modifyAvatarDesc = json['modify_avatar_desc'];
     // if (json['pendant'] != null) {
     //   pendant = <Null>[];
@@ -544,8 +544,8 @@ class UserProfileModelUser {
     //   });
     // }
     sealPrefix = json['seal_prefix'];
-    visitorNum = json['visitor_num'];
-    totalVisitorNum = json['total_visitor_num'];
+    visitorNum = json['visitor_num'].toString();
+    totalVisitorNum = json['total_visitor_num'].toString();
     alaInfo =
         json['ala_info'] != null ? AlaInfo.fromJson(json['ala_info']) : null;
     // if (json['theme_card'] != null) {
@@ -574,11 +574,11 @@ class UserProfileModelUser {
     //     consumeInfo.add(Null.fromJson(v));
     //   });
     // }
-    myLikeNum = json['my_like_num'];
-    likeForumNum = json['like_forum_num'];
-    concernNum = json['concern_num'];
-    fansNum = json['fans_num'];
-    hasConcerned = json['has_concerned'];
+    myLikeNum = json['my_like_num'].toString();
+    likeForumNum = json['like_forum_num'].toString();
+    concernNum = json['concern_num'].toString();
+    fansNum = json['fans_num'].toString();
+    hasConcerned = json['has_concerned'].toString();
     twAnchorInfo = json['tw_anchor_info'] != null
         ? TwAnchorInfo.fromJson(json['tw_anchor_info'])
         : null;
@@ -586,9 +586,9 @@ class UserProfileModelUser {
     businessAccountInfo = json['business_account_info'] != null
         ? BusinessAccountInfo.fromJson(json['business_account_info'])
         : null;
-    displayAuthType = json['display_auth_type'];
+    displayAuthType = json['display_auth_type'].toString();
     // workCreatorInfo = json['work_creator_info'];
-    isFans = json['is_fans'];
+    isFans = json['is_fans'].toString();
     if (json['likeForum'] != null) {
       likeForum = <UserProfileModelLikeForum>[];
       json['likeForum'].forEach((v) {
@@ -601,7 +601,7 @@ class UserProfileModelUser {
     //     groupList.add(Null.fromJson(v));
     //   });
     // }
-    giftNum = json['gift_num'];
+    giftNum = json['gift_num'].toString();
     if (json['gift_list'] != null) {
       giftList = <GiftList>[];
       json['gift_list'].forEach((v) {
@@ -616,22 +616,22 @@ class UserProfileModelUser {
     //   bazhuGrade = json['bazhu_grade'];
     // }
 
-    friendNum = json['friend_num'];
+    friendNum = json['friend_num'].toString();
     // if (json['parr_scores'] != null) {
     //   parrScores = <Null>[];
     //   json['parr_scores'].forEach((v) {
     //     parrScores.add(Null.fromJson(v));
     //   });
     // }
-    isInvited = json['is_invited'];
-    isShowRedpacket = json['is_show_redpacket'];
+    isInvited = json['is_invited'].toString();
+    isShowRedpacket = json['is_show_redpacket'].toString();
     callFansInfo = json['call_fans_info'] != null
         ? CallFansInfo.fromJson(json['call_fans_info'])
         : null;
     creationData = json['creation_data'] != null
         ? CreationData.fromJson(json['creation_data'])
         : null;
-    favoriteNum = json['favorite_num'];
+    favoriteNum = json['favorite_num'].toString();
     // if (json['live_room_info'] != null) {
     //   liveRoomInfo = <Null>[];
     //   json['live_room_info'].forEach((v) {
@@ -825,8 +825,8 @@ class VipCloseAd {
   });
 
   VipCloseAd.fromJson(Map<String, dynamic> json) {
-    isOpen = json['is_open'];
-    vipClose = json['vip_close'];
+    isOpen = json['is_open'].toString();
+    vipClose = json['vip_close'].toString();
     // if (json['forum_close'] != null) {
     //   forumClose = <Null>[];
     //   json['forum_close'].forEach((v) {
@@ -889,7 +889,7 @@ class NewGodData {
   NewGodData({this.fieldId});
 
   NewGodData.fromJson(Map<String, dynamic> json) {
-    fieldId = json['field_id'];
+    fieldId = json['field_id'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -945,8 +945,8 @@ class PayMemberInfo {
   PayMemberInfo({this.propsId, this.endTime, this.url, this.expireRemind});
 
   PayMemberInfo.fromJson(Map<String, dynamic> json) {
-    propsId = json['props_id'];
-    endTime = json['end_time'];
+    propsId = json['props_id'].toString();
+    endTime = json['end_time'].toString();
     url = json['url'];
     expireRemind = json['expire_remind'];
   }
@@ -1056,16 +1056,16 @@ class TwAnchorInfo {
       this.giftsNum});
 
   TwAnchorInfo.fromJson(Map<String, dynamic> json) {
-    anchorLevel = json['anchor_level'];
-    inBlackList = json['in_black_list'];
+    anchorLevel = json['anchor_level'].toString();
+    inBlackList = json['in_black_list'].toString();
     setCover = json['set_cover'];
     callerMsg = json['caller_msg'];
     follow = json['follow'];
     guide = json['guide'];
     newfloor = json['newfloor'];
-    fansNum = json['fans_num'];
-    monthUpdateDays = json['month_update_days'];
-    giftsNum = json['gifts_num'];
+    fansNum = json['fans_num'].toString();
+    monthUpdateDays = json['month_update_days'].toString();
+    giftsNum = json['gifts_num'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1095,7 +1095,7 @@ class BusinessAccountInfo {
   BusinessAccountInfo.fromJson(Map<String, dynamic> json) {
     businessName = json['business_name'];
     identifiExplain = json['identifi_explain'];
-    isBusinessAccount = json['is_business_account'];
+    isBusinessAccount = json['is_business_account'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1115,7 +1115,7 @@ class UserProfileModelLikeForum {
 
   UserProfileModelLikeForum.fromJson(Map<String, dynamic> json) {
     forumName = json['forum_name'];
-    forumId = json['forum_id'];
+    forumId = json['forum_id'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1145,12 +1145,12 @@ class GiftList {
       this.senderName});
 
   GiftList.fromJson(Map<String, dynamic> json) {
-    giftId = json['gift_id'];
+    giftId = json['gift_id'].toString();
     giftName = json['gift_name'];
-    icon = json['icon'];
+    icon = json['icon'].toString();
     largeThumbnailUrl = json['large_thumbnail_url'];
-    num = json['num'];
-    senderId = json['sender_id'];
+    num = json['num'].toString();
+    senderId = json['sender_id'].toString();
     senderName = json['sender_name'];
   }
 
@@ -1173,7 +1173,7 @@ class CallFansInfo {
   CallFansInfo({this.canCall});
 
   CallFansInfo.fromJson(Map<String, dynamic> json) {
-    canCall = json['can_call'];
+    canCall = json['can_call'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1200,12 +1200,12 @@ class CreationData {
       this.commentCountTrend});
 
   CreationData.fromJson(Map<String, dynamic> json) {
-    viewCount = json['view_count'];
-    agreeCount = json['agree_count'];
-    commentCount = json['comment_count'];
-    viewCountTrend = json['view_count_trend'];
-    agreeCountTrend = json['agree_count_trend'];
-    commentCountTrend = json['comment_count_trend'];
+    viewCount = json['view_count'].toString();
+    agreeCount = json['agree_count'].toString();
+    commentCount = json['comment_count'].toString();
+    viewCountTrend = json['view_count_trend'].toString();
+    agreeCountTrend = json['agree_count_trend'].toString();
+    commentCountTrend = json['comment_count_trend'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1241,9 +1241,9 @@ class Tainfo {
       this.hideUserFeed});
 
   Tainfo.fromJson(Map<String, dynamic> json) {
-    groupnum = json['groupnum'];
-    friendnum = json['friendnum'];
-    isFriend = json['is_friend'];
+    groupnum = json['groupnum'].toString();
+    friendnum = json['friendnum'].toString();
+    isFriend = json['is_friend'].toString();
     friendAddType = json['friend_add_type'];
     // if (json['reply_list'] != null) {
     //   replyList = <Null>[];
@@ -1252,7 +1252,7 @@ class Tainfo {
     //   });
     // }
     userIosHightestVerSion = json['userIosHightestVerSion'];
-    userClientVersionIsLower = json['userClientVersionIsLower'];
+    userClientVersionIsLower = json['userClientVersionIsLower'].toString();
     hideUserFeed = json['hide_user_feed'];
   }
 
@@ -1321,7 +1321,7 @@ class UcCards {
     pic = json['pic'];
     jmp = json['jmp'];
     tip = json['tip'];
-    st = json['st'];
+    st = json['st'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1342,8 +1342,8 @@ class VideoChannelInfo {
   VideoChannelInfo({this.manChannel, this.followChannel});
 
   VideoChannelInfo.fromJson(Map<String, dynamic> json) {
-    manChannel = json['man_channel'];
-    followChannel = json['follow_channel'];
+    manChannel = json['man_channel'].toString();
+    followChannel = json['follow_channel'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1360,7 +1360,7 @@ class UserAgreeInfo {
   UserAgreeInfo({this.totalAgreeNum});
 
   UserAgreeInfo.fromJson(Map<String, dynamic> json) {
-    totalAgreeNum = json['total_agree_num'];
+    totalAgreeNum = json['total_agree_num'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1378,7 +1378,7 @@ class UrlMap {
   UrlMap({this.id, this.name, this.url});
 
   UrlMap.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     name = json['name'];
     url = json['url'];
   }
@@ -1399,8 +1399,8 @@ class Duxiaoman {
   Duxiaoman({this.totalCash, this.isEnd});
 
   Duxiaoman.fromJson(Map<String, dynamic> json) {
-    totalCash = json['total_cash'];
-    isEnd = json['is_end'];
+    totalCash = json['total_cash'].toString();
+    isEnd = json['is_end'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1419,7 +1419,7 @@ class GoodsWin {
 
   GoodsWin.fromJson(Map<String, dynamic> json) {
     goodsUrl = json['goods_url'];
-    show = json['show'];
+    show = json['show'].toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -1437,8 +1437,8 @@ class BlockInfo {
   BlockInfo({this.isPermanentBan, this.isAutoPay});
 
   BlockInfo.fromJson(Map<String, dynamic> json) {
-    isPermanentBan = json['is_permanent_ban'];
-    isAutoPay = json['is_auto_pay'];
+    isPermanentBan = json['is_permanent_ban'].toString();
+    isAutoPay = json['is_auto_pay'].toString();
   }
 
   Map<String, dynamic> toJson() {

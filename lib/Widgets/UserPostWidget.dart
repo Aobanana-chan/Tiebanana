@@ -22,8 +22,9 @@ class UserPostWidget extends StatelessWidget {
   final bool isThread;
   final String title;
   final String createTime;
-  final QuotaModel quota;
-  final VedioInfoWidgetModel videoInfo;
+  final QuotaModel? quota;
+  final String? postId;
+  final VedioInfoWidgetModel? videoInfo;
   final String forumName;
   final String agreeNum;
   final String disagreeNum;
@@ -44,7 +45,8 @@ class UserPostWidget extends StatelessWidget {
       required this.forumName,
       required this.agreeNum,
       required this.disagreeNum,
-      required this.replyNum})
+      required this.replyNum,
+      required this.postId})
       : super(key: key);
 
   @override
@@ -143,8 +145,8 @@ class UserPostWidget extends StatelessWidget {
                     ? TiebaParser.parseContent(
                         context, content, allImgs, allOrgImgs,
                         mediaLimit: 1, videoInfo: videoInfo)
-                    : TiebaParser.parseReplyContent(
-                        context, quota, content, title, allImgs, allOrgImgs),
+                    : TiebaParser.parseReplyContent(context, quota, content,
+                        title, postId, threadId, allImgs, allOrgImgs),
               ),
             ),
             //底部

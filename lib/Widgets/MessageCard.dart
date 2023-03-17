@@ -8,6 +8,7 @@ import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';
+import 'package:tiebanana/routes/routes.dart';
 
 import '../Json_Model/WidgetModel/MessagePageModel.dart';
 
@@ -23,7 +24,6 @@ class MessageCard extends StatelessWidget {
     if (message.quoteContent == "") {
       text = "回复我的主题: ${message.title}";
     }
-    //TODO:回复跳转
     return ExtendedText(
       text,
       maxLines: 2,
@@ -57,6 +57,10 @@ class MessageCard extends StatelessWidget {
                   imgUrl: AUTHOR_AVATAR + message.portrait,
                   height: 45,
                   width: 45,
+                  onTap: () {
+                    Navigator.pushNamed(context, PageRouter.user,
+                        arguments: message.uid);
+                  },
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,16 +88,24 @@ class MessageCard extends StatelessWidget {
             ),
 
             //引用信息
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 5),
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                  // color: const Color(0xFFF0F3F5),
-                  color: Theme.of(context).extension<QuoteTheme>()!.backgorund!,
-                  borderRadius: BorderRadius.circular(3)),
-              child: Wrap(
-                children: [_buildBody(context)],
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, PageRouter.threadPage,
+                    arguments: ThreadPageRouterData(
+                        kz: message.threadId, pid: message.postId));
+              },
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 5),
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                    // color: const Color(0xFFF0F3F5),
+                    color:
+                        Theme.of(context).extension<QuoteTheme>()!.backgorund!,
+                    borderRadius: BorderRadius.circular(3)),
+                child: Wrap(
+                  children: [_buildBody(context)],
+                ),
               ),
             ),
             //回复信息

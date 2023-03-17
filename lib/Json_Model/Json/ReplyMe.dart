@@ -159,10 +159,10 @@ class PrivSets {
   PrivSets({this.like, this.location, this.post, this.reply});
 
   PrivSets.fromJson(Map<String, dynamic> json) {
-    like = json['like'];
-    location = json['location'];
-    post = json['post'];
-    reply = json['reply'];
+    like = json['like'].toString();
+    location = json['location'].toString();
+    post = json['post'].toString();
+    reply = json['reply'].toString();
   }
 
   Map<String, dynamic> toJson() {

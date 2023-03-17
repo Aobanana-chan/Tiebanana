@@ -64,15 +64,20 @@ abstract class PageRouter {
   static const String home = "/";
 
   ///参数
-  ///String
+  ///
+  ///[String]
   static const String forumHome = "forumHome";
 
   ///参数
-  ///ThreadPageRouterData
+  ///[ThreadPageRouterData]
   static const String threadPage = "threadPage";
   static const String login = "login";
   static const String search = "search";
   static const String imagePicker = "imagePicker";
+
+  ///参数
+  ///
+  ///[String] uid
   static const String user = "user";
   static const String threadStore = "threadStore";
   static const String viewHistory = "viewHistory";

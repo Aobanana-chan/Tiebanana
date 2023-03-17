@@ -1,4 +1,3 @@
-
 import 'package:tiebanana/Json_Model/json.dart';
 
 import 'commonModel.dart';
@@ -17,6 +16,10 @@ class MessagePageModel implements User {
   @override
   String? username;
 
+  String? postId;
+
+  late String threadId;
+
   @override
   String get name {
     if (nameShow != null || nameShow != "") {
@@ -31,8 +34,18 @@ class MessagePageModel implements User {
   late String quoteContent;
   late String fname;
   late String title;
-  MessagePageModel(this.content, this.fname, this.nameShow, this.portrait,
-      this.quoteContent, this.time, this.uid, this.username);
+  MessagePageModel(
+      this.content,
+      this.fname,
+      this.nameShow,
+      this.portrait,
+      this.quoteContent,
+      this.time,
+      this.uid,
+      this.username,
+      this.postId,
+      this.threadId,
+      this.title);
   MessagePageModel.fromReplyMe(ReplyMe replyMe) {
     portrait = replyMe.replyer?.portrait ?? "";
     nameShow = replyMe.replyer?.nameShow;
@@ -42,6 +55,9 @@ class MessagePageModel implements User {
     fname = replyMe.fname!;
     quoteContent = replyMe.quoteContent!;
     title = replyMe.title ?? "";
+    uid = replyMe.replyer!.id!;
+    postId = replyMe.postId;
+    threadId = replyMe.threadId!;
   }
   MessagePageModel.fromAtMe(AtMe atMe) {
     portrait = atMe.replyer?.portrait ?? "";
@@ -52,5 +68,8 @@ class MessagePageModel implements User {
     fname = atMe.fname!;
     quoteContent = atMe.quoteContent!;
     title = atMe.title ?? "";
+    uid = atMe.replyer!.id!;
+    postId = atMe.postId;
+    threadId = atMe.threadId!;
   }
 }

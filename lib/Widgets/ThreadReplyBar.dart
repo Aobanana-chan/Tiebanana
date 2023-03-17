@@ -113,7 +113,6 @@ class _ThreadReplyBarState extends State<ThreadReplyBar> {
             },
             onTap: (isLiked) async {
               if (isLiked) {
-                //TODO:取消收藏
                 var res = await Global.tiebaAPI.threadRemoveStore(widget.tid);
                 if (res.error?.errno == "0") {
                   Fluttertoast.showToast(msg: "取消收藏");
