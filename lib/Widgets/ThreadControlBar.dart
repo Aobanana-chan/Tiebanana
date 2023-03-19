@@ -103,7 +103,7 @@ class _ThreadControlBarState extends State<ThreadControlBar> {
               data: Theme.of(context).copyWith(
                 canvasColor: Theme.of(context).brightness == Brightness.light
                     ? Colors.white
-                    : Theme.of(context).backgroundColor,
+                    : Theme.of(context).colorScheme.background,
               ),
               child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(

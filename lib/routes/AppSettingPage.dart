@@ -63,7 +63,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
                     //TODO:进入个人资料界面
                   },
                   child: ListTile(
-                    leading: Icon(Icons.person_outline_outlined),
+                    leading: const Icon(Icons.person_outline_outlined),
                     title: Text("个人资料",
                         style: TextStyle(
                             fontSize: Provider.of<APPSettingProvider>(context)

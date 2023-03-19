@@ -96,7 +96,7 @@ class _VideoScreenState extends State<VideoPlayer> {
           child: FijkView(
             cover: widget.cover == null ? null : NetworkImage(widget.cover!),
             color: Colors.black,
-            fit: FijkFit.ar16_9,
+            fit: FijkFit.fitWidth,
             player: player,
             panelBuilder: (
               FijkPlayer player,

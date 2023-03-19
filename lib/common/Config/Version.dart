@@ -29,12 +29,19 @@ class Version {
   Map<String, String> downloadUrl = {};
   late String changeLog;
 
-  Future<void> checkUpdate() async {
-    var res = await _dio.get(
-      _latestUrl,
-    );
+  Future<void> checkUpdate({bool pre = false}) async {
+    Response res;
+    if (pre) {
+      res = await _dio.get(
+        _latestUrlPreInclude,
+      );
+    } else {
+      res = await _dio.get(
+        _latestUrl,
+      );
+    }
 
-    var resJson = GetLatestVersion.fromJson(res.data);
+    VersionBase resJson = GetLatestVersion.fromJson(res.data);
     lastestVersion = resJson.name;
     if (resJson.name != version) {
       hasUpdate = true;

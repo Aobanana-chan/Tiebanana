@@ -64,7 +64,7 @@ class _RecommendPanState extends State<RecommendPan> {
         threadwidgets.add(ThreadSummary(
           firstPostContent: () {
             var result = <PostContentBaseWidgetModel>[];
-            for (Content element in recommend[i]!.firstPostContent!) {
+            for (Content element in recommend[i]!.firstPostContent ?? []) {
               result.add(createContentModel(element));
             }
             return result;

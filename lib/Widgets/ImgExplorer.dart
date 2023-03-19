@@ -346,117 +346,127 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer>
                         GlobalKey<ExtendedImageGestureState>();
                     return Hero(
                         tag: widget.imgUrls[index] + widget.heroTagSalt,
-                        child: ExtendedImage.network(
-                          qualitySelect(index),
-                          extendedImageGestureKey: gestureKey,
-                          mode: ExtendedImageMode.gesture,
-                          initGestureConfigHandler: (state) {
-                            return GestureConfig(
-                              inPageView: true,
-                              initialScale: 1.0,
-                              cacheGesture: true,
-                            );
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
                           },
-                          handleLoadingProgress: true,
-                          loadStateChanged: (state) {
-                            switch (state.extendedImageLoadState) {
-                              case LoadState.completed:
-                                highQualityCacheCheck();
-                                return null;
-                              case LoadState.loading:
-                                if (state.loadingProgress == null ||
-                                    state.loadingProgress!.expectedTotalBytes ==
-                                        null) {
-                                  highQualityLoadState = null;
-                                } else {
-                                  highQualityLoadState = (state.loadingProgress!
-                                          .cumulativeBytesLoaded /
+                          child: ExtendedImage.network(
+                            qualitySelect(index),
+                            extendedImageGestureKey: gestureKey,
+                            mode: ExtendedImageMode.gesture,
+                            initGestureConfigHandler: (state) {
+                              return GestureConfig(
+                                inPageView: true,
+                                initialScale: 1.0,
+                                cacheGesture: true,
+                              );
+                            },
+                            handleLoadingProgress: true,
+                            loadStateChanged: (state) {
+                              switch (state.extendedImageLoadState) {
+                                case LoadState.completed:
+                                  highQualityCacheCheck();
+                                  return null;
+                                case LoadState.loading:
+                                  if (state.loadingProgress == null ||
                                       state.loadingProgress!
-                                          .expectedTotalBytes!);
-                                }
-                                //未加载完前显示低质量图片
-                                return ExtendedImage.network(
-                                  widget.imgUrls[index],
-                                  extendedImageGestureKey: gestureKey,
-                                  mode: ExtendedImageMode.gesture,
-                                  initGestureConfigHandler: (_) {
-                                    return GestureConfig(
-                                        inPageView: true,
-                                        initialScale: 1.0,
-                                        cacheGesture: true);
-                                  },
-                                  handleLoadingProgress: true,
-                                );
-                              case LoadState.failed:
-                                wantShowScrImg[index] = false;
-                                Fluttertoast.showToast(msg: "原图加载失败");
-                                return ExtendedImage.network(
-                                  widget.imgUrls[index],
-                                  extendedImageGestureKey: gestureKey,
-                                  mode: ExtendedImageMode.gesture,
-                                  initGestureConfigHandler: (_) {
-                                    return GestureConfig(
-                                        inPageView: true,
-                                        initialScale: 1.0,
-                                        minScale: 1.0,
-                                        cacheGesture: true);
-                                  },
-                                  handleLoadingProgress: true,
-                                );
-                              default:
-                            }
-                            return null;
-                          },
-                          onDoubleTap: (state) {
-                            const List<double> targetScale = [1.0, 1.3, 1.6];
-                            var pointerDownPosition = state.pointerDownPosition;
-                            double begin = state.gestureDetails!.totalScale!;
-                            late double end;
+                                              .expectedTotalBytes ==
+                                          null) {
+                                    highQualityLoadState = null;
+                                  } else {
+                                    highQualityLoadState = (state
+                                            .loadingProgress!
+                                            .cumulativeBytesLoaded /
+                                        state.loadingProgress!
+                                            .expectedTotalBytes!);
+                                  }
+                                  //未加载完前显示低质量图片
+                                  return ExtendedImage.network(
+                                    widget.imgUrls[index],
+                                    extendedImageGestureKey: gestureKey,
+                                    mode: ExtendedImageMode.gesture,
+                                    initGestureConfigHandler: (_) {
+                                      return GestureConfig(
+                                          inPageView: true,
+                                          initialScale: 1.0,
+                                          cacheGesture: true);
+                                    },
+                                    handleLoadingProgress: true,
+                                  );
+                                case LoadState.failed:
+                                  wantShowScrImg[index] = false;
+                                  Fluttertoast.showToast(msg: "原图加载失败");
+                                  return ExtendedImage.network(
+                                    widget.imgUrls[index],
+                                    extendedImageGestureKey: gestureKey,
+                                    mode: ExtendedImageMode.gesture,
+                                    initGestureConfigHandler: (_) {
+                                      return GestureConfig(
+                                          inPageView: true,
+                                          initialScale: 1.0,
+                                          minScale: 1.0,
+                                          cacheGesture: true);
+                                    },
+                                    handleLoadingProgress: true,
+                                  );
+                                default:
+                              }
+                              return null;
+                            },
+                            onDoubleTap: (state) {
+                              const List<double> targetScale = [1.0, 1.3, 1.6];
+                              var pointerDownPosition =
+                                  state.pointerDownPosition;
+                              double begin = state.gestureDetails!.totalScale!;
+                              late double end;
 
-                            //remove old
-                            _doubleClickAnimation
-                                ?.removeListener(_doubleClickAnimationListener);
+                              //remove old
+                              _doubleClickAnimation?.removeListener(
+                                  _doubleClickAnimationListener);
 
-                            //stop pre
-                            _doubleClickAnimationController.stop();
+                              //stop pre
+                              _doubleClickAnimationController.stop();
 
-                            //reset to use
-                            _doubleClickAnimationController.reset();
+                              //reset to use
+                              _doubleClickAnimationController.reset();
 
-                            if (begin == targetScale[2]) {
-                              end = targetScale[0];
-                            } else if (begin == targetScale[1]) {
-                              end = targetScale[2];
-                            } else if (begin == targetScale[0]) {
-                              end = targetScale[1];
-                            } else {
-                              var tmp = double.infinity;
-                              for (var scale in targetScale) {
-                                if ((begin - scale).abs() <= tmp) {
-                                  tmp = (begin - scale).abs();
-                                  end = scale;
+                              if (begin == targetScale[2]) {
+                                end = targetScale[0];
+                              } else if (begin == targetScale[1]) {
+                                end = targetScale[2];
+                              } else if (begin == targetScale[0]) {
+                                end = targetScale[1];
+                              } else {
+                                var tmp = double.infinity;
+                                for (var scale in targetScale) {
+                                  if ((begin - scale).abs() <= tmp) {
+                                    tmp = (begin - scale).abs();
+                                    end = scale;
+                                  }
                                 }
                               }
-                            }
 
-                            _doubleClickAnimationListener = () {
-                              //print(_animation.value);
-                              state.handleDoubleTap(
-                                  scale: _doubleClickAnimation?.value,
-                                  doubleTapPosition: pointerDownPosition);
-                            };
-                            _doubleClickAnimation =
-                                _doubleClickAnimationController.drive(
-                                    Tween<double>(begin: begin, end: end));
+                              _doubleClickAnimationListener = () {
+                                //print(_animation.value);
+                                state.handleDoubleTap(
+                                    scale: _doubleClickAnimation?.value,
+                                    doubleTapPosition: pointerDownPosition);
+                              };
+                              _doubleClickAnimation =
+                                  _doubleClickAnimationController.drive(
+                                      Tween<double>(begin: begin, end: end));
 
-                            _doubleClickAnimation
-                                ?.addListener(_doubleClickAnimationListener);
+                              _doubleClickAnimation
+                                  ?.addListener(_doubleClickAnimationListener);
 
-                            _doubleClickAnimationController.forward();
-                          },
+                              _doubleClickAnimationController.forward();
+                            },
+                          ),
                         ));
                   },
+
                   controller: widget.pageController,
+
                   itemCount: widget.imgUrls.length,
                   onPageChanged: (index) {
                     currentIndex = index;

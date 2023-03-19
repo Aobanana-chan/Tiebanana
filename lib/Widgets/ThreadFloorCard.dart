@@ -26,6 +26,7 @@ import '../common/Util/AppUtil.dart';
 import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
 import '../Json_Model/WidgetModel/ThreadPageModel.dart';
 
+//TODO:标识楼主，标识吧主
 ///帖子-楼层组件
 class ThreadFloorComment extends StatelessWidget {
   final ForumData forum;
@@ -338,96 +339,7 @@ class InnerPost extends StatelessWidget {
       text: "${author.name} :",
       style: const TextStyle(color: Colors.blue),
     ));
-    // for (PostContentBaseWidgetModel content in posts) {
-    //   //用户
-    //   if (content.uid != null && content.type == "0") {
-    //     w.add(TextSpan(
-    //         text: "${content.text}",
-    //         style: const TextStyle(color: Colors.blue),
-    //         recognizer: TapGestureRecognizer()
-    //           ..onTap = () {
-    //             Navigator.pushNamed(context, PageRouter.user,
-    //                 arguments: content.uid);
-    //           }));
-    //   } else if (content.type == "0") {
-    //     w.add(TextSpan(
-    //       text: "${content.text}",
-    //     ));
-    //   } else if (content.type == "2") {
-    //     w.add(EmojiSpan(
-    //       content.text!,
-    //       imageWidth: Provider.of<APPSettingProvider>(context).fontSize + 2,
-    //       imageHeight: Provider.of<APPSettingProvider>(context).fontSize + 2,
-    //     ));
-    //   } else if (content.type == "1" || content.type == "18") {
-    //     w.add(TextSpan(
-    //         text: content.text,
-    //         style: TextStyle(
-    //             fontSize: Provider.of<APPSettingProvider>(context).fontSize,
-    //             fontWeight: FontWeight.bold,
-    //             color: Colors.blue),
-    //         recognizer: TapGestureRecognizer()
-    //           ..onTap = () async {
-    //             if (await AppUtil.urlRoute(
-    //                   true,
-    //                   context,
-    //                   content.link!,
-    //                 ) ==
-    //                 false) {
-    //               Navigator.push(
-    //                   context,
-    //                   CupertinoPageRoute(
-    //                       builder: (builder) => WebViewWidget(
-    //                             // initialCookies: data,
-    //                             controller: WebViewController()
-    //                               ..setBackgroundColor(Colors.white)
-    //                               ..setJavaScriptMode(
-    //                                   JavaScriptMode.unrestricted)
-    //                               ..setNavigationDelegate(NavigationDelegate(
-    //                                   onNavigationRequest: (request) async {
-    //                                 if (await AppUtil.urlRoute(
-    //                                   true,
-    //                                   context,
-    //                                   request.url,
-    //                                 )) {
-    //                                   return NavigationDecision.prevent;
-    //                                 }
 
-    //                                 return NavigationDecision.navigate;
-    //                               }))
-    //                               ..loadRequest(Uri.parse(content.link!)),
-    //                             // backgroundColor: Colors.white,
-    //                             // initialUrl: content.link,
-    //                             // javascriptMode: JavascriptMode.unrestricted,
-    //                             // navigationDelegate: (request) async {
-    //                             //   if (await AppUtil.urlRoute(
-    //                             //     true,
-    //                             //     context,
-    //                             //     request.url,
-    //                             //   )) {
-    //                             //     return NavigationDecision.prevent;
-    //                             //   }
-
-    //                             //   return NavigationDecision.navigate;
-    //                             // },
-    //                           )));
-    //             }
-    //           }));
-    //   } else if (content.type == "9") {
-    //     w.add(TextSpan(
-    //       text: content.text!,
-    //       style: TextStyle(fontSize: Global.setting.fontSize),
-    //     ));
-    //   } else if (content.type == "4") {
-    //     //楼中楼@用户
-    //     w.add(AtUserSpan(context, text: content.text!, uid: content.uid!));
-    //   } else if (content.type == "10") {
-    //     //TODO:语音
-    //     // player
-    //   } else {
-    //     throw Exception("未知类型");
-    //   }
-    // }
     for (PostContentBaseWidgetModel content in posts) {
       //用户
       if (content is TextContentWidgetModel) {
@@ -497,7 +409,8 @@ class InnerPost extends StatelessWidget {
       } else if (content is AtContentWidgetModel) {
         //楼中楼@用户
         w.add(AtUserSpan(context, text: content.text, uid: content.uid));
-      } else if (content.type == "10") {
+      } else if (content is VoiceContentWidgetModel) {
+        throw Exception("楼语音");
         //TODO:语音
         // player
       } else {

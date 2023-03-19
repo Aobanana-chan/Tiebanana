@@ -776,7 +776,7 @@ class Content {
       this.src});
 
   Content.fromJson(Map<String, dynamic> json) {
-    uid = json["uid"].toString();
+    uid = json["uid"]?.toString();
     uname = json["uid"].toString();
     type = json['type'].toString();
     bsize = json['bsize'].toString();

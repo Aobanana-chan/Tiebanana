@@ -8,7 +8,6 @@ import 'package:tiebanana/common/API/TiebaParser.dart';
 import 'package:tiebanana/common/Global.dart';
 import 'package:tiebanana/routes/routes.dart';
 
-import '../Json_Model/WidgetModel/PostContentModel.dart';
 import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
 import '../Json_Model/WidgetModel/ThreadPageModel.dart';
 

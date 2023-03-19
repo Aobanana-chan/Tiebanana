@@ -1,11 +1,10 @@
-class GetLatestVersion {
+class VersionBase {
   String? url;
   String? htmlUrl;
   String? assetsUrl;
   String? uploadUrl;
   String? tarballUrl;
   String? zipballUrl;
-  String? discussionUrl;
   int? id;
   String? nodeId;
   String? tagName;
@@ -17,6 +16,46 @@ class GetLatestVersion {
   String? createdAt;
   String? publishedAt;
   Author? author;
+  List<Assets>? assets;
+}
+
+class GetLatestVersion implements VersionBase {
+  @override
+  String? url;
+  @override
+  String? htmlUrl;
+  @override
+  String? assetsUrl;
+  @override
+  String? uploadUrl;
+  @override
+  String? tarballUrl;
+  @override
+  String? zipballUrl;
+  String? discussionUrl;
+  @override
+  int? id;
+  @override
+  String? nodeId;
+  @override
+  String? tagName;
+  @override
+  String? targetCommitish;
+  @override
+  String? name;
+  @override
+  String? body;
+  @override
+  bool? draft;
+  @override
+  bool? prerelease;
+  @override
+  String? createdAt;
+  @override
+  String? publishedAt;
+  @override
+  Author? author;
+  @override
   List<Assets>? assets;
 
   GetLatestVersion(
@@ -250,24 +289,42 @@ class Assets {
 }
 
 ///包括Pre版的版本
-class GetLatestVersionIncludePre {
+class GetLatestVersionIncludePre implements VersionBase {
+  @override
   String? url;
+  @override
   String? htmlUrl;
+  @override
   String? assetsUrl;
+  @override
   String? uploadUrl;
+  @override
   String? tarballUrl;
+  @override
   String? zipballUrl;
+  @override
   int? id;
+  @override
   String? nodeId;
+  @override
   String? tagName;
+  @override
   String? targetCommitish;
+  @override
   String? name;
+  @override
   String? body;
+  @override
   bool? draft;
+  @override
   bool? prerelease;
+  @override
   String? createdAt;
+  @override
   String? publishedAt;
+  @override
   Author? author;
+  @override
   List<Assets>? assets;
 
   GetLatestVersionIncludePre(

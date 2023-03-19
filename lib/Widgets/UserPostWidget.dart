@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 import 'package:tiebanana/common/API/TiebaParser.dart';

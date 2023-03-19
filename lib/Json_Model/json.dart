@@ -24,8 +24,6 @@ part './Json/LikeForumModel.dart';
 part './Json/ThreadStoreModel.dart';
 part 'Json/ThreadStore.dart';
 
-//TODO:拆分
-
 class WAPTiebaBase {
   String? errcode;
   String? msg;
