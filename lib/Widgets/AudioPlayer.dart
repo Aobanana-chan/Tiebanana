@@ -1,13 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/common/API/Constants.dart';
 
 ///音频播放器
 class TiebaAudioPlayer extends StatefulWidget {
   final String voiceMd5;
-  final String durantion;
+  final int? durantion;
   const TiebaAudioPlayer(
       {Key? key, required this.voiceMd5, required this.durantion})
       : super(key: key);
@@ -28,35 +27,42 @@ class _TiebaAudioPlayerState extends State<TiebaAudioPlayer>
   @override
   void initState() {
     super.initState();
-    duration = Duration(milliseconds: int.parse(widget.durantion));
+    duration = Duration(milliseconds: widget.durantion ?? 0);
     // progressController = AnimationController(vsync: this, duration: duration);
     // progressAnimation =
     //     Tween<double>(begin: 0, end: 1).animate(progressController);
-    var uri = Uri.parse(VOVICE_MESSAGE);
-    uri.queryParameters["voice_md5"] = widget.voiceMd5;
-    player.setUrl(uri.toString());
+    player.setUrl("$VOVICE_MESSAGE?voice_md5=${widget.voiceMd5}");
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).primaryColor),
-          borderRadius: BorderRadius.circular(64)),
-      child: Row(children: [
-        player.playing
-            ? const Icon(Icons.stop_circle_outlined)
-            : const Icon(Icons.play_circle_outline_outlined),
-        Visibility(
-          child: ValueListenableBuilder<double>(
-            valueListenable: progress,
-            builder: (BuildContext context, double value, Widget? child) {
-              return Container();
-            },
-          ),
-        )
-      ]),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        print("tap");
+        player.play();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).primaryColor),
+            borderRadius: BorderRadius.circular(64)),
+        child: Row(children: [
+          player.playing
+              ? const Icon(Icons.stop_circle_outlined)
+              : const Icon(Icons.play_circle_outline_outlined),
+          Visibility(
+            child: ValueListenableBuilder<double>(
+              valueListenable: progress,
+              builder: (BuildContext context, double value, Widget? child) {
+                return Container();
+              },
+            ),
+          )
+        ]),
+      ),
     );
   }
 }
+
+enum PlayState { stopped, playing, paused, completed }

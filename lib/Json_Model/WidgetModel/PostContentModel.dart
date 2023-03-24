@@ -140,8 +140,10 @@ class PhoneNumberContentWidgetModel extends PostContentBaseWidgetModel {
 }
 
 class VoiceContentWidgetModel extends PostContentBaseWidgetModel {
-  String text;
-  VoiceContentWidgetModel({required this.text}) : super(type: "10");
+  String md5;
+  int? durantion;
+  VoiceContentWidgetModel({required this.md5, required this.durantion})
+      : super(type: "10");
 }
 
 ///吧跳转快速链接
@@ -183,7 +185,9 @@ PostContentBaseWidgetModel createContentModel(Content content) {
     case "9":
       return PhoneNumberContentWidgetModel(text: content.text!);
     case "10":
-      return VoiceContentWidgetModel(text: "");
+      return VoiceContentWidgetModel(
+          md5: content.voiceMd5!,
+          durantion: int.tryParse(content.duringTime ?? "0"));
     case "27":
       return ForumQuickLinkContentWidgetModel(text: content.text!);
     default:

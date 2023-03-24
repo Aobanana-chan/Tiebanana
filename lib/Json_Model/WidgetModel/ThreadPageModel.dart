@@ -185,7 +185,7 @@ class ThreadPagePost implements common.Post {
     uid = postList.authorId!;
     id = postList.id!;
     content = [];
-    for (Content element in postList.content!) {
+    for (Content element in postList.content ?? []) {
       content.add(createContentModel(element));
     }
     isFirstFloor = postList.floor == "1";

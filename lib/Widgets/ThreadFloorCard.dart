@@ -25,6 +25,7 @@ import '../Json_Model/json.dart';
 import '../common/Util/AppUtil.dart';
 import '../Json_Model/WidgetModel/ThreadCommentModel.dart';
 import '../Json_Model/WidgetModel/ThreadPageModel.dart';
+import 'AudioPlayer.dart';
 
 //TODO:标识楼主，标识吧主
 ///帖子-楼层组件
@@ -410,7 +411,12 @@ class InnerPost extends StatelessWidget {
         //楼中楼@用户
         w.add(AtUserSpan(context, text: content.text, uid: content.uid));
       } else if (content is VoiceContentWidgetModel) {
-        throw Exception("楼语音");
+        w.add(WidgetSpan(
+            child: TiebaAudioPlayer(
+          voiceMd5: content.md5,
+          durantion: content.durantion,
+        )));
+        // throw Exception("楼语音");
         //TODO:语音
         // player
       } else {

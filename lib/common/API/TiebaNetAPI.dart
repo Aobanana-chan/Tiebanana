@@ -208,7 +208,7 @@ class TiebaAPI {
     var gid = _guideRandom();
     var time = DateTime.now().millisecondsSinceEpoch;
     var ppuiLogintime = Random().nextInt(88888) + 15000; //从界面到登陆的的时间，简单用随机数代替一下
-    var sigParams = {
+    var sigParams = <String, dynamic>{
       "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
       "charset": "UTF-8",
       "token": await token,
@@ -249,7 +249,7 @@ class TiebaAPI {
     };
 
     var loginRes = await dio.post(LOGIN_POST_URL,
-        data: {
+        data: <String, dynamic>{
           "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
           "charset": " UTF-8",
           "token": _token,
@@ -331,7 +331,7 @@ class TiebaAPI {
     //提交登陆POST
     var gid = _guideRandom();
     var time = DateTime.now().millisecondsSinceEpoch;
-    var sigParams = {
+    var sigParams = <String, dynamic>{
       "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
       "charset": "UTF-8",
       "token": await token,
@@ -365,7 +365,7 @@ class TiebaAPI {
       "smsvcodestr": smsvcodestr,
     };
 
-    var data = {
+    var data = <String, dynamic>{
       "staticpage": "https://www.baidu.com/cache/user/html/v3Jump.html",
       "charset": "UTF-8",
       "token": _token,
@@ -454,7 +454,7 @@ class TiebaAPI {
     //提交登陆POST
     var gid = _guideRandom();
     var time = DateTime.now().millisecondsSinceEpoch;
-    var sigArgs = {
+    var sigArgs = <String, dynamic>{
       "adapter": "",
       "alg": "v3",
       "autoExecute": 0,
@@ -490,7 +490,7 @@ class TiebaAPI {
       "u": WAP_URL,
       "username": phoneNumber,
     };
-    var args = {
+    var args = <String, dynamic>{
       "adapter": "",
       "alg": "v3",
       "autoExecute": 0,
@@ -572,7 +572,7 @@ class TiebaAPI {
   Future<WapAccountCheck> checkAccount(String account, String baiduID) async {
     var time = DateTime.now().millisecondsSinceEpoch;
     var gid = _guideRandom();
-    var sigParams = {
+    var sigParams = <String, dynamic>{
       "account": _encryptedAccount(account),
       "acct_crypt": 20,
       "adapter": "",
@@ -598,7 +598,7 @@ class TiebaAPI {
       "tt": time,
       "u": WAP_URL
     };
-    var args = {
+    var args = <String, dynamic>{
       "account": _encryptedAccount(account),
       "acct_crypt": 20,
       "adapter": "",
@@ -638,7 +638,7 @@ class TiebaAPI {
     var time = DateTime.now().millisecondsSinceEpoch;
     var gid = _guideRandom();
     //签名的参数
-    var sigParams = {
+    var sigParams = <String, dynamic>{
       "token": await token,
       "tpl": "mn",
       "subpro": "",
@@ -653,7 +653,7 @@ class TiebaAPI {
       "time": time ~/ 1000
     };
 
-    var args = {
+    var args = <String, dynamic>{
       "token": await token,
       "tpl": "mn",
       "subpro": "",
@@ -699,14 +699,14 @@ class TiebaAPI {
         .replaceFirst("n", "ns")
         .replaceFirst("m", "mo");
     //验证码
-    var verify = {
+    var verify = <String, dynamic>{
       "vcodesign": vcodesign,
       "vcodestr": vcodestr,
       "verifycode": verifycode
     };
 
     //签名的参数
-    var sigParams = {
+    var sigParams = <String, dynamic>{
       "apiver": "v3",
       "bdstoken": await _getToken(),
       "client": "",
@@ -730,7 +730,7 @@ class TiebaAPI {
         sigParams[key] = value!;
       }));
     }
-    var args = {
+    var args = <String, dynamic>{
       "gid": gid,
       "username": phoneNumber,
       "countrycode": "",
@@ -775,7 +775,7 @@ class TiebaAPI {
     var gid = _guideRandom();
     var shaOne = _getshaOne(time);
     //参数的顺序要按照字典顺序排列
-    var signParams = {
+    var signParams = <String, dynamic>{
       'alg': 'v3',
       'apiver': 'v3',
       'gid': gid,
@@ -787,7 +787,7 @@ class TiebaAPI {
       'tt': time
     };
     Response res = await dio.get(TOKEN_GET_URL,
-        queryParameters: {
+        queryParameters: <String, dynamic>{
           'token': '',
           'subpro': '',
           'traceid': '',
@@ -1037,7 +1037,7 @@ class TiebaAPI {
       'tt': time
     };
     Response res = await dio.get(PUB_KEY_URL,
-        queryParameters: {
+        queryParameters: <String, dynamic>{
           'token': await _getToken(),
           'subpro': '',
           'traceid': '',
@@ -1098,7 +1098,7 @@ class TiebaAPI {
     }
     //一键签到(7级以上)
     await dio.post(ONE_KEY_SIGN_IN,
-        data: {"tbs": await _getTBS(), "ie": "utf-8"},
+        data: <String, dynamic>{"tbs": await _getTBS(), "ie": "utf-8"},
         options: Options(headers: {
           "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
           "Origin": TIEBA_URL
@@ -1134,7 +1134,7 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "kw": kw,
       "net_type": 1,
@@ -1378,7 +1378,7 @@ class TiebaAPI {
     if (isLogin == false) {
       throw Exception("未登录");
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "agree_type": agreeType,
       "obj_type": objType,
@@ -1404,7 +1404,12 @@ class TiebaAPI {
   ///搜索吧API
   Future<SearchForumModel> searchForum(String keywords, int pn,
       {int rn = 10}) async {
-    var params = {"pn": pn, "rn": rn, "is_ajax": 1, "word": keywords};
+    var params = <String, dynamic>{
+      "pn": pn,
+      "rn": rn,
+      "is_ajax": 1,
+      "word": keywords
+    };
     var res = await dio.get(SEARCH_FORUM,
         queryParameters: params,
         options: Options(responseType: ResponseType.plain));
@@ -1416,7 +1421,7 @@ class TiebaAPI {
   ///网页端,搜索贴API
   Future<SearchThreadModel> searchThread(String keywords, int pn,
       {int rn = 10, int sort = 1}) async {
-    var params = {
+    var params = <String, dynamic>{
       "pn": pn,
       "rn": rn,
       "is_ajax": 1,
@@ -1435,7 +1440,7 @@ class TiebaAPI {
   ///[filter] = 1,只看主题帖, = 0 查看全部贴
   Future<SearchPostModel> searchPost(String keywords,
       {int pn = 1, int order = 0, int filter = 1, int ct = 2}) async {
-    var args = {
+    var args = <String, dynamic>{
       "word": keywords,
       "pn": pn,
       "st": order,
@@ -1464,7 +1469,7 @@ class TiebaAPI {
         break;
       }
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "active_timestamp": DateTime.now().millisecondsSinceEpoch,
       "anonymous": "1",
@@ -1524,7 +1529,7 @@ class TiebaAPI {
         break;
       }
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "active_timestamp": DateTime.now().millisecondsSinceEpoch,
       "anonymous": "1",
@@ -1602,7 +1607,7 @@ class TiebaAPI {
         break;
       }
     }
-    var args = {
+    var args = <String, dynamic>{
       "BDUSS": bduss,
       "active_timestamp": DateTime.now().millisecondsSinceEpoch,
       "alt": "json",
@@ -1632,7 +1637,7 @@ class TiebaAPI {
   }
 
   Future<SearchUserModel> searchUser(String keyword) async {
-    var args = {
+    var args = <String, dynamic>{
       "word": keyword,
     };
 
@@ -1751,7 +1756,7 @@ class TiebaAPI {
 
   ///关注一个吧
   Future<LikeFourmModel> favoForum(String fid, String forumName) async {
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
@@ -1770,7 +1775,7 @@ class TiebaAPI {
 
   Future<bool> unfavoForum(
       {required String fid, required String forumName}) async {
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
@@ -1823,7 +1828,7 @@ class TiebaAPI {
       {int status = 1}) async {
     Map<String, dynamic> data = {"tid": tid, "pid": pid, "status": status};
 
-    var arg = {
+    var arg = <String, dynamic>{
       "BDUSS": bduss,
       "stoken": stoken,
       "tbs": await _getTBS(),
@@ -1891,7 +1896,7 @@ class UserInfoInterceptors extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    var baseInfo = {
+    var baseInfo = <String, dynamic>{
       "brand": "Android",
       "_client_id": "",
       "_client_type": "2",

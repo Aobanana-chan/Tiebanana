@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/Json_Model/json.dart';
 import 'package:tiebanana/Json_Model/provider.dart';
+import 'package:tiebanana/Widgets/AudioPlayer.dart';
 import 'package:tiebanana/Widgets/SpecialSpan.dart';
 import 'package:tiebanana/Widgets/ThreadSummary.dart';
 import 'package:tiebanana/Widgets/VIdeoPlayer.dart';
@@ -259,6 +260,12 @@ class TiebaParser {
           text: (elem).text,
           style: TextStyle(fontSize: Global.setting.fontSize),
         ));
+      } else if (elem is VoiceContentWidgetModel) {
+        richText.add(WidgetSpan(
+            child: TiebaAudioPlayer(
+          durantion: elem.durantion,
+          voiceMd5: elem.md5,
+        )));
       } else if (elem is UnknownontentWidgetModel) {
         richText.add(TextSpan(
           text: (elem).text,

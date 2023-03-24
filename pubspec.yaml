@@ -61,7 +61,7 @@ dependencies:
   flutter_markdown: ^0.6.10+2
   url_launcher: ^6.1.5
   uni_links: ^0.5.1
-  just_audio: ^0.9.28
+  just_audio: ^0.9.32
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2

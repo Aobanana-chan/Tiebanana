@@ -182,6 +182,8 @@ class AtUserSpan extends TextSpan {
     };
 }
 
+
+
 abstract class TiebaSpecialText extends SpecialText {
   static const String flag = "#(";
   List<String> get args => getContent().split(",");

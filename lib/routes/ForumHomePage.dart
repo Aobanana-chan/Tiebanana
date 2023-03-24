@@ -311,7 +311,8 @@ class _ForumHomePageState extends State<ForumHomePage>
                                             <PostContentBaseWidgetModel>[];
                                         for (Content element
                                             in forumThreadList![index]
-                                                .firstPostContent!) {
+                                                    .firstPostContent ??
+                                                []) {
                                           result
                                               .add(createContentModel(element));
                                         }
