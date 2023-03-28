@@ -54,7 +54,7 @@ class App extends StatelessWidget {
                   onGenerateRoute: (settings) {
                     LifeTimeCallback().route(settings);
                     if (PageRouter.routes.containsKey(settings.name)) {
-                      return CupertinoPageRoute(
+                      return CustomCupertinoPageRoute(
                           settings: settings,
                           builder: (context) => ClipBordObserver(
                               child:
@@ -122,4 +122,24 @@ class App extends StatelessWidget {
               },
             ));
   }
+}
+
+//issue #14203
+class CustomCupertinoPageRoute extends CupertinoPageRoute {
+  @override
+  bool get hasScopedWillPopCallback {
+    return false;
+  }
+
+  CustomCupertinoPageRoute({
+    required WidgetBuilder builder,
+    RouteSettings? settings,
+    bool maintainState = true,
+    bool fullscreenDialog = false,
+  }) : super(
+          builder: builder,
+          settings: settings,
+          maintainState: maintainState,
+          fullscreenDialog: fullscreenDialog,
+        );
 }

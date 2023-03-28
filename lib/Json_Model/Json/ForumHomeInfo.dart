@@ -470,7 +470,7 @@ class ForumThreadList implements ThreadRecommendSummary {
     createTime = json['create_time'].toString();
     tShareImg = json['t_share_img'];
     agreeNum = json['agree_num'].toString();
-    disagreeNum = json['disagree_num'].toString();
+    disagreeNum = json["agree"]['disagree_num'].toString();
     isPartialVisible = json['is_partial_visible'].toString();
     shareNum = json['share_num'].toString();
     isProThread = json['is_pro_thread'].toString();
