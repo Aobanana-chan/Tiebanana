@@ -47,7 +47,10 @@ class MessageCard extends StatelessWidget {
       margin: const EdgeInsets.only(top: 3, bottom: 3),
       child: MaterialButton(
         padding: const EdgeInsets.all(5),
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushNamed(context, PageRouter.threadPage,
+              arguments: ThreadPageRouterData(kz: message.threadId, pid: null));
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

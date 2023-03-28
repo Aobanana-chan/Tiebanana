@@ -30,6 +30,15 @@ class ThreadPageModel implements common.Forum {
   ///页管理的Post，正数页面表示正常页面，负数页面表示只看楼主的页面
   SplayTreeMap<int, List<ThreadPagePost>> postPage = SplayTreeMap();
 
+  void merge(int page, ThreadPagePost post, bool lz) {
+    int floor = int.parse(post.floor!);
+    if (postPage[page]?[floor] == null) {
+      postPage[page]?[floor] = post;
+    } else {
+      postPage[page]?[floor].merge(post.subPostList);
+    }
+  }
+
   ///正常页面List
   List<ThreadPagePost> get postList {
     var l = <ThreadPagePost>[];
@@ -155,6 +164,15 @@ class ThreadPagePost implements common.Post {
   bool isInnerFloor = false;
 
   List<SubPost> subPostList = [];
+
+  void merge(List<SubPost> sub) {
+    for (var p in sub) {
+      if (!subPostList.contains(p)) {
+        subPostList.add(p);
+      }
+    }
+    subPostList.sort((l, r) => int.parse(createTime) - int.parse(r.createTime));
+  }
 
   ///楼中楼数
   late String subPostNumber;
@@ -286,6 +304,15 @@ class SubPost implements common.Post {
       content.add(createContentModel(element));
     }
     createTime = subPostList.time!;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is SubPost) {
+      return id == other.id;
+    } else {
+      return false;
+    }
   }
 }
 

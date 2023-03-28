@@ -97,7 +97,7 @@ class __UserInfomationState extends State<_UserInfomation> {
         child: Container(
       color: Theme.of(context).brightness == Brightness.light
           ? Colors.white
-          : Theme.of(context).backgroundColor,
+          : Theme.of(context).colorScheme.background,
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),

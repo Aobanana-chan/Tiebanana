@@ -1773,6 +1773,7 @@ class TiebaAPI {
     return LikeFourmModel.fromJson(jsonDecode(res.data));
   }
 
+  ///取消关注一个吧
   Future<bool> unfavoForum(
       {required String fid, required String forumName}) async {
     var arg = <String, dynamic>{

@@ -54,7 +54,7 @@ class _SearchPageState extends State<SearchPage>
       body: Container(
         color: Theme.of(context).brightness == Brightness.light
             ? Colors.white
-            : Theme.of(context).backgroundColor,
+            : Theme.of(context).colorScheme.background,
         child: Column(
           children: [
             TabBar(
@@ -353,7 +353,7 @@ class _ThreadSearchState extends State<ThreadSearch> {
                       const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
                   color: Theme.of(context).brightness == Brightness.light
                       ? Colors.white
-                      : Theme.of(context).backgroundColor,
+                      : Theme.of(context).colorScheme.background,
                   child: Row(
                     children: [
                       Expanded(

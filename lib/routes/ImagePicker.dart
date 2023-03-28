@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 
 //TODO:相册页面连续加载
 ///图片选择和上传路由
+///崩溃BUG
 class ImagePickerRoute extends StatefulWidget {
   const ImagePickerRoute({Key? key}) : super(key: key);
 
@@ -277,87 +278,85 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: FutureBuilder<File?>(
-        future: widget.fileList[widget.index],
-        initialData: null,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            var data = snapshot.data as File?;
-            if (data != null) {
-              return Hero(
-                  tag: heroTag,
-                  child: Stack(
-                    children: [
-                      SizedBox.expand(
-                        child: FadeIn(
-                            child: GestureDetector(
-                          onTap: () async {
-                            List<File> fileList = [];
-                            for (var item in widget.fileList) {
-                              var f = await item;
-                              if (f != null) fileList.add(f);
-                            }
-                            var controller = ExtendedPageController(
-                                initialPage: widget.index);
-                            if (mounted) {
-                              int? result = await Navigator.push(context,
-                                  MaterialPageRoute(
-                                builder: (context) {
-                                  return ZoomedLocalImage(
-                                    file: fileList,
-                                    controller: controller,
-                                    heroTag: heroTag,
-                                    index: widget.index,
-                                  );
-                                },
-                              ));
-                              if (result != null) {
-                                changeSelect(index: result);
-                              }
-                            }
-                          },
-                          child: ExtendedImage.file(
-                            data,
-                            fit: BoxFit.cover,
-                          ),
-                        )),
-                      ),
-                      SizedBox.expand(
-                        child: Container(
-                          alignment: Alignment.topRight,
-                          padding: const EdgeInsets.all(3),
+    return FutureBuilder<File?>(
+      future: widget.fileList[widget.index],
+      initialData: null,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.hasData) {
+          var data = snapshot.data as File?;
+          if (data != null) {
+            return Hero(
+                tag: heroTag,
+                child: Stack(
+                  children: [
+                    SizedBox.expand(
+                      child: FadeIn(
                           child: GestureDetector(
-                            onTap: () {
-                              changeSelect();
-                              setState(() {
-                                selected = !selected;
-                              });
-                            },
-                            child: selected
-                                ? const Icon(
-                                    Icons.check_circle,
-                                    color: Colors.green,
-                                  )
-                                : const Icon(Icons.circle_outlined),
-                          ),
+                        onTap: () async {
+                          List<File> fileList = [];
+                          for (var item in widget.fileList) {
+                            var f = await item;
+                            if (f != null) fileList.add(f);
+                          }
+                          var controller =
+                              ExtendedPageController(initialPage: widget.index);
+                          if (mounted) {
+                            int? result =
+                                await Navigator.push(context, MaterialPageRoute(
+                              builder: (context) {
+                                return ZoomedLocalImage(
+                                  file: fileList,
+                                  controller: controller,
+                                  heroTag: heroTag,
+                                  index: widget.index,
+                                );
+                              },
+                            ));
+                            if (result != null) {
+                              changeSelect(index: result);
+                            }
+                          }
+                        },
+                        child: ExtendedImage.file(
+                          data,
+                          fit: BoxFit.cover,
+                        ),
+                      )),
+                    ),
+                    SizedBox.expand(
+                      child: Container(
+                        alignment: Alignment.topRight,
+                        padding: const EdgeInsets.all(3),
+                        child: GestureDetector(
+                          onTap: () {
+                            changeSelect();
+                            setState(() {
+                              selected = !selected;
+                            });
+                          },
+                          child: selected
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                )
+                              : const Icon(Icons.circle_outlined),
                         ),
                       ),
-                    ],
-                  ));
-            } else {
-              return const Icon(
-                Icons.close,
-                color: Colors.red,
-              );
-            }
+                    ),
+                  ],
+                ));
           } else {
-            return Container(
-              color: Colors.grey,
+            return const Icon(
+              Icons.close,
+              color: Colors.red,
             );
           }
-        },
-      ),
+        } else {
+          return Container(
+            color: Colors.grey,
+          );
+        }
+      },
     );
   }
 }

@@ -10,7 +10,6 @@ import 'package:tiebanana/Json_Model/provider.dart';
 import 'package:tiebanana/Widgets/CustomUnderlineTabIndicator.dart';
 import 'package:tiebanana/Widgets/MessageCard.dart';
 import 'package:tiebanana/Widgets/SearchBar.dart';
-import 'package:tiebanana/common/DefaultConfig.dart';
 import 'package:tiebanana/common/Global.dart';
 
 import '../Json_Model/WidgetModel/MessagePageModel.dart';

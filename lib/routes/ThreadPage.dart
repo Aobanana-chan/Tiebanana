@@ -146,7 +146,6 @@ class ThreadPageMain extends StatefulWidget {
 class ThreadPageMainState extends State<ThreadPageMain> {
   late ThreadPageModel floorData;
   ThreadPagePost? firstFloorData; //一楼
-  ThreadPageModel? prevState;
 
   late List<Widget> appBarAction;
   final ScrollController _controller = ScrollController();
@@ -172,7 +171,6 @@ class ThreadPageMainState extends State<ThreadPageMain> {
           return IconButton(
               padding: const EdgeInsets.all(6),
               onPressed: () {
-                //TODO:只看楼主
                 setState(() {
                   lz = !lz;
                 });
@@ -332,33 +330,36 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
   ///只看楼主
   void onlyLz() {
-    if (prevState != null) {
-      var t = prevState;
-      prevState = floorData;
-      floorData = t!;
-      setState(() {});
-    } else {
-      prevState = floorData;
+    if (lz && floorData.lzPostList.isEmpty) {
       refresh();
+    } else if (!lz && floorData.postList.isEmpty) {
+      refresh();
+    } else {
+      setState(() {});
     }
   }
 
-  void refresh() async {
-    floorData.topPn = 1;
-    floorData.bottomPn = 1;
-    floorData.hasMore = true;
-    //TODO:改为合并
-    floorData.postPage.clear();
+  Future<void> refresh() async {
+    // floorData.topPn = 1;
+    // floorData.bottomPn = 1;
+    // floorData.hasMore = true;
     var l = await Global.tiebaAPI
         .getThreadPage(widget.kz, pn: floorData.topPn!, onlyLz: lz);
 
     var list = <ThreadPagePost>[];
     for (var i in l.postList!) {
       var t = ThreadPagePost.fromPostList(i);
-
       list.add(t);
     }
-    floorData.postPage[floorData.topPn! * (lz ? -1 : 1)] = list;
+    if (floorData.postPage
+        .containsKey(int.parse(l.page!.currentPage!) * (lz ? -1 : 1))) {
+      for (var t in list) {
+        floorData.merge(int.parse(l.page!.currentPage!) * (lz ? -1 : 1), t, lz);
+      }
+    } else {
+      floorData.postPage[floorData.topPn! * (lz ? -1 : 1)] = list;
+    }
+
     // postList.addAll(l.postList!);
     floorData.hasPrev = l.page?.hasPrev == "1";
     // hasPrev = l.page?.hasPrev == "1";
@@ -438,61 +439,65 @@ class ThreadPageMainState extends State<ThreadPageMain> {
         child: Column(
           children: [
             Expanded(
-                child: CustomScrollView(
-              controller: _controller,
-              slivers: <Widget>[
-                SliverAppBar(
-                  //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
-                  // expandedHeight: .00001,
-                  elevation: 0.5,
-                  pinned: true,
-                  snap: true,
-                  floating: true,
-                  actions: appBarAction,
-                  title: AnimatedOpacity(
-                    alwaysIncludeSemantics: true,
-                    opacity: scrollOffset < 36 ? 0 : 1,
-                    duration: const Duration(milliseconds: 200),
-                    child: GestureDetector(
-                        onTap: () {
-                          _controller.animateTo(0,
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeIn);
-                        },
-                        child: Text(
-                          floorData.title,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 17),
+                child: RefreshIndicator(
+              onRefresh: refresh,
+              triggerMode: RefreshIndicatorTriggerMode.anywhere,
+              child: CustomScrollView(
+                controller: _controller,
+                slivers: <Widget>[
+                  SliverAppBar(
+                    //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
+                    // expandedHeight: .00001,
+                    elevation: 0.5,
+                    pinned: true,
+                    snap: true,
+                    floating: true,
+                    actions: appBarAction,
+                    title: AnimatedOpacity(
+                      alwaysIncludeSemantics: true,
+                      opacity: scrollOffset < 36 ? 0 : 1,
+                      duration: const Duration(milliseconds: 200),
+                      child: GestureDetector(
+                          onTap: () {
+                            _controller.animateTo(0,
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeIn);
+                          },
+                          child: Text(
+                            floorData.title,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 17),
+                          )),
+                    ),
+                  ),
+
+                  //一楼
+                  SliverToBoxAdapter(
+                    child: Visibility(
+                        visible: firstFloorData != null,
+                        child: ThreadFirstComment(
+                          postMain: firstFloorData ?? floorData.postList[0],
+                          author: floorData.userListSet[firstFloorData?.uid ??
+                              floorData.postList[0].uid]!,
+                          videoInfo: floorData.videoInfo,
+                          allImgs: floorData.imgs,
+                          allOrgImgs: floorData.imgsOrgSrc,
+                          threadID: floorData.tid,
+                          thread: widget.thread,
                         )),
                   ),
-                ),
-
-                //一楼
-                SliverToBoxAdapter(
-                  child: Visibility(
-                      visible: firstFloorData != null,
-                      child: ThreadFirstComment(
-                        postMain: firstFloorData ?? floorData.postList[0],
-                        author: floorData.userListSet[
-                            firstFloorData?.uid ?? floorData.postList[0].uid]!,
-                        videoInfo: floorData.videoInfo,
-                        allImgs: floorData.imgs,
-                        allOrgImgs: floorData.imgsOrgSrc,
-                        threadID: floorData.tid,
-                        thread: widget.thread,
-                      )),
-                ),
-                SliverToBoxAdapter(
-                  child: FourmBar(
-                    avatar: floorData.avatar,
-                    name: floorData.forumName,
+                  SliverToBoxAdapter(
+                    child: FourmBar(
+                      avatar: floorData.avatar,
+                      name: floorData.forumName,
+                    ),
                   ),
-                ),
 
-                //其他楼
-                SliverList(delegate: SliverChildListDelegate(buildFloor()))
-              ],
+                  //其他楼
+                  SliverList(delegate: SliverChildListDelegate(buildFloor()))
+                ],
+              ),
             )),
             //回复条
             ThreadReplyBar(
