@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:24126867942571393",
-      "lastPropertyId": "5:7265131415128252171",
+      "lastPropertyId": "7:6637144576555317376",
       "name": "ViewHistoryDatabase",
       "properties": [
         {
@@ -17,9 +17,7 @@
         {
           "id": "2:1188947882705233096",
           "name": "tid",
-          "type": 9,
-          "flags": 34848,
-          "indexId": "1:7947971721820076931"
+          "type": 9
         },
         {
           "id": "3:4303311900573873329",
@@ -35,19 +33,33 @@
           "id": "5:7265131415128252171",
           "name": "forumName",
           "type": 9
+        },
+        {
+          "id": "6:7649993224382480160",
+          "name": "hidden",
+          "type": 1
+        },
+        {
+          "id": "7:6637144576555317376",
+          "name": "uid",
+          "indexId": "2:9015005259070514148",
+          "type": 9,
+          "flags": 2048
         }
       ],
       "relations": []
     }
   ],
   "lastEntityId": "1:24126867942571393",
-  "lastIndexId": "1:7947971721820076931",
+  "lastIndexId": "2:9015005259070514148",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
-  "retiredIndexUids": [],
+  "retiredIndexUids": [
+    7947971721820076931
+  ],
   "retiredPropertyUids": [],
   "retiredRelationUids": [],
   "version": 1

@@ -15,10 +15,10 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -26,56 +26,69 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   dio: ^5.0.2
-  dio_cookie_manager: ^2.1.2
+  dio_cookie_manager: ^3.5.0
   path_provider: ^2.0.3
-  encrypt: ^5.0.1
+  archive: ^4.0.7
+  share_plus: ^13.3.1
+  file_picker: ^13.3.2
   crypto: ^3.0.1
   json5: ^0.8.0
   provider: ^6.0.1
-  shared_preferences: ^2.0.8
-  just_throttle_it: ^2.0.0
-  fluttertoast: ^8.0.8
-  select_form_field: ^2.2.0
-  material_floating_search_bar: ^0.3.6
-  animate_do: ^3.0.2
-  flutter_local_notifications: ^14.0.0-dev.2
-  extended_image: ^7.0.2
-  fijkplayer: ^0.10.1
-  fijkplayer_skin: ^2.2.8
-  flukit: ^3.0.1
-  uuid: ^3.0.5
-  extended_nested_scroll_view: ^6.0.0
-  pull_to_refresh_notification: ^3.0.0
-  like_button: ^2.0.4
-  extended_text: ^10.0.1
-  extended_text_library: ^10.0.0
-  extended_text_field: ^11.0.1
-  smooth_page_indicator: ^1.0.0+2
-  photo_manager: ^2.1.4
-  cookie_jar: ^3.0.1
-  objectbox: ^1.5.0
-  objectbox_flutter_libs: any
-  webview_flutter: ^4.0.6
-  connectivity_plus: ^3.0.3
+  shared_preferences: ^2.5.6
+  # 运行时读取 pubspec / --build-name 决定的版本号。
+  package_info_plus: ^10.2.2
+  just_throttle_it: ^3.0.1
+  fluttertoast: ^10.0.2
+  animate_do: ^5.1.0
+  flutter_local_notifications: ^22.3.2
+  extended_image: ^10.1.0
+  image: ^4.12.0
+  uuid: ^4.6.0
+  extended_nested_scroll_view: ^6.2.1
+  extended_text: ^15.0.2
+  extended_text_library: ^12.0.0
+  extended_text_field: ^17.0.0
+  smooth_page_indicator: ^3.0.0
+  photo_manager: ^3.12.0
+  cookie_jar: ^4.0.9
+  objectbox: ^5.3.2
+  objectbox_flutter_libs: ^5.3.2
+  webview_flutter: ^4.14.1
+  #直接使用了webview_flutter_android的AndroidWebViewController(setUseWideViewPort等)
+  webview_flutter_android: ^4.14.1
+  connectivity_plus: ^7.3.2
   synchronized: ^3.0.0+2
-  flutter_markdown: ^0.6.10+2
+  # flutter_markdown 的社区维护分支，提供相同的 Markdown/MarkdownBody API。
+  flutter_markdown_plus: ^1.0.12
   url_launcher: ^6.1.5
-  uni_links: ^0.5.1
-  just_audio: ^0.9.28
+  # uni_links 的替代实现。
+  app_links: ^7.2.2
+  # fijkplayer 的替代实现。
+  media_kit: ^1.2.6
+  media_kit_video: ^2.0.1
+  media_kit_libs_android_video: ^1.3.8
+  # wakelock 的替代实现。
+  wakelock_plus: ^1.8.1
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^2.0.0
+  # 界面数据类 + TiebaApi 接口（任何后端实现都实现它）。
+  tieba_contract:
+    path: packages/tieba_contract
+  tieba_backend_demo:
+    path: packages/tieba_backend_demo
+  # 读取 Android supportedAbis，用于在更新页推荐当前设备对应的安装包。
+  device_info_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
-  build_runner: ^2.0.0
-  objectbox_generator: any
-
-# dependency_overrides:
-#   flukit:
-#     path: dependencyOverrides\flukit\package_src
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.10
+  objectbox_generator: ^5.3.2
+  # 测试里用于模拟 path_provider 的平台接口。
+  path_provider_platform_interface: ^2.0.0
+  plugin_platform_interface: ^2.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -91,6 +104,16 @@ flutter:
   assets:
     - assets/emoji/
     - assets/icon/
+    # 开屏动画：香蕉 / 叶子（带透明通道，构成素材见 docs/icon/）
+    - assets/splash/
+
+  # 开屏字标字体。ZCOOL 快乐体是「贴」字轮廓用的同一款字，
+  # 已经子集化成只含字标需要的 9 个字母（1.48 MB → 2.7 KB），
+  # 重新生成见 docs/icon/subset_wordmark_font.py。
+  fonts:
+    - family: TiebananaWordmark
+      fonts:
+        - asset: assets/fonts/TiebananaWordmark.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

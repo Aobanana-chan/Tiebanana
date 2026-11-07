@@ -1,29 +1,62 @@
-buildscript {
-    ext.kotlin_version = '1.6.0'
-    repositories {
-        google()
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
 allprojects {
     repositories {
+        // Aliyun mirrors for China network (jcenter mirror as fallback for legacy artifacts)
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 
-rootProject.buildDir = '../build'
+// AGP 9 requires a namespace in every module's build file.
+// Several pinned pub plugins (audio_session 0.1.x, uni_links 0.5.x, fijkplayer,
+// wakelock, ...) are discontinued and lack it, so inject a fallback namespace
+// before their variants get created. afterEvaluate registered here runs before
+// each subproject's own afterEvaluate callbacks.
+subprojects { subproject ->
+    afterEvaluate {
+        def androidExt = subproject.extensions.findByName("android")
+        if (androidExt != null && androidExt.namespace == null) {
+            // Prefer the package declared in the plugin's AndroidManifest.xml so
+            // manifest component names keep resolving correctly at runtime.
+            def ns = subproject.name
+            def manifestFile = file("${subproject.projectDir}/src/main/AndroidManifest.xml")
+            if (manifestFile.exists()) {
+                def pkg = (manifestFile.text =~ /package\s*=\s*"([^"]+)"/)
+                if (pkg.find()) { ns = pkg.group(1) }
+            }
+            try {
+                androidExt.namespace = ns
+            } catch (Throwable ignored) {
+                // Not an AGP-built android extension; ignore.
+            }
+            // Old plugins declare old compileSdk values (android-31 etc.) while
+            // newer androidx transitive dependencies require API 34+. Force
+            // subprojects up to the Flutter template's compileSdk (36).
+            try {
+                def cs = androidExt.compileSdk
+                if (cs == null || cs < 34) {
+                    androidExt.compileSdk = 36
+                }
+            } catch (Throwable ignored2) {
+                // ignore
+            }
+        }
+    }
+}
+
+def newBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
+rootProject.layout.buildDirectory.value(newBuildDir)
+
 subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    def newSubprojectBuildDir = newBuildDir.dir(project.name)
+    project.layout.buildDirectory.value(newSubprojectBuildDir)
+}
+subprojects {
     project.evaluationDependsOn(':app')
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register("clean", Delete) {
+    delete rootProject.layout.buildDirectory
 }

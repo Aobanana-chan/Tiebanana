@@ -1,0 +1,16 @@
+name: tieba_backend_demo
+description: Tiebanana 的默认后端：不联网，返回一套可交互的本地数据，供公开仓库开箱即用 / 测试。
+version: 0.1.0
+# TODO(opensource): 建远程仓库后决定是否发布；当前作为应用仓库内的 path 包。
+publish_to: "none"
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  # TODO(opensource): 契约包建好远程仓库后改为 Git 依赖并 pin tag。
+  tieba_contract:
+    path: ../tieba_contract
+
+dev_dependencies:
+  lints: ^4.0.0

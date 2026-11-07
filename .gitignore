@@ -44,9 +44,33 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
+
+# Transient build logs
+build_apk.txt
+
+# 私有后端切换：实际 override 文件只留在本地，不进入版本控制。
+# 模板见 tool/private/pubspec_overrides.example.yaml。
+pubspec_overrides.yaml
+/tool/private/tieba_backend_demo/pubspec.lock
+
+# AI agent instructions (local working agreement)
+AGENT.md
 
 # Key
 key.jks
 
+# 本地调试凭证（不要入库）
+/cookie
+
 # Database Entity 
 objectbox.g.dart
+
+# VS Code workspace settings
+.vscode/settings.json
+
+# 设计概念图（本地产出，不入库）
+design/
+
+# 可选出图（GOLDEN=1 时本地产出）
+test/goldens/

@@ -1,0 +1,6 @@
+[submodule "packages/headless_tieba"]
+	path = packages/headless_tieba
+	url = https://github.com/Aobanana-chan/headless_tieba.git
+[submodule "packages/tieba_contract"]
+	path = packages/tieba_contract
+	url = https://github.com/Aobanana-chan/tieba_contract.git

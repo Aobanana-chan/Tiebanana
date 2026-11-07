@@ -1,0 +1,12 @@
+# 私有构建使用：把应用对 tieba_backend_demo 的依赖地址替换成真实协议适配层。
+#
+# 用法（在仓库根执行）：
+#   cp tool/private/pubspec_overrides.example.yaml pubspec_overrides.yaml
+#   flutter pub get
+#
+# 本文件是模板；根目录的 pubspec_overrides.yaml 由 .gitignore 忽略。
+# 界面测试引用 tieba_contract/lib/testing.dart，保留本 override 也能跑 flutter test；
+# 只有运行 / 构建公开演示后端时才需要删除根目录的 pubspec_overrides.yaml。
+dependency_overrides:
+  tieba_backend_demo:
+    path: tool/private/tieba_backend_demo

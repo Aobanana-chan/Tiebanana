@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!--
+    Tiebanana 应用图标模板，由 docs/icon/build_svg.py 生成。
+
+    概念：贴 = 贝 + 占；香蕉顶替「占」的竖笔（丨），香蕉叶顶替「占」顶部的短横（一）。
+    字形：ZCOOLKuaiLe-Regular 的「贴」轮廓，已转为路径，渲染不依赖系统字体。
+    香蕉与叶子：透明 PNG（banana.png / leaf.png），由 build_icons.js 内联。
+
+    {{...}} 是调色板占位符，见 build_icons.js。
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="{{BG_A}}"/>
+      <stop offset="1" stop-color="{{BG_B}}"/>
+    </linearGradient>
+
+    <!-- 抠掉「占」的整段「卜」（丨 + 一），交给香蕉和叶子 -->
+    <mask id="glyphCut">
+      <rect x="-600" y="-600" width="3000" height="3000" fill="#ffffff"/>
+      <rect x="400" y="201" width="510" height="363" fill="#000000"/>
+    </mask>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+
+  <g transform="translate(45.08,-52.01) scale(0.95)">
+    <g mask="url(#glyphCut)" fill="{{INK}}">
+      <path d="M836.0 555.0 887.0 608.0 843.0 1013.0 797.0 1054.0 506.0 1055.0 458.0 1014.0 414.0 647.0 457.0 594.0ZM212.0 821.0 219.0 808.0 384.0 895.0 342.0 978.0 189.0 899.0 144.0 1054.0 54.0 1028.0 142.0 725.0 68.0 732.0 33.0 335.0 78.0 284.0 377.0 269.0 427.0 320.0 392.0 720.0 298.0 713.0 328.0 365.0 132.0 377.0 157.0 672.0 219.0 459.0 311.0 485.0ZM514.0 683.0 547.0 962.0 754.0 960.0 787.0 655.0Z"/>
+    </g>
+    <image x="646" y="293" width="304" height="150" href="{{LEAF_IMG}}"/>
+    <image x="427" y="133" width="242" height="445" href="{{BANANA_IMG}}"/>
+  </g>
+</svg>

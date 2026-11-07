@@ -1,0 +1,16 @@
+name: tieba_backend_demo
+description: 私有构建用的真实后端适配层：把 headless_tieba 接到应用的 createTiebaApi 装配点。
+version: 0.1.0
+publish_to: "none"
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  tieba_contract:
+    path: ../../../packages/tieba_contract
+  headless_tieba:
+    path: ../../../packages/headless_tieba
+
+dev_dependencies:
+  lints: ^4.0.0

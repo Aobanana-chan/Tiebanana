@@ -23,20 +23,26 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      # tieba_contract 是公开契约子模块；headless_tieba 是私有协议子模块。
+      # 发布构建同时初始化两者，需用有读权限的 PAT：
+      # 在仓库 Secrets 里配置 SUBMODULE_TOKEN（细粒度 PAT，仅读 headless_tieba）。
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.SUBMODULE_TOKEN }}
 
       # setup JDK
       - name: Setup Java JDK
-        uses: actions/setup-java@v3.0.0
+        uses: actions/setup-java@v4
         with:
           distribution: "zulu"
           java-version: "17"
       # flutter env
       - name: Flutter action
-        uses: subosito/flutter-action@v2.3.0
+        uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-          flutter-version: "3.7.7"
+          flutter-version: "3.47.7"
       #setup key
       - run: echo "${{ secrets.KEYSTORE2 }}" | base64 --decode > key.jks
       # Creating the key.properties file
@@ -45,13 +51,26 @@ jobs:
           echo storePassword=\${{ secrets.KEY_PASSWORD }} >> ${{env.PROPERTIES_PATH}}
           echo keyAlias=\${{ secrets.KEY_ALIAS }} >> ${{env.PROPERTIES_PATH}}
           echo storeFile=../key.jks >> ${{env.PROPERTIES_PATH}}
+      # CI 使用私有协议实现：把 tieba_backend_demo 的依赖地址指向
+      # tool/private/tieba_backend_demo（内部依赖 headless_tieba 子模块）。
+      # 公开 clone 不执行这一步，默认使用演示后端。
+      - name: Select private backend
+        run: cp tool/private/pubspec_overrides.example.yaml pubspec_overrides.yaml
       # get dependence
       - run: flutter pub get
       # build Entity
-      - run: flutter pub run build_runner build
+      - run: dart run build_runner build
       # build
-      # - run: flutter build apk
-      - run: flutter build apk --split-per-abi
+      # 发布 tag 时用 tag 作为版本名（v0.2.2 → 0.2.2），构建号取 Actions 运行号，
+      # 保证 APK 的 versionName 与 Release tag 一致且 versionCode 单调递增；
+      # 手动触发（非 tag）时沿用 pubspec 的版本。
+      - name: Build release APKs
+        run: |
+          args=(--split-per-abi)
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            args+=(--build-name="${GITHUB_REF_NAME#v}" --build-number="${GITHUB_RUN_NUMBER}")
+          fi
+          flutter build apk "${args[@]}"
       # publish
       - name: Create Release
         uses: ncipollo/release-action@v1

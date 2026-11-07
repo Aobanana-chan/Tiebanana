@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!--
+  冷启动时系统先显示这张图，等 Flutter 画出第一帧才撤掉。
+  底色必须与开屏动画的第一帧一致（宝蓝渐变，见 lib/splash/splash_brand.dart），
+  否则会先闪一下白/黑再跳进开屏。
+  drawable/ 与 drawable-v21/ 两份内容保持一致：API 21+ 优先用后者。
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="?android:colorBackground" />
+    <item>
+        <shape android:shape="rectangle">
+            <!-- 270 = 从上到下，对应开屏的 linear-gradient -->
+            <gradient
+                android:angle="270"
+                android:startColor="#4C86F5"
+                android:endColor="#2B5FD9"
+                android:type="linear" />
+        </shape>
+    </item>
 
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+    <!-- 想再无缝一点，可以在这里放一张静态的图标位图（见 design/splash/README.md） -->
 </layer-list>
