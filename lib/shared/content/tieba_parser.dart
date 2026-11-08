@@ -196,10 +196,8 @@ class TiebaParser {
           default:
         }
       } else if (elem is TiebaAtContent) {
-        richText.add(TextSpan(
-          text: (elem).text,
-          style: TextStyle(color: TiebananaTokens.of(context).primary),
-        ));
+        // @ 用户：只有真正的 @ 段可进入用户资料。
+        richText.add(AtUserSpan(context, text: elem.text, uid: elem.uid));
       } else if (elem is TiebaVideoContent) {
         //视频
         final TiebaVideoInfo? info = videoInfo;
