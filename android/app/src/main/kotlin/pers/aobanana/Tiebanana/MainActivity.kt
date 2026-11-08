@@ -22,30 +22,46 @@ class MainActivity : FlutterActivity() {
         getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
+    private fun openOfficialTieba(uri: Uri): Boolean {
+        return try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri).apply {
+                setPackage("com.baidu.tieba")
+                addCategory(Intent.CATEGORY_BROWSABLE)
+            })
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        } catch (_: SecurityException) {
+            false
+        }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "tiebanana/official_tieba")
             .setMethodCallHandler { call, result ->
-                if (call.method != "open") {
-                    result.notImplemented()
-                    return@setMethodCallHandler
-                }
-                val uri = call.argument<String>("url")?.let(Uri::parse)
-                if (uri == null || uri.scheme != "com.baidu.tieba" ||
-                    uri.host != "unidispatch" || uri.path !in listOf("/pb", "/frs")) {
-                    result.error("badargs", "invalid official Tieba URL", null)
-                    return@setMethodCallHandler
-                }
-                try {
-                    startActivity(Intent(Intent.ACTION_VIEW, uri).apply {
-                        setPackage("com.baidu.tieba")
-                        addCategory(Intent.CATEGORY_BROWSABLE)
-                    })
-                    result.success(true)
-                } catch (_: ActivityNotFoundException) {
-                    result.success(false)
-                } catch (_: SecurityException) {
-                    result.success(false)
+                when (call.method) {
+                    "open" -> {
+                        val uri = call.argument<String>("url")?.let(Uri::parse)
+                        if (uri == null || uri.scheme != "com.baidu.tieba" ||
+                            uri.host != "unidispatch" || uri.path !in listOf("/pb", "/frs")) {
+                            result.error("badargs", "invalid official Tieba URL", null)
+                            return@setMethodCallHandler
+                        }
+                        result.success(openOfficialTieba(uri))
+                    }
+                    "openUri" -> {
+                        // 站内没有对应页面时，用官方贴吧打开任意贴吧 scheme。
+                        // 指定包名，避免系统把 Intent 解析回本应用。
+                        val uri = call.argument<String>("url")?.let(Uri::parse)
+                        if (uri == null ||
+                            uri.scheme !in listOf("tbfrs", "tbpb", "com.baidu.tieba")) {
+                            result.error("badargs", "invalid Tieba URL", null)
+                            return@setMethodCallHandler
+                        }
+                        result.success(openOfficialTieba(uri))
+                    }
+                    else -> result.notImplemented()
                 }
             }
         //读取系统WebView cookie库的原始cookie串(与webview_flutter的WebView共享同一个cookie库,

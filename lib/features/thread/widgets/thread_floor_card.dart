@@ -3,7 +3,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
@@ -12,7 +11,6 @@ import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/thread/data/thread_cache.dart';
 import 'package:tiebanana/app/navigation/link_router.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
-import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/thread/pages/thread_page.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
@@ -639,31 +637,8 @@ class InnerPost extends StatelessWidget {
               ),
               recognizer: TapGestureRecognizer()
                 ..onTap = () async {
-                  if (await AppUtil.urlRoute(context, content.link) == false) {
-                    Navigator.push(
-                      context,
-                      appPageRoute(
-                        builder: (BuildContext builder) => WebViewWidget(
-                          controller: WebViewController()
-                            ..setBackgroundColor(Colors.white)
-                            ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                            ..setNavigationDelegate(NavigationDelegate(
-                              onNavigationRequest:
-                                  (NavigationRequest request) async {
-                                if (await AppUtil.urlRoute(
-                                  context,
-                                  request.url,
-                                )) {
-                                  return NavigationDecision.prevent;
-                                }
-                                return NavigationDecision.navigate;
-                              },
-                            ))
-                            ..loadRequest(Uri.parse(content.link)),
-                        ),
-                      ),
-                    );
-                  }
+                  await AppUtil.openLink(context, content.link,
+                      forumName: forumName);
                 },
             ),
             fontSize: Provider.of<APPSettingProvider>(context).fontSize - 1));

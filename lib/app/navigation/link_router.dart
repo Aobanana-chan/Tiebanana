@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tiebanana/app/global.dart';
+import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/app/navigation/clipboard_thread_preview.dart';
+import 'package:tiebanana/core/platform/browser_url.dart';
+import 'package:tiebanana/core/platform/official_tieba.dart';
+import 'package:tiebanana/features/browser/pages/in_app_browser_page.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 abstract class AppUtil {
   static Future<bool> urlRoute(BuildContext context, String url,
@@ -69,6 +75,140 @@ abstract class AppUtil {
     }
 
     return false;
+  }
+
+  /// 打开正文 / 楼中楼中的链接。
+  ///
+  /// 站内能处理的贴吧链接直接进入对应页面；外链按设置交给内置浏览器
+  /// 或系统浏览器；其他 APP scheme 交给系统解析。
+  static Future<void> openLink(BuildContext context, String url,
+      {String forumName = ''}) async {
+    final String text = url.trim();
+    if (text.isEmpty) {
+      return;
+    }
+    if (await urlRoute(context, text, forumName: forumName)) {
+      return;
+    }
+
+    final Uri? uri = Uri.tryParse(text);
+    if (uri == null) {
+      return;
+    }
+
+    if (BrowserUrl.isWeb(uri)) {
+      if (!context.mounted) {
+        return;
+      }
+      if (Global.setting.useBuildinBrowser ?? true) {
+        await Navigator.of(context).push(appPageRoute(
+          builder: (BuildContext pageContext) => InAppBrowserPage(
+            initialUrl: text,
+            onNavigation: (BuildContext browserContext, String requestUrl) =>
+                handleWebViewNavigation(browserContext, requestUrl,
+                    forumName: forumName),
+          ),
+        ));
+      } else {
+        await _launchExternal(context, uri);
+      }
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+    if (BrowserUrl.isWebViewInternal(uri)) {
+      return;
+    }
+    await _handleNonWebUri(context, uri, allowClose: false);
+  }
+
+  /// WebView 导航策略。
+  ///
+  /// 返回 true 表示继续交给 WebView 加载，false 表示已拦截并处理。
+  static Future<bool> handleWebViewNavigation(BuildContext context, String url,
+      {bool allowClose = true, String forumName = ''}) async {
+    final Uri? uri = Uri.tryParse(url);
+    if (uri == null) {
+      return false;
+    }
+
+    if (BrowserUrl.isWeb(uri)) {
+      if (await urlRoute(context, url, forumName: forumName)) {
+        return false;
+      }
+      return true;
+    }
+
+    if (BrowserUrl.isWebViewInternal(uri)) {
+      return true;
+    }
+
+    return _handleNonWebUri(context, uri, allowClose: allowClose);
+  }
+
+  static Future<bool> _handleNonWebUri(BuildContext context, Uri uri,
+      {required bool allowClose}) async {
+    if (BrowserUrl.isCloseCurrentPage(uri)) {
+      if (allowClose && context.mounted) {
+        Navigator.of(context).maybePop();
+      }
+      return false;
+    }
+
+    final TiebaDeepLink? target = BrowserUrl.tiebaDeepLink(uri);
+    if (target != null) {
+      if (context.mounted) {
+        if (target.isThread) {
+          Navigator.pushNamed(context, PageRouter.threadPage,
+              arguments:
+                  ThreadPageRouterData(kz: target.tid!, pid: target.pid));
+        } else if (target.forumName != null && target.forumName!.isNotEmpty) {
+          Navigator.pushNamed(context, PageRouter.forumHome,
+              arguments: target.forumName);
+        }
+      }
+      return false;
+    }
+
+    // 贴吧 scheme 站内没有对应页面时，交给官方贴吧客户端。
+    if (BrowserUrl.isTiebaScheme(uri)) {
+      final bool opened = await OfficialTiebaTarget.openOfficialTiebaUri(uri);
+      if (!opened && context.mounted) {
+        _showNoHandler(context);
+      }
+      return false;
+    }
+
+    await _launchExternal(context, uri);
+    return false;
+  }
+
+  static Future<bool> _launchExternal(BuildContext context, Uri uri) async {
+    bool opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on PlatformException {
+      opened = false;
+    } on MissingPluginException {
+      opened = false;
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened && context.mounted) {
+      _showNoHandler(context);
+    }
+    return opened;
+  }
+
+  static void _showNoHandler(BuildContext context) {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      const SnackBar(content: Text('未安装可打开该链接的应用')),
+    );
   }
 
   /// 从话题链接解析站内话题页参数；非话题链接返回 null。

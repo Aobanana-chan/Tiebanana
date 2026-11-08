@@ -7,14 +7,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
-import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/shared/content/post_link_span.dart';
 import 'package:tiebanana/shared/content/thread_summary.dart';
 import 'package:tiebanana/shared/media/video_player.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/link_router.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
@@ -34,7 +32,7 @@ class TiebaParser {
     return 0;
   }
 
-  ///链接 / 话题 / 视频播放链接共用的可点文字 span（无法路由时回退 WebView）。
+  ///链接 / 话题 / 视频播放链接共用的可点文字 span（无法路由时交给内置浏览器）。
   static TextSpan _buildLinkSpan(BuildContext context, String text, String link,
       {String forumName = ''}) {
     return TextSpan(
@@ -45,28 +43,7 @@ class TiebaParser {
             color: TiebananaTokens.of(context).primary),
         recognizer: TapGestureRecognizer()
           ..onTap = () async {
-            if (await AppUtil.urlRoute(context, link, forumName: forumName) ==
-                false) {
-              Navigator.push(context, appPageRoute(builder: (builder) {
-                return WebViewWidget(
-                  controller: WebViewController()
-                    ..setBackgroundColor(Colors.white)
-                    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                    ..setNavigationDelegate(NavigationDelegate(
-                        onNavigationRequest: (request) async {
-                      if (await AppUtil.urlRoute(
-                        context,
-                        request.url,
-                      )) {
-                        return NavigationDecision.prevent;
-                      }
-
-                      return NavigationDecision.navigate;
-                    }))
-                    ..loadRequest(Uri.parse(link)),
-                );
-              }));
-            }
+            await AppUtil.openLink(context, link, forumName: forumName);
           });
   }
 

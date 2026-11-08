@@ -22,11 +22,22 @@ class OfficialTiebaTarget {
       );
 
   Future<bool> open() async {
+    return _open(uri, method: 'open');
+  }
+
+  /// 用官方贴吧客户端打开任意贴吧 scheme。
+  ///
+  /// 站内没有对应页面时使用。Android 上指定 `com.baidu.tieba` 包，
+  /// 避免本应用也注册了贴吧 scheme 时跳回自己。
+  static Future<bool> openOfficialTiebaUri(Uri uri) async {
+    return _open(uri, method: 'openUri');
+  }
+
+  static Future<bool> _open(Uri uri, {required String method}) async {
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
-        // 本应用也注册了贴吧 scheme，指定官方包，确保跳转到贴吧客户端。
         return await const MethodChannel('tiebanana/official_tieba')
-                .invokeMethod<bool>('open', {'url': uri.toString()}) ??
+                .invokeMethod<bool>(method, {'url': uri.toString()}) ??
             false;
       }
       if (defaultTargetPlatform == TargetPlatform.iOS) {

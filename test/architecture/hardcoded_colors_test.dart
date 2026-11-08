@@ -16,11 +16,11 @@ import 'package:flutter_test/flutter_test.dart';
 const Map<String, int> allowedHardcodedColors = <String, int>{
   'lib/shared/media/video_player.dart': 25,
   'lib/shared/media/img_explorer.dart': 3,
-  'lib/shared/content/tieba_parser.dart': 4,
+  'lib/shared/content/tieba_parser.dart': 3,
   'lib/features/account/pages/login_page.dart': 2,
   'lib/features/settings/pages/service_center_page.dart': 1,
+  'lib/features/browser/pages/in_app_browser_page.dart': 1,
   'lib/features/media/pages/image_picker_page.dart': 1,
-  'lib/features/thread/widgets/thread_floor_card.dart': 1,
   // 性别图标：男蓝女粉是语义色，不该跟主题色走。
   'lib/features/profile/pages/user_profile_page.dart': 2,
   // 开屏的品牌色：必须与 App 图标逐色一致，不跟主题走（见 lib/features/splash/splash_brand.dart）。

@@ -55,11 +55,11 @@ class _ServiceCenterPageState extends State<ServiceCenterPage> {
             ..setJavaScriptMode(JavaScriptMode.unrestricted)
             ..setNavigationDelegate(
                 NavigationDelegate(onNavigationRequest: (request) async {
-              if (await AppUtil.urlRoute(context, request.url)) {
-                return NavigationDecision.prevent;
-              }
-
-              return NavigationDecision.navigate;
+              final bool navigate =
+                  await AppUtil.handleWebViewNavigation(context, request.url);
+              return navigate
+                  ? NavigationDecision.navigate
+                  : NavigationDecision.prevent;
             }))
             ..loadRequest(Uri.parse(SERVICE_CENTER)),
           // backgroundColor: Colors.white,
