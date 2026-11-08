@@ -6,7 +6,7 @@
 
 **轻一点，逛贴吧。**
 
-基于 Flutter 的第三方百度贴吧 Android 客户端 · **1.0.0**
+基于 Flutter 的第三方百度贴吧 Android 客户端 · **1.0.1**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Android](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)](#下载安装)
