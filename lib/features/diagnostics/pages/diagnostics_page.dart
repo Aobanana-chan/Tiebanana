@@ -52,10 +52,8 @@ class _DiagnosticsPageState extends State<DiagnosticsPage> {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('日志与诊断')),
         body: ListView(padding: const EdgeInsets.all(24), children: [
-          const Text('仅记录异常，自动保存在本机，最多保留 7 天、总量不超过 20 MB，不会自动上传。没有异常时日志为空。'),
-          const SizedBox(height: 12),
           const Text(
-              '记录未知解析类型与非预期异常。未知内容附带脱敏结构、原始类型编号以及可用的帖子/楼层 ID，用于定位官方新增内容。字符串内容、凭证与个人标识不保存；不记录正常操作、请求流水或已知网络/业务失败。导出后文件由你选择的位置保存，分享则会交给你选择的应用，请确认保存位置和接收对象。'),
+              '点击「导出诊断包」选择保存位置保存 ZIP，或点击「分享诊断包」通过系统分享面板发送。诊断包仅包含脱敏的异常记录，不包含凭证等敏感数据。'),
           const SizedBox(height: 12),
           Text(_bytes == null
               ? '正在读取日志大小…'
@@ -76,7 +74,6 @@ class _DiagnosticsPageState extends State<DiagnosticsPage> {
                       }
                     }),
           ),
-          const Text('导出：选择保存位置并保存 ZIP 文件，不打开分享面板。'),
           const SizedBox(height: 12),
           Builder(
               builder: (buttonContext) => OutlinedButton.icon(
@@ -93,7 +90,6 @@ class _DiagnosticsPageState extends State<DiagnosticsPage> {
                                 Diagnostics.shared.share)(origin));
                           },
                   )),
-          const Text('分享：打开系统分享面板，发送诊断包给其他应用。'),
           TextButton(
               onPressed: _busy
                   ? null
@@ -125,9 +121,6 @@ class _DiagnosticsPageState extends State<DiagnosticsPage> {
               child: const Text('清空日志')),
           if (_busy) const Center(child: CircularProgressIndicator()),
           if (_message != null) Text(_message!),
-          const SizedBox(height: 24),
-          const Text(
-              '反馈时请同时说明：出现问题的大致时间、操作步骤、预期结果和实际结果。诊断包无法完整捕获原生崩溃、ANR 或系统强杀。'),
         ]),
       );
 }
