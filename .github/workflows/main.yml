@@ -1,79 +1,130 @@
-# This is a basic workflow to help you get started with Actions
+# Build Release
+#
+# 发布流程：
+#   - 推送 v* tag  → 构建签名 APK 并创建 GitHub Release
+#   - 手动触发     → 只构建并上传 artifact，不创建 Release
+#
+# 需要的仓库 Secrets：
+#   SUBMODULE_TOKEN    能读 Tiebanana + headless_tieba 的 PAT（内容：只读）
+#   KEYSTORE_BASE64    release keystore（key.jks）的 base64
+#   KEYSTORE_PASSWORD  keystore 密码
+#   KEY_ALIAS          密钥别名
+#   KEY_PASSWORD       密钥密码
+#
+# 发布用 GITHUB_TOKEN（permissions: contents: write），不再需要 RELEASE_TOKEN。
 
 name: Build Release
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     tags:
       - v*
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   PROPERTIES_PATH: "./android/key.properties"
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+  KEYSTORE_PATH: "./android/key.jks"
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       # tieba_contract 是公开契约子模块；headless_tieba 是私有协议子模块。
-      # 发布构建同时初始化两者，需用有读权限的 PAT：
-      # 在仓库 Secrets 里配置 SUBMODULE_TOKEN（细粒度 PAT，仅读 headless_tieba）。
+      # checkout 的 token 也用于主仓库，所以 PAT 必须同时能读两个仓库。
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
           token: ${{ secrets.SUBMODULE_TOKEN }}
 
-      # setup JDK
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: "zulu"
           java-version: "17"
-      # flutter env
+
       - name: Flutter action
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           flutter-version: "3.47.7"
-      #setup key
-      - run: echo "${{ secrets.KEYSTORE2 }}" | base64 --decode > key.jks
-      # Creating the key.properties file
-      - run: |
-          echo keyPassword=\${{ secrets.KEY_STORE }} > ${{env.PROPERTIES_PATH}}
-          echo storePassword=\${{ secrets.KEY_PASSWORD }} >> ${{env.PROPERTIES_PATH}}
-          echo keyAlias=\${{ secrets.KEY_ALIAS }} >> ${{env.PROPERTIES_PATH}}
-          echo storeFile=../key.jks >> ${{env.PROPERTIES_PATH}}
+          cache: true
+
       # CI 使用私有协议实现：把 tieba_backend_demo 的依赖地址指向
       # tool/private/tieba_backend_demo（内部依赖 headless_tieba 子模块）。
-      # 公开 clone 不执行这一步，默认使用演示后端。
       - name: Select private backend
-        run: cp tool/private/pubspec_overrides.example.yaml pubspec_overrides.yaml
-      # get dependence
-      - run: flutter pub get
-      # build Entity
-      - run: dart run build_runner build
-      # build
-      # 发布 tag 时用 tag 作为版本名（v0.2.2 → 0.2.2），构建号取 Actions 运行号，
-      # 保证 APK 的 versionName 与 Release tag 一致且 versionCode 单调递增；
-      # 手动触发（非 tag）时沿用 pubspec 的版本。
+        run: |
+          git submodule status
+          cp tool/private/pubspec_overrides.example.yaml pubspec_overrides.yaml
+
+      # 签名文件放在 android/ 下：key.properties 里的 storeFile=../key.jks
+      # 相对 android/app/ 解析，正好指向 android/key.jks。
+      - name: Restore release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::secret $name is empty"
+              exit 1
+            fi
+          done
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          test -s "$KEYSTORE_PATH"
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../key.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > "$PROPERTIES_PATH"
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build ObjectBox entities
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # tag 构建用 tag 作为 versionName（v1.0.2 → 1.0.2）；
+      # versionCode 用 1000+运行号，保证高于 pubspec 里的 +N 且单调递增，
+      # 手动触发与 tag 构建共用同一套编码，避免互相降级。
       - name: Build release APKs
         run: |
-          args=(--split-per-abi)
+          args=(--release --split-per-abi --build-number=$((1000 + GITHUB_RUN_NUMBER)))
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            args+=(--build-name="${GITHUB_REF_NAME#v}" --build-number="${GITHUB_RUN_NUMBER}")
+            args+=(--build-name="${GITHUB_REF_NAME#v}")
           fi
           flutter build apk "${args[@]}"
-      # publish
+
+      # 防止以后签名配置回退成 debug（每次 runner 随机密钥，用户无法覆盖升级）。
+      - name: Verify release signature
+        run: |
+          APK=build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | tail -1)
+          "$APKSIGNER" verify --print-certs "$APK" | tee certs.txt
+          if grep -q "CN=Android Debug" certs.txt; then
+            echo "::error::APK is still signed with the debug key"
+            exit 1
+          fi
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks-${{ github.ref_name }}
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+
+      # 只有 tag 触发才建 Release；手动触发只保留 artifact。
       - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.RElEASE_TOKEN }}
-          artifacts: "build/app/outputs/apk/release/*.apk"
+          artifacts: "build/app/outputs/flutter-apk/*.apk"
+          generateReleaseNotes: true
+          allowUpdates: true

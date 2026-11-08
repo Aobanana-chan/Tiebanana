@@ -48,9 +48,13 @@ android {
 
     buildTypes {
         release {
-            // Same as the original project: local builds still sign with debug keys
-            // (the original `signingConfig signingConfigs.release` line was commented out).
-            signingConfig = signingConfigs.getByName("debug")
+            // CI 提供了 key.properties + key.jks 时用正式签名；
+            // 本地缺少签名文件时退回 debug，保证日常构建不受影响。
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
