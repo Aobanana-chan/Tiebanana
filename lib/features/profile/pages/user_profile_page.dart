@@ -14,6 +14,7 @@ import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/features/home/widgets/forum_tag.dart';
 import 'package:tiebanana/shared/content/thread_summary.dart';
+import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/shared/widgets/tiebanana_tab_indicator.dart';
 import 'package:tiebanana/features/moderation/widgets/moderation_actions.dart';
 
@@ -74,6 +75,8 @@ class _UserVisitorState extends State<UserVisitor>
   }
 
   void _load() {
+    // 无效 uid（空串 / 0 / 非数字）不发请求，避免把脏数据展示成网络错误。
+    if (!isValidUserUid(widget.uid)) return;
     final Future<TiebaUserProfile> future =
         Global.tiebaAPI.getUserInfo(uid: widget.uid);
     _profile = future;
@@ -113,6 +116,28 @@ class _UserVisitorState extends State<UserVisitor>
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
+    if (!isValidUserUid(widget.uid)) {
+      return Scaffold(
+        backgroundColor: tokens.bg,
+        appBar: AppBar(
+          backgroundColor: tokens.bg,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          title: const Text('用户主页'),
+        ),
+        body: Center(
+          child: StateView(
+            icon: Icons.person_off_outlined,
+            title: '找不到该用户',
+            body: '用户 ID 无效或内容已不可用',
+            primaryLabel: '返回',
+            primaryIcon: Icons.arrow_back_rounded,
+            onPrimary: () => Navigator.of(context).maybePop(),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: _appBar(tokens),

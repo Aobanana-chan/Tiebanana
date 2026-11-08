@@ -288,7 +288,7 @@ class InnerFloorEntry extends StatelessWidget {
   /// 卡内最多展开几条，剩下的交给底部面板。
   static const int _visibleLimit = 2;
 
-  void _openSheet(BuildContext context) {
+  void _openSheet(BuildContext context, {String spid = ''}) {
     final page = context.findAncestorStateOfType<ThreadPageMainState>();
     showModalBottomSheet<void>(
       context: context,
@@ -298,6 +298,7 @@ class InnerFloorEntry extends StatelessWidget {
         floorNum: floorNum,
         kz: kz,
         pid: pid,
+        spid: spid,
         forum: forum,
         session: page?.session,
         cacheUid: page?.cacheUid,
@@ -398,27 +399,31 @@ class InnerFloorEntry extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Row(
-              children: <Widget>[
-                Icon(Icons.mode_comment_outlined,
-                    size: 13, color: tokens.primary),
-                const SizedBox(width: 5),
-                Text(
-                  '楼中楼',
-                  style: textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: tokens.textSecondary,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _openSheet(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Row(
+                children: <Widget>[
+                  Icon(Icons.mode_comment_outlined,
+                      size: 13, color: tokens.primary),
+                  const SizedBox(width: 5),
+                  Text(
+                    '楼中楼',
+                    style: textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: tokens.textSecondary,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '$total 条回复',
-                  style: textTheme.labelSmall
-                      ?.copyWith(color: tokens.textTertiary),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Text(
+                    '$total 条回复',
+                    style: textTheme.labelSmall
+                        ?.copyWith(color: tokens.textTertiary),
+                  ),
+                ],
+              ),
             ),
           ),
           for (final TiebaSubPost post in visible)
@@ -427,7 +432,7 @@ class InnerFloorEntry extends StatelessWidget {
               post: post,
               author: userlist[post.uid],
               isOp: threadOwnerUid.isNotEmpty && post.uid == threadOwnerUid,
-              onTap: () => _openSheet(context),
+              onTap: () => _openSheet(context, spid: post.id),
               onReply: () => _openReply(context, post),
               forumName: forum.forumName,
             ),
@@ -602,19 +607,9 @@ class InnerPost extends StatelessWidget {
     final List<InlineSpan> spans = <InlineSpan>[];
     for (final TiebaPostContent content in posts) {
       if (content is TiebaTextContent) {
-        if (content.uid != null) {
-          spans.add(TextSpan(
-            text: content.text,
-            style: TextStyle(color: TiebananaTokens.of(context).primary),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () {
-                Navigator.pushNamed(context, PageRouter.user,
-                    arguments: content.uid);
-              },
-          ));
-        } else {
-          spans.add(TextSpan(text: content.text));
-        }
+        // 正文不跳用户页；回帖里的“回复某某”段同样按普通文字处理。
+        // 只有真正的 @ 段（TiebaAtContent）才可点进用户资料。
+        spans.add(TextSpan(text: content.text));
       } else if (content is TiebaEmojiContent) {
         spans.add(EmojiSpan(
           content.text,
@@ -747,6 +742,18 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
   late final String cacheUid;
   bool _requesting = false;
 
+  /// 目标楼中楼卡片的 key，用于滚动定位。
+  final Map<String, GlobalKey> _replyKeys = <String, GlobalKey>{};
+
+  /// 正在闪烁强调的回复 id。
+  String? _highlightId;
+
+  /// 从预览点进来时只自动定位一次。
+  bool _revealed = false;
+
+  GlobalKey _keyFor(String id) =>
+      _replyKeys.putIfAbsent(id, GlobalKey.new);
+
   @override
   void initState() {
     super.initState();
@@ -794,12 +801,13 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
           authors: widget.cachedAuthors ?? {});
     }
     setState(() {});
-    if (!session.paused) return _request(pn);
+    _scheduleReveal();
+    if (!session.paused) return _request(pn, spid: widget.spid);
     if (floorPages.isNotEmpty) return floorPages.values.first;
     throw StateError('没有已缓存的楼中楼');
   }
 
-  Future<InnerFloor> _request(int pageNum) async {
+  Future<InnerFloor> _request(int pageNum, {String spid = ''}) async {
     if (session.paused || _requesting) {
       if (floorPages.isNotEmpty) return floorPages.values.first;
       throw StateError('自动请求已暂停');
@@ -807,11 +815,11 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
     _requesting = true;
     try {
       final value = await Global.tiebaAPI
-          .getInnerFloor(widget.kz, widget.pid, spid: widget.spid, pn: pageNum);
+          .getInnerFloor(widget.kz, widget.pid, spid: spid, pn: pageNum);
       if (!mounted || cacheUid != (AccountStore.currentUid ?? '')) return value;
       // 带 spid 的响应从锚点开始，可能只覆盖部分楼层；
       // 普通分页请求用于读取整页。
-      final bool completePage = widget.spid.isEmpty;
+      final bool completePage = spid.isEmpty;
       await Global.threadCache.saveInner(cacheUid, widget.kz, widget.pid, value,
           completePage: completePage);
       if (!mounted) return value;
@@ -830,6 +838,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
           thread: value.thread,
           authors: {...?old?.authors, ...value.authors});
       setState(() => floorPages[pn] = merged);
+      _scheduleReveal();
       return merged;
     } catch (e) {
       if (mounted) session.fail(e);
@@ -838,6 +847,29 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
     } finally {
       _requesting = false;
     }
+  }
+
+  void _scheduleReveal() {
+    if (_revealed || widget.spid.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealTarget());
+  }
+
+  /// 平滑滚动到被点击的楼中楼，并闪烁强调。
+  Future<void> _revealTarget() async {
+    if (_revealed || !mounted || widget.spid.isEmpty) return;
+    final BuildContext? target = _replyKeys[widget.spid]?.currentContext;
+    if (target == null) return;
+    _revealed = true;
+    await Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      alignment: 0.12,
+    );
+    if (!mounted) return;
+    setState(() => _highlightId = widget.spid);
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (mounted) setState(() => _highlightId = null);
   }
 
   void _onReplySent() {
@@ -905,10 +937,12 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
         if (!seen.add(subpost.id)) continue;
         widgets.add(
           InnerFloorCard(
+            key: _keyFor(subpost.id),
             author: _authorOf(value, subpost),
             postMain: subpost,
             threadID: widget.kz,
-            isSpid: subpost.id == widget.spid,
+            isSpid: false,
+            highlighted: subpost.id == _highlightId,
             forum: widget.forum,
             floorId: value.post.id,
             isOp: ownerUid.isNotEmpty && subpost.uid == ownerUid,
@@ -1043,15 +1077,15 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
                             overscroll!.disallowIndicator();
                             return true;
                           },
-                          child: ListView.builder(
+                          child: SingleChildScrollView(
                             controller: controller,
                             physics: animationcontroller.value > 0
                                 ? const NeverScrollableScrollPhysics()
                                 : const ClampingScrollPhysics(),
-                            itemCount: floors.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return floors[index];
-                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: floors,
+                            ),
                           ),
                         ),
                       ),
@@ -1105,6 +1139,9 @@ class InnerFloorCard extends StatelessWidget {
   final TiebaPost postMain;
   final String threadID;
   final bool isSpid;
+
+  /// 刚刚被定位到的回复，短暂高亮强调。
+  final bool highlighted;
   final TiebaForum forum;
   final String floorId;
   final bool isOp;
@@ -1118,6 +1155,7 @@ class InnerFloorCard extends StatelessWidget {
     required this.forum,
     required this.floorId,
     this.isOp = false,
+    this.highlighted = false,
   });
 
   List<String> _imgCollect() {
@@ -1161,12 +1199,15 @@ class InnerFloorCard extends StatelessWidget {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TiebaVoteBadgeContent? voteBadge =
         postMain.content.whereType<TiebaVoteBadgeContent>().firstOrNull;
-    return Container(
+    final bool tinted = highlighted || isSpid;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOut,
       margin: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: isSpid ? tokens.primaryContainer : tokens.surface,
+        color: tinted ? tokens.primaryContainer : tokens.surface,
         borderRadius: TiebananaMetrics.brLg,
-        boxShadow: isSpid ? null : tokens.cardShadow,
+        boxShadow: tinted ? null : tokens.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,

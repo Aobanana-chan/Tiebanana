@@ -166,6 +166,12 @@ class _EmojiLoader extends StatelessWidget {
   }
 }
 
+/// 是否为可跳转的用户 id。
+///
+/// 服务端下发的普通文字段也可能带 `uid`（缺省为 `"0"`），只有正数才是
+/// 真正的用户。用它区分“@ 某人”与普通正文，避免打开空 uid 的用户页。
+bool isValidUserUid(String? uid) => (int.tryParse(uid ?? '') ?? 0) > 0;
+
 ///@用户的span
 class AtUserSpan extends TextSpan {
   final String uid;
@@ -175,13 +181,18 @@ class AtUserSpan extends TextSpan {
       : super(
           text: text,
           style: style ??
-              TextStyle(color: TiebananaTokens.of(context).primary),
+              (isValidUserUid(uid)
+                  ? TextStyle(color: TiebananaTokens.of(context).primary)
+                  : null),
         );
   @override
-  GestureRecognizer? get recognizer => TapGestureRecognizer()
-    ..onTap = () {
-      Navigator.pushNamed(context, PageRouter.user, arguments: uid);
-    };
+  GestureRecognizer? get recognizer {
+    if (!isValidUserUid(uid)) return null;
+    return TapGestureRecognizer()
+      ..onTap = () {
+        Navigator.pushNamed(context, PageRouter.user, arguments: uid);
+      };
+  }
 }
 
 abstract class TiebaSpecialText extends SpecialText {
