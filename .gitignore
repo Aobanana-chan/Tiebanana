@@ -65,3 +65,4 @@ objectbox.g.dart
 
 # VS Code workspace settings
 .vscode/settings.json
+.vscode/launch.json

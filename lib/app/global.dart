@@ -129,6 +129,21 @@ class Global {
     }
   }
 
+  /// 仅 Debug 且显式开启抓包时，读取当前平台的编译期代理地址。
+  static String? get _debugProxy {
+    const captureEnabled = bool.fromEnvironment('TIEBA_CAPTURE');
+    if (!kDebugMode || !captureEnabled) return null;
+
+    const androidProxy = String.fromEnvironment('TIEBA_PROXY_ANDROID');
+    const windowsProxy = String.fromEnvironment('TIEBA_PROXY_WINDOWS');
+    final address = switch (defaultTargetPlatform) {
+      TargetPlatform.android => androidProxy.trim(),
+      TargetPlatform.windows => windowsProxy.trim(),
+      _ => '',
+    };
+    return address.isEmpty ? null : 'PROXY $address';
+  }
+
   /// 按当前设置构造后端实例。切换账号后会重新调用它（cookie 仓库已替换）。
   static TiebaApi _createTiebaApi({bool useCachedUid = true}) {
     loginFailures.reset();
@@ -146,9 +161,7 @@ class Global {
       ),
       signUpperHex: () => setting.protocolSignUpperHex ?? true,
       enableSig: () => setting.protocolEnableSig ?? false,
-      debugProxy: kDebugMode && defaultTargetPlatform == TargetPlatform.android
-          ? "PROXY 10.0.2.2:10888"
-          : null,
+      debugProxy: _debugProxy,
       accountUid:
           useCachedUid ? int.tryParse(AccountStore.currentUid ?? '') : null,
       onLoginFailure: loginFailures.report,
