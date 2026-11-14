@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:tiebanana/features/media/data/local_image_asset.dart';
 import 'package:tiebanana/features/compose/models/thread_compose_draft.dart';
 import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/features/media/pages/image_picker_page.dart';
@@ -253,7 +254,7 @@ class _ScoreThumbnailState extends State<_ScoreThumbnail> {
   late final _bytes = _load();
   Future<Uint8List?> _load() async {
     try {
-      final asset = await AssetEntity.fromId(widget.assetId);
+      final asset = await restoreImageAsset(widget.assetId);
       return await asset?.thumbnailDataWithSize(const ThumbnailSize(240, 240));
     } catch (_) {
       return null;

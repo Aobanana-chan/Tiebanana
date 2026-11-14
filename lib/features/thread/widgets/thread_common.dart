@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/features/moderation/widgets/moderation_actions.dart';
 import 'package:tiebanana/app/global.dart';

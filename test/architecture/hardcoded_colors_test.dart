@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// 这些是**有意保留**的，不是漏改：
 /// - `video_player` / `img_explorer` / `image_picker(看图器)`：全屏纯黑遮罩，
 ///   其上的白字白图标正是设计意图，跟着主题走反而会看不见。
-/// - `login` / `service_center` / `thread_floor_card` / `tieba_parser`：
+/// - `login` / `thread_floor_card` / `tieba_parser`：
 ///   WebView 必须白底（否则加载瞬间闪黑），以及缩略图角标上的深色半透明遮罩。
 /// - `forum_tag`：贴吧等级徽章的固定配色，属于语义色。
 ///
@@ -18,7 +18,6 @@ const Map<String, int> allowedHardcodedColors = <String, int>{
   'lib/shared/media/img_explorer.dart': 3,
   'lib/shared/content/tieba_parser.dart': 3,
   'lib/features/account/pages/login_page.dart': 2,
-  'lib/features/settings/pages/service_center_page.dart': 1,
   'lib/features/browser/pages/in_app_browser_page.dart': 1,
   'lib/features/media/pages/image_picker_page.dart': 1,
   // 性别图标：男蓝女粉是语义色，不该跟主题色走。

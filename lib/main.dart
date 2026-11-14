@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiebanana/app/lifecycle/app_lifecycle.dart';
@@ -99,6 +100,7 @@ class App extends StatelessWidget {
               builder: (BuildContext context, theme, user, Widget? child) {
                 final TiebananaSeed seed = seedOf(theme.theme);
                 return MaterialApp(
+                  scaffoldMessengerKey: Fluttertoast.messengerKey,
                   navigatorKey: _appNavigatorKey,
                   // 全局监听滚动：页面内的视频在滚出可视区域时自行暂停。
                   builder: (context, child) => ScrollNotificationObserver(

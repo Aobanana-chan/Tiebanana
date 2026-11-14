@@ -14,7 +14,9 @@ import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/core/config/constants.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/account/data/webview_cookie_util.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
+import 'package:tiebanana/core/platform/windows_webview.dart';
 
 ///手机版登录网站的UA,使登录页面进入手机端适配
 const String _mobileLoginUA =
@@ -60,6 +62,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    _watchdog = Timer.periodic(
+        const Duration(seconds: 3), ((timer) => _trySaveLogin()));
+    if (isWindows) return;
     _webViewController = WebViewController()
       ..setBackgroundColor(const Color(0xFFFFFFFF))
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -92,8 +97,6 @@ class _LoginPageState extends State<LoginPage> {
     }
     _openLoginPage();
     //passport页面登录成功时可能不产生页面跳转(扫描二维码确认登录等场景),定时兜底检查凭证
-    _watchdog = Timer.periodic(
-        const Duration(seconds: 3), ((timer) => _trySaveLogin()));
   }
 
   /// 添加账号时先清空 WebView 的百度 cookie，让 passport 重新进入登录流程。
@@ -183,9 +186,33 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: isWindows ? AppBar(title: const Text('登录贴吧')) : null,
       body: Stack(
         children: [
-          WebViewWidget(controller: _webViewController),
+          if (isWindows)
+            WindowsWebView(
+              url: LOGIN_GET_URL,
+              userAgent: _mobileLoginUA,
+              clearCookies: widget.addAccount || widget.relogin,
+              onReady: () => _ready = true,
+              onLoading: (loading) {
+                if (mounted) setState(() => _loading = loading);
+              },
+              onLoaded: (url) {
+                if (Uri.tryParse(url)?.host == 'tieba.baidu.com') {
+                  _tiebaPageLoaded = true;
+                }
+                _trySaveLogin();
+              },
+              onNavigation: (url) async {
+                final uri = Uri.tryParse(url);
+                return uri?.scheme == 'https' ||
+                    uri?.scheme == 'http' ||
+                    url == 'about:blank';
+              },
+            )
+          else
+            WebViewWidget(controller: _webViewController),
           //加载进度条
           if (_loading)
             const Positioned(

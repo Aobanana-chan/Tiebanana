@@ -43,6 +43,8 @@ py -3 docs/icon/subset_wordmark_font.py
 
 平台图标输出至 `android/app/src/main/res/`、
 `ios/Runner/Assets.xcassets/AppIcon.appiconset/`；应用内图标输出至 `assets/icon/`。
+Windows 多尺寸图标通过 `dart run tool/build_windows_icon.dart` 从应用源图生成，
+输出至 `windows/runner/resources/app_icon.ico`。
 更换配色时还需同步 Android 的 `drawable/ic_launcher_background.xml` 和
 `drawable*/launch_background.xml` 中的背景色。
 

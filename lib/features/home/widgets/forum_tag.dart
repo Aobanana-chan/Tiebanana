@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/features/history/models/view_history_page_model.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/app/navigation/app_route_observer.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';

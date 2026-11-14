@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 
 import 'package:tiebanana/features/account/data/account_store.dart';

@@ -103,6 +103,26 @@ void main() {
     });
   }
 
+  testWidgets('Windows 使用文件选择器，多次选择保留图片，不申请相册权限', (tester) async {
+    var pick = 0;
+    await tester.pumpWidget(MaterialApp(
+      theme: TiebananaTheme.light(seedOf('blue'), 16),
+      home: ImagePickerRoute(
+          filePicker: (_) async => [
+                AssetEntity(
+                    id: '${pick++}', typeInt: 1, width: 100, height: 200),
+              ]),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('已选 1 张'), findsOneWidget);
+    await tester.tap(find.text('选择文件'));
+    await tester.pumpAndSettle();
+    expect(find.text('已选 2 张'), findsOneWidget);
+    expect(permissionRequests, isEmpty);
+    expect(albumQueries, 0);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
   testWidgets('换相册保留已选资源', (tester) async {
     await open(tester);
     await tester.tap(find.byType(ImageSelectionTile).first);

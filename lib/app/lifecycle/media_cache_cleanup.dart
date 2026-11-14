@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
 import 'package:tiebanana/app/lifecycle/app_lifecycle_hook.dart';
 
 ///开启APP自动清除上次缓存
 class ClearCache extends APPStateCallback {
   @override
   void afterInit() {
-    PhotoManager.clearFileCache();
+    if (!isDesktop) PhotoManager.clearFileCache();
 
     done = true;
   }

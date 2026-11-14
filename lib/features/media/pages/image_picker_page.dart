@@ -1,7 +1,11 @@
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
+import 'package:tiebanana/features/media/data/local_image_asset.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
@@ -9,7 +13,11 @@ import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 
 /// 图片选择只返回资源，上传与正文编辑由回复面板统一管理。
 class ImagePickerRoute extends StatefulWidget {
-  const ImagePickerRoute({super.key, this.singleSelection = false});
+  const ImagePickerRoute(
+      {super.key, this.singleSelection = false, this.filePicker});
+
+  /// 桌面文件选择入口，可注入以验证取消、失败与多选行为。
+  final Future<List<AssetEntity>> Function(bool singleSelection)? filePicker;
 
   /// 头像等单图用途；默认发帖流程仍为多选。
   final bool singleSelection;
@@ -32,6 +40,7 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
   bool _hasMore = true;
   bool _original = false;
   bool _openingSettings = false;
+  bool _pickingFiles = false;
   String? _error;
   int _page = 0;
   int _generation = 0;
@@ -41,7 +50,71 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _scroll.addListener(_onScroll);
-    _reload();
+    if (isDesktop) {
+      _loading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _pickFiles());
+    } else {
+      _reload();
+    }
+  }
+
+  Future<void> _pickFiles() async {
+    if (!mounted || _pickingFiles) return;
+    _pickingFiles = true;
+    try {
+      if (widget.filePicker != null) {
+        final assets = await widget.filePicker!(widget.singleSelection);
+        if (!mounted || assets.isEmpty) return;
+        setState(() {
+          if (widget.singleSelection) _selected.clear();
+          _selected.addAll(widget.singleSelection ? assets.take(1) : assets);
+          _error = null;
+        });
+        return;
+      }
+      final result = widget.singleSelection
+          ? [
+              await FilePicker.pickFile(
+                type: FileType.custom,
+                allowedExtensions: const [
+                  'jpg',
+                  'jpeg',
+                  'png',
+                  'gif',
+                  'webp',
+                  'bmp'
+                ],
+              )
+            ].whereType<PlatformFile>().toList()
+          : await FilePicker.pickFiles(
+              type: FileType.custom,
+              allowedExtensions: const [
+                'jpg',
+                'jpeg',
+                'png',
+                'gif',
+                'webp',
+                'bmp'
+              ],
+            );
+      if (result.isEmpty || !mounted) return;
+      final assets = <AssetEntity>[];
+      for (final file in result) {
+        if (file.path != null) {
+          assets.add(await LocalImageAsset.fromFile(File(file.path!)));
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        if (widget.singleSelection) _selected.clear();
+        _selected.addAll(assets);
+        _error = null;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _error = '无法读取图片，请选择有效的图片文件');
+    } finally {
+      _pickingFiles = false;
+    }
   }
 
   @override
@@ -205,6 +278,42 @@ class _ImagePickerRouteState extends State<ImagePickerRoute>
 
   @override
   Widget build(BuildContext context) {
+    if (isDesktop) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.singleSelection ? '选择头像' : '选择图片')),
+        body: CustomScrollView(slivers: [
+          SliverToBoxAdapter(
+              child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Wrap(
+                spacing: 16,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  FilledButton.icon(
+                      onPressed: _pickFiles,
+                      icon: const Icon(Icons.folder_open),
+                      label: const Text('选择文件')),
+                  Text('已选 ${_selected.length} 张'),
+                  if (!widget.singleSelection) ...[
+                    const Text('原图'),
+                    Switch(
+                        value: _original,
+                        onChanged: (value) =>
+                            setState(() => _original = value)),
+                  ],
+                  if (_error != null) Text(_error!),
+                ]),
+          )),
+          _grid(_selected.toList()),
+        ]),
+        bottomNavigationBar: ImagePickerFooter(
+            count: _selected.length,
+            singleSelection: widget.singleSelection,
+            onConfirm: _selected.isEmpty
+                ? null
+                : () => Navigator.pop(context, [Set.of(_selected), _original])),
+      );
+    }
     final tokens = TiebananaTokens.of(context);
     return Scaffold(
       appBar: AppBar(

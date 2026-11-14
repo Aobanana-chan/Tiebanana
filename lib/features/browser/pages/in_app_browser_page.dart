@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
+import 'package:tiebanana/core/platform/windows_webview.dart';
 
 /// WebView 导航拦截回调。
 ///
@@ -37,6 +39,7 @@ class _InAppBrowserPageState extends State<InAppBrowserPage> {
   void initState() {
     super.initState();
     _title = widget.title;
+    if (isWindows) return;
     _controller = WebViewController()
       ..setBackgroundColor(Colors.white)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -92,7 +95,15 @@ class _InAppBrowserPageState extends State<InAppBrowserPage> {
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      body: WebViewWidget(controller: _controller),
+      body: isWindows
+          ? WindowsWebView(
+              url: widget.initialUrl,
+              onNavigation: (url) => widget.onNavigation(context, url),
+              onTitle: (title) {
+                if (mounted) setState(() => _title = title);
+              },
+            )
+          : WebViewWidget(controller: _controller),
     );
   }
 }

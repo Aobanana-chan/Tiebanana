@@ -1,6 +1,6 @@
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';

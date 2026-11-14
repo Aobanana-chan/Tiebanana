@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kDebugMode, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:json5/json5.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -101,7 +101,7 @@ class Global {
     await daoapi.init();
   }
 
-  /// 初始化移动端通知；iOS 拒绝授权不会阻止应用启动。
+  /// 初始化系统通知；拒绝授权或通知服务不可用不阻止应用启动。
   static Future<void> initializeNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -115,8 +115,18 @@ class Global {
         defaultPresentBadge: false,
         defaultPresentSound: false,
       ),
+      windows: WindowsInitializationSettings(
+        appName: 'Tiebanana',
+        appUserModelId: 'Aobanana.Tiebanana',
+        guid: 'd083f4f1-0ca0-4744-8baf-698421ea52b7',
+      ),
     );
-    await localNotifications.initialize(settings: initializationSettings);
+    try {
+      await localNotifications.initialize(settings: initializationSettings);
+    } catch (error, stack) {
+      // 系统通知不可用不应阻止浏览与登录。
+      AppLog.shared.error('notifications.initialize_failed', error, stack);
+    }
   }
 
   /// 按当前设置构造后端实例。切换账号后会重新调用它（cookie 仓库已替换）。
@@ -203,6 +213,7 @@ class Global {
         presentBanner: true,
         presentList: true,
       ),
+      windows: const WindowsNotificationDetails(),
     );
 
     await Global.localNotifications.show(

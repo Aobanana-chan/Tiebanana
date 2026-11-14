@@ -5,6 +5,7 @@ import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:tiebanana/features/media/data/local_image_asset.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/core/platform/official_tieba.dart';
@@ -199,7 +200,7 @@ class _ThreadComposePageState extends State<ThreadComposePage>
         for (final attachment in draft.attachments) {
           AssetEntity? asset;
           try {
-            asset = await AssetEntity.fromId(attachment.assetId);
+            asset = await restoreImageAsset(attachment.assetId);
           } catch (_) {/* 权限可能已收回。 */}
           if (!mounted) return;
           if (asset == null) {
@@ -212,7 +213,7 @@ class _ThreadComposePageState extends State<ThreadComposePage>
         for (final item in _score?.items ?? <ComposeScoreItem>[]) {
           AssetEntity? asset;
           try {
-            asset = await AssetEntity.fromId(item.assetId);
+            asset = await restoreImageAsset(item.assetId);
           } catch (_) {/* 失效图片留在打分项中。 */}
           if (!mounted) return;
           if (asset != null) _scoreImages.enqueue(asset, false);
@@ -495,7 +496,7 @@ class _ThreadComposePageState extends State<ThreadComposePage>
     for (final item in score.items) {
       AssetEntity? asset;
       try {
-        asset = await AssetEntity.fromId(item.assetId);
+        asset = await restoreImageAsset(item.assetId);
       } catch (_) {/* 由卡片提示。 */}
       if (!mounted) return;
       if (asset != null) {

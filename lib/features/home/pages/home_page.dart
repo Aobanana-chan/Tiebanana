@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/app/lifecycle/app_lifecycle.dart';

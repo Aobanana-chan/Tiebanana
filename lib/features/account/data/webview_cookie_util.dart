@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:tiebanana/core/platform/windows_webview.dart';
 
 ///系统WebView的cookie工具类
 ///用于读取WebView中百度passport网页登录产生的登录凭证(BDUSS/STOKEN等)
@@ -11,6 +12,14 @@ abstract class WebviewCookieUtil {
 
   ///清空系统WebView的cookie库，添加账号前调用。
   static Future<void> clearCookies() async {
+    if (Platform.isWindows) {
+      try {
+        await (await WindowsWebEnvironment.cookies).deleteAllCookies();
+      } catch (_) {
+        // 退出本地账号不能依赖浏览器或 WebView2 是否已安装。
+      }
+      return;
+    }
     if (Platform.isAndroid) {
       try {
         await _channel.invokeMethod<void>("clearCookies");
@@ -30,6 +39,18 @@ abstract class WebviewCookieUtil {
   ///
   ///无cookie或平台不支持时返回null
   static Future<String?> getRawCookies(String url) async {
+    if (Platform.isWindows) {
+      try {
+        final cookies = await (await WindowsWebEnvironment.cookies)
+            .getCookies(url: WebUri(url));
+        if (cookies.isEmpty) return null;
+        return cookies
+            .map((cookie) => '${cookie.name}=${cookie.value}')
+            .join('; ');
+      } catch (_) {
+        return null;
+      }
+    }
     if (Platform.isAndroid) {
       //Android端走原生android.webkit.CookieManager读取,
       //与webview_flutter的WebView共享同一个cookie库,能读到HttpOnly的凭证,

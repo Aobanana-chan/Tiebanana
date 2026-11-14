@@ -18,7 +18,7 @@ Tiebanana 使用 Flutter 构建界面，以 Android 为主要目标平台。应�
 | `packages/headless_tieba/` | 可选的私有后端实现，Git 子模块 |
 | `tool/private/` | 私有构建的后端适配包与依赖覆盖模板 |
 | `assets/` | 随应用打包的图标、表情、开屏图片和字标字体 |
-| `android/`、`ios/` | 平台工程与平台资源 |
+| `android/`、`ios/`、`windows/` | 平台工程与平台资源 |
 | `test/` | 功能、基础能力、共享组件和集成测试 |
 | `docs/` | 架构说明与[图标构成资源](icon/README.md) |
 
@@ -152,3 +152,10 @@ flutter test
 检查颜色、字号与平台权限等约束；`test/integration/` 覆盖应用集成行为，
 `test/support/` 提供共享夹具。浏览历史测试需要本机可加载 ObjectBox 原生库，
 Windows 上需准备 `objectbox.dll`。
+
+Windows 桌面使用 WebView2 展示登录页与内置浏览器，共用应用支持目录下的
+`webview2/` 用户数据及 CookieManager（包括 HttpOnly 登录凭证），不依赖
+`document.cookie`。Android/iOS 保留原来的 WebView 与 Cookie 实现。
+桌面选图通过系统文件对话框，`LocalImageAsset` 提供与相册资源相同的上传、
+缩略图与草稿恢复接口；草稿记录文件 URI，原文件失效时仍保留缺失提示。
+Windows 构建打包 libmpv，通知失败不阻塞启动，普通提示通过 ScaffoldMessenger 展示。

@@ -114,6 +114,17 @@ flutter build ios --release --no-codesign
 
 产物在 `build/ios/iphoneos/Runner.app`，签名后才能安装。
 
+### 构建 Windows（实验性）
+
+需要 Visual Studio C++、[NuGet CLI](https://www.nuget.org/downloads)（加入 PATH）和开发者模式；
+网页功能需要 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)。
+
+```bash
+flutter build windows --release
+```
+
+产物在 `build/windows/x64/runner/Release/`，分发时保留整个目录。
+
 ### 测试
 
 ```bash

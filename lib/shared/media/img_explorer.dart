@@ -5,6 +5,8 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
@@ -206,6 +208,26 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
     final url = _original(_current) ?? widget.imgUrls[_current];
     setState(() => _saving = true);
     try {
+      if (isDesktop) {
+        final data = await getNetworkImageData(url);
+        if (data == null || data.isEmpty) throw StateError('图片下载失败');
+        // 根据文件头保留实际格式，避免 GIF/PNG 被误标为 JPEG。
+        final extension = data.length >= 4 && data[0] == 0x89 && data[1] == 0x50
+            ? 'png'
+            : data.length >= 3 && data[0] == 0x47 && data[1] == 0x49
+                ? 'gif'
+                : data.length >= 12 && data[8] == 0x57 && data[9] == 0x45
+                    ? 'webp'
+                    : 'jpg';
+        final path = await FilePicker.saveFile(
+            dialogTitle: '保存图片',
+            fileName: '${keyToMd5(url)}.$extension',
+            bytes: data,
+            mimeType: 'image/${extension == 'jpg' ? 'jpeg' : extension}');
+        if (path == null) return;
+        _message('图片已保存');
+        return;
+      }
       final permission = await PhotoManager.requestPermissionExtend(
         requestOption: const PermissionRequestOption(
           iosAccessLevel: IosAccessLevel.addOnly,

@@ -15,6 +15,7 @@ analyzer:
     - web/**
     # 可选私有构建包不属于默认公开分析目标；有权限时在包内单独分析。
     - tool/private/**
+    - windows/**
 include: package:flutter_lints/flutter.yaml
 
 linter:
