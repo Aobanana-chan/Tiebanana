@@ -1,5 +1,6 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tieba_contract/tieba_contract.dart';
@@ -45,6 +46,33 @@ void main() {
       final item = fakeThreadInfo()..firstPostContent = contents;
       return ForumFeedCard(item: item);
     }
+
+    testWidgets('鼠标悬停不产生暗影，保留点击反馈 ${feed ? "卡片流" : "帖子流"}', (tester) async {
+      await mount(tester, card([]));
+      final buttonFinder = find.byType(MaterialButton);
+      final button = tester.widget<MaterialButton>(buttonFinder);
+      final context = tester.element(buttonFinder);
+      final theme = Theme.of(context);
+      expect(button.hoverElevation, 0);
+      expect(
+          button.hoverColor, theme.colorScheme.primary.withValues(alpha: .04));
+      // 不覆盖既有的按下与水波纹反馈。
+      expect(button.highlightColor, isNull);
+      expect(button.splashColor, isNull);
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(buttonFinder));
+      await tester.pumpAndSettle();
+      final materialFinder =
+          find.descendant(of: buttonFinder, matching: find.byType(Material));
+      for (final material in tester.widgetList<Material>(materialFinder)) {
+        expect(material.elevation, 0);
+      }
+      expect(materialFinder, findsWidgets);
+      await mouse.removePointer();
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets('预览表情使用图片 ${feed ? "卡片流" : "帖子流"}', (tester) async {
       await mount(

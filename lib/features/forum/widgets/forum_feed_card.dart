@@ -36,6 +36,9 @@ class ForumFeedCard extends StatelessWidget {
             arguments: ThreadPageRouterData(kz: item.id, pid: null)),
         color: Colors.transparent,
         elevation: 0,
+        hoverElevation: 0,
+        hoverColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: .04),
         highlightElevation: 0,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         minWidth: 0,

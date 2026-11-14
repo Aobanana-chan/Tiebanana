@@ -121,6 +121,10 @@ class ThreadSummary extends StatelessWidget {
         },
         color: Colors.transparent,
         elevation: 0,
+        // 透明按钮默认悬停高度为 4，会在整张卡片上产生明显暗影。
+        hoverElevation: 0,
+        hoverColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: .04),
         highlightElevation: 0,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         minWidth: 0,

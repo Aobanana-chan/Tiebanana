@@ -15,6 +15,7 @@ import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
 import 'package:tiebanana/shared/widgets/clipboard_observe.dart';
+import 'package:tiebanana/shared/widgets/phone_viewport.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -103,17 +104,19 @@ class App extends StatelessWidget {
                   scaffoldMessengerKey: Fluttertoast.messengerKey,
                   navigatorKey: _appNavigatorKey,
                   // 全局监听滚动：页面内的视频在滚出可视区域时自行暂停。
-                  builder: (context, child) => ScrollNotificationObserver(
-                    child: LoginFailurePrompt(
-                      controller: Global.loginFailures,
-                      navigatorKey: _appNavigatorKey,
-                      onRelogin: () async {
-                        await _appNavigatorKey.currentState?.pushNamed(
-                          PageRouter.login,
-                          arguments: const LoginRouteOptions(relogin: true),
-                        );
-                      },
-                      child: child ?? const SizedBox.shrink(),
+                  builder: (context, child) => PhoneViewport(
+                    child: ScrollNotificationObserver(
+                      child: LoginFailurePrompt(
+                        controller: Global.loginFailures,
+                        navigatorKey: _appNavigatorKey,
+                        onRelogin: () async {
+                          await _appNavigatorKey.currentState?.pushNamed(
+                            PageRouter.login,
+                            arguments: const LoginRouteOptions(relogin: true),
+                          );
+                        },
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                   title: "Tiebanana",

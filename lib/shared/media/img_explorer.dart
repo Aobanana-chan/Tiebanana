@@ -691,7 +691,11 @@ class _ExplorerImageState extends State<_ExplorerImage>
           extendedImageGestureKey: _gesture,
           handleLoadingProgress: true,
           initGestureConfigHandler: (_) => GestureConfig(
-              inPageView: true, initialScale: 1, minScale: 1, maxScale: 5),
+              reverseMousePointerScrollDirection: true,
+              inPageView: true,
+              initialScale: 1,
+              minScale: 1,
+              maxScale: 5),
           onDoubleTap: _doubleTap,
           loadStateChanged: (state) {
             switch (state.extendedImageLoadState) {
@@ -748,7 +752,11 @@ class _ExplorerImageState extends State<_ExplorerImage>
         mode: ExtendedImageMode.gesture,
         extendedImageGestureKey: _gesture,
         initGestureConfigHandler: (_) => GestureConfig(
-            inPageView: true, initialScale: 1, minScale: 1, maxScale: 5),
+            reverseMousePointerScrollDirection: true,
+            inPageView: true,
+            initialScale: 1,
+            minScale: 1,
+            maxScale: 5),
         onDoubleTap: _doubleTap,
         loadStateChanged: (state) =>
             state.extendedImageLoadState == LoadState.completed

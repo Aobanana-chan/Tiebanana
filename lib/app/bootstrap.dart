@@ -4,6 +4,7 @@ import 'package:tiebanana/features/diagnostics/pages/diagnostics_page.dart';
 import 'package:tiebanana/features/splash/splash_page.dart';
 import 'package:tiebanana/features/splash/splash_timeline.dart';
 import 'package:tiebanana/features/splash/tiebanana_glyph.dart';
+import 'package:tiebanana/shared/widgets/phone_viewport.dart';
 
 /// `Global.init()` 是否已经完成。
 ///
@@ -192,6 +193,9 @@ class _BootstrapAppState extends State<BootstrapApp>
           // 而这两样来自 `App`，兄弟节点继承不到。
           MaterialApp(
             debugShowCheckedModeBanner: false,
+            builder: (context, child) => PhoneViewport(
+              child: child ?? const SizedBox.shrink(),
+            ),
             home: widget.boot.error == null
                 ? GestureDetector(
                     behavior: HitTestBehavior.opaque,

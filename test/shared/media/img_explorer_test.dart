@@ -50,6 +50,21 @@ void main() {
     });
   }
 
+  testWidgets('图片浏览器反转鼠标滚轮缩放方向', (tester) async {
+    await open(
+        tester,
+        const ImgExplorer(
+            imgUrl: 'https://test.invalid/avatar.png', heroTagSalt: 'wheel'));
+    final images = tester.widgetList<ExtendedImage>(find.byType(ExtendedImage));
+    final image =
+        images.firstWhere((image) => image.initGestureConfigHandler != null);
+    final config = image.initGestureConfigHandler!(
+        tester.state(find.byWidget(image)) as ExtendedImageState);
+    expect(config.reverseMousePointerScrollDirection, isTrue);
+    expect(config.minScale, 1);
+    expect(config.maxScale, 5);
+  });
+
   testWidgets('初始下标、缩略图切页与滑动同步页码', (tester) async {
     await open(
         tester,

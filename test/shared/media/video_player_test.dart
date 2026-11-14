@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:tiebanana/core/config/default_config.dart';
@@ -124,6 +125,14 @@ void main() {
     expect(normalizeVideoAspectRatio(99), 21 / 9);
   });
 
+  test('视频诊断隐藏签名参数', () {
+    expect(
+      redactVideoDiagnostic(
+          'Failed to open https://example.com/v.mp4?tbau=secret&sid=private'),
+      'Failed to open https://example.com/v.mp4',
+    );
+  });
+
   testWidgets('首次点击才打开媒体，重复点击不会重复加载', (tester) async {
     await mount(tester);
     expect(native.opens, 0);
@@ -204,6 +213,26 @@ void main() {
     native.error('network error');
     await tester.pumpAndSettle();
     expect(find.text('点击重试'), findsOneWidget);
+    await tester.tap(find.text('错误详情'));
+    await tester.pumpAndSettle();
+    expect(find.text('视频播放错误详情'), findsOneWidget);
+    expect(find.text('network error'), findsOneWidget);
+    String? copied;
+    tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') {
+        copied = (call.arguments as Map)['text'] as String;
+      }
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null));
+    await tester.tap(find.text('复制全部'));
+    await tester.pump();
+    expect(copied, 'network error');
+    expect(find.text('已复制全部错误详情'), findsOneWidget);
+    await tester.tap(find.text('关闭'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('点击重试'));
     await tester.pumpAndSettle();
     expect(native.opens, 2);

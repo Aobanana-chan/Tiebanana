@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:tiebanana/shared/widgets/phone_viewport.dart';
 
 export 'package:flutter_inappwebview/flutter_inappwebview.dart' show WebUri;
 
@@ -104,56 +105,59 @@ class _WindowsWebViewState extends State<WindowsWebView> {
             return const Center(child: CircularProgressIndicator());
           }
           return Stack(children: [
-            InAppWebView(
-              webViewEnvironment: snapshot.data,
-              initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-              initialSettings: InAppWebViewSettings(
-                userAgent: widget.userAgent,
-                javaScriptEnabled: true,
-                useShouldOverrideUrlLoading: true,
-                supportMultipleWindows: true,
-              ),
-              onWebViewCreated: (controller) {
-                _controller = controller;
-                widget.onReady?.call();
-              },
-              onLoadStart: (_, url) {
-                if (mounted) setState(() => _loadError = null);
-                widget.onLoading?.call(true);
-              },
-              onLoadStop: (_, url) {
-                widget.onLoading?.call(false);
-                if (url != null) widget.onLoaded?.call(url.toString());
-              },
-              onTitleChanged: (_, title) {
-                if (title != null && title.trim().isNotEmpty) {
-                  widget.onTitle?.call(title);
-                }
-              },
-              shouldOverrideUrlLoading: (_, action) async {
-                final url = action.request.url;
-                if (url == null) return NavigationActionPolicy.CANCEL;
-                if (action.isForMainFrame == false) {
-                  return NavigationActionPolicy.ALLOW;
-                }
-                return await widget.onNavigation?.call(url.toString()) ?? true
-                    ? NavigationActionPolicy.ALLOW
-                    : NavigationActionPolicy.CANCEL;
-              },
-              onCreateWindow: (controller, action) async {
-                final url = action.request.url;
-                if (url != null &&
-                    (await widget.onNavigation?.call(url.toString()) ?? true)) {
-                  await controller.loadUrl(urlRequest: URLRequest(url: url));
-                }
-                return false;
-              },
-              onReceivedError: (_, request, error) {
-                if (request.isForMainFrame == true && mounted) {
-                  setState(() => _loadError = '网页加载失败，请检查网络后重试');
+            NativeResolutionViewport(
+              child: InAppWebView(
+                webViewEnvironment: snapshot.data,
+                initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                initialSettings: InAppWebViewSettings(
+                  userAgent: widget.userAgent,
+                  javaScriptEnabled: true,
+                  useShouldOverrideUrlLoading: true,
+                  supportMultipleWindows: true,
+                ),
+                onWebViewCreated: (controller) {
+                  _controller = controller;
+                  widget.onReady?.call();
+                },
+                onLoadStart: (_, url) {
+                  if (mounted) setState(() => _loadError = null);
+                  widget.onLoading?.call(true);
+                },
+                onLoadStop: (_, url) {
                   widget.onLoading?.call(false);
-                }
-              },
+                  if (url != null) widget.onLoaded?.call(url.toString());
+                },
+                onTitleChanged: (_, title) {
+                  if (title != null && title.trim().isNotEmpty) {
+                    widget.onTitle?.call(title);
+                  }
+                },
+                shouldOverrideUrlLoading: (_, action) async {
+                  final url = action.request.url;
+                  if (url == null) return NavigationActionPolicy.CANCEL;
+                  if (action.isForMainFrame == false) {
+                    return NavigationActionPolicy.ALLOW;
+                  }
+                  return await widget.onNavigation?.call(url.toString()) ?? true
+                      ? NavigationActionPolicy.ALLOW
+                      : NavigationActionPolicy.CANCEL;
+                },
+                onCreateWindow: (controller, action) async {
+                  final url = action.request.url;
+                  if (url != null &&
+                      (await widget.onNavigation?.call(url.toString()) ??
+                          true)) {
+                    await controller.loadUrl(urlRequest: URLRequest(url: url));
+                  }
+                  return false;
+                },
+                onReceivedError: (_, request, error) {
+                  if (request.isForMainFrame == true && mounted) {
+                    setState(() => _loadError = '网页加载失败，请检查网络后重试');
+                    widget.onLoading?.call(false);
+                  }
+                },
+              ),
             ),
             if (_loadError != null)
               Positioned.fill(

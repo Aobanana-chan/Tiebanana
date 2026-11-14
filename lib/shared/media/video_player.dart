@@ -10,6 +10,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:tiebanana/app/navigation/app_route_observer.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/shared/media/player_system_utils.dart';
+import 'package:tiebanana/shared/media/video_source_url.dart';
 import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/shared/theme/tiebanana_palette.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
@@ -21,6 +22,12 @@ Color accentOnBlack() =>
 
 /// 视频元数据到达前的兜底比例。
 const double kVideoFallbackAspectRatio = 16 / 9;
+
+/// 诊断信息不展示视频地址中的签名参数。
+String redactVideoDiagnostic(String message) => message.replaceAllMapped(
+      RegExp(r'https?://[^\s]+'),
+      (match) => match[0]!.split('?').first,
+    );
 
 /// 由像素尺寸得到画面比例；尺寸未知或非法时返回 null。
 double? videoAspectRatioOf(int? width, int? height) {
@@ -174,7 +181,9 @@ class _VideoScreenState extends State<VideoPlayer>
   static final Set<_VideoScreenState> _activePlayers = {};
   static Future<void> _wakelockUpdate = Future<void>.value();
 
-  final Player player = Player();
+  final Player player = Player(
+    configuration: const PlayerConfiguration(logLevel: MPVLogLevel.debug),
+  );
   late final VideoController videoController = VideoController(player);
   StreamSubscription<bool>? _playingSubs;
   StreamSubscription<Duration>? _durationSubs;
@@ -216,11 +225,6 @@ class _VideoScreenState extends State<VideoPlayer>
       _videoHeight = height;
       _syncAspectRatio();
     });
-    if (widget.autoplay) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_open());
-      });
-    }
   }
 
   @override
@@ -345,7 +349,8 @@ class _VideoScreenState extends State<VideoPlayer>
     final Duration resume = player.state.position > Duration.zero
         ? player.state.position
         : (_resumePositions[widget.url] ?? Duration.zero);
-    await player.open(Media(widget.url), play: false);
+    await player.open(Media(videoSourceUrl(widget.url)), play: false);
+    if (!mounted) return;
     if (resume > Duration.zero) {
       final Duration duration = player.state.duration;
       if (duration <= Duration.zero || resume < duration) {
@@ -422,8 +427,9 @@ class _VideoScreenState extends State<VideoPlayer>
                   player: player,
                   onPlay: _open,
                   isFullScreen: false,
-                  // 自动起播只在首次挂载时由外层触发；这里若再次传 true，
-                  // 退出全屏重建控制层会重新 open，把进度冲回开头。
+                  // 由控制层统一处理自动起播与加载错误。
+                  autoplay:
+                      widget.autoplay && player.state.playlist.medias.isEmpty,
                   onFullScreen: _enterFullScreen,
                 ),
             ],
@@ -470,6 +476,7 @@ class _VideoPlayerPanelState extends State<VideoPlayerPanel> {
   bool _buffering = false;
   bool _menuOpen = false;
   String _error = '';
+  final List<String> _diagnosticLogs = [];
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   Duration _buffer = Duration.zero;
@@ -501,6 +508,17 @@ class _VideoPlayerPanelState extends State<VideoPlayerPanel> {
     _buffering = state.buffering;
     _started = state.playlist.medias.isNotEmpty;
     _subscriptions.addAll([
+      player.stream.log.listen((log) {
+        // 保留网络上下文，排除渲染器的大量格式枚举；只驻留内存。
+        if (log.prefix.startsWith('libmpv_render') &&
+            log.level != 'error' &&
+            log.level != 'warn') {
+          return;
+        }
+        _diagnosticLogs.add(
+            redactVideoDiagnostic('[${log.prefix}/${log.level}] ${log.text}'));
+        if (_diagnosticLogs.length > 120) _diagnosticLogs.removeAt(0);
+      }),
       player.stream.position.listen((value) {
         if (mounted) setState(() => _position = value);
       }),
@@ -521,6 +539,7 @@ class _VideoPlayerPanelState extends State<VideoPlayerPanel> {
         setState(() {
           _playing = value;
           if (value) {
+            _error = '';
             _started = true;
             _completed = false;
           }
@@ -866,6 +885,46 @@ class _VideoPlayerPanelState extends State<VideoPlayerPanel> {
               ),
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('点击重试'),
+            ),
+            TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) {
+                  final details = [
+                    redactVideoDiagnostic(_error),
+                    if (_diagnosticLogs.isNotEmpty) ...[
+                      '',
+                      '底层播放日志：',
+                      ..._diagnosticLogs,
+                    ],
+                  ].join('\n');
+                  return AlertDialog(
+                    title: const Text('视频播放错误详情'),
+                    content: SingleChildScrollView(
+                      child: SelectableText(details),
+                    ),
+                    actions: [
+                      TextButton.icon(
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: details));
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('已复制全部错误详情')),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_rounded),
+                        label: const Text('复制全部'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('关闭'),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.white70),
+              child: const Text('错误详情'),
             ),
           ],
         ),

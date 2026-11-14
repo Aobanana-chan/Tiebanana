@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
 
 import 'tiebanana_metrics.dart';
 import 'tiebanana_palette.dart';
@@ -53,6 +54,9 @@ class TiebananaTheme {
 
     return ThemeData(
       useMaterial3: true,
+      // Windows 沿用手机的控件密度与点击区域，不使用桌面的紧凑默认值。
+      visualDensity: isWindows ? VisualDensity.standard : null,
+      materialTapTargetSize: isWindows ? MaterialTapTargetSize.padded : null,
       brightness: brightness,
       colorScheme: scheme,
       // 兼容旧代码里大量的 `Theme.of(context).primaryColor`，Phase 4 清理干净后可移除。
