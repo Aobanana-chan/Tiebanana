@@ -6,7 +6,7 @@
 
 **轻一点，逛贴吧。**
 
-基于 Flutter 的第三方百度贴吧 Android 客户端 · **1.0.1**
+基于 Flutter 的第三方百度贴吧客户端 · Android / iOS（实验性） · **1.0.2**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Android](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)](#下载安装)
@@ -56,10 +56,17 @@ Tiebanana 想把看帖、逛吧做得简约一些，
 
 ## 下载安装
 
+### Android
+
 到 [Releases](https://github.com/Aobanana-chan/Tiebanana/releases) 选择已发布版本的 APK。
 安卓大多数手机选择 `app-arm64-v8a-release.apk`；较老的 32 位设备选择
 `app-armeabi-v7a-release.apk`。如果你不知道自己应该选什么， 直接选择 `app-armeabi-v7a-release.apk`。
 
+### iOS（实验性）
+
+iOS 版还没经过测试，能编译不代表能正常用。
+系统要求 15.0 及以上，Release 里的 iOS 包文件名以 `-ios-无签名.ipa` 结尾。
+下载后用自己的证书和描述文件签名再装，这个包不能直接安装，也不是 TestFlight 或 App Store 版本。
 
 ## 从源码运行
 
@@ -67,6 +74,7 @@ Tiebanana 想把看帖、逛吧做得简约一些，
 
 - Flutter **3.47.x**（当前使用 3.47.7）与其自带的 Dart SDK。
 - JDK 17、Android SDK，以及 Android 真机或模拟器。
+- 构建 iOS 时需要 macOS、Xcode 及 iOS SDK、CocoaPods；无需 Android 环境。
 - Git：用于拉取项目和公开契约子模块。
 
 ### 获取与启动
@@ -95,6 +103,16 @@ flutter build apk --split-per-abi
 ```
 
 产物位于 `build/app/outputs/flutter-apk/`。
+
+### 构建 iOS
+
+需要 macOS 和 Xcode：
+
+```bash
+flutter build ios --release --no-codesign
+```
+
+产物在 `build/ios/iphoneos/Runner.app`，签名后才能安装。
 
 ### 测试
 

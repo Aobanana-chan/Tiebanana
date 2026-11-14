@@ -2,8 +2,8 @@ import 'package:flutter/services.dart';
 
 /// Thin Dart wrapper for the `tiebanana/player_utils` MethodChannel
 /// implemented in `android/app/src/main/kotlin/pers/aobanana/Tiebanana/
-/// MainActivity.kt`. Only used by the video player gestures; no-ops on
-/// other platforms.
+/// MainActivity.kt` and `ios/Runner/AppDelegate.swift`. Only used by the
+/// video player gestures; no-ops on unsupported platforms.
 class PlayerSystemUtils {
   PlayerSystemUtils._();
 

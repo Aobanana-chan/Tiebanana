@@ -24,6 +24,7 @@ abstract class BrowserUrl {
   };
 
   static const Set<String> _tiebaSchemes = <String>{
+    'tiebanana',
     'tbfrs',
     'tbpb',
     'com.baidu.tieba',
@@ -65,6 +66,20 @@ abstract class BrowserUrl {
     final String scheme = uri.scheme.toLowerCase();
     final Map<String, String> query = uri.queryParameters;
     switch (scheme) {
+      case 'http':
+      case 'https':
+        if (uri.host.toLowerCase() != 'tieba.baidu.com') return null;
+        if (uri.path == '/pb') {
+          final tid = _threadId(query);
+          return tid == null
+              ? null
+              : TiebaDeepLink(tid: tid, pid: _postId(query));
+        }
+        if (uri.path == '/frs') {
+          final forumName = _firstNonEmpty([query['kw']]);
+          return forumName == null ? null : TiebaDeepLink(forumName: forumName);
+        }
+        return null;
       case 'tbfrs':
         final String? forumName = _firstNonEmpty(<String?>[
           query['kw'],
@@ -77,11 +92,15 @@ abstract class BrowserUrl {
         return tid == null
             ? null
             : TiebaDeepLink(tid: tid, pid: _postId(query));
+      case 'tiebanana':
       case 'com.baidu.tieba':
-        if (uri.host.toLowerCase() != 'unidispatch') {
+        if (scheme == 'com.baidu.tieba' &&
+            uri.host.toLowerCase() != 'unidispatch') {
           return null;
         }
-        switch (uri.path.toLowerCase()) {
+        switch (uri.path.isEmpty
+            ? '/${uri.host.toLowerCase()}'
+            : uri.path.toLowerCase()) {
           case '/pb':
             final String? tid = _threadId(query);
             return tid == null

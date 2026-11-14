@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kDebugMode, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -84,15 +85,7 @@ class Global {
       setting = APPSetting.fromJson(json5Decode(settingload));
     }
 
-    //通知栏消息插件初始化
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-    await localNotifications.initialize(settings: initializationSettings);
+    await initializeNotifications();
 
     //初始化贴吧后端：cookie 目录与设备指纹存储由宿主提供，
     //提示/通知等副作用以回调注入（契约包不含 UI 依赖）。
@@ -106,6 +99,24 @@ class Global {
 
     //初始化数据库
     await daoapi.init();
+  }
+
+  /// 初始化移动端通知；iOS 拒绝授权不会阻止应用启动。
+  static Future<void> initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: DarwinInitializationSettings(
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+        defaultPresentBadge: false,
+        defaultPresentSound: false,
+      ),
+    );
+    await localNotifications.initialize(settings: initializationSettings);
   }
 
   /// 按当前设置构造后端实例。切换账号后会重新调用它（cookie 仓库已替换）。
@@ -125,7 +136,9 @@ class Global {
       ),
       signUpperHex: () => setting.protocolSignUpperHex ?? true,
       enableSig: () => setting.protocolEnableSig ?? false,
-      debugProxy: kDebugMode ? "PROXY 10.0.2.2:10888" : null,
+      debugProxy: kDebugMode && defaultTargetPlatform == TargetPlatform.android
+          ? "PROXY 10.0.2.2:10888"
+          : null,
       accountUid:
           useCachedUid ? int.tryParse(AccountStore.currentUid ?? '') : null,
       onLoginFailure: loginFailures.report,
@@ -183,6 +196,13 @@ class Global {
 
     NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: false,
+        presentBanner: true,
+        presentList: true,
+      ),
     );
 
     await Global.localNotifications.show(

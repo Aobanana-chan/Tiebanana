@@ -75,6 +75,39 @@ void main() {
   });
 
   group('BrowserUrl.tiebaDeepLink', () {
+    test('解析 iOS 自有 scheme，忽略不完整或未知链接', () {
+      expect(
+          BrowserUrl.tiebaDeepLink(Uri.parse('tiebanana://pb?tid=123&pid=456'))
+              ?.tid,
+          '123');
+      expect(
+          BrowserUrl.tiebaDeepLink(Uri.parse('tiebanana://pb?tid=123&pid=456'))
+              ?.pid,
+          '456');
+      expect(
+          BrowserUrl.tiebaDeepLink(Uri.parse('tiebanana://frs?kw=贴吧'))
+              ?.forumName,
+          '贴吧');
+      expect(BrowserUrl.tiebaDeepLink(Uri.parse('tiebanana://pb')), isNull);
+      expect(
+          BrowserUrl.tiebaDeepLink(Uri.parse('tiebanana://unknown')), isNull);
+    });
+
+    test('保留 Android 贴吧网页跳转且拒绝其他域名', () {
+      expect(
+          BrowserUrl.tiebaDeepLink(
+                  Uri.parse('https://tieba.baidu.com/pb?tid=123'))
+              ?.tid,
+          '123');
+      expect(
+          BrowserUrl.tiebaDeepLink(Uri.parse('http://tieba.baidu.com/frs?kw=吧'))
+              ?.forumName,
+          '吧');
+      expect(
+          BrowserUrl.tiebaDeepLink(Uri.parse('https://example.com/pb?tid=123')),
+          isNull);
+    });
+
     test('解析 tbfrs 吧链接', () {
       final TiebaDeepLink? link = BrowserUrl.tiebaDeepLink(
         Uri.parse('tbfrs://tieba.baidu.com/frs?kw=%E8%B4%B4%E5%90%A7'),

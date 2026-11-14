@@ -24,7 +24,7 @@ const String TIEBA_KUMA_EMOJI =
 
 ///服务中心
 const String SERVICE_CENTER =
-    "http://tieba.baidu.com/n/apage-runtime/page/ueg_service_center";
+    "https://tieba.baidu.com/n/apage-runtime/page/ueg_service_center";
 
 const Map<String, String> emojiFileMapping = {
   "image_emoticon": "呵呵",

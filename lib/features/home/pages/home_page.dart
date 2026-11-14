@@ -21,6 +21,7 @@ import 'package:tiebanana/features/profile/pages/my_profile_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:app_links/app_links.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
+import 'package:tiebanana/core/platform/browser_url.dart';
 
 ///首页
 class HomePage extends StatefulWidget {
@@ -154,15 +155,17 @@ class _HomePageState extends State<HomePage> {
   Future<void> initPlatformStateForStringUniLinks() async {
     _appLinks = AppLinks();
     void process(String url) {
-      var uri = Uri.parse(url);
-      if (uri.path.endsWith("/pb")) {
+      if (!mounted) return;
+      final uri = Uri.tryParse(url);
+      if (uri == null) return;
+      final link = BrowserUrl.tiebaDeepLink(uri);
+      if (link?.isThread ?? false) {
         //进入贴
         Navigator.pushNamed(context, PageRouter.threadPage,
-            arguments: ThreadPageRouterData(
-                kz: uri.queryParameters['tid']!, pid: null));
-      } else if (uri.path.endsWith("/frs")) {
+            arguments: ThreadPageRouterData(kz: link!.tid!, pid: link.pid));
+      } else if (link?.forumName != null) {
         Navigator.pushNamed(context, PageRouter.forumHome,
-            arguments: uri.queryParameters['kw']);
+            arguments: link!.forumName);
         //进入吧
       }
     }
