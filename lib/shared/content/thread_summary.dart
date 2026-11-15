@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
+import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/media/img_explorer.dart';
@@ -390,6 +391,12 @@ class Thumbnail extends StatefulWidget {
   final String img;
   final BoxFit fit;
   final EdgeInsets padding;
+  final bool animated;
+
+  ///GIF 角标距缩略图右 / 下边缘的距离。
+  ///
+  ///信息流的多图数量角标也占用右下角，此时由调用方把角标上移。
+  final EdgeInsets gifBadgeMargin;
 
   ///圆角。动态卡片用 12，贴内嵌图沿用更小的 5。
   final double radius;
@@ -401,6 +408,8 @@ class Thumbnail extends StatefulWidget {
       required this.img,
       this.fit = BoxFit.cover,
       this.padding = const EdgeInsets.symmetric(horizontal: 2.5),
+      this.animated = false,
+      this.gifBadgeMargin = const EdgeInsets.all(4),
       this.radius = 5});
 
   @override
@@ -418,6 +427,10 @@ class _ThumbnailState extends State<Thumbnail> {
     }
     return Builder(
       builder: (context) {
+        final TiebananaTokens tokens = TiebananaTokens.of(context);
+        // 省流量档位只加载首帧，用角标提示点开后是动图。
+        final bool showGifBadge = widget.animated &&
+            Global.setting.pictureLoadSetting == 0;
         return GestureDetector(
             onTap: () {
               Navigator.push(context, ImageExplorerRoute(builder: (builder) {
@@ -434,42 +447,74 @@ class _ThumbnailState extends State<Thumbnail> {
               padding: widget.padding,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(widget.radius),
-                child: FadeIn(
-                    child: Hero(
-                  tag: widget.img + heroTagSalt,
-                  child: LayoutBuilder(
-                    builder:
-                        (BuildContext context, BoxConstraints constraints) {
-                      return Container(
-                        constraints: constraints,
-                        child: ExtendedImage.network(
-                          widget.img,
-                          fit: widget.fit,
-                          cache: true,
-                          clearMemoryCacheIfFailed: true,
-                          // 加载失败时显示中性占位。
-                          loadStateChanged: (ExtendedImageState state) {
-                            if (state.extendedImageLoadState ==
-                                LoadState.failed) {
-                              return Container(
-                                constraints: constraints,
-                                alignment: Alignment.center,
-                                color: TiebananaTokens.of(context).fill,
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  size: 20,
-                                  color:
-                                      TiebananaTokens.of(context).textTertiary,
+                child: Stack(
+                  fit: StackFit.passthrough,
+                  children: <Widget>[
+                    FadeIn(
+                        child: Hero(
+                      tag: widget.img + heroTagSalt,
+                      child: LayoutBuilder(
+                        builder: (BuildContext context,
+                            BoxConstraints constraints) {
+                          return Container(
+                            constraints: constraints,
+                            child: ExtendedImage.network(
+                              widget.img,
+                              fit: widget.fit,
+                              cache: true,
+                              clearMemoryCacheIfFailed: true,
+                              // 加载失败时显示中性占位。
+                              loadStateChanged: (ExtendedImageState state) {
+                                if (state.extendedImageLoadState ==
+                                    LoadState.failed) {
+                                  return Container(
+                                    constraints: constraints,
+                                    alignment: Alignment.center,
+                                    color: TiebananaTokens.of(context).fill,
+                                    child: Icon(
+                                      Icons.image_not_supported_outlined,
+                                      size: 20,
+                                      color: TiebananaTokens.of(context)
+                                          .textTertiary,
+                                    ),
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    )),
+                    if (showGifBadge)
+                      Positioned(
+                        right: widget.gifBadgeMargin.right,
+                        bottom: widget.gifBadgeMargin.bottom,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: tokens.imageScrim.withValues(alpha: .45),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 1),
+                              child: Text(
+                                'GIF',
+                                style: TextStyle(
+                                  color: tokens.onImage,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.2,
+                                  letterSpacing: .5,
                                 ),
-                              );
-                            }
-                            return null;
-                          },
+                              ),
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                )),
+                      ),
+                  ],
+                ),
               ),
             ));
       },

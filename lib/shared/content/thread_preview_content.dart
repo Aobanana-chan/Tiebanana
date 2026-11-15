@@ -116,6 +116,12 @@ class ThreadPreviewMedia extends StatelessWidget {
                       controller: ExtendedPageController(
                           initialPage: images.indexOf(image)),
                       img: image.displaySrc,
+                      animated: image.isAnimated,
+                      gifBadgeMargin: EdgeInsets.only(
+                        right: TiebananaMetrics.gapXs,
+                        bottom: TiebananaMetrics.gapXs +
+                            (i == _limit - 1 && media.length > _limit ? 18 : 0),
+                      ),
                       padding: EdgeInsets.zero,
                       radius: TiebananaMetrics.radiusSm,
                     )

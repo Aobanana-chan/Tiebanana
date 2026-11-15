@@ -64,6 +64,7 @@ class TiebaParser {
     List<Widget> media = <Widget>[];
     List<String> images = [];
     List<String>? imgsOriginSrc = [];
+    List<bool> animated = <bool>[];
     Widget imgLeft = const SizedBox(
       width: 0,
       height: 0,
@@ -97,6 +98,7 @@ class TiebaParser {
             if (isRecommend) {
               images.add(elem.displaySrc);
               imgsOriginSrc.add(elem.originalSrc);
+              animated.add(elem.isAnimated);
             } else {
               richText.add(ExtendedWidgetSpan(
                   child: Container(
@@ -106,6 +108,7 @@ class TiebaParser {
                       controller: controller,
                       img: elem.lowFlowSrc,
                       imgsOriginSrc: allOrgImgs,
+                      animated: elem.isAnimated,
                       fit: BoxFit.fitWidth,
                     ),
                   ),
@@ -122,6 +125,7 @@ class TiebaParser {
               if (isRecommend) {
                 images.add(elem.displaySrc);
                 imgsOriginSrc.add(elem.originalSrc);
+                animated.add(elem.isAnimated);
               } else {
                 ExtendedPageController controller =
                     ExtendedPageController(initialPage: index + offset);
@@ -133,6 +137,7 @@ class TiebaParser {
                         controller: controller,
                         img: elem.lowFlowSrc,
                         imgsOriginSrc: allOrgImgs,
+                        animated: elem.isAnimated,
                         fit: BoxFit.fitWidth,
                       ),
                     ),
@@ -151,6 +156,7 @@ class TiebaParser {
             if (isRecommend) {
               images.add(elem.displaySrc);
               imgsOriginSrc.add(elem.originalSrc);
+              animated.add(elem.isAnimated);
             } else {
               richText.add(ExtendedWidgetSpan(
                   child: Container(
@@ -160,6 +166,7 @@ class TiebaParser {
                       controller: controller,
                       img: elem.originalSrc,
                       imgsOriginSrc: allOrgImgs,
+                      animated: elem.isAnimated,
                       fit: BoxFit.fitWidth,
                     ),
                   ),
@@ -258,6 +265,7 @@ class TiebaParser {
           controller: controller,
           img: img,
           imgsOriginSrc: imgsOriginSrc,
+          animated: animated[index],
         )));
         index++;
       }

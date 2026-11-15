@@ -4,7 +4,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tieba_contract/tieba_contract.dart';
+import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
 import 'package:tiebanana/features/forum/widgets/forum_feed_card.dart';
@@ -16,6 +18,10 @@ import 'package:tiebanana/shared/media/video_player.dart';
 import '../../support/fake_thread.dart';
 
 void main() {
+  setUp(() {
+    Global.setting = APPSetting.fromJson(defaultAPPSetting);
+  });
+
   Future<void> mount(WidgetTester tester, Widget card,
       {RouteFactory? onGenerateRoute}) async {
     await tester.pumpWidget(MaterialApp(
@@ -161,6 +167,36 @@ void main() {
     expect(opened?.name, PageRouter.threadPage);
     expect((opened?.arguments as ThreadPageRouterData).kz, '1');
     expect(find.text('详情'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('省流量档位的动图缩略图显示 GIF 角标', (tester) async {
+    Global.setting.pictureLoadSetting = 0;
+    await mount(
+        tester,
+        summary([
+          TiebaImageContent(src: 'https://example.com/anim.gif'),
+        ]));
+    expect(find.text('GIF'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('高质量档位和静态图不显示 GIF 角标', (tester) async {
+    Global.setting.pictureLoadSetting = 2;
+    await mount(
+        tester,
+        summary([
+          TiebaImageContent(src: 'https://example.com/anim.gif'),
+        ]));
+    expect(find.text('GIF'), findsNothing);
+
+    Global.setting.pictureLoadSetting = 0;
+    await mount(
+        tester,
+        summary([
+          TiebaImageContent(src: 'https://example.com/static.jpg'),
+        ]));
+    expect(find.text('GIF'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

@@ -55,4 +55,40 @@ void main() {
       expect(TiebaImageContent(bsize: 'wide').bsizeValue, 0);
     });
   });
+
+  group('动图识别', () {
+    const proxy =
+        'http://c.tieba.baidu.com/c/p/img?src=http://static.tieba.baidu.com/tb/editor/images/qw_cat_small/qw_cat_0001.gif'
+        '&width=720&height=720&qulity=60&first_gif=1&imgtype=0';
+
+    test('图片代理带 first_gif 即视为动图', () {
+      expect(TiebaImageContent(cdnSrcActive: proxy).isAnimated, isTrue);
+    });
+
+    test('任一候选地址是 GIF 都算动图', () {
+      expect(
+          TiebaImageContent(
+                  cdnSrcActive: 'https://example.com/active.jpg',
+                  originSrc: 'https://example.com/anim.gif')
+              .isAnimated,
+          isTrue);
+      expect(
+          TiebaImageContent(
+                  cdnSrcActive:
+                      'https://example.com/c/p/img?src=https://example.com/a.gif')
+              .isAnimated,
+          isTrue);
+    });
+
+    test('静态图与空地址不显示动图标识', () {
+      expect(
+          TiebaImageContent(
+                  cdnSrcActive: 'https://example.com/active.jpg',
+                  bigCdnSrc: 'https://example.com/big.jpg',
+                  originSrc: 'https://example.com/origin.jpg')
+              .isAnimated,
+          isFalse);
+      expect(TiebaImageContent().isAnimated, isFalse);
+    });
+  });
 }
