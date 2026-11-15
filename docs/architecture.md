@@ -40,6 +40,8 @@ Global ── createTiebaApi ── lib/app/backend.dart
 
 `lib/app/backend.dart` 是应用引用具体后端包的唯一位置。`Global` 创建并持有
 `TiebaApi` 实例，功能代码通过契约调用业务能力，不解析后端原始响应。
+契约独立发版，应用只声明兼容范围；版本对应与后端选版规则见
+[契约版本与后端兼容](contract-versioning.md)。
 
 公开构建使用 `packages/tieba_backend_demo`，其数据与交互实现来自
 `tieba_contract/testing.dart`，不连接真实服务。私有构建通过根目录

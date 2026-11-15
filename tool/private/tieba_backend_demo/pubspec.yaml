@@ -7,8 +7,10 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
+  # 与目标 Tiebanana 版本要求的契约范围一致；见根仓库 docs/contract-versioning.md。
   tieba_contract:
     path: ../../../packages/tieba_contract
+    version: ^1.1.0
   headless_tieba:
     path: ../../../packages/headless_tieba
 

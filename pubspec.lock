@@ -1045,7 +1045,7 @@ packages:
     source: hosted
     version: "6.1.5+1"
   pub_semver:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: pub_semver
       sha256: "261236774e8b1d69cfc6b9eabbc96c40f25e7a2d6b171f3385d4f65d5734fb24"
@@ -1262,7 +1262,7 @@ packages:
       path: "packages/tieba_contract"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "1.1.0"
   timezone:
     dependency: transitive
     description:
@@ -1520,7 +1520,7 @@ packages:
     source: hosted
     version: "7.1.0"
   yaml:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: yaml
       sha256: f67cdd8e07d3c6329146aaef1ba043542b3134c12489f553ca9a7435d1068aea

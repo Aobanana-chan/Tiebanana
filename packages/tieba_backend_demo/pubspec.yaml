@@ -8,9 +8,10 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  # TODO(opensource): 契约包建好远程仓库后改为 Git 依赖并 pin tag。
+  # 与目标 Tiebanana 版本要求的契约范围一致（见 docs/contract-versioning.md）。
   tieba_contract:
     path: ../tieba_contract
+    version: ^1.1.0
 
 dev_dependencies:
   lints: ^4.0.0

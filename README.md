@@ -154,6 +154,7 @@ tool/                   开发工具与私有构建适配模板
 主题由种子派生明暗配色，页面通过 `TiebananaTokens` 和语义字阶取用样式。
 
 更多说明：[架构与依赖边界](docs/architecture.md) ·
+[契约版本与后端兼容](docs/contract-versioning.md) ·
 [契约包](packages/tieba_contract/README.md) ·
 [演示后端](packages/tieba_backend_demo/README.md) ·
 [图标资源](docs/icon/README.md)
@@ -168,7 +169,9 @@ tool/                   开发工具与私有构建适配模板
 
 接入路径：
 
-1. 参照 [`TiebaApi`](packages/tieba_contract/lib/src/api/) 实现接口，返回 `tieba_contract` 定义的数据类。
+1. 按[契约兼容表](docs/contract-versioning.md)选择目标 Tiebanana 版本要求的
+   `tieba_contract` 范围，参照 [`TiebaApi`](packages/tieba_contract/lib/src/api/)
+   实现接口，返回 `tieba_contract` 定义的数据类。
 2. 提供与 [`createTiebaApi`](packages/tieba_backend_demo/lib/tieba_backend_demo.dart) 一致的工厂入口，
    通过 `TiebaApiHost` 接收存储与提示等宿主能力。
 3. 在自己的 `tieba_backend_demo` 替代包中导出该工厂，用根目录的

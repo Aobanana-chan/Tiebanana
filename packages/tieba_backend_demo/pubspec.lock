@@ -15,6 +15,6 @@ packages:
       path: "../tieba_contract"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "1.1.0"
 sdks:
   dart: ">=3.1.0 <4.0.0"

@@ -77,8 +77,10 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^2.0.0
   # 界面数据类 + TiebaApi 接口（任何后端实现都实现它）。
+  # 契约独立发版；范围必须覆盖子模块当前版本，见 docs/contract-versioning.md。
   tieba_contract:
     path: packages/tieba_contract
+    version: ^1.1.0
   tieba_backend_demo:
     path: packages/tieba_backend_demo
   # 读取 Android supportedAbis，用于在更新页推荐当前设备对应的安装包。
@@ -93,6 +95,9 @@ dev_dependencies:
   # 测试里用于模拟 path_provider 的平台接口。
   path_provider_platform_interface: ^2.0.0
   plugin_platform_interface: ^2.1.0
+  # 契约版本与 pubspec 范围的兼容性检查。
+  pub_semver: ^2.1.4
+  yaml: ^3.1.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
