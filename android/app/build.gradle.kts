@@ -57,6 +57,13 @@ android {
             }
         }
     }
+
+    packaging {
+        jniLibs {
+            // 压缩 APK 内的原生库以减小下载体积，安装时由系统解压。
+            useLegacyPackaging = true
+        }
+    }
 }
 
 kotlin {
