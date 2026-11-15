@@ -92,6 +92,7 @@ class ThreadCacheCodec {
           'cdnSrc': c.cdnSrc,
           'bigSrc': c.bigSrc,
           'cdnSrcActive': c.cdnSrcActive,
+          'originSize': c.originSize,
         },
         if (c is TiebaAtContent) ...{'text': c.text, 'uid': c.uid},
         if (c is TiebaEmojiContent) ...{
@@ -129,6 +130,7 @@ class ThreadCacheCodec {
             cdnSrc: j['cdnSrc'],
             bigSrc: j['bigSrc'],
             cdnSrcActive: j['cdnSrcActive'],
+            originSize: j['originSize'],
             type: type);
       case 'TiebaAtContent':
         return TiebaAtContent(text: j['text'], uid: j['uid']);

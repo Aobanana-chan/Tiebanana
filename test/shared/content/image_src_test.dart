@@ -80,6 +80,28 @@ void main() {
           isTrue);
     });
 
+    test('原图挂在 .jpg 地址下时按原图大小识别动图', () {
+      final gif = TiebaImageContent(
+          cdnSrc:
+              'https://tiebapic.baidu.com/forum/w%3D1080%3Bq%3D90%3Bg%3D0/sign=a/408aaec79f3df8dc.jpg',
+          bigCdnSrc:
+              'https://tiebapic.baidu.com/forum/w%3D1080%3Bq%3D90/sign=b/408aaec79f3df8dc.jpg',
+          cdnSrcActive:
+              'https://tiebapic.baidu.com/forum/w%3D1080%3Bq%3D90/sign=b/408aaec79f3df8dc.jpg',
+          originSrc:
+              'https://tiebapic.baidu.com/forum/pic/item/408aaec79f3df8dc.jpg',
+          bsize: '240,240',
+          originSize: 2240634);
+      expect(gif.isAnimated, isTrue);
+      expect(gif.pixelCount, 57600);
+
+      final photo = TiebaImageContent(
+          originSrc: 'https://example.com/photo.jpg',
+          bsize: '560,1244',
+          originSize: 757221);
+      expect(photo.isAnimated, isFalse);
+    });
+
     test('静态图与空地址不显示动图标识', () {
       expect(
           TiebaImageContent(

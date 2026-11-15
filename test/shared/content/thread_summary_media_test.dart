@@ -181,6 +181,20 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('.jpg 地址下的动图也显示 GIF 角标', (tester) async {
+    Global.setting.pictureLoadSetting = 0;
+    await mount(
+        tester,
+        summary([
+          TiebaImageContent(
+              src: 'https://example.com/anim.jpg',
+              bsize: '240,240',
+              originSize: 2240634),
+        ]));
+    expect(find.text('GIF'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('高质量档位和静态图不显示 GIF 角标', (tester) async {
     Global.setting.pictureLoadSetting = 2;
     await mount(
