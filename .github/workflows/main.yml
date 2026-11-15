@@ -1,7 +1,7 @@
 # Build Release
 #
 # 发布流程：
-#   - 推送 v* tag  → 构建签名 APK 和无签名 IPA，汇总到同一 GitHub Release
+#   - 推送 v* tag  → 构建签名 APK、无签名 IPA 和 Windows ZIP，汇总到同一 GitHub Release
 #   - 手动触发     → 只构建并上传 artifact，不创建 Release
 #
 # 需要的仓库 Secrets：
@@ -188,9 +188,74 @@ jobs:
           path: build/ios/unsigned/*.ipa
           if-no-files-found: error
 
-  # 两个平台都成功后才发布，避免 Release 只有部分平台的安装包。
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULE_TOKEN }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.7"
+          cache: true
+
+      - name: Select private backend
+        shell: pwsh
+        run: Copy-Item tool/private/pubspec_overrides.example.yaml pubspec_overrides.yaml
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build ObjectBox entities
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # 与 APK/iOS 共用 build-name/build-number，tag 构建用 tag 作为版本号。
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          $buildName = (Select-String -Path pubspec.yaml -Pattern '^version:\s*([^+\s]+)').Matches[0].Groups[1].Value
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $buildName = $env:GITHUB_REF_NAME -replace '^v', ''
+          }
+          "BUILD_NAME=$buildName" >> $env:GITHUB_ENV
+          "BUILD_NUMBER=$(1000 + [int]$env:GITHUB_RUN_NUMBER)" >> $env:GITHUB_ENV
+
+      - name: Build Windows app
+        shell: pwsh
+        run: flutter build windows --release "--build-name=$env:BUILD_NAME" "--build-number=$env:BUILD_NUMBER"
+
+      # 整个 Release 目录（exe、dll、data/）一起打包，解压后保留 Tiebanana/ 目录。
+      - name: Package Windows ZIP
+        shell: pwsh
+        run: |
+          $release = 'build/windows/x64/runner/Release'
+          if (-not (Test-Path "$release/tiebanana.exe")) {
+            throw "缺少 Windows 构建产物：$release/tiebanana.exe"
+          }
+          if (-not (Test-Path "$release/data/flutter_assets")) {
+            throw "缺少 Flutter 资源目录：$release/data/flutter_assets"
+          }
+          $stage = 'build/windows/package/Tiebanana'
+          New-Item -ItemType Directory -Path $stage -Force | Out-Null
+          Copy-Item -Path "$release/*" -Destination $stage -Recurse -Force
+          $zip = "build/windows/package/Tiebanana-$env:BUILD_NAME+$env:BUILD_NUMBER-windows-x64.zip"
+          Compress-Archive -Path $stage -DestinationPath $zip -CompressionLevel Optimal
+          Get-Item $zip | Format-List FullName, Length
+
+      - name: Upload Windows ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-windows-x64
+          path: build/windows/package/*.zip
+          if-no-files-found: error
+
+  # 所有平台都成功后才发布，避免 Release 只有部分平台的安装包。
   release:
-    needs: [android, ios]
+    needs: [android, ios, windows]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -217,7 +282,7 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "release/*.apk,release/*.ipa"
+          artifacts: "release/*.apk,release/*.ipa,release/*.zip"
           artifactErrorsFailBuild: true
           bodyFile: build/release-notes.md
           allowUpdates: true

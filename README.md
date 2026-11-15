@@ -6,7 +6,7 @@
 
 **轻一点，逛贴吧。**
 
-基于 Flutter 的第三方百度贴吧客户端 · Android / iOS（实验性） · **1.0.2**
+基于 Flutter 的第三方百度贴吧客户端 · Android / iOS（实验性）/ Windows（实验性） · **1.0.2**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Android](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)](#下载安装)
@@ -67,6 +67,13 @@ Tiebanana 想把看帖、逛吧做得简约一些，
 iOS 版还没经过测试，能编译不代表能正常用。
 系统要求 15.0 及以上，Release 里的 iOS 包文件名以 `-ios-无签名.ipa` 结尾。
 下载后用自己的证书和描述文件签名再装，这个包不能直接安装，也不是 TestFlight 或 App Store 版本。
+
+### Windows（实验性）
+
+Windows 版已经过少量测试，可能仍有问题。系统要求 Windows 10 / 11 64 位，Release 里的文件以
+`-windows-x64.zip` 结尾。解压后保留整个目录，运行 `Tiebanana/tiebanana.exe`。
+网页登录需要系统已安装 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)，
+Windows 11 一般已自带。
 
 ## 从源码运行
 
