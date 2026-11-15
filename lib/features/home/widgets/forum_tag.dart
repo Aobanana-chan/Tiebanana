@@ -1,4 +1,8 @@
+import 'dart:math' as math;
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tiebanana/features/history/models/view_history_page_model.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:provider/provider.dart';
@@ -141,15 +145,21 @@ class _TagPanState extends State<TagPan> with RouteAware {
     Fluttertoast.showToast(msg: "已隐藏，可在浏览历史中恢复");
   }
 
-  void _reorder(ForumState forumState, int from, int to) {
-    if (from == to) {
-      return;
-    }
-    final List<LikeForumInfo> ordered =
-        List<LikeForumInfo>.of(forumState.forums);
-    final LikeForumInfo item = ordered.removeAt(from);
-    ordered.insert(to, item);
-    forumState.saveForumOrder(ordered);
+  /// 拖动结束：可见区（缩略态只是关注列表的前 N 个）的顺序变了，
+  /// 后面的关注吧原样接上，再按账号保存。
+  void _saveVisibleOrder(ForumState forumState, List<LikeForumInfo> ordered) {
+    final Map<String, LikeForumInfo> latest = <String, LikeForumInfo>{
+      for (final LikeForumInfo f in forumState.forums) f.forumId: f
+    };
+    final Set<String> orderedIds = <String>{
+      for (final LikeForumInfo f in ordered) f.forumId
+    };
+    final List<LikeForumInfo> merged = <LikeForumInfo>[
+      for (final LikeForumInfo f in ordered) latest[f.forumId] ?? f,
+      ...forumState.forums
+          .where((LikeForumInfo f) => !orderedIds.contains(f.forumId)),
+    ];
+    forumState.saveForumOrder(merged);
   }
 
   @override
@@ -165,11 +175,6 @@ class _TagPanState extends State<TagPan> with RouteAware {
         final List<LikeForumInfo> visible =
             showAll ? forums : forums.take(maxCount).toList(growable: false);
         final bool canExpand = forums.length > maxCount;
-        // 缩略与展开都用同一套 3 列网格：展开只是显示全部，一行数量不变。
-        final double cellWidth = (MediaQuery.sizeOf(context).width -
-                TiebananaMetrics.pageGutter * 2 -
-                14) /
-            3;
         return CustomScrollView(
           // 内容不足一屏时也要能下拉刷新
           physics: const AlwaysScrollableScrollPhysics(),
@@ -198,21 +203,11 @@ class _TagPanState extends State<TagPan> with RouteAware {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: TiebananaMetrics.pageGutter),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisExtent: 38,
-                      mainAxisSpacing: 7,
-                      crossAxisSpacing: 7),
-                  delegate: SliverChildBuilderDelegate(
-                    (BuildContext context, int index) => _ReorderableForumTag(
-                      index: index,
-                      info: visible[index],
-                      cellWidth: cellWidth,
-                      onReorder: (int from, int to) =>
-                          _reorder(forumState, from, to),
-                    ),
-                    childCount: visible.length,
+                sliver: SliverToBoxAdapter(
+                  child: _ForumReorderGrid(
+                    forums: visible,
+                    onOrderChanged: (List<LikeForumInfo> ordered) =>
+                        _saveVisibleOrder(forumState, ordered),
                   ),
                 ),
               ),
@@ -396,55 +391,461 @@ class HomeHistoryTip extends StatelessWidget {
   }
 }
 
-/// 首页吧标签：长按直接拖动，落到目标格即重排并按账号保存。
-class _ReorderableForumTag extends StatelessWidget {
-  const _ReorderableForumTag({
-    required this.index,
-    required this.info,
-    required this.cellWidth,
-    required this.onReorder,
+/// 首页吧标签网格。
+///
+/// 交互对齐手机桌面图标：
+/// - 长按抬起后卡片跟手移动，其余标签实时让位（换位预览），松手才落库；
+/// - 抬起期间其余标签像 iOS 图标一样轻微抖动，换格 / 落位带触感反馈；
+/// - 松手后卡片落回目标格；没有真的移动时不写存储。
+class _ForumReorderGrid extends StatefulWidget {
+  const _ForumReorderGrid({
+    required this.forums,
+    required this.onOrderChanged,
   });
 
-  final int index;
-  final LikeForumInfo info;
-  final double cellWidth;
-  final void Function(int from, int to) onReorder;
+  /// 当前可见的吧（缩略态只是关注列表的前 N 个）。
+  final List<LikeForumInfo> forums;
+
+  /// 拖动结束后的新可见顺序；顺序没变时不会回调。
+  final ValueChanged<List<LikeForumInfo>> onOrderChanged;
+
+  @override
+  State<_ForumReorderGrid> createState() => _ForumReorderGridState();
+}
+
+class _ForumReorderGridState extends State<_ForumReorderGrid>
+    with TickerProviderStateMixin {
+  static const int _columns = 3;
+  static const double _cellHeight = 38;
+  static const double _spacing = 7;
+
+  /// 长按判定：比默认 500ms 稍短，抬起更跟手。
+  static const Duration _longPressDuration = Duration(milliseconds: 400);
+
+  /// 其余标签让位的动画。
+  static const Duration _shiftDuration = Duration(milliseconds: 200);
+  static const Curve _shiftCurve = Curves.easeOutCubic;
+
+  /// 抬起后卡片上浮的距离，避免手指挡住吧名。
+  static const double _liftRise = 12;
+
+  /// 抖动幅度（弧度）与周期。
+  static const Duration _wobblePeriod = Duration(milliseconds: 380);
+
+  /// 落位动画时长。
+  static const Duration _landingDuration = Duration(milliseconds: 190);
+
+  final GlobalKey _gridKey = GlobalKey();
+
+  /// 网格里的当前顺序：拖动时是实时预览，松手后再交给上层保存。
+  late List<LikeForumInfo> _order = List<LikeForumInfo>.of(widget.forums);
+
+  late final AnimationController _wobble = AnimationController(
+    vsync: this,
+    duration: _wobblePeriod,
+  );
+  late final AnimationController _landing = AnimationController(
+    vsync: this,
+    duration: _landingDuration,
+  );
+
+  OverlayEntry? _overlay;
+  String? _draggedId;
+  int? _dragIndex;
+
+  /// 手指按下点相对卡片左上角的偏移（overlay 坐标），保证卡片不跳。
+  Offset _grabOffset = Offset.zero;
+
+  /// 浮层卡片当前左上角（overlay 坐标）。
+  Offset _dragTopLeft = Offset.zero;
+  Offset _landingFrom = Offset.zero;
+  Offset _landingTo = Offset.zero;
+  double _dragCellWidth = 0;
+
+  /// 落位动画结束后要提交的顺序。
+  List<LikeForumInfo>? _droppedOrder;
+
+  @override
+  void initState() {
+    super.initState();
+    _landing.addListener(_tickLanding);
+    _landing.addStatusListener(_onLandingStatus);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ForumReorderGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 拖动中（含落位）以本地预览为准，避免外部刷新把手指下的顺序重置。
+    if (_draggedId == null) {
+      _order = List<LikeForumInfo>.of(widget.forums);
+    }
+  }
+
+  @override
+  void dispose() {
+    _overlay?.remove();
+    _overlay = null;
+    _wobble.dispose();
+    _landing.dispose();
+    super.dispose();
+  }
+
+  RenderBox? get _gridBox {
+    final RenderObject? object = _gridKey.currentContext?.findRenderObject();
+    return object is RenderBox && object.attached ? object : null;
+  }
+
+  RenderBox? get _overlayBox {
+    final RenderObject? object =
+        Overlay.maybeOf(context)?.context.findRenderObject();
+    return object is RenderBox && object.attached ? object : null;
+  }
+
+  LikeForumInfo? get _draggedInfo {
+    final String? id = _draggedId;
+    if (id == null) return null;
+    for (final LikeForumInfo info in _order) {
+      if (info.forumId == id) return info;
+    }
+    return null;
+  }
+
+  double _cellWidthFor(double width) =>
+      (width - _spacing * (_columns - 1)) / _columns;
+
+  Offset _slotOffset(int index, double cellWidth) => Offset(
+        (index % _columns) * (cellWidth + _spacing),
+        (index ~/ _columns) * (_cellHeight + _spacing),
+      );
 
   @override
   Widget build(BuildContext context) {
-    return DragTarget<int>(
-      onWillAcceptWithDetails: (DragTargetDetails<int> details) =>
-          details.data != index,
-      onAcceptWithDetails: (DragTargetDetails<int> details) =>
-          onReorder(details.data, index),
-      builder:
-          (BuildContext context, List<int?> candidate, List<dynamic> rejected) {
-        return LongPressDraggable<int>(
-          data: index,
-          feedback: Material(
-            color: Colors.transparent,
-            child: SizedBox(
-              width: cellWidth,
-              height: 38,
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth;
+        final double cellWidth = _cellWidthFor(width);
+        final int rows = (_order.length / _columns).ceil();
+        final double height =
+            rows <= 0 ? 0 : rows * _cellHeight + (rows - 1) * _spacing;
+        return Listener(
+          onPointerCancel: _onPointerCancel,
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Stack(
+              key: _gridKey,
+              clipBehavior: Clip.none,
+              children: <Widget>[
+                for (int i = 0; i < _order.length; i++)
+                  _buildCell(i, cellWidth, i),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCell(int index, double cellWidth, int slot) {
+    final LikeForumInfo info = _order[index];
+    // 被拿起的标签留在树里（只做透明）：手势识别器要一直跟踪手指，
+    // 移除这一格会让后续的 move / end 回调丢失。
+    final bool lifted = info.forumId == _draggedId;
+    final Offset offset = _slotOffset(slot, cellWidth);
+    return AnimatedPositioned(
+      key: ValueKey<String>(info.forumId),
+      duration: _shiftDuration,
+      curve: _shiftCurve,
+      left: offset.dx,
+      top: offset.dy,
+      width: cellWidth,
+      height: _cellHeight,
+      child: RawGestureDetector(
+        behavior: HitTestBehavior.opaque,
+        gestures: <Type, GestureRecognizerFactory>{
+          LongPressGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+            () => LongPressGestureRecognizer(duration: _longPressDuration),
+            (LongPressGestureRecognizer instance) {
+              instance.onLongPressStart = (LongPressStartDetails details) {
+                _startDrag(index, info, details);
+              };
+              instance.onLongPressMoveUpdate = _updateDrag;
+              instance.onLongPressEnd = _endDrag;
+              instance.onLongPressCancel = _cancelDrag;
+            },
+          ),
+        },
+        child: _WobbleTile(
+          wobble: _wobble,
+          active: _draggedId != null && !lifted,
+          phase: (info.forumId.hashCode & 0x7fffffff) % 7 * 0.9,
+          child: Opacity(
+            opacity: lifted ? 0 : 1,
+            child: ForumTag(info: info, compact: true),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 长按抬起：把卡片交给浮层，网格里留出空位。
+  void _startDrag(
+      int index, LikeForumInfo info, LongPressStartDetails details) {
+    if (_draggedId != null) {
+      return;
+    }
+    final RenderBox? grid = _gridBox;
+    final RenderBox? overlayBox = _overlayBox;
+    if (grid == null || overlayBox == null) {
+      return;
+    }
+    final double cellWidth = _cellWidthFor(grid.size.width);
+    final Offset slotOverlay = overlayBox
+        .globalToLocal(grid.localToGlobal(_slotOffset(index, cellWidth)));
+    final Offset pointerOverlay =
+        overlayBox.globalToLocal(details.globalPosition);
+
+    setState(() {
+      _draggedId = info.forumId;
+      _dragIndex = index;
+      _dragCellWidth = cellWidth;
+      _grabOffset = pointerOverlay - slotOverlay;
+      _dragTopLeft = pointerOverlay - _grabOffset - const Offset(0, _liftRise);
+    });
+    HapticFeedback.mediumImpact();
+    _landing.stop();
+    _droppedOrder = null;
+    _wobble.repeat();
+
+    final OverlayEntry entry = OverlayEntry(builder: _buildDragCard);
+    _overlay = entry;
+    Overlay.of(context).insert(entry);
+  }
+
+  void _updateDrag(LongPressMoveUpdateDetails details) {
+    final int? index = _dragIndex;
+    final RenderBox? grid = _gridBox;
+    final RenderBox? overlayBox = _overlayBox;
+    if (index == null ||
+        grid == null ||
+        overlayBox == null ||
+        _overlay == null) {
+      return;
+    }
+    final Offset pointer = overlayBox.globalToLocal(details.globalPosition);
+    _dragTopLeft = pointer - _grabOffset - const Offset(0, _liftRise);
+
+    final int target = _targetIndex(
+      grid: grid,
+      center: overlayBox.localToGlobal(
+        _dragTopLeft + Offset(_dragCellWidth / 2, _cellHeight / 2),
+      ),
+    );
+    if (target != index) {
+      // 直接改预览顺序：其余标签会在 [AnimatedPositioned] 里滑到新格子。
+      final LikeForumInfo dragged = _order.removeAt(index);
+      _order.insert(target, dragged);
+      _dragIndex = target;
+      HapticFeedback.selectionClick();
+      setState(() {});
+    }
+    _overlay?.markNeedsBuild();
+  }
+
+  /// 卡片中心落在哪一格：行列都按槽位取整，最后一格按数量收口。
+  int _targetIndex({required RenderBox grid, required Offset center}) {
+    final Offset local = grid.globalToLocal(center);
+    final double cellWidth = _cellWidthFor(grid.size.width);
+    final int rows = (_order.length / _columns).ceil().clamp(1, 1 << 20);
+    final int column =
+        (local.dx / (cellWidth + _spacing)).floor().clamp(0, _columns - 1);
+    final int row =
+        (local.dy / (_cellHeight + _spacing)).floor().clamp(0, rows - 1);
+    return (row * _columns + column).clamp(0, _order.length - 1);
+  }
+
+  void _endDrag(LongPressEndDetails details) {
+    final int? index = _dragIndex;
+    if (index == null || _overlay == null) {
+      _cancelDrag();
+      return;
+    }
+    final RenderBox? grid = _gridBox;
+    final RenderBox? overlayBox = _overlayBox;
+    if (grid == null || overlayBox == null) {
+      _cancelDrag();
+      return;
+    }
+
+    if (!_sameOrder(widget.forums, _order)) {
+      _droppedOrder = List<LikeForumInfo>.of(_order);
+    }
+    HapticFeedback.lightImpact();
+
+    _landingFrom = _dragTopLeft;
+    _landingTo = overlayBox
+        .globalToLocal(grid.localToGlobal(_slotOffset(index, _dragCellWidth)));
+    _landing.forward(from: 0);
+  }
+
+  /// 长按未成立（滑动手势抢先）时收尾，什么都不保存。
+  void _cancelDrag() {
+    final bool wasDragging = _draggedId != null || _overlay != null;
+    if (!wasDragging) {
+      return;
+    }
+    _droppedOrder = null;
+    _landing.stop();
+    _overlay?.remove();
+    _overlay = null;
+    _wobble.stop();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _draggedId = null;
+      _dragIndex = null;
+      if (!_sameOrder(widget.forums, _order)) {
+        _order = List<LikeForumInfo>.of(widget.forums);
+      }
+    });
+  }
+
+  /// 系统打断（来电 / 手势被取消）时长按识别器不会回调 end，主动收尾免得浮层卡住。
+  void _onPointerCancel(PointerCancelEvent event) {
+    if (_draggedId != null) {
+      _cancelDrag();
+    }
+  }
+
+  void _tickLanding() {
+    _dragTopLeft = Offset.lerp(
+      _landingFrom,
+      _landingTo,
+      Curves.easeOutCubic.transform(_landing.value),
+    )!;
+    _overlay?.markNeedsBuild();
+  }
+
+  void _onLandingStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) {
+      return;
+    }
+    final List<LikeForumInfo>? dropped = _droppedOrder;
+    _droppedOrder = null;
+    _overlay?.remove();
+    _overlay = null;
+    _wobble.stop();
+    setState(() {
+      _draggedId = null;
+      _dragIndex = null;
+    });
+    if (dropped != null) {
+      widget.onOrderChanged(dropped);
+    }
+  }
+
+  static bool _sameOrder(List<LikeForumInfo> a, List<LikeForumInfo> b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].forumId != b[i].forumId) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// 浮层里的「被拿起来」的卡片：轻微放大 + 投影，跟手但不拦截点击。
+  Widget _buildDragCard(BuildContext context) {
+    final LikeForumInfo? info = _draggedInfo;
+    if (info == null) {
+      return const SizedBox.shrink();
+    }
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Positioned(
+      left: _dragTopLeft.dx,
+      top: _dragTopLeft.dy,
+      width: _dragCellWidth,
+      height: _cellHeight,
+      child: IgnorePointer(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          builder: (BuildContext context, double t, Widget? child) =>
+              Transform.translate(
+            offset: Offset(0, _liftRise * (1 - t)),
+            child: Transform.scale(scale: 1 + 0.12 * t, child: child),
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: TiebananaMetrics.brLg,
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: tokens.shadow,
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Material(
+              type: MaterialType.transparency,
               child: ForumTag(
                 info: info,
                 compact: true,
-                showGrip: true,
                 dragging: true,
+                onTap: () {},
               ),
             ),
           ),
-          childWhenDragging: Opacity(
-            opacity: 0.35,
-            child: ForumTag(
-              info: info,
-              compact: true,
-            ),
-          ),
-          child: ForumTag(
-            info: info,
-            compact: true,
-            highlighted: candidate.isNotEmpty,
+        ),
+      ),
+    );
+  }
+}
+
+/// 拖动期间其余标签的 iOS 风格抖动：振幅缓入缓出，相位按吧名错开。
+class _WobbleTile extends StatelessWidget {
+  const _WobbleTile({
+    required this.wobble,
+    required this.active,
+    required this.phase,
+    required this.child,
+  });
+
+  /// 抖动幅度：约 1.3°，比 iOS 图标克制一些，宽标签不会晃得晃眼。
+  static const double _amplitude = 0.022;
+
+  final Animation<double> wobble;
+  final bool active;
+
+  /// 每个标签的相位偏移，避免整片同频摆动。
+  final double phase;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: active ? 1 : 0),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      child: child,
+      builder: (BuildContext context, double amplitude, Widget? child) {
+        if (amplitude == 0) {
+          return child!;
+        }
+        return AnimatedBuilder(
+          animation: wobble,
+          child: child,
+          builder: (BuildContext context, Widget? child) => Transform.rotate(
+            angle: amplitude *
+                _amplitude *
+                math.sin(wobble.value * 2 * math.pi + phase),
+            child: child,
           ),
         );
       },
@@ -614,29 +1015,17 @@ class ForumTag extends StatelessWidget {
   /// 缩略态。
   final bool compact;
 
-  /// 排序模式：显示拖动手柄。
-  final bool showGrip;
-
-  /// 正在被拖动：轻微放大 + 主色描边。
+  /// 正在被拖动：主色描边（抬起放大 / 落位动画由首页网格负责）。
   final bool dragging;
 
-  /// 拖到目标格上：主色描边高亮。
-  final bool highlighted;
-
-  /// 长按进入排序模式。
-  final VoidCallback? onLongPress;
-
-  /// 覆盖默认的「进吧」点击行为（排序模式里用来禁用跳转）。
+  /// 覆盖默认的「进吧」点击行为（拖动浮层里用来禁用跳转）。
   final VoidCallback? onTap;
 
   const ForumTag({
     super.key,
     required this.info,
     this.compact = false,
-    this.showGrip = false,
     this.dragging = false,
-    this.highlighted = false,
-    this.onLongPress,
     this.onTap,
   });
 
@@ -653,11 +1042,10 @@ class ForumTag extends StatelessWidget {
             .titleSmall
             ?.copyWith(fontWeight: FontWeight.w500);
 
-    final Border? border = highlighted || dragging
-        ? Border.all(color: tokens.primary, width: 1.4)
-        : null;
+    final Border? border =
+        dragging ? Border.all(color: tokens.primary, width: 1.4) : null;
 
-    Widget tag = DecoratedBox(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: compact ? tokens.surfaceAlt : tokens.surface,
         borderRadius: TiebananaMetrics.brLg,
@@ -670,15 +1058,10 @@ class ForumTag extends StatelessWidget {
               Navigator.pushNamed(context, PageRouter.forumHome,
                   arguments: info.forumName);
             },
-        onLongPress: onLongPress,
         shape: RoundedRectangleBorder(borderRadius: TiebananaMetrics.brLg),
         padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14),
         child: Row(
           children: <Widget>[
-            if (showGrip) ...<Widget>[
-              Icon(Icons.drag_indicator, size: 14, color: tokens.textTertiary),
-              const SizedBox(width: 2),
-            ],
             Expanded(
                 child: Text(
               info.forumName,
@@ -695,12 +1078,6 @@ class ForumTag extends StatelessWidget {
         ),
       ),
     );
-
-    if (dragging) {
-      tag = Transform.rotate(
-          angle: -0.028, child: Transform.scale(scale: 1.06, child: tag));
-    }
-    return tag;
   }
 }
 
