@@ -6,18 +6,23 @@ import 'package:flutter/widgets.dart';
 import 'package:tiebanana/features/splash/splash_brand.dart';
 import 'package:tiebanana/features/splash/splash_mark.dart';
 import 'package:tiebanana/features/splash/splash_timeline.dart';
+import 'package:tiebanana/features/splash/splash_tips.dart';
 import 'package:tiebanana/features/splash/splash_wordmark.dart';
 
 /// 开屏页。**纯展示**：所有状态都从 [t]（设计毫秒，0–3300）算出来，
 /// 控制器由 `BootstrapApp` 持有 —— 这样它既能被逐帧驱动，也能在测试里定格任意一帧。
+/// 底部 Tips 的文案同样由 `BootstrapApp` 在启动时抽一次后传入，页面内不再变化。
 ///
 /// 布局与 `design/splash/splash.html` 对齐：
 /// 图标中心在屏高 40%、字标在 58%、加载点在 78%，图标宽度占屏宽 61%。
 class SplashPage extends StatelessWidget {
-  const SplashPage({super.key, required this.t});
+  const SplashPage({super.key, required this.t, required this.tip});
 
   /// 设计毫秒。见 [SplashBeats]。
   final double t;
+
+  /// 本次开屏展示的 Tips，见 [SplashTips]。
+  final String tip;
 
   /// 概念图里的基准屏宽（iPhone 14 那一档）。
   static const double _refWidth = 390;
@@ -29,7 +34,7 @@ class SplashPage extends StatelessWidget {
     final double outK =
         ease(t, SplashBeats.out.from, SplashBeats.out.to, SplashCurves.gravity);
 
-    Widget content = _Content(t: t);
+    Widget content = _Content(t: t, tip: tip);
 
     // 交接：整屏向前推走（对应概念图的 `scale(1 + .07 * outK)` + 淡出）
     if (outK > 0) {
@@ -60,9 +65,10 @@ class SplashPage extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.t});
+  const _Content({required this.t, required this.tip});
 
   final double t;
+  final String tip;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +119,26 @@ class _Content extends StatelessWidget {
               right: 0,
               top: h * .78,
               child: Center(child: _LoadingDots(t: t, size: 6 * s)),
+            ),
+            // 开屏动画下方的小提示：每次启动随机一条，见 [SplashTips]。
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.only(bottom: 28),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 340 * s),
+                    child: SplashTipsLine(
+                      t: t,
+                      text: tip,
+                      fontSize: 12.5 * s,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         );
@@ -180,8 +206,8 @@ class _LoadingDots extends StatelessWidget {
   Widget build(BuildContext context) {
     // 与概念图一致：字标起来之后才淡入
     final double appear = ease(t, 2150, 2400, SplashCurves.out);
-    final double alive =
-        1 - ease(t, SplashBeats.out.from, SplashBeats.out.to, SplashCurves.gravity);
+    final double alive = 1 -
+        ease(t, SplashBeats.out.from, SplashBeats.out.to, SplashCurves.gravity);
     final double group = (appear * alive * .95).clamp(0, 1);
 
     return Opacity(

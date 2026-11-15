@@ -3,6 +3,7 @@ import 'package:tiebanana/core/diagnostics/app_log.dart';
 import 'package:tiebanana/features/diagnostics/pages/diagnostics_page.dart';
 import 'package:tiebanana/features/splash/splash_page.dart';
 import 'package:tiebanana/features/splash/splash_timeline.dart';
+import 'package:tiebanana/features/splash/splash_tips.dart';
 import 'package:tiebanana/features/splash/tiebanana_glyph.dart';
 import 'package:tiebanana/shared/widgets/phone_viewport.dart';
 
@@ -84,6 +85,9 @@ class _BootstrapAppState extends State<BootstrapApp>
   bool _leaving = false;
   bool _splashGone = false;
   bool _precached = false;
+
+  /// 本次启动的开屏 Tips。启动壳创建后只抽一次，逐帧重建时保持不变。
+  late final String _tip = SplashTips.pick();
 
   /// 当前的设计毫秒（0–3300）。
   double get _t =>
@@ -200,7 +204,7 @@ class _BootstrapAppState extends State<BootstrapApp>
                 ? GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: _skipIntro,
-                    child: SplashPage(t: t),
+                    child: SplashPage(t: t, tip: _tip),
                   )
                 : Scaffold(
                     body: SafeArea(
