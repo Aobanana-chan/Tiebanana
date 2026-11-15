@@ -5,6 +5,7 @@ import 'package:tiebanana/app/lifecycle/app_lifecycle_hook.dart';
 import 'package:tiebanana/features/update/data/version.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/features/update/widgets/update_release_notes.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 
 ///自动检查版本更新
@@ -55,7 +56,17 @@ class AutoCheckUpdate extends APPStateCallback {
         context: context,
         builder: (BuildContext builder) => TiebaActionDialog<_UpdateChoice>(
           title: "发现新版本 ${result.latestVersion}",
-          content: const Text("是否前往更新？"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(builder).height * 0.4,
+              ),
+              child: SingleChildScrollView(
+                child: UpdateReleaseNotes(notes: result.notes),
+              ),
+            ),
+          ),
           actions: const <TiebaDialogAction<_UpdateChoice>>[
             TiebaDialogAction<_UpdateChoice>('跳过此版本', _UpdateChoice.ignore),
             TiebaDialogAction<_UpdateChoice>('稍后', _UpdateChoice.later),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/widgets/update_release_notes.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -172,23 +172,17 @@ class _UpdatePageState extends State<UpdatePage> {
     TiebananaTokens tokens,
     UpdateCheckResult result,
   ) {
-    final String notes = result.notes.trim();
     return <Widget>[
-      if (notes.isNotEmpty)
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(vertical: 5),
-          padding: const EdgeInsets.all(TiebananaMetrics.gapMd),
-          decoration: BoxDecoration(
-            color: tokens.bg,
-            borderRadius: TiebananaMetrics.brLg,
-          ),
-          child: MarkdownBody(
-            data: notes,
-            shrinkWrap: true,
-            selectable: true,
-          ),
+      Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        padding: const EdgeInsets.all(TiebananaMetrics.gapMd),
+        decoration: BoxDecoration(
+          color: tokens.bg,
+          borderRadius: TiebananaMetrics.brLg,
         ),
+        child: UpdateReleaseNotes(notes: result.notes),
+      ),
       _buildDownloadSection(result),
     ];
   }
