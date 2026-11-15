@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:tiebanana/features/history/models/view_history_page_model.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
@@ -396,6 +397,7 @@ class HomeHistoryTip extends StatelessWidget {
 /// 交互对齐手机桌面图标：
 /// - 长按抬起后卡片跟手移动，其余标签实时让位（换位预览），松手才落库；
 /// - 抬起期间其余标签像 iOS 图标一样轻微抖动，换格 / 落位带触感反馈；
+/// - 拖到视口上下沿会自动滚动，吧多到超出一屏时也能拖到任意位置；
 /// - 松手后卡片落回目标格；没有真的移动时不写存储。
 class _ForumReorderGrid extends StatefulWidget {
   const _ForumReorderGrid({
@@ -435,6 +437,16 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
   /// 落位动画时长。
   static const Duration _landingDuration = Duration(milliseconds: 190);
 
+  /// 拖到距视口上 / 下沿这么近时开始自动滚动。
+  static const double _autoScrollEdge = 64;
+
+  /// 自动滚动速度（像素 / 秒）：刚进边缘区最慢，贴到边上最快。
+  static const double _autoScrollMinSpeed = 140;
+  static const double _autoScrollMaxSpeed = 720;
+
+  /// 单帧最多补多少时间，避免掉帧后一下子滚一大截。
+  static const Duration _autoScrollMaxStep = Duration(milliseconds: 50);
+
   final GlobalKey _gridKey = GlobalKey();
 
   /// 网格里的当前顺序：拖动时是实时预览，松手后再交给上层保存。
@@ -449,6 +461,12 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
     duration: _landingDuration,
   );
 
+  /// 边缘自动滚动的逐帧驱动。
+  late final Ticker _autoScroll;
+  Duration? _autoScrollLastTick;
+  double _autoScrollIntensity = 0;
+  double _autoScrollDirection = 0;
+
   OverlayEntry? _overlay;
   String? _draggedId;
   int? _dragIndex;
@@ -462,12 +480,24 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
   Offset _landingTo = Offset.zero;
   double _dragCellWidth = 0;
 
+  /// 拖动开始时网格在滚动视口内的原点与滚动偏移。
+  ///
+  /// 自动滚动时视口里的网格会移动，用这两个值换算卡片落在第几格，
+  /// 不依赖还没重新布局的 RenderBox。
+  Offset _gridOriginInViewport = Offset.zero;
+  double _gridStartPixels = 0;
+
+  /// 手指最新的全局位置与浮层卡片的中心（全局坐标）。
+  Offset _pointerGlobal = Offset.zero;
+  Offset _dragCenterGlobal = Offset.zero;
+
   /// 落位动画结束后要提交的顺序。
   List<LikeForumInfo>? _droppedOrder;
 
   @override
   void initState() {
     super.initState();
+    _autoScroll = createTicker(_onAutoScrollTick);
     _landing.addListener(_tickLanding);
     _landing.addStatusListener(_onLandingStatus);
   }
@@ -483,6 +513,7 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
 
   @override
   void dispose() {
+    _autoScroll.dispose();
     _overlay?.remove();
     _overlay = null;
     _wobble.dispose();
@@ -498,6 +529,20 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
   RenderBox? get _overlayBox {
     final RenderObject? object =
         Overlay.maybeOf(context)?.context.findRenderObject();
+    return object is RenderBox && object.attached ? object : null;
+  }
+
+  /// 首页所在的滚动视图（拖动时用来做边缘自动滚动）。
+  ScrollPosition? get _scrollPosition {
+    final ScrollableState? scrollable = Scrollable.maybeOf(context);
+    if (scrollable == null) return null;
+    final ScrollPosition position = scrollable.position;
+    return position.hasPixels ? position : null;
+  }
+
+  RenderBox? get _scrollBox {
+    final RenderObject? object =
+        Scrollable.maybeOf(context)?.context.findRenderObject();
     return object is RenderBox && object.attached ? object : null;
   }
 
@@ -612,6 +657,15 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
       _dragCellWidth = cellWidth;
       _grabOffset = pointerOverlay - slotOverlay;
       _dragTopLeft = pointerOverlay - _grabOffset - const Offset(0, _liftRise);
+      _gridOriginInViewport = _scrollBox?.globalToLocal(
+            grid.localToGlobal(Offset.zero),
+          ) ??
+          Offset.zero;
+      _gridStartPixels = _scrollPosition?.pixels ?? 0;
+      _pointerGlobal = details.globalPosition;
+      _dragCenterGlobal = overlayBox.localToGlobal(
+        _dragTopLeft + Offset(cellWidth / 2, _cellHeight / 2),
+      );
     });
     HapticFeedback.mediumImpact();
     _landing.stop();
@@ -621,51 +675,140 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
     final OverlayEntry entry = OverlayEntry(builder: _buildDragCard);
     _overlay = entry;
     Overlay.of(context).insert(entry);
+    _syncAutoScroll();
   }
 
   void _updateDrag(LongPressMoveUpdateDetails details) {
-    final int? index = _dragIndex;
-    final RenderBox? grid = _gridBox;
     final RenderBox? overlayBox = _overlayBox;
-    if (index == null ||
-        grid == null ||
-        overlayBox == null ||
-        _overlay == null) {
+    if (_dragIndex == null || _overlay == null || overlayBox == null) {
       return;
     }
-    final Offset pointer = overlayBox.globalToLocal(details.globalPosition);
-    _dragTopLeft = pointer - _grabOffset - const Offset(0, _liftRise);
-
-    final int target = _targetIndex(
-      grid: grid,
-      center: overlayBox.localToGlobal(
-        _dragTopLeft + Offset(_dragCellWidth / 2, _cellHeight / 2),
-      ),
+    _pointerGlobal = details.globalPosition;
+    _dragTopLeft = overlayBox.globalToLocal(details.globalPosition) -
+        _grabOffset -
+        const Offset(0, _liftRise);
+    _dragCenterGlobal = overlayBox.localToGlobal(
+      _dragTopLeft + Offset(_dragCellWidth / 2, _cellHeight / 2),
     );
-    if (target != index) {
-      // 直接改预览顺序：其余标签会在 [AnimatedPositioned] 里滑到新格子。
-      final LikeForumInfo dragged = _order.removeAt(index);
-      _order.insert(target, dragged);
-      _dragIndex = target;
-      HapticFeedback.selectionClick();
-      setState(() {});
-    }
+
+    _applyDragTarget();
     _overlay?.markNeedsBuild();
+    _syncAutoScroll();
+  }
+
+  /// 按卡片中心位置更新预览顺序（换格时给一次触感）。
+  void _applyDragTarget() {
+    final int? index = _dragIndex;
+    if (index == null) return;
+    // 自动滚动后网格在视口里的位置会变：用滚动偏移换算局部坐标。
+    final RenderBox? viewport = _scrollBox;
+    final double pixels = _scrollPosition?.pixels ?? _gridStartPixels;
+    final Offset gridOrigin =
+        _gridOriginInViewport - Offset(0, pixels - _gridStartPixels);
+    // globalToLocal 同时消除视口缩放，不能直接用屏幕坐标减布局滚动量。
+    final Offset? local = viewport != null
+        ? viewport.globalToLocal(_dragCenterGlobal) - gridOrigin
+        : _gridBox?.globalToLocal(_dragCenterGlobal);
+    if (local == null) return;
+    final int target = _targetIndexFor(local);
+    if (target == index) {
+      return;
+    }
+    // 直接改预览顺序：其余标签会在 [AnimatedPositioned] 里滑到新格子。
+    final LikeForumInfo dragged = _order.removeAt(index);
+    _order.insert(target, dragged);
+    _dragIndex = target;
+    HapticFeedback.selectionClick();
+    setState(() {});
   }
 
   /// 卡片中心落在哪一格：行列都按槽位取整，最后一格按数量收口。
-  int _targetIndex({required RenderBox grid, required Offset center}) {
-    final Offset local = grid.globalToLocal(center);
-    final double cellWidth = _cellWidthFor(grid.size.width);
+  int _targetIndexFor(Offset local) {
     final int rows = (_order.length / _columns).ceil().clamp(1, 1 << 20);
     final int column =
-        (local.dx / (cellWidth + _spacing)).floor().clamp(0, _columns - 1);
+        (local.dx / (_dragCellWidth + _spacing)).floor().clamp(0, _columns - 1);
     final int row =
         (local.dy / (_cellHeight + _spacing)).floor().clamp(0, rows - 1);
     return (row * _columns + column).clamp(0, _order.length - 1);
   }
 
+  /// 手指贴到视口上 / 下沿时启动自动滚动；离开边缘就停。
+  void _syncAutoScroll() {
+    final ScrollPosition? position = _scrollPosition;
+    final RenderBox? box = _scrollBox;
+    if (_dragIndex == null || position == null || box == null) {
+      _stopAutoScroll();
+      return;
+    }
+    const double top = 0;
+    final double bottom = box.size.height;
+    final double y = box.globalToLocal(_pointerGlobal).dy;
+
+    double direction = 0;
+    double intensity = 0;
+    if (y < top + _autoScrollEdge) {
+      direction = -1;
+      intensity =
+          ((top + _autoScrollEdge - y) / _autoScrollEdge).clamp(0.0, 1.0);
+    } else if (y > bottom - _autoScrollEdge) {
+      direction = 1;
+      intensity =
+          ((y - (bottom - _autoScrollEdge)) / _autoScrollEdge).clamp(0.0, 1.0);
+    }
+    if (direction == 0) {
+      _stopAutoScroll();
+      return;
+    }
+    _autoScrollDirection = direction;
+    _autoScrollIntensity = intensity;
+    if (!_autoScroll.isActive) {
+      _autoScrollLastTick = null;
+      _autoScroll.start();
+    }
+  }
+
+  void _stopAutoScroll() {
+    if (_autoScroll.isActive) {
+      _autoScroll.stop();
+    }
+    _autoScrollLastTick = null;
+    _autoScrollIntensity = 0;
+    _autoScrollDirection = 0;
+  }
+
+  void _onAutoScrollTick(Duration elapsed) {
+    final Duration? last = _autoScrollLastTick;
+    _autoScrollLastTick = elapsed;
+    if (last == null) {
+      return;
+    }
+    final ScrollPosition? position = _scrollPosition;
+    if (position == null || _dragIndex == null) {
+      _stopAutoScroll();
+      return;
+    }
+    final Duration step = elapsed - last;
+    final double dt =
+        (step > _autoScrollMaxStep ? _autoScrollMaxStep : step).inMicroseconds /
+            Duration.microsecondsPerSecond;
+    if (dt <= 0) {
+      return;
+    }
+    final double speed = _autoScrollMinSpeed +
+        (_autoScrollMaxSpeed - _autoScrollMinSpeed) * _autoScrollIntensity;
+    final double next = (position.pixels + speed * dt * _autoScrollDirection)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (next == position.pixels) {
+      // 已经到顶 / 到底，等下次手指移动再判断。
+      _stopAutoScroll();
+      return;
+    }
+    position.jumpTo(next);
+    _applyDragTarget();
+  }
+
   void _endDrag(LongPressEndDetails details) {
+    _stopAutoScroll();
     final int? index = _dragIndex;
     if (index == null || _overlay == null) {
       _cancelDrag();
@@ -695,6 +838,7 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
     if (!wasDragging) {
       return;
     }
+    _stopAutoScroll();
     _droppedOrder = null;
     _landing.stop();
     _overlay?.remove();
@@ -732,6 +876,7 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
     if (status != AnimationStatus.completed) {
       return;
     }
+    _stopAutoScroll();
     final List<LikeForumInfo>? dropped = _droppedOrder;
     _droppedOrder = null;
     _overlay?.remove();

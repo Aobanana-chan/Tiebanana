@@ -45,7 +45,7 @@ LikeForumInfo _forum(String name) => LikeForumInfo(
       levelId: '4',
     );
 
-Widget _app(ForumState forumState) {
+Widget _app(ForumState forumState, {bool scaled = false}) {
   return MultiProvider(
     providers: <ChangeNotifierProvider<APPSettingProvider>>[
       ChangeNotifierProvider<APPSettingProvider>(
@@ -55,6 +55,11 @@ Widget _app(ForumState forumState) {
       value: forumState,
       child: MaterialApp(
         theme: TiebananaTheme.light(seedOf('blue'), 16),
+        builder: scaled
+            ? (context, child) => FittedBox(
+                  child: SizedBox(width: 400, height: 300, child: child),
+                )
+            : null,
         home: Scaffold(
           body: TagPan(historyLoader: () => <ViewHistoryPageModel>[]),
         ),
@@ -129,6 +134,104 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(forumState.saved, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('缩放视口中浮层、挤开空位和自动滚动后的落点一致', (tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    Global.profile = await SharedPreferences.getInstance();
+    final state = _RecordingForumState(
+      List.generate(80, (i) => _forum('吧$i')),
+    );
+    addTearDown(state.dispose);
+    await tester.pumpWidget(_app(state, scaled: true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('展开全部 80 个'));
+    await tester.pumpAndSettle();
+
+    Finder tag(String id) => find.byWidgetPredicate(
+        (w) => w is ForumTag && w.info.forumId == id && !w.dragging);
+    final first = tester.getCenter(tag('吧0'));
+    final target = tester.getCenter(tag('吧7'));
+    final gesture = await tester.startGesture(first);
+    await tester.pump(const Duration(milliseconds: 420));
+    // 外层放大两倍，上浮 12 个布局像素对应 24 个屏幕像素。
+    await gesture.moveTo(target + const Offset(0, 24));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    void expectAligned() {
+      final floating =
+          find.byWidgetPredicate((w) => w is ForumTag && w.dragging);
+      expect(
+          (tester.getCenter(floating) - tester.getCenter(tag('吧0'))).distance,
+          lessThan(1));
+    }
+
+    expectAligned();
+    final position =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    final viewport = tester.getRect(find.byType(Scrollable).first);
+    await gesture.moveTo(Offset(target.dx, viewport.bottom - 6));
+    for (int i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(position.pixels, greaterThan(0));
+    // 离开边缘停止滚动，再把浮层中心对准当前某个槽位中心。
+    await gesture.moveTo(Offset(target.dx, viewport.center.dy));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    final hiddenCenter = tester.getCenter(tag('吧0'));
+    await gesture.moveTo(hiddenCenter + const Offset(0, 24));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    expectAligned();
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(state.saved, isNotNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('拖到视口底部会自动向下滚动，吧多了也能拖到底', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    Global.profile = await SharedPreferences.getInstance();
+
+    final _RecordingForumState forumState = _RecordingForumState(
+      List<LikeForumInfo>.generate(40, (int i) => _forum('吧$i')),
+    );
+    addTearDown(forumState.dispose);
+
+    await tester.pumpWidget(_app(forumState));
+    await tester.pumpAndSettle();
+
+    // 展开全部，让网格高度超过一屏，必须滚动才够得着后面的格子。
+    await tester.tap(find.text('展开全部 40 个'));
+    await tester.pumpAndSettle();
+
+    final ScrollableState scrollable =
+        tester.state<ScrollableState>(find.byType(Scrollable).first);
+    final Rect viewport = tester.getRect(find.byType(Scrollable).first);
+    expect(scrollable.position.pixels, 0);
+
+    final TestGesture gesture =
+        await tester.startGesture(tester.getCenter(find.text('吧0')));
+    await tester.pump(const Duration(milliseconds: 420));
+
+    // 按住不放，把卡片贴到视口下沿：应当自己往下滚。
+    await gesture.moveTo(Offset(viewport.center.dx, viewport.bottom - 6));
+    await tester.pump();
+    for (int i = 0; i < 16; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(scrollable.position.pixels, greaterThan(0));
+    expect(tester.takeException(), isNull);
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    // 自动滚过之后落位，被拖的吧已经离开第一位。
+    expect(forumState.saved, isNotNull);
+    expect(forumState.saved!.first.forumName, isNot('吧0'));
     expect(tester.takeException(), isNull);
   });
 }
