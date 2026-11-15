@@ -10,8 +10,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:tiebanana/app/navigation/app_route_observer.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/shared/media/player_system_utils.dart';
+import 'package:tiebanana/shared/media/video_fullscreen_route.dart';
 import 'package:tiebanana/shared/media/video_source_url.dart';
-import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/shared/theme/tiebanana_palette.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
@@ -22,6 +22,13 @@ Color accentOnBlack() =>
 
 /// 视频元数据到达前的兜底比例。
 const double kVideoFallbackAspectRatio = 16 / 9;
+
+/// 卡片画面的圆角。进出全屏时飞行中的画面沿用这个圆角，落位后消失。
+const double kVideoCornerRadius = 16;
+
+/// 起播前（还没拿到时长）用封面盖住黑屏，开始播放后交给画面本身。
+bool _showVideoCover(bool playing, Duration duration) =>
+    !playing && duration == Duration.zero;
 
 /// 诊断信息不展示视频地址中的签名参数。
 String redactVideoDiagnostic(String message) => message.replaceAllMapped(
@@ -197,6 +204,9 @@ class _VideoScreenState extends State<VideoPlayer>
   bool _playing = false;
   Duration _duration = Duration.zero;
   bool _isFullScreen = false;
+
+  /// 卡片与全屏页共用同一个 Hero 标识；每个播放器独立，避免列表里重名。
+  final Object _heroTag = Object();
   late double _aspectRatio = normalizeVideoAspectRatio(widget.aspectRatio);
   int? _videoWidth;
   int? _videoHeight;
@@ -363,12 +373,14 @@ class _VideoScreenState extends State<VideoPlayer>
   Future<void> _enterFullScreen() async {
     if (_isFullScreen) return;
     setState(() => _isFullScreen = true);
-    await Navigator.of(context).push<void>(appPageRoute(
+    await Navigator.of(context).push<void>(VideoFullScreenRoute(
       builder: (_) => _FullScreenVideoPage(
         player: player,
         videoController: videoController,
         onPlay: _open,
         aspectRatio: _aspectRatio,
+        heroTag: _heroTag,
+        cover: widget.cover,
       ),
     ));
     if (mounted) setState(() => _isFullScreen = false);
@@ -401,7 +413,7 @@ class _VideoScreenState extends State<VideoPlayer>
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(kVideoCornerRadius),
       child: AspectRatio(
         aspectRatio: _aspectRatio,
         child: ColoredBox(
@@ -409,35 +421,97 @@ class _VideoScreenState extends State<VideoPlayer>
           child: Stack(
             fit: StackFit.expand,
             children: [
-              if (!_isFullScreen)
-                Video(controller: videoController, controls: NoVideoControls),
-              if (!_playing &&
-                  _duration == Duration.zero &&
-                  widget.cover != null)
-                IgnorePointer(
-                  child: Image.network(
-                    widget.cover!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, error, stack) =>
-                        const ColoredBox(color: Colors.black),
-                  ),
+              // 全屏页与本卡片共用同一个控制器，Hero 只搬运画面这一层：
+              // 进出全屏时画面从卡片位置拉到整屏，而不是整页翻过去。
+              Hero(
+                tag: _heroTag,
+                flightShuttleBuilder: _videoHeroShuttle,
+                child: _VideoSurface(
+                  controller: videoController,
+                  cover: widget.cover,
+                  showCover: _showVideoCover(_playing, _duration),
                 ),
-              if (!_isFullScreen)
-                VideoPlayerPanel(
-                  player: player,
-                  onPlay: _open,
-                  isFullScreen: false,
-                  // 由控制层统一处理自动起播与加载错误。
-                  autoplay:
-                      widget.autoplay && player.state.playlist.medias.isEmpty,
-                  onFullScreen: _enterFullScreen,
-                ),
+              ),
+              VideoPlayerPanel(
+                player: player,
+                onPlay: _open,
+                isFullScreen: false,
+                // 由控制层统一处理自动起播与加载错误。
+                autoplay:
+                    widget.autoplay && player.state.playlist.medias.isEmpty,
+                onFullScreen: _enterFullScreen,
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+/// 卡片和全屏页共用的画面层。
+///
+/// 两处共用同一个 [VideoController]，因此 Hero 不需要复制播放器：
+/// 进出的动画就是这一层画面在放大 / 缩回。
+class _VideoSurface extends StatelessWidget {
+  const _VideoSurface({
+    required this.controller,
+    this.cover,
+    this.showCover = false,
+  });
+
+  final VideoController controller;
+  final String? cover;
+
+  /// 起播前用封面盖住黑屏。
+  final bool showCover;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 唤醒锁由卡片统一管理（见 _VideoScreenState._updateWakelock）；
+        // 飞行中画面层会短暂存在两份，不再各自申请。
+        Video(
+          controller: controller,
+          controls: NoVideoControls,
+          wakelock: false,
+        ),
+        if (showCover && cover != null)
+          IgnorePointer(
+            child: Image.network(
+              cover!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, error, stack) =>
+                  const ColoredBox(color: Colors.black),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// 进出全屏时的飞行体。
+///
+/// 沿用出发侧的同一份画面（推进时是卡片上的封面 / 视频，退出时是全屏画面），
+/// 圆角只属于卡片，随放大一起消失，退出时再长回来。
+Widget _videoHeroShuttle(
+  BuildContext flightContext,
+  Animation<double> animation,
+  HeroFlightDirection direction,
+  BuildContext fromHeroContext,
+  BuildContext toHeroContext,
+) {
+  return AnimatedBuilder(
+    animation: animation,
+    builder: (context, child) => ClipRRect(
+      borderRadius:
+          BorderRadius.circular(kVideoCornerRadius * (1 - animation.value)),
+      child: child,
+    ),
+    child: (fromHeroContext.widget as Hero).child,
+  );
 }
 
 /// 内嵌和全屏共用的自适应控制层。所有控件都是覆盖层，不挤占画面高度。
@@ -998,12 +1072,18 @@ class _FullScreenVideoPage extends StatefulWidget {
     required this.videoController,
     required this.onPlay,
     required this.aspectRatio,
+    required this.heroTag,
+    this.cover,
   });
 
   final Player player;
   final VideoController videoController;
   final Future<void> Function() onPlay;
   final double aspectRatio;
+
+  /// 与卡片上的 Hero 对应，画面从这里启动 / 回到这里。
+  final Object heroTag;
+  final String? cover;
 
   @override
   State<_FullScreenVideoPage> createState() => _FullScreenVideoPageState();
@@ -1012,9 +1092,19 @@ class _FullScreenVideoPage extends StatefulWidget {
 class _FullScreenVideoPageState extends State<_FullScreenVideoPage> {
   StreamSubscription<int?>? _widthSubs;
   StreamSubscription<int?>? _heightSubs;
+  StreamSubscription<bool>? _playingSubs;
+  StreamSubscription<Duration>? _durationSubs;
   int? _width;
   int? _height;
-  late bool _landscape = _currentAspectRatio() > 1;
+  bool _playing = false;
+  Duration _duration = Duration.zero;
+  bool _immersive = false;
+  ModalRoute<void>? _route;
+  late double _aspectRatio = _currentAspectRatio();
+  late bool _landscape = _aspectRatio > 1;
+
+  /// 起播前用封面盖住黑屏，和卡片上的表现保持一致。
+  bool get _showCover => _showVideoCover(_playing, _duration);
 
   double _currentAspectRatio() => normalizeVideoAspectRatio(videoAspectRatioOf(
           _width ?? widget.player.state.width,
@@ -1024,27 +1114,67 @@ class _FullScreenVideoPageState extends State<_FullScreenVideoPage> {
   @override
   void initState() {
     super.initState();
-    _applyOrientation();
+    final state = widget.player.state;
+    _playing = state.playing;
+    _duration = state.duration;
     _widthSubs = widget.player.stream.width.listen((width) {
       _width = width;
-      _syncOrientation();
+      _syncAspectRatio();
     });
     _heightSubs = widget.player.stream.height.listen((height) {
       _height = height;
-      _syncOrientation();
+      _syncAspectRatio();
     });
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    _playingSubs = widget.player.stream.playing.listen((playing) {
+      if (mounted) setState(() => _playing = playing);
+    });
+    _durationSubs = widget.player.stream.duration.listen((duration) {
+      if (mounted) setState(() => _duration = duration);
+    });
   }
 
-  /// 横屏视频才转横屏，竖屏 / 方形视频保持竖屏。
-  void _syncOrientation() {
-    final bool landscape = _currentAspectRatio() > 1;
-    if (landscape == _landscape) return;
-    _landscape = landscape;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ModalRoute<void>? route = ModalRoute.of<void>(context);
+    if (route != _route) {
+      _route?.animation?.removeStatusListener(_handleRouteStatus);
+      _route = route;
+      _route?.animation?.addStatusListener(_handleRouteStatus);
+    }
+    // 路由已处于完成状态（如重建）时不必再等动画结束。
+    if (_route?.animation?.status == AnimationStatus.completed) {
+      _enterImmersive();
+    }
+  }
+
+  void _handleRouteStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) _enterImmersive();
+  }
+
+  /// 等放大动画落位后再进入沉浸式并转屏。
+  ///
+  /// 转屏会改变可用尺寸，提前做会让画面在飞行途中跳一下。
+  void _enterImmersive() {
+    if (_immersive || !mounted) return;
+    _immersive = true;
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _applyOrientation();
   }
 
+  /// 横屏视频才转横屏，竖屏 / 方形视频保持竖屏。
+  void _syncAspectRatio() {
+    final double ratio = _currentAspectRatio();
+    final bool landscape = ratio > 1;
+    if (ratio == _aspectRatio && landscape == _landscape) return;
+    _aspectRatio = ratio;
+    _landscape = landscape;
+    _applyOrientation();
+    if (mounted) setState(() {});
+  }
+
   void _applyOrientation() {
+    if (!_immersive) return;
     SystemChrome.setPreferredOrientations(_landscape
         ? const [
             DeviceOrientation.landscapeLeft,
@@ -1057,8 +1187,13 @@ class _FullScreenVideoPageState extends State<_FullScreenVideoPage> {
   void dispose() {
     _widthSubs?.cancel();
     _heightSubs?.cancel();
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _playingSubs?.cancel();
+    _durationSubs?.cancel();
+    _route?.animation?.removeStatusListener(_handleRouteStatus);
+    if (_immersive) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     super.dispose();
   }
 
@@ -1069,7 +1204,21 @@ class _FullScreenVideoPageState extends State<_FullScreenVideoPage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Video(controller: widget.videoController, controls: NoVideoControls),
+          // 画面按实际比例居中：这里同时是 Hero 放大动画的终点。
+          Center(
+            child: AspectRatio(
+              aspectRatio: _aspectRatio,
+              child: Hero(
+                tag: widget.heroTag,
+                flightShuttleBuilder: _videoHeroShuttle,
+                child: _VideoSurface(
+                  controller: widget.videoController,
+                  cover: widget.cover,
+                  showCover: _showCover,
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: VideoPlayerPanel(
               player: widget.player,
