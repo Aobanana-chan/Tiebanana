@@ -13,6 +13,7 @@ import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 
 
 ///拉取一页推荐贴的实现。默认走 [Global.tiebaAPI]，测试里注入假数据。
@@ -43,14 +44,19 @@ class _RecommendPanState extends State<RecommendPan> {
   ScrollController controller = ScrollController();
   int pn = 1;
 
-  ///首屏（含下拉刷新）加载中。已有内容时交给 RefreshIndicator。
+  ///首屏（含下拉刷新）加载中。已有内容时交给下拉指示器。
   bool _loading = true;
   bool _loadingMore = false;
 
   ///首屏错误 / 翻页错误。首屏错误占满内容区，翻页错误只在列表底部给重试口。
   Object? _error;
   Object? _moreError;
-  bool _refreshing = false;
+
+  /// 代码触发下拉刷新（返回键回顶时显示转圈）。
+  final TiebananaRefreshController _refreshController =
+      TiebananaRefreshController();
+
+  Future<void>? _refreshTask;
 
   RecommendLoader get _loader => widget.loader ?? Global.tiebaAPI.getRecommThread;
 
@@ -81,11 +87,10 @@ class _RecommendPanState extends State<RecommendPan> {
     super.dispose();
   }
 
-  Future<void> refresh() async {
-    if (_refreshing) {
-      return;
-    }
-    _refreshing = true;
+  /// 刷新第一页。并发调用复用同一个 Future，避免下拉指示器提前收起。
+  Future<void> refresh() => _refreshTask ??= _refresh();
+
+  Future<void> _refresh() async {
     final bool showSkeleton = recommend.isEmpty;
     if (showSkeleton && mounted) {
       setState(() {
@@ -128,7 +133,7 @@ class _RecommendPanState extends State<RecommendPan> {
         }
       });
     } finally {
-      _refreshing = false;
+      _refreshTask = null;
     }
   }
 
@@ -176,7 +181,13 @@ class _RecommendPanState extends State<RecommendPan> {
           duration: TiebananaMetrics.durationBase,
           curve: TiebananaMetrics.curveStandard));
     }
-    await refresh();
+    // 与手势下拉一致：指示器拉出来转圈，而不是静默刷新。
+    // 指示器的拉出 / 收起动画要跟着帧走，所以这里不等它，避免阻塞返回流程。
+    if (_refreshController.isAttached) {
+      unawaited(_refreshController.show());
+    } else {
+      await refresh();
+    }
   }
 
   ///点续读条：回到顶部并刷新推荐流。
@@ -213,6 +224,7 @@ class _RecommendPanState extends State<RecommendPan> {
                       loadingMore: _loadingMore,
                       moreError: _moreError,
                       scrollController: controller,
+                      refreshController: _refreshController,
                       onRefresh: refresh,
                       onResumeTap: _onResumeTap,
                       onRetry: _retry,
@@ -242,6 +254,7 @@ class RecommendFeed extends StatelessWidget {
     required this.onResumeTap,
     required this.onRetry,
     required this.onLoadMore,
+    this.refreshController,
   });
 
   ///`null` 元素是续读条占位。
@@ -252,6 +265,9 @@ class RecommendFeed extends StatelessWidget {
   final bool loadingMore;
   final Object? moreError;
   final ScrollController scrollController;
+
+  /// 代码触发下拉刷新（返回键回顶）；为空时只响应手势。
+  final TiebananaRefreshController? refreshController;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onResumeTap;
   final VoidCallback onRetry;
@@ -268,8 +284,8 @@ class RecommendFeed extends StatelessWidget {
       return _sheet(context, _emptyView());
     }
     final bool showFooter = loadingMore || moreError != null;
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
+      controller: refreshController,
       onRefresh: onRefresh,
       child: ListView.builder(
         padding: const EdgeInsets.only(
@@ -294,8 +310,8 @@ class RecommendFeed extends StatelessWidget {
   ///
   ///骨架屏不居中（[center] = false）：它模拟列表，从顶部往下铺更贴近内容到达后的样子。
   Widget _sheet(BuildContext context, Widget child, {bool center = true}) {
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
+      controller: refreshController,
       onRefresh: onRefresh,
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
