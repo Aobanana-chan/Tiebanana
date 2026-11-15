@@ -98,9 +98,11 @@ class Version {
   static const String _latestReleaseApi =
       'https://api.github.com/repos/$_repository/releases/latest';
 
+  /// 项目仓库地址。
+  static const String repositoryUrl = 'https://github.com/$_repository';
+
   /// 资产缺失或非 Android 平台时打开的发布页。
-  static const String releasesPageUrl =
-      'https://github.com/$_repository/releases/latest';
+  static const String releasesPageUrl = '$repositoryUrl/releases/latest';
 
   static final Dio _dio = Dio(
     BaseOptions(

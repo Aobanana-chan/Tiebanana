@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:tiebanana/features/settings/data/license.dart';
 import 'package:tiebanana/features/update/data/version.dart';
 import 'package:tiebanana/app/navigation/app_page_route.dart';
+import 'package:tiebanana/app/navigation/link_router.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/setting_group.dart';
 
+/// 作者信息；GitHub 主页用于「关于」页的作者入口。
+const String _authorName = 'Aobanana-chan';
+const String _authorGithubUrl = 'https://github.com/Aobanana-chan';
+
 /// 「关于」屏。
 ///
 /// 概念图 `design/mockups/app_setting.html` 的规格卡：关于独立成一屏，
-/// 展示「品牌卡 + 检查更新（= 更新日志入口）+ 开源许可 + 版权说明」。
+/// 展示「品牌卡 + 检查更新（= 更新日志入口）+ 开源许可 + 作者与仓库 + 版权说明」。
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
@@ -50,6 +55,25 @@ class AboutPage extends StatelessWidget {
                     builder: (BuildContext context) => const LicenseFullPage(),
                   ),
                 ),
+              ),
+            ],
+          ),
+          SettingGroup(
+            children: <Widget>[
+              SettingRow(
+                icon: Icons.person_outline_rounded,
+                title: '作者',
+                subtitle: 'GitHub 主页',
+                value: _authorName,
+                showChevron: true,
+                onTap: () => AppUtil.openLink(context, _authorGithubUrl),
+              ),
+              SettingRow(
+                icon: Icons.code_rounded,
+                title: '项目仓库',
+                subtitle: Version.repositoryUrl,
+                showChevron: true,
+                onTap: () => AppUtil.openLink(context, Version.repositoryUrl),
               ),
             ],
           ),
