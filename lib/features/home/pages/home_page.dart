@@ -21,6 +21,7 @@ import 'package:tiebanana/features/profile/pages/my_profile_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:app_links/app_links.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
+import 'package:tiebanana/core/platform/app_exit.dart';
 import 'package:tiebanana/core/platform/browser_url.dart';
 
 ///首页
@@ -255,11 +256,10 @@ class _HomePageState extends State<HomePage> {
     }
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        if (onWillPop() && context.mounted) {
-          Navigator.pop(context);
-        }
+        if (!onWillPop() || !context.mounted) return;
+        await AppExit.handleRootBack(context);
       },
       child: childpage,
     );
