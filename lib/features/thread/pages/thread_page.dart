@@ -236,7 +236,8 @@ class ThreadPageMain extends StatefulWidget {
   ThreadPageMainState createState() => ThreadPageMainState();
 }
 
-class ThreadPageMainState extends State<ThreadPageMain> {
+class ThreadPageMainState extends State<ThreadPageMain>
+    with TickerProviderStateMixin {
   late TiebaThreadPage info;
   late final ThreadReadSession session;
   late final String cacheUid;
@@ -265,6 +266,26 @@ class ThreadPageMainState extends State<ThreadPageMain> {
   bool _loadingPrevious = false;
   bool _previousFailed = false;
   bool _nextFailed = false;
+
+  /// 内容和底部提示共享同一位移；松手后回弹到提示高度，完成后才收起。
+  late final AnimationController _bottomPull =
+      AnimationController.unbounded(vsync: this);
+  late final AnimationController _newFloorFade = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 360), value: 1);
+  final Set<String> _newBottomFloorIds = <String>{};
+  bool _bottomNoNewContent = false;
+  Timer? _bottomResultTimer;
+
+  /// 正在执行底部刷新 / 末页重载。
+  bool _bottomRefreshing = false;
+  bool _bottomRefreshFailed = false;
+
+  /// 本次下拉手势是否已经触发过刷新，保证一次手势只请求一次。
+  bool _bottomPullTriggered = false;
+  DateTime? _lastBottomRefreshAt;
+  static const double _bottomRefreshThreshold = 56;
+
+  static const Duration _bottomRefreshThrottle = Duration(milliseconds: 1500);
   // pid 响应可能只包含目标楼层之后的内容，先补全所在页再向前翻。
   bool _needsFullLocatedPage = false;
   final Map<String, GlobalKey> _floorKeys = <String, GlobalKey>{};
@@ -389,10 +410,14 @@ class ThreadPageMainState extends State<ThreadPageMain> {
       };
 
   Future<void> _manualRefresh() async {
-    if (_loading || _manualRefreshing) return;
+    if (_loading || _manualRefreshing || _bottomRefreshing) return;
+    _bottomResultTimer?.cancel();
+    _bottomNoNewContent = false;
+    _collapseBottomPull();
     session.retry();
     _nextFailed = false;
     _previousFailed = false;
+    _bottomRefreshFailed = false;
     setState(() => _manualRefreshing = true);
     try {
       final page = await Global.tiebaAPI
@@ -409,6 +434,232 @@ class ThreadPageMainState extends State<ThreadPageMain> {
     }
   }
 
+  /// 底部下拉手势。
+  ///
+  /// 底部阻止系统回弹，用 overscroll 累积位移；同时兼容 offset 越界的通知。
+  bool _onBottomScrollNotification(ScrollNotification notification) {
+    if (notification.depth != 0) return false;
+    if (notification.metrics.axis != Axis.vertical) return false;
+    if (_bottomRefreshing || _manualRefreshing) return false;
+
+    if (notification is ScrollStartNotification) {
+      // 回弹 / 惯性滚动也会发 Start，只把用户手势开始算作新的一次下拉。
+      if (notification.dragDetails == null) return false;
+      _bottomResultTimer?.cancel();
+      _bottomPull.stop();
+      _bottomNoNewContent = false;
+      _bottomPullTriggered = _bottomPull.value >= _bottomRefreshThreshold;
+      // 离开底部开始新的阅读手势时收起刷新失败提示。
+      if (_bottomRefreshFailed && notification.metrics.extentAfter > 0) {
+        setState(() => _bottomRefreshFailed = false);
+      }
+      return false;
+    }
+    if (notification is ScrollUpdateNotification) {
+      final double over = notification.metrics.extentAfter > 0
+          ? 0
+          : notification.metrics.pixels - notification.metrics.maxScrollExtent;
+      if (notification.dragDetails == null) {
+        return false;
+      }
+      if (over > 0) {
+        _setBottomPull(over);
+      } else if (_bottomPull.value > 0 &&
+          notification.metrics.extentAfter == 0) {
+        _setBottomPull(_bottomPull.value + (notification.scrollDelta ?? 0));
+      } else {
+        _setBottomPull(0);
+      }
+      _bottomPullTriggered = _bottomPull.value >= _bottomRefreshThreshold;
+      return false;
+    }
+    if (notification is OverscrollNotification) {
+      // 惯性触底不算下拉手势。
+      if (notification.dragDetails == null) return false;
+      // 往回拖时先逐像素消耗展开距离，再恢复正常列表滚动。
+      if (notification.overscroll < 0 && _bottomPull.value > 0) {
+        _setBottomPull(_bottomPull.value + notification.overscroll);
+        _bottomPullTriggered = _bottomPull.value >= _bottomRefreshThreshold;
+        return false;
+      }
+      if (notification.metrics.extentAfter > 0 ||
+          notification.overscroll <= 0) {
+        _bottomPullTriggered = false;
+        _setBottomPull(0);
+        return false;
+      }
+      // 阻力随展开距离增大，但没有硬上限。积分映射使大步 / 小步拖动手感一致。
+      final scale =
+          math.max(120.0, notification.metrics.viewportDimension * .3);
+      final distance = _bottomPull.value / scale + 1;
+      _setBottomPull(scale *
+          (math.sqrt(
+                  distance * distance + 2 * notification.overscroll / scale) -
+              1));
+      _bottomPullTriggered = _bottomPull.value >= _bottomRefreshThreshold;
+      // Clamping 在边界不改变 offset，不会调用控制器的预取监听。
+      if (info.hasMore && !_nextFailed && !session.paused) nextPage();
+      return false;
+    }
+    if (notification is ScrollEndNotification) {
+      _releaseBottomPull();
+      return false;
+    }
+    return false;
+  }
+
+  void _setBottomPull(double value) {
+    final double next = math.max(0.0, value);
+    if (next != _bottomPull.value) _bottomPull.value = next;
+  }
+
+  /// 松手：越过阈值才触发，并且同一手势、节流窗口内只触发一次。
+  void _releaseBottomPull() {
+    final bool triggered = _bottomPullTriggered;
+    _bottomPullTriggered = false;
+    if (!triggered || _loading || _manualRefreshing || _bottomRefreshing) {
+      if (!_bottomRefreshing) _collapseBottomPull();
+      return;
+    }
+    final DateTime now = DateTime.now();
+    final DateTime? last = _lastBottomRefreshAt;
+    // 失败后的重试不受节流限制，方便用户马上再拉一次。
+    final bool retry = _nextFailed || _bottomRefreshFailed;
+    if (!retry &&
+        last != null &&
+        now.difference(last) < _bottomRefreshThrottle) {
+      _collapseBottomPull();
+      return;
+    }
+    _lastBottomRefreshAt = now;
+    _triggerBottomRefresh();
+  }
+
+  void _collapseBottomPull() {
+    _bottomPull.animateTo(0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic);
+  }
+
+  /// 有下一页时优先续接 / 重试下一页，已经是最后一页才刷新末页。
+  Future<void> _triggerBottomRefresh() async {
+    if (_bottomRefreshing || _loading || _manualRefreshing) return;
+    if (info.hasMore) {
+      _retryNextPage();
+      _collapseBottomPull();
+      return;
+    }
+    await _refreshAtBottom();
+  }
+
+  /// 重新请求下一页；失败过的请求会先恢复自动请求。
+  void _retryNextPage() {
+    if (_bottomRefreshing || _loading || _manualRefreshing) return;
+    session.retry();
+    _nextFailed = false;
+    _bottomRefreshFailed = false;
+    nextPage();
+  }
+
+  /// 重新请求末页；如果服务端因为新回复多出了新页，顺带加载（最多 3 页）。
+  ///
+  /// 复用同一页 key 合并楼层，已经读过的内容不会消失，也不会跳回顶部。
+  Future<void> _refreshAtBottom() async {
+    if (_bottomRefreshing || _loading || _manualRefreshing) return;
+    final int firstPn = math.max(1, info.bottomPn ?? 1);
+    final Set<String> knownIds = <String>{
+      for (final TiebaThreadPagePost post in _currentPosts) post.id,
+    };
+    session.retry();
+    _bottomResultTimer?.cancel();
+    _bottomNoNewContent = false;
+    // 从实际松手位置平滑回弹，只留足文字可见的高度，不直接归零或钉在远处。
+    _bottomPull.animateTo(_bottomRefreshThreshold,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic);
+    setState(() {
+      _bottomRefreshing = true;
+      _bottomRefreshFailed = false;
+    });
+    try {
+      int pn = firstPn;
+      for (int i = 0; i < 3; i++) {
+        final TiebaThreadPage page =
+            await Global.tiebaAPI.getThreadPage(widget.kz, pn: pn, onlyLz: lz);
+        if (!mounted) return;
+        if (cacheUid != (AccountStore.currentUid ?? '')) return;
+        await Global.threadCache.savePage(cacheUid, page,
+            onlyLz: lz,
+            stored: isStored && (Global.setting.markedCache ?? true));
+        if (!mounted) return;
+        _applyReloadedPage(pn, page);
+        if (!page.page.hasMore) break;
+        pn += 1;
+      }
+      if (!mounted) return;
+      final added = _currentPosts
+          .where((post) => !knownIds.contains(post.id))
+          .map((post) => post.id)
+          .toSet();
+      setState(() {
+        collectImages();
+        _threadAgree ??= _createThreadAgree();
+        _newBottomFloorIds
+          ..clear()
+          ..addAll(added);
+        _bottomNoNewContent = added.isEmpty;
+        if (added.isNotEmpty) _newFloorFade.value = 0;
+      });
+      if (added.isEmpty) {
+        _bottomResultTimer = Timer(const Duration(milliseconds: 850), () {
+          if (mounted) _collapseBottomPull();
+        });
+      } else {
+        // 先挂载透明的新楼层，下一帧开始淡入；保持阅读位置，不跳到新末尾。
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _newFloorFade.forward();
+          _collapseBottomPull();
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      session.fail(e);
+      setState(() => _bottomRefreshFailed = true);
+    } finally {
+      if (mounted) {
+        setState(() => _bottomRefreshing = false);
+        if (_replyRefreshPending) _refreshAfterReply();
+      }
+    }
+  }
+
+  /// 把重载后的整页合并进当前模式，并同步页码 / hasMore。
+  void _applyReloadedPage(int pn, TiebaThreadPage page) {
+    final int key = pn * (lz ? -1 : 1);
+    info.postPage[key] = ThreadCache.mergePosts(
+        info.postPage[key] ?? [], page.posts,
+        markMissingDeleted: true, aliveIds: _aliveFloorIds(key));
+    info.userListSet.addAll(page.userListSet);
+    if (lz) {
+      if (pn >= _lzBottomPn) _lzHasMore = page.page.hasMore;
+      _lzTopPn = math.min(_lzTopPn, pn);
+      _lzBottomPn = math.max(_lzBottomPn, pn);
+    } else {
+      if (pn >= _normalBottomPn) _normalHasMore = page.page.hasMore;
+      _normalTopPn = math.min(_normalTopPn, pn);
+      _normalBottomPn = math.max(_normalBottomPn, pn);
+    }
+    info.hasMore = lz ? _lzHasMore : _normalHasMore;
+    info.hasPrev = lz ? _lzHasPrev : _normalHasPrev;
+    info.topPn = lz ? _lzTopPn : _normalTopPn;
+    info.bottomPn = lz ? _lzBottomPn : _normalBottomPn;
+    // 非首页响应通常不带帖元数据（tid 为 0），避免覆盖投票 / 收藏数。
+    if (page.tid == info.tid && page.title.isNotEmpty) {
+      info.thread = page.thread;
+    }
+  }
+
   void _onReplySent() {
     if (replyEvents.threadId != widget.kz) return;
     _replyFloorId = replyEvents.floorId;
@@ -417,7 +668,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
   }
 
   Future<void> _refreshAfterReply() async {
-    if (_loading || !_replyRefreshPending) return;
+    if (_loading || _bottomRefreshing || !_replyRefreshPending) return;
     _replyRefreshPending = false;
     final String? floorId = _replyFloorId;
     final int bottom = info.bottomPn ?? 1;
@@ -537,7 +788,13 @@ class ThreadPageMainState extends State<ThreadPageMain> {
       {bool refresh = false,
       bool previous = false,
       bool reload = false}) async {
-    if (_loading || _manualRefreshing || session.paused || pn < 1) return;
+    if (_loading ||
+        _manualRefreshing ||
+        _bottomRefreshing ||
+        session.paused ||
+        pn < 1) {
+      return;
+    }
     if (!refresh && !reload && !(previous ? _hasPrevious : info.hasMore)) {
       return;
     }
@@ -653,10 +910,15 @@ class ThreadPageMainState extends State<ThreadPageMain> {
 
   ///只看楼主。两种模式各自缓存页数据，来回切换时复用。
   void onlyLz() {
-    if (_loading) return;
+    if (_loading || _bottomRefreshing) return;
+    _bottomResultTimer?.cancel();
+    _bottomNoNewContent = false;
+    _newBottomFloorIds.clear();
+    _bottomPull.value = 0;
     setState(() {
       _previousFailed = false;
       _nextFailed = false;
+      _bottomRefreshFailed = false;
       lz = !lz;
       info.topPn = lz ? _lzTopPn : _normalTopPn;
       info.bottomPn = lz ? _lzBottomPn : _normalBottomPn;
@@ -727,7 +989,7 @@ class ThreadPageMainState extends State<ThreadPageMain> {
         : (_firstPost?.uid ?? '');
     final List<Widget> widgets = <Widget>[];
     for (final TiebaThreadPagePost floor in _sortedFloors()) {
-      widgets.add(ThreadFloorComment(
+      final card = ThreadFloorComment(
         key: _floorKeys.putIfAbsent(floor.id, GlobalKey.new),
         allImgs: info.imgs,
         allOrgImgs: info.imgsOrgSrc,
@@ -740,6 +1002,14 @@ class ThreadPageMainState extends State<ThreadPageMain> {
         isOp: ownerUid.isNotEmpty && floor.uid == ownerUid,
         threadOwnerUid: ownerUid,
         storedNotifier: _stored,
+      );
+      // 所有楼层保留相同的包裹结构和原来的 GlobalKey，旧楼层不重建 State。
+      widgets.add(FadeTransition(
+        key: ValueKey('bottom-floor-${floor.id}'),
+        opacity: _newBottomFloorIds.contains(floor.id)
+            ? _newFloorFade
+            : const AlwaysStoppedAnimation<double>(1),
+        child: card,
       ));
     }
     return widgets;
@@ -890,58 +1160,104 @@ class ThreadPageMainState extends State<ThreadPageMain> {
     );
   }
 
+  Widget _bottomEndCaption(TiebananaTokens tokens) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(width: 24, height: 1, color: tokens.line),
+        const SizedBox(width: 12),
+        Text('苏格拉也有底',
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(color: tokens.textTertiary, letterSpacing: 2)),
+        const SizedBox(width: 12),
+        Container(width: 24, height: 1, color: tokens.line),
+      ],
+    );
+  }
+
   Widget _listFooter(TiebananaTokens tokens) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: _bottomPull,
       builder: (BuildContext context, Widget? child) {
-        final double pull =
-            _controller.hasClients && _controller.position.hasContentDimensions
-                ? (_controller.offset - _controller.position.maxScrollExtent)
-                    .clamp(0.0, 80.0)
-                : 0;
+        final double pull = _bottomPull.value;
         return ClipRect(
           child: SizedBox(
+            key: const ValueKey('thread-bottom-refresh-space'),
             height: pull,
             child: OverflowBox(
               alignment: Alignment.bottomCenter,
-              minHeight: 64,
-              maxHeight: 64,
+              minHeight: _bottomRefreshThreshold,
+              maxHeight: _bottomRefreshThreshold,
               child: Opacity(
                 opacity: (pull / 48).clamp(0.0, 1.0),
                 child: Semantics(
                   liveRegion: true,
-                  child: Center(
-                    child: info.hasMore
-                        ? TickerMode(
-                            enabled: pull > 0,
-                            child: _LoadingCaption(
-                                label: '正在全力加载中', color: tokens.primary),
-                          )
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Container(
-                                  width: 24, height: 1, color: tokens.line),
-                              const SizedBox(width: 12),
-                              Text('苏格拉也有底',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
-                                      ?.copyWith(
-                                          color: tokens.textTertiary,
-                                          letterSpacing: 2)),
-                              const SizedBox(width: 12),
-                              Container(
-                                  width: 24, height: 1, color: tokens.line),
-                            ],
-                          ),
-                  ),
+                  child: Center(child: _footerCaption(tokens, pull)),
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _footerCaption(TiebananaTokens tokens, double pull) {
+    if (_bottomNoNewContent) return _bottomEndCaption(tokens);
+    if (_bottomRefreshing) {
+      return _LoadingCaption(label: '正在刷新…', color: tokens.primary);
+    }
+    if (_bottomRefreshFailed) {
+      return TextButton.icon(
+        onPressed: _refreshAtBottom,
+        icon: const Icon(Icons.refresh_rounded, size: 16),
+        label: const Text('刷新失败，点击重试'),
+      );
+    }
+    if (_newBottomFloorIds.isNotEmpty && _newFloorFade.value < 1) {
+      return const SizedBox.shrink();
+    }
+    final bool ready = pull >= _bottomRefreshThreshold;
+    if (info.hasMore) {
+      if (_nextFailed) {
+        return _footerHint(
+          tokens,
+          Icons.refresh_rounded,
+          ready ? '松开重试' : '下拉重试',
+          ready ? tokens.primary : tokens.textSecondary,
+        );
+      }
+      return TickerMode(
+        enabled: pull > 0,
+        child: _LoadingCaption(label: '正在全力加载中', color: tokens.primary),
+      );
+    }
+    if (pull > 0) {
+      return _footerHint(
+        tokens,
+        ready ? Icons.refresh_rounded : Icons.keyboard_arrow_down_rounded,
+        ready ? '松开刷新' : '下拉刷新',
+        ready ? tokens.primary : tokens.textTertiary,
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _footerHint(
+      TiebananaTokens tokens, IconData icon, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Text(label,
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(color: color)),
+      ],
     );
   }
 
@@ -1029,119 +1345,135 @@ class ThreadPageMainState extends State<ThreadPageMain> {
       child: Column(
         children: <Widget>[
           Expanded(
-            child: Stack(
+            child: ClipRect(
+                child: Stack(
               children: <Widget>[
-                CustomScrollView(
-                  controller: _controller,
-                  physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
-                  slivers: <Widget>[
-                    SliverAppBar(
-                      //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
-                      elevation: 0,
-                      scrolledUnderElevation: 0,
-                      backgroundColor: tokens.bg,
-                      surfaceTintColor: Colors.transparent,
-                      foregroundColor: tokens.textPrimary,
-                      pinned: true,
-                      snap: true,
-                      floating: true,
-                      centerTitle: true,
-                      actions: _appBarActions(tokens),
-                      title: GestureDetector(
-                        onTap: () {
-                          _controller.animateTo(
-                            0,
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeIn,
-                          );
-                        },
-                        child: Text(
-                          info.title,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                AnimatedBuilder(
+                  animation: _bottomPull,
+                  builder: (context, child) => Transform.translate(
+                      offset: Offset(0, -_bottomPull.value), child: child),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _onBottomScrollNotification,
+                    child: CustomScrollView(
+                      controller: _controller,
+                      physics: _ThreadScrollPhysics(
+                          bottomPull: () => _bottomPull.value,
+                          parent: AlwaysScrollableScrollPhysics()),
+                      slivers: <Widget>[
+                        SliverAppBar(
+                          //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
+                          elevation: 0,
+                          scrolledUnderElevation: 0,
+                          backgroundColor: tokens.bg,
+                          surfaceTintColor: Colors.transparent,
+                          foregroundColor: tokens.textPrimary,
+                          pinned: true,
+                          snap: true,
+                          floating: true,
+                          centerTitle: true,
+                          actions: _appBarActions(tokens),
+                          title: GestureDetector(
+                            onTap: () {
+                              _controller.animateTo(
+                                0,
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeIn,
+                              );
+                            },
+                            child: Text(
+                              info.title,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: tokens.textPrimary,
                                   ),
-                        ),
-                      ),
-                    ),
-
-                    //一楼
-                    if (first != null)
-                      SliverToBoxAdapter(
-                        child: ThreadFirstComment(
-                          postMain: first,
-                          author: _authorOf(first),
-                          videoInfo: info.videoInfo,
-                          allImgs: info.imgs,
-                          allOrgImgs: info.imgsOrgSrc,
-                          threadID: info.tid,
-                          threadTitle: info.title,
-                          storedNotifier: _stored,
-                          poll: info.thread.poll,
-                          hasPoll: info.thread.hasPoll,
-                          fid: info.fid,
-                          forumName: info.forumName,
-                          onVote: _voteThreadPoll,
-                        ),
-                      ),
-                    SliverToBoxAdapter(
-                      child: FourmBar(
-                        avatar: info.avatar,
-                        name: info.forumName,
-                      ),
-                    ),
-                    SliverToBoxAdapter(child: _sortBar(tokens)),
-                    if (session.paused || _manualRefreshing)
-                      SliverToBoxAdapter(
-                          child: ListTile(
-                        dense: true,
-                        leading: Icon(session.paused
-                            ? Icons.offline_bolt_outlined
-                            : Icons.sync),
-                        title:
-                            Text(session.paused ? '正在浏览缓存，自动请求已暂停' : '正在更新帖子…'),
-                        subtitle: session.paused
-                            ? const Text('服务器暂时无法访问，已保留加载内容')
-                            : null,
-                        trailing: session.paused
-                            ? TextButton(
-                                onPressed: _manualRefresh,
-                                child: const Text('刷新'))
-                            : null,
-                      )),
-                    if (_hasPrevious || (_loading && _loadingPrevious))
-                      SliverToBoxAdapter(
-                        child: _previousPageEntry(tokens),
-                      ),
-
-                    //其他楼
-                    SliverList(
-                      delegate: SliverChildListDelegate(buildFloor()),
-                    ),
-                    if (_nextFailed && !session.paused)
-                      SliverToBoxAdapter(
-                        child: Center(
-                          child: TextButton.icon(
-                            onPressed: _loading ? null : nextPage,
-                            icon: const Icon(Icons.refresh_rounded, size: 16),
-                            label: const Text('加载失败，点击重试'),
+                            ),
                           ),
                         ),
-                      ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                  ],
+
+                        //一楼
+                        if (first != null)
+                          SliverToBoxAdapter(
+                            child: ThreadFirstComment(
+                              postMain: first,
+                              author: _authorOf(first),
+                              videoInfo: info.videoInfo,
+                              allImgs: info.imgs,
+                              allOrgImgs: info.imgsOrgSrc,
+                              threadID: info.tid,
+                              threadTitle: info.title,
+                              storedNotifier: _stored,
+                              poll: info.thread.poll,
+                              hasPoll: info.thread.hasPoll,
+                              fid: info.fid,
+                              forumName: info.forumName,
+                              onVote: _voteThreadPoll,
+                            ),
+                          ),
+                        SliverToBoxAdapter(
+                          child: FourmBar(
+                            avatar: info.avatar,
+                            name: info.forumName,
+                          ),
+                        ),
+                        SliverToBoxAdapter(child: _sortBar(tokens)),
+                        if (session.paused || _manualRefreshing)
+                          SliverToBoxAdapter(
+                              child: ListTile(
+                            dense: true,
+                            leading: Icon(session.paused
+                                ? Icons.offline_bolt_outlined
+                                : Icons.sync),
+                            title: Text(
+                                session.paused ? '正在浏览缓存，自动请求已暂停' : '正在更新帖子…'),
+                            subtitle: session.paused
+                                ? const Text('服务器暂时无法访问，已保留加载内容')
+                                : null,
+                            trailing: session.paused
+                                ? TextButton(
+                                    onPressed: _manualRefresh,
+                                    child: const Text('刷新'))
+                                : null,
+                          )),
+                        if (_hasPrevious || (_loading && _loadingPrevious))
+                          SliverToBoxAdapter(
+                            child: _previousPageEntry(tokens),
+                          ),
+
+                        //其他楼
+                        SliverList(
+                          delegate: SliverChildListDelegate(buildFloor()),
+                        ),
+                        if (_nextFailed && !session.paused)
+                          SliverToBoxAdapter(
+                            child: Center(
+                              child: TextButton.icon(
+                                onPressed: _loading ? null : _retryNextPage,
+                                icon:
+                                    const Icon(Icons.refresh_rounded, size: 16),
+                                label: const Text('加载失败，点击重试'),
+                              ),
+                            ),
+                          ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                      ],
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: IgnorePointer(child: _listFooter(tokens)),
+                  child: IgnorePointer(
+                    ignoring: !_bottomRefreshFailed,
+                    child: _listFooter(tokens),
+                  ),
                 ),
               ],
-            ),
+            )),
           ),
           //回复条
           ThreadReplyBar(
@@ -1165,12 +1497,39 @@ class ThreadPageMainState extends State<ThreadPageMain> {
     _controller.removeListener(_onScrollNext);
     _controller.removeListener(_onScrollPrev);
     _controller.dispose();
+    _bottomResultTimer?.cancel();
+    _bottomPull.dispose();
+    _newFloorFade.dispose();
     _stored.removeListener(_storeChanged);
     _stored.dispose();
     session.removeListener(_sessionChanged);
     if (widget.session == null) session.dispose();
     _threadAgree?.dispose();
     super.dispose();
+  }
+}
+
+/// 顶部保留原来的回弹；底部位移由刷新动画统一接管，避免松手后系统先回弹。
+class _ThreadScrollPhysics extends BouncingScrollPhysics {
+  const _ThreadScrollPhysics({required this.bottomPull, super.parent});
+
+  final double Function() bottomPull;
+
+  @override
+  _ThreadScrollPhysics applyTo(ScrollPhysics? ancestor) => _ThreadScrollPhysics(
+      bottomPull: bottomPull, parent: buildParent(ancestor));
+
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) {
+    final double delta = value - position.pixels;
+    if (delta < 0 && bottomPull() > 0 && position.extentAfter == 0) {
+      // 负向 overscroll 交给刷新区收起，不能先滚动内容再把展开距离清零。
+      return delta;
+    }
+    if (value > position.maxScrollExtent) {
+      return value - math.max(position.pixels, position.maxScrollExtent);
+    }
+    return super.applyBoundaryConditions(position, value);
   }
 }
 

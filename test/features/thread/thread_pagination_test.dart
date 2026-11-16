@@ -98,6 +98,24 @@ Future<GlobalKey<ThreadPageMainState>> _mount(
   return key;
 }
 
+/// 滚到列表底部后继续上拉并松手，触发一次底部动作。
+Future<void> _pullUpAtBottom(WidgetTester tester) async {
+  final scrollable = find.byType(CustomScrollView);
+  final position =
+      tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+  position.jumpTo(position.maxScrollExtent);
+  await tester.pump();
+  final gesture = await tester.startGesture(tester.getCenter(scrollable));
+  await gesture.moveBy(const Offset(0, -40));
+  await gesture.moveBy(const Offset(0, -140));
+  await tester.pump();
+  await gesture.up();
+  // 松手后的回弹需要多帧才会静止并派发 ScrollEnd。
+  for (int i = 0; i < 20; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
 void main() {
   late _Api api;
   setUp(() async {
@@ -256,23 +274,26 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     final scrollable = find.byType(CustomScrollView);
-    await tester.drag(scrollable, const Offset(0, -2500));
-    await tester.pump(const Duration(seconds: 1));
-    expect(find.text('苏格拉也有底'), findsOneWidget);
     final position =
         tester.state<ScrollableState>(find.byType(Scrollable).first).position;
     position.jumpTo(position.maxScrollExtent);
     await tester.pump();
+    expect(find.text('苏格拉也有底'), findsNothing);
     final gesture = await tester.startGesture(tester.getCenter(scrollable));
     await gesture.moveBy(const Offset(0, -30));
     await gesture.moveBy(const Offset(0, -140));
     await tester.pump();
     final revealed = tester.widget<Opacity>(find
-        .ancestor(of: find.text('苏格拉也有底'), matching: find.byType(Opacity))
+        .ancestor(of: find.text('松开刷新'), matching: find.byType(Opacity))
         .first);
     expect(revealed.opacity, greaterThan(0));
     await gesture.up();
-    await tester.pump(const Duration(seconds: 1));
+    for (int i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(api.calls, [2, 1, 1]);
+    api.pending!.complete(_page(1));
+    await tester.pump();
     expect(tester.takeException(), isNull);
   });
 
@@ -338,5 +359,218 @@ void main() {
         .map((w) => w.postMain.id)
         .toList();
     expect(floors, ['2', '3']);
+  });
+
+  testWidgets('最后一页继续上拉只刷新一次末页，新回复追加到底部', (tester) async {
+    final key = await _mount(tester, _page(1, end: 20));
+    await _pullUpAtBottom(tester);
+    expect(find.text('正在刷新…'), findsOneWidget);
+    expect(api.calls, [1]);
+    // 刷新请求还在进行中，再次上拉不会重复请求。
+    await _pullUpAtBottom(tester);
+    expect(api.calls, [1]);
+    api.pending!.complete(_page(1, end: 22));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(key.currentState!.info.postList.map((p) => p.id),
+        containsAll(<String>['21', '22']));
+    expect(key.currentState!.info.hasMore, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('底部刷新提示落在列表末尾空白区，不覆盖楼层内容', (tester) async {
+    await _mount(tester, _page(1, end: 20));
+    await _pullUpAtBottom(tester);
+    expect(find.text('正在刷新…'), findsOneWidget);
+    final Rect caption = tester.getRect(find.text('正在刷新…'));
+    final List<ThreadFloorComment> floors = tester
+        .widgetList<ThreadFloorComment>(find.byType(ThreadFloorComment))
+        .toList();
+    final Rect lastFloor = tester.getRect(find.byWidget(floors.last));
+    expect(caption.top, greaterThanOrEqualTo(lastFloor.bottom));
+    api.pending!.complete(_page(1, end: 20));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('底部提示跟手、松开回弹到文字高度，无新内容显示到底再收起', (tester) async {
+    await _mount(tester, _page(1, end: 20));
+    final scrollable = find.byType(CustomScrollView);
+    final position =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+    final gesture = await tester.startGesture(tester.getCenter(scrollable));
+    await gesture.moveBy(const Offset(0, -30));
+    await gesture.moveBy(const Offset(0, -24));
+    await tester.pump();
+    expect(find.text('下拉刷新'), findsOneWidget);
+    await gesture.moveBy(const Offset(0, -140));
+    await tester.pump();
+    expect(find.text('松开刷新'), findsOneWidget);
+    final footer = find.byKey(const ValueKey('thread-bottom-refresh-space'));
+    final expandedHeight = tester.getSize(footer).height;
+    final lastFloor = find.byWidgetPredicate(
+        (widget) => widget is ThreadFloorComment && widget.postMain.id == '20');
+    final expandedBottom = tester.getBottomLeft(lastFloor).dy;
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(api.calls, [1]);
+    expect(find.text('正在刷新…'), findsOneWidget);
+    expect(tester.getSize(footer).height, inExclusiveRange(56, expandedHeight));
+    expect(tester.getBottomLeft(lastFloor).dy, greaterThan(expandedBottom));
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.getSize(footer).height, closeTo(56, .1));
+    api.pending!.complete(_page(1, end: 20));
+    await tester.pump();
+    expect(find.text('苏格拉也有底'), findsOneWidget);
+    expect(tester.getSize(footer).height, closeTo(56, .1));
+    await tester.pump(const Duration(milliseconds: 850));
+    await tester.pump(const Duration(milliseconds: 140));
+    expect(tester.getSize(footer).height, lessThan(expandedHeight));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(tester.getSize(footer).height, 0);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('松开刷新状态往回拖逐步收起，不突然弹回也不请求刷新', (tester) async {
+    await _mount(tester, _page(1, end: 20));
+    final scrollable = find.byType(CustomScrollView);
+    final position =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+    final gesture = await tester.startGesture(tester.getCenter(scrollable));
+    await gesture.moveBy(const Offset(0, -30));
+    await gesture.moveBy(const Offset(0, -160));
+    await tester.pump();
+    expect(find.text('松开刷新'), findsOneWidget);
+    final footer = find.byKey(const ValueKey('thread-bottom-refresh-space'));
+    final height = tester.getSize(footer).height;
+    final offset = position.pixels;
+    final lastFloor = find.byWidgetPredicate(
+        (widget) => widget is ThreadFloorComment && widget.postMain.id == '20');
+    final bottom = tester.getBottomLeft(lastFloor).dy;
+    await gesture.moveBy(const Offset(0, 12));
+    await tester.pump();
+    expect(tester.getSize(footer).height, closeTo(height - 12, 1));
+    expect(position.pixels, closeTo(offset, 1));
+    expect(tester.getBottomLeft(lastFloor).dy, closeTo(bottom + 12, 1));
+    await gesture.moveBy(Offset(0, height - 40));
+    await tester.pump();
+    expect(find.text('下拉刷新'), findsOneWidget);
+    expect(tester.getSize(footer).height, greaterThan(0));
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.getSize(footer).height, 0);
+    expect(api.calls, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('继续上拉有渐增阻尼，没有固定高度硬限位', (tester) async {
+    await _mount(tester, _page(1, end: 20));
+    final scrollable = find.byType(CustomScrollView);
+    final position =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+    final gesture = await tester.startGesture(tester.getCenter(scrollable));
+    final footer = find.byKey(const ValueKey('thread-bottom-refresh-space'));
+    await gesture.moveBy(const Offset(0, -30));
+    await gesture.moveBy(const Offset(0, -140));
+    await tester.pump();
+    final first = tester.getSize(footer).height;
+    await gesture.moveBy(const Offset(0, -140));
+    await tester.pump();
+    final second = tester.getSize(footer).height;
+    await gesture.moveBy(const Offset(0, -140));
+    await tester.pump();
+    final third = tester.getSize(footer).height;
+    expect(second, greaterThan(first));
+    expect(third, greaterThan(second));
+    expect(second, greaterThan(96));
+    expect(third - second, lessThan(second - first));
+    expect(second - first, lessThan(140));
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(tester.getSize(footer).height, closeTo(56, .1));
+    expect(api.calls, [1]);
+    api.pending!.complete(_page(1, end: 20));
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox());
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('底部刷新的新楼层淡入，已有楼层保持不透明', (tester) async {
+    await _mount(tester, _page(1, end: 20));
+    await _pullUpAtBottom(tester);
+    api.pending!.complete(_page(1, end: 22));
+    await tester.pump();
+    FadeTransition fade(String id) => tester.widget<FadeTransition>(
+        find.byKey(ValueKey('bottom-floor-$id'), skipOffstage: false));
+    expect(fade('21').opacity.value, 0);
+    expect(fade('20').opacity.value, 1);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 180));
+    expect(fade('21').opacity.value, inExclusiveRange(0, 1));
+    expect(fade('20').opacity.value, 1);
+    await tester.pump(const Duration(milliseconds: 220));
+    expect(fade('21').opacity.value, 1);
+    expect(find.text('苏格拉也有底'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('末页刷新发现新页时继续加载', (tester) async {
+    final key = await _mount(tester, _page(1, end: 20));
+    await _pullUpAtBottom(tester);
+    expect(api.calls, [1]);
+    api.pending!.complete(_page(1, more: true, end: 20));
+    await tester.pump();
+    expect(api.calls, [1, 2]);
+    api.pending!.complete(_page(2, start: 21, end: 25));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(key.currentState!.info.postList.map((p) => p.id), contains('25'));
+    expect(key.currentState!.info.bottomPn, 2);
+    expect(key.currentState!.info.hasMore, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('有下一页且加载失败时，上拉优先重试下一页', (tester) async {
+    final key = await _mount(tester, _page(1, more: true, end: 20));
+    key.currentState!.nextPage();
+    expect(api.calls, [2]);
+    api.pending!.completeError(StateError('offline'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await _pullUpAtBottom(tester);
+    expect(api.calls, [2, 2]);
+    api.pending!.complete(_page(2, start: 21, end: 25));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(key.currentState!.info.postList.map((p) => p.id), contains('21'));
+    expect(key.currentState!.info.hasMore, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('末页刷新失败显示重试条，点击可重试', (tester) async {
+    final key = await _mount(tester, _page(1, end: 20));
+    await _pullUpAtBottom(tester);
+    api.pending!.completeError(StateError('offline'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('刷新失败，点击重试'), findsOneWidget);
+    await tester.tap(find.text('刷新失败，点击重试'));
+    await tester.pump();
+    expect(api.calls, [1, 1]);
+    api.pending!.complete(_page(1, end: 21));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(key.currentState!.info.postList.map((p) => p.id), contains('21'));
+    expect(tester.takeException(), isNull);
   });
 }
