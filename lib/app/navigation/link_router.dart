@@ -257,11 +257,57 @@ abstract class AppUtil {
 
   static Future observClipBord(
       BuildContext context, AppLifecycleState state) async {
-    if (state == AppLifecycleState.resumed) {
-      var data = await Clipboard.getData("text/plain");
-      if (context.mounted) {
-        await urlRoute(context, data?.text ?? "", needConfirm: true);
-      }
+    if (state != AppLifecycleState.resumed || _clipboardCheckRunning) {
+      return;
     }
+    _clipboardCheckRunning = true;
+    try {
+      var data = await Clipboard.getData("text/plain");
+      final String text = data?.text?.trim() ?? '';
+      if (text.isEmpty || _consumeOpenedDeepLink(text)) {
+        return;
+      }
+      if (!context.mounted) {
+        return;
+      }
+      await urlRoute(context, text, needConfirm: true);
+    } finally {
+      _clipboardCheckRunning = false;
+    }
+  }
+
+  /// 一次剪贴板检查只跑一份：页面栈里多个观察者同时收到恢复事件时，
+  /// 不能让它们各自读一次剪贴板、各弹一个跳转窗口。
+  static bool _clipboardCheckRunning = false;
+
+  /// 系统深链最近直接打开过的链接。
+  static String? _openedDeepLink;
+  static DateTime? _openedDeepLinkAt;
+
+  /// 记录系统深链已经打开了哪个链接。
+  ///
+  /// 从浏览器等应用跳进来时，同一条链接往往还留在剪贴板里；不记下来，
+  /// 应用恢复后还会再弹一次「是否进入剪切板复制的贴」。
+  static void noteDeepLinkOpened(String url) {
+    final String text = url.trim();
+    if (text.isEmpty) {
+      return;
+    }
+    _openedDeepLink = text;
+    _openedDeepLinkAt = DateTime.now();
+  }
+
+  /// 剪贴板内容正好是刚由深链打开的链接时，本次恢复不再提示。
+  static bool _consumeOpenedDeepLink(String clipboard) {
+    final DateTime? at = _openedDeepLinkAt;
+    if (_openedDeepLink == null ||
+        at == null ||
+        DateTime.now().difference(at) > const Duration(seconds: 10) ||
+        _openedDeepLink != clipboard) {
+      return false;
+    }
+    _openedDeepLink = null;
+    _openedDeepLinkAt = null;
+    return true;
   }
 }

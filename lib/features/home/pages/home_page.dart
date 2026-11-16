@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart' hide SearchBar;
-import 'package:flutter/services.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +19,7 @@ import 'package:tiebanana/features/recommend/pages/recommend_page.dart';
 import 'package:tiebanana/features/profile/pages/my_profile_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:app_links/app_links.dart';
+import 'package:tiebanana/app/navigation/link_router.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
 import 'package:tiebanana/core/platform/app_exit.dart';
 import 'package:tiebanana/core/platform/browser_url.dart';
@@ -44,9 +44,13 @@ class _HomePageState extends State<HomePage> {
   /// 每个页签一个：返回键先问当前页签「列表回顶了没」，回了才走退出流程。
   List<BackToTopController> backToTopController = [];
 
-  late StreamSubscription _sub;
+  StreamSubscription? _sub;
   late AppLinks _appLinks;
   Timer? _reminderTimer;
+
+  /// 上一条已处理的深链；平台偶尔会重复发送，一段时间内只处理一次。
+  String? _lastDeepLink;
+  DateTime? _lastDeepLinkAt;
 
   @override
   void initState() {
@@ -153,42 +157,44 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> initPlatformStateForStringUniLinks() async {
+  void initPlatformStateForStringUniLinks() {
     _appLinks = AppLinks();
-    void process(String url) {
-      if (!mounted) return;
-      final uri = Uri.tryParse(url);
-      if (uri == null) return;
-      final link = BrowserUrl.tiebaDeepLink(uri);
-      if (link?.isThread ?? false) {
-        //进入贴
-        Navigator.pushNamed(context, PageRouter.threadPage,
-            arguments: ThreadPageRouterData(kz: link!.tid!, pid: link.pid));
-      } else if (link?.forumName != null) {
-        Navigator.pushNamed(context, PageRouter.forumHome,
-            arguments: link!.forumName);
-        //进入吧
-      }
-    }
-
-    // App未打开的状态在这个地方捕获scheme
-    try {
-      var initialUri = await _appLinks.getInitialLink();
-      if (initialUri != null) {
-        process(initialUri.toString());
-      }
-    } on PlatformException {
-      //忽略初始链接获取失败
-    } on FormatException {
-      //忽略初始链接解析失败
-    }
-    // App打开的状态监听scheme
+    // app_links 的 uriLinkStream 在冷启动时也会补发让 App 启动的那条链接，
+    // 再调用 getInitialLink 会把同一条链接处理两次（会连续打开两个贴子）。
     _sub = _appLinks.uriLinkStream.listen((Uri? uri) {
       if (!mounted || uri == null) return;
-      process(uri.toString());
+      _openDeepLink(uri);
     }, onError: (Object err) {
-      if (!mounted) return;
+      // 深链解析失败不影响应用继续运行。
     });
+  }
+
+  void _openDeepLink(Uri uri) {
+    final String raw = uri.toString();
+    final DateTime now = DateTime.now();
+    // 个别平台在启动 / 恢复时会重复发送同一条链接，短时间内只处理一次。
+    if (raw == _lastDeepLink &&
+        _lastDeepLinkAt != null &&
+        now.difference(_lastDeepLinkAt!) < const Duration(seconds: 1)) {
+      return;
+    }
+    final TiebaDeepLink? link = BrowserUrl.tiebaDeepLink(uri);
+    if (link == null) {
+      return;
+    }
+    _lastDeepLink = raw;
+    _lastDeepLinkAt = now;
+    // 从浏览器跳进来时这条链接往往还在剪贴板里，记下来避免恢复后再弹一次。
+    AppUtil.noteDeepLinkOpened(raw);
+    if (link.isThread) {
+      //进入贴
+      Navigator.pushNamed(context, PageRouter.threadPage,
+          arguments: ThreadPageRouterData(kz: link.tid!, pid: link.pid));
+    } else if (link.forumName != null) {
+      //进入吧
+      Navigator.pushNamed(context, PageRouter.forumHome,
+          arguments: link.forumName);
+    }
   }
 
   @override
@@ -271,7 +277,7 @@ class _HomePageState extends State<HomePage> {
     AccountStore.changes.removeListener(_onAccountChanged);
     forumState.dispose();
     controller.dispose();
-    _sub.cancel();
+    _sub?.cancel();
     super.dispose();
   }
 }

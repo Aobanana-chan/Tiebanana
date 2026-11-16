@@ -25,8 +25,17 @@ class _ClipBordObserverState extends State<ClipBordObserver>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    AppUtil.observClipBord(context, state);
     super.didChangeAppLifecycleState(state);
+    if (state != AppLifecycleState.resumed) {
+      return;
+    }
+    // 每个命名路由外层都包了一份本组件。一次恢复事件会发给所有页面，
+    // 只让最上层页面检查剪贴板，否则会连续弹出多个跳转窗口。
+    final ModalRoute<Object?>? route = ModalRoute.of(context);
+    if (route == null || !route.isCurrent) {
+      return;
+    }
+    AppUtil.observClipBord(context, state);
   }
 
   @override
