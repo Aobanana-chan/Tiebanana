@@ -65,7 +65,7 @@ Tiebanana 想把看帖、逛吧做得简约一些，
 ### iOS（实验性）
 
 iOS 版还没经过测试，能编译不代表能正常用。
-系统要求 15.0 及以上，Release 里的 iOS 包文件名以 `-ios-无签名.ipa` 结尾。
+系统要求 15.0 及以上，Release 里的 iOS 包文件名以 `-ios-unsigned.ipa` 结尾。
 下载后用自己的证书和描述文件签名再装，这个包不能直接安装，也不是 TestFlight 或 App Store 版本。
 
 ### Windows（实验性）

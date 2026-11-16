@@ -37,13 +37,16 @@ void main() {
         contains('UNUserNotificationCenter.current().delegate = self'));
   });
 
-  test('发布流程等待双平台构建，上传带无签名标记的 IPA', () {
+  test('发布流程等待三平台构建，上传带 unsigned 标记的 IPA', () {
     final workflow = File('.github/workflows/main.yml').readAsStringSync();
-    expect(workflow, contains('runs-on: macos-15'));
+    expect(workflow, contains('runs-on: macos-26'));
     expect(workflow, contains('--no-codesign'));
-    expect(workflow, contains('ios-无签名.ipa'));
+    expect(workflow, contains('ios-unsigned.ipa'));
+    // Release 资源名会被 GitHub 丢掉非 ASCII 字符，IPA 文件名必须保持纯 ASCII。
+    final ipa = RegExp(r'zip -qry "([^"]+)"').firstMatch(workflow)![1]!;
+    expect(ipa, matches(RegExp(r'^[\x20-\x7e]+$')));
     expect(workflow, contains('Payload/Runner.app'));
-    expect(workflow, contains('needs: [android, ios]'));
+    expect(workflow, contains('needs: [android, ios, windows]'));
     expect(workflow, contains('release/*.apk,release/*.ipa'));
   });
 }

@@ -1,7 +1,7 @@
 # Build Release
 #
 # 发布流程：
-#   - 推送 v* tag  → 构建签名 APK、无签名 IPA 和 Windows ZIP，汇总到同一 GitHub Release
+#   - 推送 v* tag  → 构建签名 APK、unsigned IPA（未签名）和 Windows ZIP，汇总到同一 GitHub Release
 #   - 手动触发     → 只构建并上传 artifact，不创建 Release
 #
 # 需要的仓库 Secrets：
@@ -186,13 +186,13 @@ jobs:
           mkdir -p build/ios/unsigned/Payload
           ditto "$APP" build/ios/unsigned/Payload/Runner.app
           cd build/ios/unsigned
-          /usr/bin/zip -qry "Tiebanana-${VERSION}+${BUILD}-ios-无签名.ipa" Payload
+          /usr/bin/zip -qry "Tiebanana-${VERSION}+${BUILD}-ios-unsigned.ipa" Payload
           unzip -t ./*.ipa
 
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v7
         with:
-          name: release-ios-无签名
+          name: release-ios-unsigned
           path: build/ios/unsigned/*.ipa
           if-no-files-found: error
 

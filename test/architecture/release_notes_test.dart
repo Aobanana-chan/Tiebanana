@@ -82,8 +82,9 @@ void main() {
     expect(result, contains('app-arm64-v8a-release.apk'));
     expect(result, contains('app-armeabi-v7a-release.apk'));
     expect(result, contains('还没经过测试'));
-    expect(result, contains('无签名'));
+    expect(result, contains('-ios-unsigned.ipa'));
     final workflow = File('.github/workflows/main.yml').readAsStringSync();
+    expect(workflow, contains('-ios-unsigned.ipa'));
     expect(workflow, contains('bodyFile: build/release-notes.md'));
     expect(workflow, isNot(contains('generateReleaseNotes: true')));
   });
