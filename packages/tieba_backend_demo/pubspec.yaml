@@ -11,7 +11,7 @@ dependencies:
   # 与目标 Tiebanana 版本要求的契约范围一致（见 docs/contract-versioning.md）。
   tieba_contract:
     path: ../tieba_contract
-    version: ^1.1.0
+    version: ^1.2.0
 
 dev_dependencies:
   lints: ^4.0.0

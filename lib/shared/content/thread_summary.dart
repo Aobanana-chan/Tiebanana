@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text/extended_text.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/media/animated_image_probe.dart';
 import 'package:tiebanana/shared/media/img_explorer.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/features/profile/state/profile_events.dart';
@@ -418,6 +421,36 @@ class Thumbnail extends StatefulWidget {
 
 class _ThumbnailState extends State<Thumbnail> {
   String heroTagSalt = const Uuid().v4();
+
+  /// 图片加载后从磁盘缓存头识别出的动图；`.jpg` 地址下的真实动图靠它补上。
+  bool _detectedAnimated = false;
+  String? _probedUrl;
+
+  @override
+  void didUpdateWidget(covariant Thumbnail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.img != widget.img) {
+      _detectedAnimated = false;
+      _probedUrl = null;
+    }
+  }
+
+  /// 图片下载完成后读取文件头；与官方一样以实际图片格式为准，
+  /// 不再用原图字节数猜测。
+  void _ensureAnimatedProbe() {
+    // 角标只在省流量档位显示；其他档位不做额外探测请求。
+    if (Global.setting.pictureLoadSetting != 0 || widget.animated) return;
+    final String url = widget.img.trim();
+    if (url.isEmpty || _probedUrl == url) return;
+    _probedUrl = url;
+    unawaited(AnimatedImageProbe.shared.resolve(url).then((state) {
+      if (!mounted || _probedUrl != url) return;
+      if (state == AnimatedImageState.animated && !_detectedAnimated) {
+        setState(() => _detectedAnimated = true);
+      }
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     // 空地址 / 非法地址直接跳过：投票首段之类的 linkImage 可能没有 src。
@@ -429,8 +462,11 @@ class _ThumbnailState extends State<Thumbnail> {
       builder: (context) {
         final TiebananaTokens tokens = TiebananaTokens.of(context);
         // 省流量档位只加载首帧，用角标提示点开后是动图。
-        final bool showGifBadge = widget.animated &&
-            Global.setting.pictureLoadSetting == 0;
+        final bool animated = widget.animated ||
+            _detectedAnimated ||
+            AnimatedImageProbe.shared.peek(img) == AnimatedImageState.animated;
+        final bool showGifBadge =
+            animated && Global.setting.pictureLoadSetting == 0;
         return GestureDetector(
             onTap: () {
               Navigator.push(context, ImageExplorerRoute(builder: (builder) {
@@ -454,8 +490,8 @@ class _ThumbnailState extends State<Thumbnail> {
                         child: Hero(
                       tag: widget.img + heroTagSalt,
                       child: LayoutBuilder(
-                        builder: (BuildContext context,
-                            BoxConstraints constraints) {
+                        builder:
+                            (BuildContext context, BoxConstraints constraints) {
                           return Container(
                             constraints: constraints,
                             child: ExtendedImage.network(
@@ -465,6 +501,10 @@ class _ThumbnailState extends State<Thumbnail> {
                               clearMemoryCacheIfFailed: true,
                               // 加载失败时显示中性占位。
                               loadStateChanged: (ExtendedImageState state) {
+                                if (state.extendedImageLoadState ==
+                                    LoadState.completed) {
+                                  _ensureAnimatedProbe();
+                                }
                                 if (state.extendedImageLoadState ==
                                     LoadState.failed) {
                                   return Container(

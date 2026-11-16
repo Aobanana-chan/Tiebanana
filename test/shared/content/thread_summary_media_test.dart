@@ -181,7 +181,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('.jpg 地址下的动图也显示 GIF 角标', (tester) async {
+  testWidgets('动图显式标记让 .jpg 地址也显示 GIF 角标', (tester) async {
     Global.setting.pictureLoadSetting = 0;
     await mount(
         tester,
@@ -189,9 +189,47 @@ void main() {
           TiebaImageContent(
               src: 'https://example.com/anim.jpg',
               bsize: '240,240',
-              originSize: 2240634),
+              originSize: 2240634,
+              animated: true),
         ]));
     expect(find.text('GIF'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('大文件静态图和高压缩比截图不显示 GIF 角标', (tester) async {
+    Global.setting.pictureLoadSetting = 0;
+    await mount(
+        tester,
+        summary([
+          TiebaImageContent(
+              src: 'https://example.com/photo.jpg',
+              bsize: '240,240',
+              originSize: 8 * 1024 * 1024),
+        ]));
+    expect(find.text('GIF'), findsNothing);
+
+    await mount(
+        tester,
+        summary([
+          TiebaImageContent(
+              src: 'https://example.com/screenshot.png',
+              bsize: '560,1244',
+              originSize: 757221),
+        ]));
+    expect(find.text('GIF'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('first_gif=0 不显示 GIF 角标', (tester) async {
+    Global.setting.pictureLoadSetting = 0;
+    await mount(
+        tester,
+        summary([
+          TiebaImageContent(
+              cdnSrcActive:
+                  'https://example.com/c/p/img?src=static.jpg&first_gif=0'),
+        ]));
+    expect(find.text('GIF'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

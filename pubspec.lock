@@ -1262,7 +1262,7 @@ packages:
       path: "packages/tieba_contract"
       relative: true
     source: path
-    version: "1.1.0"
+    version: "1.2.0"
   timezone:
     dependency: transitive
     description:
