@@ -5,13 +5,27 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// 官方通知采用独立通栏卡片，不套用个人聊天的头像和气泡。
 class ChatNoticeCard extends StatelessWidget {
-  const ChatNoticeCard({super.key, required this.data, this.onOpen});
+  const ChatNoticeCard(
+      {super.key, required this.data, this.onOpen, this.blockLinks = false});
   final ChatNoticeCardData data;
   final ValueChanged<Uri>? onOpen;
+
+  /// 只读官方会话（userType 3/4）没有回复能力，卡片不再把用户带出应用；
+  /// 只提示不支持，避免误触收银台或外部浏览器。
+  final bool blockLinks;
 
   Future<void> _open(BuildContext context) async {
     final Uri? link = data.link;
     if (link == null) return;
+    if (blockLinks) {
+      await _showUnsupported(context, '该通知的详情暂不支持打开。');
+      return;
+    }
+    // 支付相关页面统一拦截，避免把用户带到收银台；卡片本身仍完整展示。
+    if (chatLinkNeedsPayment(link)) {
+      await _showUnsupported(context, '该通知的详情页属于支付相关页面，当前版本暂不支持打开。');
+      return;
+    }
     if (onOpen != null) {
       onOpen!(link);
       return;
@@ -24,6 +38,22 @@ class ChatNoticeCard extends StatelessWidget {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('暂时无法打开链接')));
     }
+  }
+
+  Future<void> _showUnsupported(BuildContext context, String message) async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('暂不支持'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

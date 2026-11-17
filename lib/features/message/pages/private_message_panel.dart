@@ -100,6 +100,7 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
         title: conversation.title,
         avatar: conversation.avatar,
         isMuted: conversation.isMuted,
+        userType: conversation.userType,
       ),
     );
     if (mounted) await _load(silent: true);
@@ -181,6 +182,7 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
                     title: selected.title,
                     avatar: selected.avatar,
                     isMuted: selected.isMuted,
+                    userType: selected.userType,
                   ),
                   onChanged: () => _load(silent: true),
                 ),

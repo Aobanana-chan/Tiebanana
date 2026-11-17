@@ -9,6 +9,22 @@ class ChatNoticeCardData {
   final Uri? link;
 }
 
+/// 官方会员收银台/会员中心所在的业务模块。仅按模块路径判断，避免误伤
+/// 正常的吧页、帖子与帮助页；远程配置可能替换完整 URL，但模块名保持不变。
+const List<String> _paymentPathMarkers = <String>[
+  'hybrid-business-vip',
+  'paypanel',
+];
+
+/// 是否为官方支付相关页面（收银台、会员中心、一键签到等）。
+bool chatLinkNeedsPayment(Uri uri) {
+  final String path = uri.path.toLowerCase();
+  for (final String marker in _paymentPathMarkers) {
+    if (path.contains(marker)) return true;
+  }
+  return false;
+}
+
 /// 仅接受 HTTP(S) 图片和跳转，不执行消息内携带的任意 URI scheme。
 Uri? chatNoticeUri(Object? value) {
   if (value is! String) return null;

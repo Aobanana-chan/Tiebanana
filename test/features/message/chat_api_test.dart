@@ -32,6 +32,8 @@ void main() {
     expect(result.message.status, TiebaChatMessageStatus.sent);
     expect(result.message.id, isNotEmpty);
     expect(result.message.recordId, isNotEmpty);
+    // 新消息还没收到对方回执，列表与气泡都应显示「未读」。
+    expect(result.message.isRead, isFalse);
 
     final ChatMessagePage after = await chat.getChatMessages(first.id);
     expect(after.messages.length, before + 1);
@@ -52,6 +54,7 @@ void main() {
         .firstWhere((TiebaConversation item) => item.id == first.id);
     expect(updated.lastMessage, '测试一条文字 #(滑稽)');
     expect(updated.lastMessageIsMine, isTrue);
+    expect(updated.lastMessageRead, isFalse);
 
     await chat.markChatRead(first.id, after.messages.last.id);
     expect(

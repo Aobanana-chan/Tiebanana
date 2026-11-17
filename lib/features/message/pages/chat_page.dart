@@ -86,6 +86,7 @@ class _ChatViewState extends State<ChatView> {
   bool _loadingMore = false;
   bool _hasMore = false;
   bool _emojiOpen = false;
+  bool _readOnly = false;
   Object? _error;
   ChatCursor? _cursor;
 
@@ -99,6 +100,7 @@ class _ChatViewState extends State<ChatView> {
     super.initState();
     _title = widget.data.title;
     _avatar = widget.data.avatar;
+    _readOnly = widget.data.readOnly;
     _scroll.addListener(_onScroll);
     _input.addListener(_onInputChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -127,6 +129,7 @@ class _ChatViewState extends State<ChatView> {
       if (!mounted || page.messages.isEmpty) return;
       bool changed = false;
       bool incoming = false;
+      bool readUpdated = false;
       final Set<String> seen = <String>{};
       final List<TiebaChatMessage> merged = <TiebaChatMessage>[..._messages];
       for (final TiebaChatMessage message in page.messages) {
@@ -137,9 +140,12 @@ class _ChatViewState extends State<ChatView> {
             (item.id.isNotEmpty && item.id == message.id) ||
             (item.recordId.isNotEmpty && item.recordId == message.recordId));
         if (index >= 0) {
-          if (merged[index].status != TiebaChatMessageStatus.sent) {
+          final bool readChanged = merged[index].isRead != message.isRead;
+          if (merged[index].status != TiebaChatMessageStatus.sent ||
+              readChanged) {
             merged[index] = message;
             changed = true;
+            if (readChanged) readUpdated = true;
           }
           continue;
         }
@@ -161,6 +167,7 @@ class _ChatViewState extends State<ChatView> {
       });
       if (atBottom) _jumpToBottom();
       if (incoming) unawaited(_markRead());
+      if (readUpdated) widget.onChanged?.call();
     } catch (_) {
       // 轮询失败保留当前消息，下一次继续。
     }
@@ -297,6 +304,8 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Future<void> _send() async {
+    // 官方只读会话（userType 3/4）没有输入框，这里再兜底一次。
+    if (_readOnly) return;
     final String text = _input.text.trim();
     if (text.isEmpty) return;
     final String recordId = '${DateTime.now().microsecondsSinceEpoch}';
@@ -492,8 +501,8 @@ class _ChatViewState extends State<ChatView> {
               ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
               : _messageList(tokens),
         ),
-        _composer(tokens),
-        if (_emojiOpen)
+        _composerOrNotice(tokens),
+        if (_emojiOpen && !_readOnly)
           Container(
             color: tokens.surface,
             child: Column(
@@ -686,8 +695,10 @@ class _ChatViewState extends State<ChatView> {
     if (message.type == 7) {
       final List<ChatNoticeCardData> cards = chatNoticeCards(message.content);
       if (cards.isNotEmpty) {
-        return Column(
-            children: [for (final card in cards) ChatNoticeCard(data: card)]);
+        return Column(children: [
+          for (final card in cards)
+            ChatNoticeCard(data: card, blockLinks: _readOnly)
+        ]);
       }
     }
     final bool mine = message.senderUid == _currentUid;
@@ -801,22 +812,7 @@ class _ChatViewState extends State<ChatView> {
             if (lastOfGroup)
               Padding(
                 padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
-                child: Text(
-                  message.status == TiebaChatMessageStatus.sending
-                      ? '发送中…'
-                      : message.status == TiebaChatMessageStatus.failed
-                          ? '未发送 · 点此重发'
-                          : chatClock(message.time),
-                  style: textTheme.labelSmall?.copyWith(
-                    fontSize: 10.5,
-                    color: message.status == TiebaChatMessageStatus.failed
-                        ? tokens.danger
-                        : tokens.textTertiary,
-                    fontWeight: message.status == TiebaChatMessageStatus.failed
-                        ? FontWeight.w600
-                        : null,
-                  ),
-                ),
+                child: _stamp(tokens, message, mine: mine),
               ),
           ],
         ),
@@ -832,6 +828,47 @@ class _ChatViewState extends State<ChatView> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: children,
       ),
+    );
+  }
+
+  /// 消息组末尾的状态行：发送中 / 未发送 / 时间（己方附带对方已读状态）。
+  Widget _stamp(
+    TiebananaTokens tokens,
+    TiebaChatMessage message, {
+    required bool mine,
+  }) {
+    final TextStyle? base = Theme.of(context)
+        .textTheme
+        .labelSmall
+        ?.copyWith(fontSize: 10.5, color: tokens.textTertiary);
+    final bool sending = message.status == TiebaChatMessageStatus.sending;
+    final bool failed = message.status == TiebaChatMessageStatus.failed;
+    if (sending || failed) {
+      return Text(
+        sending ? '发送中…' : '未发送 · 点此重发',
+        style: base?.copyWith(
+          color: failed ? tokens.danger : tokens.textTertiary,
+          fontWeight: failed ? FontWeight.w600 : null,
+        ),
+      );
+    }
+    if (!mine) {
+      return Text(chatClock(message.time), style: base);
+    }
+    final bool read = message.isRead;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(chatClock(message.time), style: base),
+        Text(' · ', style: base),
+        Text(
+          read ? '已读' : '未读',
+          style: base?.copyWith(
+            color: read ? tokens.primary : tokens.textSecondary,
+            fontWeight: read ? FontWeight.w600 : null,
+          ),
+        ),
+      ],
     );
   }
 
@@ -861,6 +898,25 @@ class _ChatViewState extends State<ChatView> {
       ));
     }
     return rows;
+  }
+
+  Widget _composerOrNotice(TiebananaTokens tokens) {
+    if (!_readOnly) return _composer(tokens);
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('chat-read-only-bar'),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 15),
+      decoration: BoxDecoration(
+        color: tokens.bar,
+        border: Border(top: BorderSide(color: tokens.line)),
+      ),
+      child: Text(
+        '该会话仅接收消息',
+        textAlign: TextAlign.center,
+        style: textTheme.bodySmall?.copyWith(color: tokens.textTertiary),
+      ),
+    );
   }
 
   Widget _composer(TiebananaTokens tokens) {

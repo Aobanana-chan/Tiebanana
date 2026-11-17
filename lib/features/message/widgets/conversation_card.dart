@@ -116,6 +116,26 @@ class ConversationCard extends StatelessWidget {
                               count: conversation.unread,
                               muted: conversation.isMuted,
                             ),
+                          ] else if (conversation.lastMessageIsMine &&
+                              conversation.lastMessage.isNotEmpty) ...<Widget>[
+                            const SizedBox(width: TiebananaMetrics.gapSm),
+                            Text(
+                              conversation.lastMessageRead ? '已读' : '未读',
+                              style: textTheme.labelSmall?.copyWith(
+                                fontSize: 10.5,
+                                color: selected
+                                    ? tokens.onPrimaryContainer
+                                    : (conversation.lastMessageRead
+                                        ? tokens.primary
+                                        : tokens.textSecondary),
+                                fontWeight: conversation.lastMessageRead
+                                    ? FontWeight.w600
+                                    : null,
+                                fontFeatures: const <FontFeature>[
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
                           ],
                         ],
                       ),
