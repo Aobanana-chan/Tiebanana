@@ -7,6 +7,8 @@ import 'package:tiebanana/features/forum/pages/forum_home_page.dart';
 import 'package:tiebanana/features/forum/pages/forum_search_page.dart';
 import 'package:tiebanana/features/home/pages/home_page.dart';
 import 'package:tiebanana/features/media/pages/image_picker_page.dart';
+import 'package:tiebanana/features/message/models/chat_route_data.dart';
+import 'package:tiebanana/features/message/pages/chat_page.dart';
 import 'package:tiebanana/features/account/pages/login_page.dart';
 import 'package:tiebanana/features/profile/pages/profile_edit_page.dart';
 import 'package:tiebanana/features/search/pages/search_page.dart';
@@ -74,6 +76,10 @@ abstract class AppRouter {
     "user": (context) {
       return UserVisitor(
           uid: ModalRoute.of(context)!.settings.arguments as String);
+    },
+    "chat": (context) {
+      final data = ModalRoute.of(context)!.settings.arguments as ChatRouteData;
+      return ChatPage(data: data);
     },
     "profileEdit": (context) => const ProfileEditPage(),
     "threadStore": (context) {

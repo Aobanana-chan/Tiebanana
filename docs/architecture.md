@@ -111,6 +111,7 @@ Global ── createTiebaApi ── lib/app/backend.dart
 | 登录凭证 | 应用文档目录中的 Cookie 文件；账号切换时保存和还原各账号快照，再重建后端实例 |
 | 浏览历史 | ObjectBox；`features/history/data/` 按当前账号查询和写入 |
 | 帖子内容 | `ThreadCache`；文档目录 `thread_cache_v1/` 下按账号和帖子保存 JSON 快照 |
+| 私信 | 私有后端按 uid 保存到文档目录 `chat_cache/<uid>.json`；演示后端只保存在内存 |
 | 图片 | `core/cache/` 中的图片缓存管理与头像缓存 |
 | 诊断日志 | 应用支持目录 `diagnostics/` 中的 JSON Lines 文件 |
 

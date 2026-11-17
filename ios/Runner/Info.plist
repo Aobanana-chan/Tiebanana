@@ -64,6 +64,20 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- 贴吧私信 IM 使用官方明文 ws://im.tieba.baidu.com:8000；仅为该域放开 ATS。 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>im.tieba.baidu.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>用于选择回复配图和头像。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

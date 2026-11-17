@@ -5,6 +5,7 @@ import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/profile/state/profile_events.dart';
+import 'package:tiebanana/features/message/models/chat_route_data.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
@@ -287,9 +288,8 @@ class _UserVisitorState extends State<UserVisitor>
                               ? user.likeForums
                               : const <TiebaUserLikeForum>[],
                           hasMore: false,
-                          notice: user.likeForums.isEmpty
-                              ? '关注的吧已隐藏'
-                              : '其余吧已隐藏',
+                          notice:
+                              user.likeForums.isEmpty ? '关注的吧已隐藏' : '其余吧已隐藏',
                         );
                       }
                       if (pn == 1 && page.forums.isEmpty && (total ?? 0) > 0) {
@@ -651,40 +651,103 @@ class _VisitorInfoCard extends StatelessWidget {
     );
   }
 
-  /// 访客显示「＋ 关注」，本人显示「编辑资料」。
+  /// 访客显示「私信」+「＋ 关注」，本人显示「编辑资料」。
   ///
-  /// 本人进入资料编辑页；访客关注仍待协议接入。
+  /// 私信入口只在后端实现 [TiebaChatApi] 时出现；发起会话时把 uid 作为
+  /// `toUid`，首次发送由 205001 建立会话。
   Widget _actionButton(BuildContext context, TiebananaTokens tokens) {
     final bool self = isSelf;
+    bool chatSupported = false;
+    try {
+      chatSupported = Global.tiebaAPI is TiebaChatApi;
+    } catch (_) {
+      // 后端尚未初始化（测试或启动早期）时不显示私信入口。
+    }
+    if (self) {
+      return _pillButton(
+        context,
+        tokens,
+        label: '编辑资料',
+        onTap: () => Navigator.pushNamed(context, PageRouter.profileEdit),
+        tonal: false,
+      );
+    }
+    return Wrap(
+      alignment: WrapAlignment.end,
+      spacing: 8,
+      runSpacing: 4,
+      children: <Widget>[
+        if (chatSupported)
+          _pillButton(
+            context,
+            tokens,
+            label: '私信',
+            icon: Icons.chat_bubble_outline,
+            onTap: () => Navigator.pushNamed(
+              context,
+              PageRouter.chat,
+              arguments: ChatRouteData(
+                conversationId: user.uid,
+                peerUid: user.uid,
+                title: user.name,
+                avatar: profileEvents.avatarUrl(user.uid, user.portraitUrl),
+              ),
+            ),
+            tonal: false,
+          ),
+        _pillButton(
+          context,
+          tokens,
+          label: '＋ 关注',
+          onTap: () => Fluttertoast.showToast(msg: '关注接口还没接入'),
+          tonal: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _pillButton(
+    BuildContext context,
+    TiebananaTokens tokens, {
+    required String label,
+    required VoidCallback onTap,
+    IconData? icon,
+    required bool tonal,
+  }) {
     return Material(
-      color: self ? Colors.transparent : tokens.primaryContainer,
+      color: tonal ? tokens.primaryContainer : Colors.transparent,
       borderRadius: TiebananaMetrics.brPill,
       child: InkWell(
         borderRadius: TiebananaMetrics.brPill,
-        onTap: () {
-          if (self) {
-            Navigator.pushNamed(context, PageRouter.profileEdit);
-          } else {
-            Fluttertoast.showToast(msg: '关注接口还没接入');
-          }
-        },
+        onTap: onTap,
         child: Container(
           height: 32,
-          padding: const EdgeInsets.symmetric(
-              horizontal: TiebananaMetrics.gapMd + 1),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             borderRadius: TiebananaMetrics.brPill,
-            border: self ? Border.all(color: tokens.lineStrong) : null,
+            border: tonal ? null : Border.all(color: tokens.lineStrong),
           ),
-          child: Center(
-            widthFactor: 1,
-            child: Text(
-              self ? '编辑资料' : '＋ 关注',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color:
-                        self ? tokens.textSecondary : tokens.onPrimaryContainer,
-                  ),
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (icon != null) ...<Widget>[
+                Icon(
+                  icon,
+                  size: 14,
+                  color:
+                      tonal ? tokens.onPrimaryContainer : tokens.textSecondary,
+                ),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: tonal
+                          ? tokens.onPrimaryContainer
+                          : tokens.textSecondary,
+                    ),
+              ),
+            ],
           ),
         ),
       ),

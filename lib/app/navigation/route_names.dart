@@ -19,6 +19,9 @@ abstract class PageRouter {
   static const String forumSearch = "forumSearch";
   static const String imagePicker = "imagePicker";
   static const String user = "user";
+
+  /// 参数：`ChatRouteData`
+  static const String chat = "chat";
   static const String profileEdit = "profileEdit";
   static const String threadStore = "threadStore";
   static const String viewHistory = "viewHistory";

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
+import 'package:tiebanana/features/message/pages/private_message_panel.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -45,7 +46,8 @@ class MessageTabMeta {
     required this.emptyIcon,
   });
 
-  final TiebaMessageKind kind;
+  /// 私信页签没有 [TiebaMessageKind]（未读来自本地会话表）。
+  final TiebaMessageKind? kind;
   final String label;
   final String emptyTitle;
   final String emptyBody;
@@ -53,6 +55,13 @@ class MessageTabMeta {
 }
 
 const List<MessageTabMeta> messageTabMetas = <MessageTabMeta>[
+  MessageTabMeta(
+    kind: null,
+    label: "私信",
+    emptyTitle: "还没有私信",
+    emptyBody: "在用户主页点「发私信」\n开始第一段对话",
+    emptyIcon: Icons.chat_bubble_outline,
+  ),
   MessageTabMeta(
     kind: TiebaMessageKind.reply,
     label: "回复",
@@ -121,6 +130,7 @@ class _MessagePanState extends State<MessagePan>
     _controller = TabController(length: _tabs.length, vsync: this);
     _controller.addListener(_onTabChanged);
     MessageReminder.counts.addListener(_onReminderChanged);
+    MessageReminder.chatUnread.addListener(_onReminderChanged);
   }
 
   void _onReminderChanged() {
@@ -134,11 +144,15 @@ class _MessagePanState extends State<MessagePan>
       MessageReminder.clear(TiebaMessageKind.like);
     }
     _selectedTab = _controller.index;
+    if (_tabs[_selectedTab].meta.kind == null) {
+      MessageReminder.refreshChat();
+    }
   }
 
   @override
   void dispose() {
     MessageReminder.counts.removeListener(_onReminderChanged);
+    MessageReminder.chatUnread.removeListener(_onReminderChanged);
     if (_tabs[_selectedTab].meta.kind == TiebaMessageKind.like) {
       WidgetsBinding.instance.addPostFrameCallback(
           (_) => MessageReminder.clear(TiebaMessageKind.like));
@@ -150,12 +164,14 @@ class _MessagePanState extends State<MessagePan>
     super.dispose();
   }
 
-  MessageLoader _loaderOf(_TabState tab) {
-    final MessageLoader? injected = widget.loaders?[tab.meta.kind];
+  MessageLoader? _loaderOf(_TabState tab) {
+    final TiebaMessageKind? kind = tab.meta.kind;
+    if (kind == null) return null;
+    final MessageLoader? injected = widget.loaders?[kind];
     if (injected != null) {
       return injected;
     }
-    switch (tab.meta.kind) {
+    switch (kind) {
       case TiebaMessageKind.reply:
         return _loadReply;
       case TiebaMessageKind.at:
@@ -189,6 +205,10 @@ class _MessagePanState extends State<MessagePan>
       return;
     }
     tab.started = true;
+    if (tab.meta.kind == null) {
+      MessageReminder.refreshChat();
+      return;
+    }
     if (tab.meta.kind == TiebaMessageKind.like) {
       MessageReminder.likeOpened = true;
     }
@@ -201,7 +221,8 @@ class _MessagePanState extends State<MessagePan>
 
   /// 下拉刷新 / 首次加载。已有内容时保留列表，错误显示在底部。
   Future<void> _refresh(_TabState tab) async {
-    if (tab.refreshing) {
+    final MessageLoader? loader = _loaderOf(tab);
+    if (loader == null || tab.refreshing) {
       return;
     }
     tab.refreshing = true;
@@ -212,7 +233,7 @@ class _MessagePanState extends State<MessagePan>
       });
     }
     try {
-      final MessagePageResult page = await _loaderOf(tab).call(1);
+      final MessagePageResult page = await loader(1);
       if (!mounted) {
         return;
       }
@@ -226,8 +247,9 @@ class _MessagePanState extends State<MessagePan>
         tab.error = null;
         tab.moreError = null;
       });
-      if (tab.meta.kind != TiebaMessageKind.like) {
-        MessageReminder.clear(tab.meta.kind);
+      final TiebaMessageKind? kind = tab.meta.kind;
+      if (kind != null && kind != TiebaMessageKind.like) {
+        MessageReminder.clear(kind);
       }
     } catch (error) {
       if (!mounted) {
@@ -249,7 +271,12 @@ class _MessagePanState extends State<MessagePan>
   }
 
   Future<void> _nextPage(_TabState tab) async {
-    if (tab.loading || tab.loadingMore || !tab.hasMore || !tab.started) {
+    final MessageLoader? loader = _loaderOf(tab);
+    if (loader == null ||
+        tab.loading ||
+        tab.loadingMore ||
+        !tab.hasMore ||
+        !tab.started) {
       return;
     }
     final int next = tab.pn + 1;
@@ -258,7 +285,7 @@ class _MessagePanState extends State<MessagePan>
       tab.moreError = null;
     });
     try {
-      final MessagePageResult page = await _loaderOf(tab).call(next);
+      final MessagePageResult page = await loader(next);
       if (!mounted) {
         return;
       }
@@ -415,6 +442,9 @@ class _MessagePanState extends State<MessagePan>
   }
 
   Widget _body(_TabState tab) {
+    if (tab.meta.kind == null) {
+      return PrivateMessagePanel(onBrowse: widget.onBrowse);
+    }
     return MessageFeed(
       meta: tab.meta,
       items: tab.items,
@@ -482,7 +512,9 @@ class _TabState {
   /// 惰性加载：第一次显示这个页签才发请求。
   bool started = false;
 
-  int get unreadCount => MessageReminder.counts.value.count(meta.kind);
+  int get unreadCount => meta.kind == null
+      ? MessageReminder.chatUnread.value
+      : MessageReminder.counts.value.count(meta.kind!);
 }
 
 /// 消息列表的展示层：骨架 / 空 / 错误 / 未登录 / 列表。

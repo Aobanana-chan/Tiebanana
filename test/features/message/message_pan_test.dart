@@ -8,6 +8,7 @@ import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tieba_contract/tieba_contract.dart';
+import 'package:tieba_contract/testing.dart';
 import 'package:tiebanana/features/message/pages/message_page.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
@@ -77,9 +78,11 @@ void main() {
   setUp(() {
     MessageReminder.reset();
     Global.setting = APPSetting.fromJson(defaultAPPSetting);
+    // 私信页签是消息页首屏；测试里接演示后端，避免落到「后端不支持」状态。
+    Global.tiebaAPI = DemoTiebaApi(latency: Duration.zero);
   });
 
-  testWidgets('三个页签惰性加载：进页面只请求「回复」，切过去才请求对应页签', (WidgetTester tester) async {
+  testWidgets('四个页签惰性加载：私信走本机会话，其余切过去才请求', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     Global.profile = await SharedPreferences.getInstance();
 
@@ -115,8 +118,12 @@ void main() {
     await tester.pump();
     await tester.pump();
 
+    expect(called, isEmpty, reason: '首屏是私信，不该预取其它分类');
+    expect(find.text('回复'), findsOneWidget);
+
+    await _switchTo(tester, '回复');
     expect(called, <TiebaMessageKind>[TiebaMessageKind.reply],
-        reason: '另外两个页签不该在进消息页时一起打出去');
+        reason: '其它页签切过去才请求');
     expect(find.text('感谢整理，第 3 步的顺序很关键'), findsOneWidget);
     expect(find.text('未读 3'), findsNothing, reason: '列表计数不冒充分类提醒数');
 
@@ -160,6 +167,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
+    await _switchTo(tester, '回复');
     expect(calls, 1);
     expect(find.text('第1页第0条'), findsOneWidget);
 
@@ -297,6 +305,7 @@ void main() {
     await tester.pumpWidget(page());
     await tester.pump();
     await tester.pump();
+    await _switchTo(tester, '回复');
     final Finder dots =
         find.byKey(const ValueKey<String>('message-unread-dot'));
     expect(dots, findsOneWidget);
@@ -323,6 +332,7 @@ void main() {
     await tester.pumpWidget(page());
     await tester.pump();
     await tester.pump();
+    await _switchTo(tester, '回复');
     expect(dots, findsOneWidget);
     expect(find.text('未读 1'), findsNothing);
   });
@@ -344,6 +354,7 @@ void main() {
     })));
     await tester.pump();
     await tester.pump();
+    await _switchTo(tester, '回复');
     expect(MessageReminder.counts.value.reply, 0);
     expect(MessageReminder.counts.value.total, 8);
     await _switchTo(tester, '给我点赞');

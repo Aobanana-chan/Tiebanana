@@ -91,6 +91,7 @@ class _HomePageState extends State<HomePage> {
     page = _buildPages();
     MessageReminder.reset();
     MessageReminder.refresh();
+    MessageReminder.refreshChat();
     // 官方 HTTP 提醒的周期为 600000ms；不为计数预取三个列表。
     _reminderTimer = Timer.periodic(
         const Duration(minutes: 10), (_) => MessageReminder.refresh());
@@ -138,6 +139,7 @@ class _HomePageState extends State<HomePage> {
     });
     MessageReminder.reset();
     MessageReminder.refresh();
+    MessageReminder.refreshChat();
     forumState.refresh();
   }
 
@@ -149,7 +151,10 @@ class _HomePageState extends State<HomePage> {
     if (_currentPage == 2 && MessageReminder.likeOpened) {
       MessageReminder.clear(TiebaMessageKind.like);
     }
-    if (index == 2) MessageReminder.refresh();
+    if (index == 2) {
+      MessageReminder.refresh();
+      MessageReminder.refreshChat();
+    }
     setState(() {
       _currentPage = index;
       controller.animateToPage(_currentPage,
@@ -216,6 +221,7 @@ class _HomePageState extends State<HomePage> {
           listenable: Listenable.merge(<Listenable>[
             AccountStore.changes,
             MessageReminder.counts,
+            MessageReminder.chatUnread,
           ]),
           builder: (BuildContext context, Widget? child) => NavigationBar(
             selectedIndex: _currentPage,
@@ -232,14 +238,14 @@ class _HomePageState extends State<HomePage> {
               NavigationDestination(
                   icon: Badge.count(
                     maxCount: 99,
-                    count: MessageReminder.counts.value.total,
-                    isLabelVisible: MessageReminder.counts.value.total > 0,
+                    count: MessageReminder.totalUnread,
+                    isLabelVisible: MessageReminder.totalUnread > 0,
                     child: const Icon(Icons.notifications_none),
                   ),
                   selectedIcon: Badge.count(
                     maxCount: 99,
-                    count: MessageReminder.counts.value.total,
-                    isLabelVisible: MessageReminder.counts.value.total > 0,
+                    count: MessageReminder.totalUnread,
+                    isLabelVisible: MessageReminder.totalUnread > 0,
                     child: const Icon(Icons.notifications),
                   ),
                   label: "消息"),

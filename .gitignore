@@ -57,6 +57,9 @@ pubspec_overrides.yaml
 # AI agent instructions (local working agreement)
 AGENT.md
 
+# 本地设计稿与概念图，不进入版本控制
+/design/
+
 # Key
 key.jks
 
