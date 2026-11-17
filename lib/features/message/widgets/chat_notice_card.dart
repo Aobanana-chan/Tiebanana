@@ -3,7 +3,8 @@ import 'package:tiebanana/features/message/state/chat_content.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// 官方通知采用独立通栏卡片，不套用个人聊天的头像和气泡。
+/// 图文/通知消息（官方类型 7、35）采用独立通栏卡片，
+/// 不套用个人聊天的头像和气泡。
 class ChatNoticeCard extends StatelessWidget {
   const ChatNoticeCard(
       {super.key, required this.data, this.onOpen, this.blockLinks = false});

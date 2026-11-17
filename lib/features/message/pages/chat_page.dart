@@ -596,7 +596,8 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Widget _messageList(TiebananaTokens tokens) {
-    if (_messages.isEmpty) {
+    final List<_ChatRow> rows = _buildRows();
+    if (rows.isEmpty) {
       return Center(
         child: StateView(
           icon: Icons.chat_bubble_outline,
@@ -605,7 +606,6 @@ class _ChatViewState extends State<ChatView> {
         ),
       );
     }
-    final List<_ChatRow> rows = _buildRows();
     final int extra = _boundaryRow ? 1 : 0;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -692,7 +692,8 @@ class _ChatViewState extends State<ChatView> {
 
   Widget _messageLine(
       TiebananaTokens tokens, TiebaChatMessage message, _ChatRow row) {
-    if (message.type == 7) {
+    if (message.type == ChatMessageType.picText ||
+        message.type == ChatMessageType.questionThread) {
       final List<ChatNoticeCardData> cards = chatNoticeCards(message.content);
       if (cards.isNotEmpty) {
         return Column(children: [
@@ -704,6 +705,21 @@ class _ChatViewState extends State<ChatView> {
     final bool mine = message.senderUid == _currentUid;
     final bool lastOfGroup = row.lastOfGroup;
     final TextTheme textTheme = Theme.of(context).textTheme;
+    final String displayText = chatDisplayText(message.type, message.content);
+    final TextStyle? textStyle = textTheme.bodyMedium?.copyWith(
+      fontSize: 14.5,
+      height: 1.56,
+      color: message.status == TiebaChatMessageStatus.failed
+          ? tokens.textPrimary
+          : (mine ? tokens.accentOn : tokens.textPrimary),
+    );
+    final Widget bubbleContent = _messageContent(
+      tokens,
+      message,
+      displayText: displayText,
+      textStyle: textStyle,
+    );
+    final bool hasImage = _messageImageUrl(message).isNotEmpty;
 
     final Widget bubble = GestureDetector(
       onTap: message.status == TiebaChatMessageStatus.failed
@@ -713,7 +729,9 @@ class _ChatViewState extends State<ChatView> {
         constraints: BoxConstraints(
           maxWidth: math.min(520.0, MediaQuery.sizeOf(context).width * 0.76),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+        padding: hasImage
+            ? const EdgeInsets.all(5)
+            : const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
         decoration: BoxDecoration(
           color: message.status == TiebaChatMessageStatus.failed
               ? tokens.surface
@@ -739,17 +757,7 @@ class _ChatViewState extends State<ChatView> {
         ),
         child: Opacity(
           opacity: message.status == TiebaChatMessageStatus.sending ? .78 : 1,
-          child: ExtendedText(
-            chatDisplayText(message.type, message.content),
-            style: textTheme.bodyMedium?.copyWith(
-              fontSize: 14.5,
-              height: 1.56,
-              color: message.status == TiebaChatMessageStatus.failed
-                  ? tokens.textPrimary
-                  : (mine ? tokens.accentOn : tokens.textPrimary),
-            ),
-            specialTextSpanBuilder: TiebaSpanBuilder(),
-          ),
+          child: bubbleContent,
         ),
       ),
     );
@@ -831,6 +839,85 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
+  String _messageImageUrl(TiebaChatMessage message) {
+    switch (message.type) {
+      case ChatMessageType.image:
+      case ChatMessageType.bigEmotion:
+      case ChatMessageType.textGenImage:
+      case ChatMessageType.singleTextImage:
+        return chatImageUrl(message.type, message.content);
+      default:
+        return '';
+    }
+  }
+
+  /// 文本 / 图片 / 表情 / 语音共用一个气泡，状态与重试仍由外层处理。
+  Widget _messageContent(
+    TiebananaTokens tokens,
+    TiebaChatMessage message, {
+    required String displayText,
+    required TextStyle? textStyle,
+  }) {
+    final String imageUrl = _messageImageUrl(message);
+    if (imageUrl.isNotEmpty) {
+      final bool sticker = message.type == ChatMessageType.bigEmotion;
+      final String caption = chatImageCaption(message.type, message.content);
+      final Widget image = ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          width: sticker ? 132 : 220,
+          height: sticker ? 132 : 168,
+          color: tokens.fill,
+          child: Image.network(
+            imageUrl,
+            fit: sticker ? BoxFit.contain : BoxFit.cover,
+            errorBuilder: (_, __, ___) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  displayText,
+                  textAlign: TextAlign.center,
+                  style: textStyle?.copyWith(color: tokens.textSecondary),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      if (caption.isEmpty || sticker) return image;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          image,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(7, 7, 7, 3),
+            child: ExtendedText(
+              caption,
+              style: textStyle,
+              specialTextSpanBuilder: TiebaSpanBuilder(),
+            ),
+          ),
+        ],
+      );
+    }
+    if (message.type == ChatMessageType.voice) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(Icons.graphic_eq_rounded, size: 17, color: textStyle?.color),
+          const SizedBox(width: 5),
+          Text(displayText, style: textStyle),
+        ],
+      );
+    }
+    return ExtendedText(
+      displayText,
+      style: textStyle,
+      specialTextSpanBuilder: TiebaSpanBuilder(),
+    );
+  }
+
   /// 消息组末尾的状态行：发送中 / 未发送 / 时间（己方附带对方已读状态）。
   Widget _stamp(
     TiebananaTokens tokens,
@@ -873,15 +960,22 @@ class _ChatViewState extends State<ChatView> {
   }
 
   List<_ChatRow> _buildRows() {
+    // 已读回执等控制事件不进入正文；旧缓存漏进来时也在这里兜底过滤，
+    // 分组按过滤后的相邻消息计算。
+    final List<TiebaChatMessage> messages = _messages
+        .where((TiebaChatMessage item) => chatMessageVisible(item.type))
+        .toList();
     final List<_ChatRow> rows = <_ChatRow>[];
-    for (int i = 0; i < _messages.length; i++) {
-      final TiebaChatMessage message = _messages[i];
-      final TiebaChatMessage? previous = i == 0 ? null : _messages[i - 1];
+    for (int i = 0; i < messages.length; i++) {
+      final TiebaChatMessage message = messages[i];
+      final TiebaChatMessage? previous = i == 0 ? null : messages[i - 1];
       final TiebaChatMessage? next =
-          i == _messages.length - 1 ? null : _messages[i + 1];
+          i == messages.length - 1 ? null : messages[i + 1];
       final bool newDate = previous == null ||
-          message.type == 7 ||
-          previous.type == 7 ||
+          message.type == ChatMessageType.picText ||
+          message.type == ChatMessageType.questionThread ||
+          previous.type == ChatMessageType.picText ||
+          previous.type == ChatMessageType.questionThread ||
           !isSameChatDay(previous.time, message.time);
       if (newDate) {
         rows.add(_ChatRow.date(message.time));
