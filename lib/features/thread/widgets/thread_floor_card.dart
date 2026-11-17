@@ -2,6 +2,7 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:provider/provider.dart';
 
 import 'package:tieba_contract/tieba_contract.dart';
@@ -21,6 +22,7 @@ import 'package:tiebanana/features/thread/widgets/thread_common.dart';
 import 'package:tiebanana/features/thread/widgets/thread_reply_bar.dart';
 import 'package:tiebanana/shared/content/thread_summary.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
+import 'package:tiebanana/shared/media/img_explorer.dart';
 import 'package:tiebanana/features/thread/widgets/thread_poll_card.dart';
 
 /// 帖子楼层卡片。
@@ -660,16 +662,130 @@ class InnerPost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        children: _buildContent(context),
-        style: TextStyle(
-          color: TiebananaTokens.of(context).textSecondary,
-          fontSize: Provider.of<APPSettingProvider>(context).fontSize - 1,
-          height: 1.55,
-        ),
-      ),
+    final images = posts.whereType<TiebaImageContent>().toList();
+    final spans = _buildContent(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (spans.isNotEmpty)
+          RichText(
+            maxLines: images.isEmpty ? 4 : 2,
+            overflow: TextOverflow.ellipsis,
+            text: TextSpan(
+              children: spans,
+              style: TextStyle(
+                color: TiebananaTokens.of(context).textSecondary,
+                fontSize: Provider.of<APPSettingProvider>(context).fontSize - 1,
+                height: 1.55,
+              ),
+            ),
+          ),
+        if (images.isNotEmpty) ...[
+          if (spans.isNotEmpty) const SizedBox(height: 6),
+          _InnerPostImages(images: images),
+        ],
+      ],
     );
+  }
+}
+
+/// 楼层内只展示小图；查看器仍可浏览该回复的全部有效图片。
+class _InnerPostImages extends StatelessWidget {
+  const _InnerPostImages({required this.images});
+
+  final List<TiebaImageContent> images;
+  static const int _limit = 4;
+
+  void _openImage(BuildContext context, TiebaImageContent image) {
+    final valid =
+        images.where((part) => part.displaySrc.trim().isNotEmpty).toList();
+    Navigator.of(context).push(ImageExplorerRoute(
+      builder: (_) => ZoomedImgExplorer(
+        imgUrls: valid.map((part) => part.displaySrc).toList(),
+        highQualityUrls: valid.map((part) => part.originalSrc).toList(),
+        index: valid.indexOf(image),
+        heroTagSalt: 'inner-post-${identityHashCode(images)}',
+      ),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = TiebananaTokens.of(context);
+    final pictureSetting = Global.setting.pictureLoadSetting;
+    return LayoutBuilder(builder: (context, constraints) {
+      final side = ((constraints.maxWidth - 18) / 4).clamp(0.0, 72.0);
+      return Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (var i = 0; i < images.length && i < _limit; i++)
+            Semantics(
+              label: '查看第 ${i + 1} 张图片，共 ${images.length} 张',
+              button: images[i].displaySrc.trim().isNotEmpty,
+              child: GestureDetector(
+                onTap: images[i].displaySrc.trim().isEmpty
+                    ? null
+                    : () => _openImage(context, images[i]),
+                child: ClipRRect(
+                  borderRadius: TiebananaMetrics.brCtl,
+                  child: SizedBox.square(
+                    dimension: side,
+                    child: ColoredBox(
+                      color: tokens.surface,
+                      child: Stack(fit: StackFit.expand, children: [
+                        if (images[i].displaySrc.trim().isEmpty ||
+                            (pictureSetting == 1 &&
+                                images[i].bsizeValue >= 0x100000))
+                          Center(
+                              child: Text('[图片]',
+                                  style:
+                                      TextStyle(color: tokens.textSecondary)))
+                        else
+                          ExtendedImage.network(
+                            pictureSetting == 2
+                                ? images[i].displaySrc
+                                : images[i].lowFlowSrc,
+                            cache: true,
+                            fit: BoxFit.cover,
+                            loadStateChanged: (state) {
+                              switch (state.extendedImageLoadState) {
+                                case LoadState.completed:
+                                  return null;
+                                case LoadState.failed:
+                                  return Center(
+                                      child: Text('[图片]',
+                                          style: TextStyle(
+                                              color: tokens.textSecondary)));
+                                case LoadState.loading:
+                                  return Center(
+                                      child: Icon(Icons.image_outlined,
+                                          color: tokens.textTertiary,
+                                          size: 20));
+                              }
+                            },
+                          ),
+                        if (i == _limit - 1 && images.length > _limit)
+                          IgnorePointer(
+                            child: ColoredBox(
+                              color: Colors.black54,
+                              child: Center(
+                                  child: Text('+${images.length - _limit}',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600))),
+                            ),
+                          ),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    });
   }
 }
 
@@ -726,8 +842,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
   /// 从预览点进来时只自动定位一次。
   bool _revealed = false;
 
-  GlobalKey _keyFor(String id) =>
-      _replyKeys.putIfAbsent(id, GlobalKey.new);
+  GlobalKey _keyFor(String id) => _replyKeys.putIfAbsent(id, GlobalKey.new);
 
   @override
   void initState() {
