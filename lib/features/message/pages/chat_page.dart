@@ -407,38 +407,7 @@ class _ChatViewState extends State<ChatView> {
   Future<void> _showBlocked(ChatBlockInfo block) async {
     final String? action = await showDialog<String>(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('消息没有发出去'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                block.message.isEmpty ? '对方暂时不接收你的私信' : block.message,
-              ),
-              if (block.dealUrl.isNotEmpty) ...<Widget>[
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, 'open'),
-                  child: const Text('查看原因'),
-                ),
-              ],
-            ],
-          ),
-          actions: <Widget>[
-            if (block.cancel.isNotEmpty)
-              TextButton(
-                onPressed: () => Navigator.pop(context, 'cancel'),
-                child: Text(block.cancel),
-              ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, 'confirm'),
-              child: Text(block.confirm.isEmpty ? '知道了' : block.confirm),
-            ),
-          ],
-        );
-      },
+      builder: (BuildContext context) => _BlockedDialog(block: block),
     );
     if (action == 'open' && block.dealUrl.isNotEmpty) {
       final Uri? uri = Uri.tryParse(block.dealUrl);
@@ -710,7 +679,7 @@ class _ChatViewState extends State<ChatView> {
       fontSize: 14.5,
       height: 1.56,
       color: message.status == TiebaChatMessageStatus.failed
-          ? tokens.textPrimary
+          ? tokens.textSecondary
           : (mine ? tokens.accentOn : tokens.textPrimary),
     );
     final Widget bubbleContent = _messageContent(
@@ -720,44 +689,55 @@ class _ChatViewState extends State<ChatView> {
       textStyle: textStyle,
     );
     final bool hasImage = _messageImageUrl(message).isNotEmpty;
+    final bool failed = message.status == TiebaChatMessageStatus.failed;
+    final bool sending = message.status == TiebaChatMessageStatus.sending;
+    final BorderRadius bubbleRadius = BorderRadius.only(
+      topLeft: const Radius.circular(20),
+      topRight: const Radius.circular(20),
+      bottomLeft: Radius.circular(mine ? 20 : 7),
+      bottomRight: Radius.circular(mine ? 7 : 20),
+    );
 
     final Widget bubble = GestureDetector(
-      onTap: message.status == TiebaChatMessageStatus.failed
-          ? () => _retry(message)
-          : null,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: math.min(520.0, MediaQuery.sizeOf(context).width * 0.76),
-        ),
-        padding: hasImage
-            ? const EdgeInsets.all(5)
-            : const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-        decoration: BoxDecoration(
-          color: message.status == TiebaChatMessageStatus.failed
-              ? tokens.surface
-              : (mine ? tokens.accentFill : tokens.surface),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(mine ? 20 : 7),
-            bottomRight: Radius.circular(mine ? 7 : 20),
+      onTap: failed ? () => _retry(message) : null,
+      child: Opacity(
+        // 发送中的整颗气泡一起变淡，不只是正文。
+        opacity: sending ? .78 : 1,
+        child: CustomPaint(
+          foregroundPainter: failed
+              ? _DashedBorderPainter(
+                  color: tokens.danger,
+                  radius: bubbleRadius,
+                )
+              : null,
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth:
+                  math.min(520.0, MediaQuery.sizeOf(context).width * 0.76),
+            ),
+            padding: hasImage
+                ? const EdgeInsets.all(5)
+                : const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+            decoration: BoxDecoration(
+              color: failed
+                  ? tokens.surface
+                  : (mine ? tokens.accentFill : tokens.surface),
+              borderRadius: bubbleRadius,
+              border: failed
+                  ? null
+                  : (mine ? null : Border.all(color: tokens.line)),
+              boxShadow: failed
+                  ? null
+                  : <BoxShadow>[
+                      BoxShadow(
+                        color: tokens.shadow,
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+            ),
+            child: bubbleContent,
           ),
-          border: message.status == TiebaChatMessageStatus.failed
-              ? Border.all(color: tokens.danger, width: 1.5)
-              : (mine ? null : Border.all(color: tokens.line)),
-          boxShadow: message.status == TiebaChatMessageStatus.failed
-              ? null
-              : <BoxShadow>[
-                  BoxShadow(
-                    color: tokens.shadow,
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-        ),
-        child: Opacity(
-          opacity: message.status == TiebaChatMessageStatus.sending ? .78 : 1,
-          child: bubbleContent,
         ),
       ),
     );
@@ -931,11 +911,24 @@ class _ChatViewState extends State<ChatView> {
     final bool sending = message.status == TiebaChatMessageStatus.sending;
     final bool failed = message.status == TiebaChatMessageStatus.failed;
     if (sending || failed) {
-      return Text(
+      final Widget label = Text(
         sending ? '发送中…' : '未发送 · 点此重发',
         style: base?.copyWith(
           color: failed ? tokens.danger : tokens.textTertiary,
           fontWeight: failed ? FontWeight.w600 : null,
+        ),
+      );
+      if (!failed) return label;
+      // 气泡和状态行都能重发，不必非要瞄准气泡本体。
+      return Semantics(
+        button: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _retry(message),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            child: label,
+          ),
         ),
       );
     }
@@ -952,7 +945,7 @@ class _ChatViewState extends State<ChatView> {
           read ? '已读' : '未读',
           style: base?.copyWith(
             color: read ? tokens.primary : tokens.textSecondary,
-            fontWeight: read ? FontWeight.w600 : null,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -1209,6 +1202,181 @@ class _ChatAvatar extends StatelessWidget {
           ? Icon(Icons.person_outline,
               color: tokens.textTertiary, size: size * .55)
           : AvatarImage(url: url),
+    );
+  }
+}
+
+/// 发送失败气泡的虚线描边。
+///
+/// 概念图用 CSS `dashed` 表示“这条没发出去”，实线会被误读成普通边框。
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({
+    required this.color,
+    required this.radius,
+  });
+
+  final Color color;
+  final BorderRadius radius;
+  static const double strokeWidth = 1.5;
+  static const double dashLength = 5;
+  static const double gapLength = 4;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final RRect rrect =
+        radius.toRRect((Offset.zero & size).deflate(strokeWidth / 2));
+    final Path path = Path()..addRRect(rrect);
+    final Paint paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final double next = math.min(distance + dashLength, metric.length);
+        canvas.drawPath(metric.extractPath(distance, next), paint);
+        distance = next + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
+      color != oldDelegate.color || radius != oldDelegate.radius;
+}
+
+/// 发送被拦截时的弹窗：图标、服务端文案、两个药丸按钮。
+class _BlockedDialog extends StatelessWidget {
+  const _BlockedDialog({required this.block});
+
+  final ChatBlockInfo block;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    final String confirm = block.confirm.isEmpty ? '知道了' : block.confirm;
+    final bool canOpenReason = block.dealUrl.isNotEmpty;
+    return Dialog(
+      backgroundColor: tokens.surface,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: tokens.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.gpp_bad_outlined,
+                size: 27,
+                color: tokens.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '消息没有发出去',
+              textAlign: TextAlign.center,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: tokens.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              block.message.isEmpty ? '对方暂时不接收你的私信' : block.message,
+              textAlign: TextAlign.center,
+              style: textTheme.bodySmall?.copyWith(
+                color: tokens.textSecondary,
+                height: 1.7,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: <Widget>[
+                if (canOpenReason) ...<Widget>[
+                  Expanded(
+                    child: _DialogButton(
+                      label: '查看原因',
+                      primary: true,
+                      onTap: () => Navigator.pop(context, 'open'),
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: _DialogButton(
+                      label: confirm,
+                      primary: false,
+                      onTap: () => Navigator.pop(context, 'confirm'),
+                    ),
+                  ),
+                ] else ...<Widget>[
+                  if (block.cancel.isNotEmpty) ...<Widget>[
+                    Expanded(
+                      child: _DialogButton(
+                        label: block.cancel,
+                        primary: false,
+                        onTap: () => Navigator.pop(context, 'cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                  ],
+                  Expanded(
+                    child: _DialogButton(
+                      label: confirm,
+                      primary: true,
+                      onTap: () => Navigator.pop(context, 'confirm'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogButton extends StatelessWidget {
+  const _DialogButton({
+    required this.label,
+    required this.primary,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool primary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final Color foreground = primary ? tokens.accentOn : tokens.textSecondary;
+    return Material(
+      color: primary ? tokens.accentFill : tokens.fill,
+      borderRadius: TiebananaMetrics.brPill,
+      child: InkWell(
+        borderRadius: TiebananaMetrics.brPill,
+        onTap: onTap,
+        child: Container(
+          height: 42,
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: Theme.of(context)
+                .textTheme
+                .labelLarge
+                ?.copyWith(color: foreground, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
     );
   }
 }

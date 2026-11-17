@@ -35,6 +35,18 @@ class ConversationCard extends StatelessWidget {
         : (unread ? tokens.textPrimary : tokens.textSecondary);
     final Color timeColor =
         selected ? tokens.onPrimaryContainer : tokens.textTertiary;
+    final TextStyle? previewStyle = textTheme.bodySmall?.copyWith(
+      color: previewColor,
+      fontSize: 13,
+      fontWeight: unread ? FontWeight.w500 : null,
+    );
+    final String previewText = conversation.lastMessage.isEmpty
+        ? ''
+        : chatDisplayText(
+            conversation.lastMessageType,
+            conversation.lastMessage,
+            summary: true,
+          );
 
     return Container(
       margin: const EdgeInsets.fromLTRB(
@@ -71,6 +83,7 @@ class ConversationCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: textTheme.titleSmall?.copyWith(
                                 color: nameColor,
+                                fontSize: 15,
                                 fontWeight:
                                     unread ? FontWeight.w700 : FontWeight.w600,
                               ),
@@ -95,19 +108,30 @@ class ConversationCard extends StatelessWidget {
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: ExtendedText(
-                              conversation.lastMessage.isEmpty
-                                  ? ''
-                                  : '${conversation.lastMessageIsMine ? '我：' : ''}'
-                                      '${chatDisplayText(conversation.lastMessageType, conversation.lastMessage, summary: true)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: previewColor,
-                                fontSize: 13,
-                                fontWeight: unread ? FontWeight.w500 : null,
-                              ),
-                              specialTextSpanBuilder: TiebaSpanBuilder(),
+                            child: Row(
+                              children: <Widget>[
+                                // 「我：」比正文更淡，未读时也不跟着加粗。
+                                if (conversation.lastMessageIsMine &&
+                                    previewText.isNotEmpty)
+                                  Text(
+                                    '我：',
+                                    style: previewStyle?.copyWith(
+                                      color: selected
+                                          ? tokens.onPrimaryContainer
+                                          : tokens.textTertiary,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: ExtendedText(
+                                    previewText,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: previewStyle,
+                                    specialTextSpanBuilder: TiebaSpanBuilder(),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           if (unread) ...<Widget>[
@@ -130,7 +154,7 @@ class ConversationCard extends StatelessWidget {
                                         : tokens.textSecondary),
                                 fontWeight: conversation.lastMessageRead
                                     ? FontWeight.w600
-                                    : null,
+                                    : FontWeight.w700,
                                 fontFeatures: const <FontFeature>[
                                   FontFeature.tabularFigures(),
                                 ],
@@ -197,6 +221,19 @@ class _UnreadMark extends StatelessWidget {
         ),
       );
     }
+    return UnreadCountBadge(count: count);
+  }
+}
+
+/// 红色未读药丸。列表行、宽屏左栏标题和页签共用同一套尺寸。
+class UnreadCountBadge extends StatelessWidget {
+  const UnreadCountBadge({super.key, required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
     return Semantics(
       label: '$count 条未读',
       child: Container(

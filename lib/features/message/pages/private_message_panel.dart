@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
-import 'package:tiebanana/features/message/state/chat_error.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/message/models/chat_route_data.dart';
 import 'package:tiebanana/features/message/pages/chat_page.dart';
@@ -144,18 +143,24 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
                       Text(
                         '私信',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
                       ),
-                      const Spacer(),
-                      if (MessageReminder.chatUnread.value > 0)
-                        Text(
-                          '未读 ${MessageReminder.chatUnread.value}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(color: tokens.primary),
+                      if (MessageReminder.chatUnread.value > 0) ...<Widget>[
+                        const SizedBox(width: 8),
+                        UnreadCountBadge(
+                          count: MessageReminder.chatUnread.value,
                         ),
+                      ],
+                      const Spacer(),
+                      Text(
+                        '按最近消息排序',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(color: tokens.textTertiary),
+                      ),
                     ],
                   ),
                 ),
@@ -225,8 +230,8 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
         context,
         scrollable: scrollable,
         icon: Icons.wifi_off_outlined,
-        title: '私信加载失败',
-        body: chatErrorBody(_error),
+        title: '网络似乎有点问题',
+        body: '检查一下网络连接后重试，\n已经加载过的会话仍可离线查看',
         primaryLabel: '重试',
         onPrimary: _load,
       );

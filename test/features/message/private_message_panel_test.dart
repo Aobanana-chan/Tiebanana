@@ -45,13 +45,13 @@ void main() {
     await tester.pumpWidget(_app(const PrivateMessagePanel()));
     await tester.pumpAndSettle();
     expect(api.attempts, 1);
-    expect(find.text('私信加载失败'), findsOneWidget);
-    expect(find.textContaining('初始化或数据处理失败'), findsOneWidget);
+    expect(find.text('网络似乎有点问题'), findsOneWidget);
+    expect(find.textContaining('已经加载过的会话仍可离线查看'), findsOneWidget);
     await tester.tap(find.text('重试'));
     await tester.pumpAndSettle();
     expect(api.attempts, 2);
     expect(find.text('青葉ナナ'), findsOneWidget);
-    expect(find.text('私信加载失败'), findsNothing);
+    expect(find.text('网络似乎有点问题'), findsNothing);
   });
 
   testWidgets('会话列表进入聊天并发送文字', (WidgetTester tester) async {
@@ -100,6 +100,48 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('发送失败保留气泡，点状态文字用同一 recordId 重发', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{'uid': '10001'});
+    Global.profile = await SharedPreferences.getInstance();
+    Global.setting = APPSetting.fromJson(defaultAPPSetting);
+    final _FailOnceChatApi api = _FailOnceChatApi();
+    Global.tiebaAPI = api;
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_app(const ChatView(
+      data: ChatRouteData(
+        conversationId: '20001',
+        peerUid: '20001',
+        title: '青葉ナナ',
+      ),
+    )));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+
+    tester
+        .widget<ExtendedTextField>(find.byType(ExtendedTextField))
+        .controller!
+        .text = '发不出去的消息';
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('未发送 · 点此重发'), findsOneWidget);
+    expect(api.recordIds, hasLength(1));
+
+    await tester.tap(find.text('未发送 · 点此重发'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(api.recordIds, hasLength(2));
+    expect(api.recordIds.last, api.recordIds.first);
+    expect(find.text('未发送 · 点此重发'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _RetryChatApi extends DemoTiebaApi {
@@ -112,5 +154,23 @@ class _RetryChatApi extends DemoTiebaApi {
     attempts++;
     if (attempts == 1) throw StateError('test initialization failure');
     return super.getConversations();
+  }
+}
+
+class _FailOnceChatApi extends DemoTiebaApi {
+  _FailOnceChatApi() : super(latency: Duration.zero);
+
+  final List<String> recordIds = <String>[];
+
+  @override
+  Future<ChatSendResult> sendChatMessage(
+    String conversationId,
+    ChatDraft draft,
+  ) {
+    recordIds.add(draft.recordId);
+    if (recordIds.length == 1) {
+      throw StateError('test network failure');
+    }
+    return super.sendChatMessage(conversationId, draft);
   }
 }
