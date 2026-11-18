@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 
 import 'package:tiebanana/app/global.dart';
@@ -348,8 +349,7 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
       return _sheet(context, _emptyView(context), center: true);
     }
     final bool showFooter = _loadingMore || _moreError != null || !_hasMore;
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: () => _search(keepList: true),
       child: NotificationListener<ScrollNotification>(
         onNotification: (ScrollNotification notification) {
@@ -385,8 +385,7 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
 
   /// 状态页也要能下拉刷新：撑满可视高度再居中。
   Widget _sheet(BuildContext context, Widget child, {bool center = true}) {
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: () => _search(keepList: true),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {

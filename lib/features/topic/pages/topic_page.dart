@@ -1,6 +1,7 @@
 import 'package:tiebanana/features/compose/models/thread_compose_route_data.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
@@ -506,9 +507,7 @@ class _TopicPageState extends State<TopicPageRoute> {
     final TiebaTopicDetail detail = _detail!;
     final bool filtering = _query.trim().isNotEmpty;
     final List<TiebaThreadInfo> visible = _visibleThreads;
-    return RefreshIndicator(
-      color: tokens.primary,
-      backgroundColor: tokens.surface,
+    return TiebananaRefreshIndicator(
       edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
       onRefresh: () => _load(refresh: true),
       child: CustomScrollView(

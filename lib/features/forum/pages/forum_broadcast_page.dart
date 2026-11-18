@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -497,8 +498,7 @@ class _ForumBroadcastPageState extends State<ForumBroadcastPage> {
     }
     final bool showFooter =
         _loadingMore || _moreError != null || _error != null || !_hasMore;
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: () => _load(refresh: true),
       child: NotificationListener<ScrollNotification>(
         onNotification: (ScrollNotification notification) {

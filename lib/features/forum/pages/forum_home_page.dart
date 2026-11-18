@@ -1,5 +1,4 @@
 import 'package:tiebanana/features/compose/models/thread_compose_route_data.dart';
-import 'dart:math';
 
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/extended_nested_scroll_view_wrapper.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
-import 'package:tiebanana/shared/widgets/pull_to_refresh_notification.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/features/forum/widgets/forum_control_bar.dart';
@@ -81,8 +80,6 @@ class _ForumHomePageState extends State<ForumHomePage>
   ///服务端上下文，翻页 / 切页签时回传。
   String _frsCommonInfo = '';
   String _topCardId = '';
-
-  final double maxDragOffset = 80.0;
 
   void init() {
     initForum = Global.tiebaAPI.getForumPage(kw: widget.kw, pn: 1);
@@ -562,47 +559,27 @@ class _ForumHomePageState extends State<ForumHomePage>
   Widget _tabView(int index) {
     final _ForumTabState s = _tabs[index];
     return KeepAliveWrapper(
-      child: PullToRefreshNotification(
-        onRefresh: () async {
-          await _fetch(index, refresh: true);
-          return true;
-        },
-        maxDragOffset: maxDragOffset,
-        child: GlowNotificationWidget(Column(
-          children: <Widget>[
-            PullToRefreshContainer((info) {
-              final double offset = info?.dragOffset ?? 0.0;
-              double width = min(48, offset);
-              return SizedBox(
-                height: offset,
-                width: width,
-                child: Center(
-                  child: RefreshProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        TiebananaTokens.of(context).primary),
-                    strokeWidth: 2.0,
-                  ),
-                ),
-              );
-            }),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification notification) {
-                  if (notification.metrics.axis != Axis.vertical) return false;
-                  final ScrollMetrics m = notification.metrics;
-                  if (m.maxScrollExtent > 0 &&
-                      m.pixels >= m.maxScrollExtent - m.viewportDimension) {
-                    _fetch(index);
-                  }
-                  return false;
-                },
-                child: CustomScrollView(
-                  key: PageStorageKey<String>('forum-tab-${s.tab.id}'),
-                  slivers: _tabSlivers(index),
-                ),
-              ),
+      child: TiebananaRefreshIndicator(
+        onRefresh: () => _fetch(index, refresh: true),
+        child: GlowNotificationWidget(NotificationListener<ScrollNotification>(
+          onNotification: (ScrollNotification notification) {
+            if (notification.metrics.axis != Axis.vertical) return false;
+            final ScrollMetrics m = notification.metrics;
+            if (m.maxScrollExtent > 0 &&
+                m.pixels >= m.maxScrollExtent - m.viewportDimension) {
+              _fetch(index);
+            }
+            return false;
+          },
+          child: CustomScrollView(
+            key: PageStorageKey<String>('forum-tab-${s.tab.id}'),
+            // 回弹位移由内层列表先消耗，反向拖动时先收回指示器，
+            // 而不是让外层吧头先滚走。
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-          ],
+            slivers: _tabSlivers(index),
+          ),
         )),
       ),
     );

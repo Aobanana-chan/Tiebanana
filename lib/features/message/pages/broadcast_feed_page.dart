@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -198,8 +199,7 @@ class _BroadcastFeedPageState extends State<BroadcastFeedPage> {
       rows.add(item);
     }
 
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: () => _load(refresh: true),
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: TiebananaMetrics.gapMd),

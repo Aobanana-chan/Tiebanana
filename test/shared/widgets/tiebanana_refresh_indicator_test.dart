@@ -47,28 +47,37 @@ void main() {
     )));
   }
 
-  testWidgets('下拉过阈值后往回拉，指示器完全收起且不触发刷新',
+  testWidgets('指示器到阈值后不再下移，轻微上拉立即回缩并取消刷新',
       (WidgetTester tester) async {
     int calls = 0;
     await pumpIndicator(tester, onRefresh: () async => calls++);
 
     final TestGesture gesture =
         await tester.startGesture(const Offset(195, 300));
-    // 越过触发距离（默认 80），再用同样距离拉回起点。
+    // 越过触发距离（默认 80），记录完全展开的位置。
     await gesture.moveBy(const Offset(0, 160));
     await tester.pump();
-    expect(find.byType(RefreshProgressIndicator), findsOneWidget);
+    final Finder indicator = find.byType(RefreshProgressIndicator);
+    expect(indicator, findsOneWidget);
     expect(calls, 0);
 
-    await gesture.moveBy(const Offset(0, -160));
+    final double armedY = tester.getCenter(indicator).dy;
+    await gesture.moveBy(const Offset(0, 40));
     await tester.pump();
+    expect(tester.getCenter(indicator).dy, armedY);
+    final Finder reveal = find.ancestor(
+      of: indicator,
+      matching: find.byType(SizeTransition),
+    );
+    await gesture.moveBy(const Offset(0, -8));
+    await tester.pump();
+    expect(tester.widget<SizeTransition>(reveal).sizeFactor.value, closeTo(0.9, 0.01),
+        reason: '超过阈值的位移不应抵消反向拖动');
     await gesture.up();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pumpAndSettle();
 
-    expect(find.byType(RefreshProgressIndicator), findsNothing,
-        reason: '手指回到起点，指示器也应完全缩回去');
-    expect(calls, 0, reason: '没有拉到阈值就松手不该刷新');
+    expect(indicator, findsNothing);
+    expect(calls, 0, reason: '退回阈值以下再松手不该刷新');
   });
 
   testWidgets('下拉过阈值松手触发刷新，回调结束后指示器收起',

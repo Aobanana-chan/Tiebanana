@@ -13,6 +13,7 @@ import 'package:tiebanana/features/message/pages/message_page.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tiebanana/features/message/widgets/message_card.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
@@ -319,7 +320,8 @@ void main() {
     expect(dots, findsNothing);
     expect(find.text('未读 1'), findsNothing);
     final Future<void> refresh = tester
-        .state<RefreshIndicatorState>(find.byType(RefreshIndicator))
+        .state<TiebananaRefreshIndicatorState>(
+            find.byType(TiebananaRefreshIndicator))
         .show();
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));

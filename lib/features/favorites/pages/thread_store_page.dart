@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:provider/provider.dart';
@@ -556,8 +557,7 @@ class ThreadStoreFeed extends StatelessWidget {
     final bool showHint = !deleteMode && !hasMore && !showFooter;
     final int extra = (showFooter || showHint) ? 1 : 0;
 
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
         controller: scrollController,
@@ -627,8 +627,7 @@ class ThreadStoreFeed extends StatelessWidget {
 
   /// 状态页也要能下拉刷新：撑满可视高度再居中。
   Widget _sheet(BuildContext context, Widget child, {bool center = true}) {
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: onRefresh,
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
@@ -288,8 +289,7 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
       },
     );
     if (!scrollable) return list;
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: () => _load(silent: true),
       child: list,
     );
@@ -324,8 +324,7 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
       },
     );
     if (!scrollable) return bodyWidget;
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: () => _load(silent: true),
       child: bodyWidget,
     );

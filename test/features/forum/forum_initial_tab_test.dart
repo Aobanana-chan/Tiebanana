@@ -115,6 +115,28 @@ void main() {
     expect(find.text('默认页签的帖子'), findsNothing);
     expect(find.text('这个吧还没有帖子'), findsNothing);
     expect((Global.tiebaAPI as _TabsApi).requestedTabs, <String?>[null, '503']);
+
+    final TestGesture gesture =
+        await tester.startGesture(const Offset(195, 550));
+    await gesture.moveBy(const Offset(0, 24));
+    await gesture.moveBy(const Offset(0, 200));
+    await tester.pump();
+    expect(find.byType(RefreshProgressIndicator), findsOneWidget);
+    await gesture.moveBy(const Offset(0, -200));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(find.byType(RefreshProgressIndicator), findsNothing);
+    expect((Global.tiebaAPI as _TabsApi).requestedTabs, <String?>[null, '503']);
+
+    final TestGesture refresh =
+        await tester.startGesture(const Offset(195, 550));
+    await refresh.moveBy(const Offset(0, 24));
+    await refresh.moveBy(const Offset(0, 200));
+    await refresh.up();
+    await tester.pumpAndSettle();
+    expect((Global.tiebaAPI as _TabsApi).requestedTabs,
+        <String?>[null, '503', '503']);
     expect(tester.takeException(), isNull);
   });
 

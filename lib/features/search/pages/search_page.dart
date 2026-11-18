@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 
 import 'package:tiebanana/app/global.dart';
@@ -750,8 +751,7 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Widget _withRefresh(Widget child) {
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: () => _search(keepList: true, recordHistory: false),
       child: child,
     );

@@ -40,9 +40,8 @@ class TiebananaRefreshController {
 /// 下拉刷新指示器，替代 Material [RefreshIndicator]。
 ///
 /// 与 Material 版本的差异都是本应用需要的：
-/// 1. 位移与手指 1:1（圆弧进度另有映射，不影响位置）。过了触发距离也继续跟手，
-///    往回拉时立即缩回，回到起点后完全消失；Material 版本在 armed 之后会把
-///    指示器钉在展开位置，往上拉也不缩回。
+/// 1. 指示器随下拉展开，到达触发距离后不再下移。往回拉时立即跟手缩回，
+///    展开距离归零时完全消失。
 /// 2. 支持 [TiebananaRefreshController.show] 从代码触发，用于返回键
 ///    「回顶 + 刷新」时同步显示转圈。
 ///
@@ -96,9 +95,6 @@ enum _RefreshMode {
 
 class TiebananaRefreshIndicatorState extends State<TiebananaRefreshIndicator>
     with SingleTickerProviderStateMixin {
-  /// 超过触发距离后允许继续下拉的倍数，只用于避免数值无限增长。
-  static const double _maxPullFactor = 3.0;
-
   /// 下拉进度 → 圆弧进度的映射。拉满时画到 3/4 圈，与 Material 一致。
   static const double _dragArcFactor = 0.75;
 
@@ -270,8 +266,8 @@ class TiebananaRefreshIndicatorState extends State<TiebananaRefreshIndicator>
   }
 
   void _applyDragOffset(double value) {
-    final double max = widget.triggerDistance * _maxPullFactor;
-    final double next = value.clamp(0.0, max).toDouble();
+    // 不累计超出阈值的距离，反向拖动的第一帧就能开始回缩。
+    final double next = value.clamp(0.0, widget.triggerDistance).toDouble();
     if (_offset.value != next) {
       _offset.value = next;
     }

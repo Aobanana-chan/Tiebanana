@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide SearchBar;
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
 import 'package:tiebanana/features/message/state/notification_reminder.dart';
@@ -709,8 +710,7 @@ class MessageFeed extends StatelessWidget {
       return _sheet(context, _emptyView(context));
     }
     final bool showFooter = loadingMore || moreError != null;
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: TiebananaMetrics.gapMd),
@@ -735,8 +735,7 @@ class MessageFeed extends StatelessWidget {
   ///
   ///骨架屏不居中（[center] = false）：它模拟列表，从顶部往下铺更贴近内容到达后的样子。
   Widget _sheet(BuildContext context, Widget child, {bool center = true}) {
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: onRefresh,
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {

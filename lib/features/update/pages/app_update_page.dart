@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:tiebanana/features/update/data/version.dart';
 import 'package:tiebanana/features/update/widgets/update_release_notes.dart';
@@ -82,7 +83,7 @@ class _UpdatePageState extends State<UpdatePage> {
           ),
         ],
       ),
-      body: RefreshIndicator(
+      body: TiebananaRefreshIndicator(
         onRefresh: _check,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),

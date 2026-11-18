@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:tiebanana/features/history/models/view_history_page_model.dart';
@@ -165,8 +166,7 @@ class _TagPanState extends State<TagPan> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+    return TiebananaRefreshIndicator(
       onRefresh: _refresh,
       child: Consumer<ForumState>(builder: (context, forumState, _) {
         final List<LikeForumInfo> forums = forumState.forums;
