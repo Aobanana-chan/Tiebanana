@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -58,6 +60,17 @@ class _CountingApi extends DemoTiebaApi {
   }
 }
 
+class _PendingInnerFloorApi extends DemoTiebaApi {
+  _PendingInnerFloorApi() : super(latency: Duration.zero);
+
+  final pending = Completer<InnerFloor>();
+
+  @override
+  Future<InnerFloor> getInnerFloor(String kz, String pid,
+          {String spid = '', int pn = 1, int rn = 20}) =>
+      pending.future;
+}
+
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -115,7 +128,7 @@ void main() {
     Global.tiebaAPI = DemoTiebaApi(latency: Duration.zero);
     final TiebaThreadPage page = await Global.tiebaAPI.getThreadPage('123');
     final TiebaAuthor author = page.userListSet.values.first;
-    final TiebaSubPost post = _subPost('s1', '楼中楼正文', author.uid);
+    final TiebaSubPost post = _subPost('s1', '：楼中楼正文', author.uid);
 
     await tester.pumpWidget(_host(
       InnerFloorEntry(
@@ -131,6 +144,8 @@ void main() {
       ),
     ));
 
+    expect(find.text('${author.name}：'), findsOneWidget);
+    expect(find.text('：楼中楼正文', findRichText: true), findsNothing);
     await tester.tap(find.text('楼中楼正文', findRichText: true));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -138,6 +153,48 @@ void main() {
     final InnerFloorBottomSheet sheet =
         tester.widget<InnerFloorBottomSheet>(find.byType(InnerFloorBottomSheet));
     expect(sheet.spid, 's1');
+  });
+
+  testWidgets('面板首屏从预览恢复时不显示分隔冒号，正式回复的标点不变', (tester) async {
+    final demo = DemoTiebaApi(latency: Duration.zero);
+    final page = await demo.getThreadPage('123');
+    final floor = await demo.getInnerFloor('123', page.posts.first.id);
+    final author = floor.authors.values.first;
+    final preview = _subPost('s1', ': 缓存回复：带标点', author.uid);
+    final parent = floor.post
+      ..content = [TiebaTextContent(text: '：父楼正文')]
+      ..subPostList = [preview];
+    final api = _PendingInnerFloorApi();
+    Global.tiebaAPI = api;
+
+    await tester.pumpWidget(_host(InnerFloorBottomSheet(
+      floorNum: '2',
+      kz: '123',
+      pid: parent.id,
+      forum: page,
+      cachedPost: parent,
+      cachedAuthors: floor.authors,
+    )));
+    await tester.pump();
+
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.text('缓存回复：带标点'), findsOneWidget);
+    expect(find.text(': 缓存回复：带标点'), findsNothing);
+    expect(find.text('：父楼正文'), findsOneWidget);
+    expect((preview.content.single as TiebaTextContent).text, ': 缓存回复：带标点');
+
+    api.pending.complete(InnerFloor(
+      post: parent,
+      subposts: [_subPost('s1', '：正式回复', author.uid)],
+      page: floor.page,
+      thread: floor.thread,
+      authors: floor.authors,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.text('缓存回复：带标点'), findsNothing);
+    expect(find.text('：正式回复'), findsOneWidget);
   });
 
   testWidgets('打开面板后滚动到锚点回复并高亮', (tester) async {

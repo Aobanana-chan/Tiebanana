@@ -317,7 +317,7 @@ class InnerFloorEntry extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (BuildContext context) => ReplyBottomSheet(
-        replyText: TiebaParser.parserContentString(post.content),
+        replyText: TiebaParser.parserContentString(_innerPreviewBody(post)),
         targetName: author.name,
         targetMeta: '$floorNum楼回复',
         threadTitle: threadTitle,
@@ -505,6 +505,7 @@ class _InnerFloorRow extends StatelessWidget {
             uid: post.uid,
             username: post.username);
     final int likes = int.tryParse(post.agreeNum) ?? 0;
+    final body = _innerPreviewBody(post);
     return InkWell(
       borderRadius: TiebananaMetrics.brCtl,
       onTap: onTap,
@@ -524,7 +525,7 @@ class _InnerFloorRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   ThreadAuthorLine(
-                    name: user.name,
+                    name: user.name.isEmpty ? '' : '${user.name}：',
                     level: null,
                     icons: const <Widget>[],
                     isOp: isOp,
@@ -532,7 +533,7 @@ class _InnerFloorRow extends StatelessWidget {
                     isDeleted: post.isDeleted,
                   ),
                   const SizedBox(height: 2),
-                  InnerPost(posts: post.content, forumName: forumName),
+                  InnerPost(posts: body, forumName: forumName),
                   const SizedBox(height: 3),
                   Text(
                     threadTimeText(post.createTime),
@@ -556,7 +557,7 @@ class _InnerFloorRow extends StatelessWidget {
                           authorId: post.uid,
                           authorName: user.name,
                           portrait: user.portrait,
-                          summary: post.content
+                           summary: body
                               .whereType<TiebaTextContent>()
                               .map((part) => part.text)
                               .join(),
@@ -571,6 +572,54 @@ class _InnerFloorRow extends StatelessWidget {
       ),
     );
   }
+}
+
+final _innerPreviewSeparator =
+    RegExp(r'^[ \t\u00a0\u3000]*[:：][ \t\u00a0\u3000]*');
+
+/// 帖子页的预览有时把昵称分隔符放在正文开头；正式回复不走这条路径。
+List<TiebaPostContent> _innerPreviewBody(TiebaSubPost post) {
+  final content = post.content;
+  for (var i = 0; i < content.length; i++) {
+    final part = content[i];
+    if (part is! TiebaTextContent) break;
+    if (part.text.isEmpty) continue;
+    final separator = _innerPreviewSeparator.firstMatch(part.text);
+    if (separator == null) break;
+    return [
+      if (separator.end < part.text.length)
+        TiebaTextContent(
+          text: part.text.substring(separator.end),
+          uid: part.uid,
+          type: part.type,
+        ),
+      ...content.skip(i + 1),
+    ];
+  }
+  return content;
+}
+
+/// 从帖子页恢复面板时，不修改仍在帖子页使用的预览对象。
+TiebaSubPost _innerReplyFromPreview(TiebaSubPost post) {
+  final body = _innerPreviewBody(post);
+  if (identical(body, post.content)) return post;
+  return TiebaSubPost(
+    id: post.id,
+    title: post.title,
+    isVoice: post.isVoice,
+    agreeNum: post.agreeNum,
+    disagreeNum: post.disagreeNum,
+    hasAgree: post.hasAgree,
+    agreeType: post.agreeType,
+    content: body,
+    createTime: post.createTime,
+    isFirstFloor: post.isFirstFloor,
+    isInnerFloor: post.isInnerFloor,
+    portrait: post.portrait,
+    uid: post.uid,
+    nameShow: post.nameShow,
+    username: post.username,
+  )..isDeleted = post.isDeleted;
 }
 
 class _SubAction extends StatelessWidget {
@@ -884,7 +933,7 @@ class _InnerFloorBottomSheetState extends State<InnerFloorBottomSheet>
       final post = widget.cachedPost!;
       floorPages[1] = InnerFloor(
           post: post,
-          subposts: post.subPostList,
+          subposts: post.subPostList.map(_innerReplyFromPreview).toList(),
           page: const TiebaPageInfo(
               currentPage: 1, hasMore: false, hasPrev: false),
           thread: TiebaThreadData(agreeType: null),
