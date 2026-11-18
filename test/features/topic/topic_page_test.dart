@@ -94,15 +94,22 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('分享面板提供复制链接与浏览器打开', (tester) async {
+  testWidgets('分享面板按好友、其他应用、复制链接排列', (tester) async {
     await _pump(tester, DemoTiebaApi(latency: Duration.zero));
 
     await tester.tap(find.byIcon(Icons.ios_share_rounded));
     await tester.pumpAndSettle();
 
-    expect(find.text('分享话题'), findsOneWidget);
-    expect(find.text('复制话题链接'), findsOneWidget);
-    expect(find.text('在浏览器打开'), findsOneWidget);
+    expect(find.text('分享给好友'), findsOneWidget);
+    expect(find.text('其他应用'), findsOneWidget);
+    expect(find.text('复制链接'), findsOneWidget);
+    expect(find.text('分享内容为链接，对方可在贴吧中打开'), findsOneWidget);
+
+    final double friendX = tester.getCenter(find.text('分享给好友')).dx;
+    final double appsX = tester.getCenter(find.text('其他应用')).dx;
+    final double copyX = tester.getCenter(find.text('复制链接')).dx;
+    expect(friendX < appsX, isTrue);
+    expect(appsX < copyX, isTrue);
     expect(tester.takeException(), isNull);
   });
 }

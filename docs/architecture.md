@@ -81,6 +81,7 @@ Global ── createTiebaApi ── lib/app/backend.dart
 | `thread`、`compose`、`topic` | 看帖、楼中楼、投票、发帖与话题 |
 | `message`、`search` | 消息提醒与内容搜索 |
 | `profile`、`media`、`moderation` | 个人资料、图片选择与上传、举报及管理操作 |
+| `share` | 跨功能的分享面板：私信好友、其他应用与复制链接 |
 | `favorites`、`history` | 收藏与本地浏览历史 |
 | `settings`、`update`、`diagnostics`、`splash` | 设置、更新、诊断与开屏 |
 

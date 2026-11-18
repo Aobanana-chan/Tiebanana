@@ -9,6 +9,8 @@ import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/features/moderation/widgets/moderation_actions.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
+import 'package:tiebanana/features/share/models/share_content.dart';
+import 'package:tiebanana/features/share/widgets/share_sheet.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
@@ -922,6 +924,14 @@ class ThreadLikeAction extends StatelessWidget {
   }
 }
 
+/// 分享标题的短摘要。按 rune 截断，避免把 emoji 切成半个代理对。
+String _shareExcerpt(String text, {required String fallback}) {
+  if (text.isEmpty) return fallback;
+  final Runes runes = text.runes;
+  if (runes.length <= 40) return text;
+  return '${String.fromCharCodes(runes.take(40))}…';
+}
+
 /// 卡片右上角「更多」：收藏 / 分享 / 举报 / 拉黑。
 ///
 /// 举报目标与作者身份由卡片传入，楼中楼使用自己的楼层 ID。
@@ -966,11 +976,22 @@ class ThreadMoreButton extends StatelessWidget {
         }
         return;
       case 'share':
-        await Clipboard.setData(ClipboardData(
-          text: 'https://tieba.baidu.com/p/$threadId?pid=$postId',
-        ));
-        if (!context.mounted) return;
-        Fluttertoast.showToast(msg: '链接已复制');
+        final bool threadTarget = reportKind == TiebaReportKind.thread;
+        final String plain = summary.replaceAll(RegExp(r'\s+'), ' ').trim();
+        await showShareSheet(
+          context,
+          ShareContent(
+            title:
+                _shareExcerpt(plain, fallback: threadTarget ? '贴吧帖子' : '贴吧回复'),
+            url: 'https://tieba.baidu.com/p/$threadId?pid=$postId',
+            source: authorName.isEmpty
+                ? (threadTarget ? '帖子' : '回复')
+                : '$authorName · ${threadTarget ? '帖子' : '回复'}',
+            icon: threadTarget
+                ? Icons.article_outlined
+                : Icons.chat_bubble_outline_rounded,
+          ),
+        );
         return;
       case 'report':
         await openReportPage(

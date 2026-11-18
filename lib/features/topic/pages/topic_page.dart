@@ -12,7 +12,8 @@ import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/shared/content/thread_summary.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:tiebanana/features/share/models/share_content.dart';
+import 'package:tiebanana/features/share/widgets/share_sheet.dart';
 
 /// 话题页。
 ///
@@ -361,70 +362,20 @@ class _TopicPageState extends State<TopicPageRoute> {
   }
 
   Future<void> _share() async {
-    if (_detail == null) return;
-    final TiebananaTokens tokens = TiebananaTokens.of(context);
-    final String url = _topicUrl;
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: tokens.surface,
-      builder: (BuildContext sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '分享话题',
-                    style: Theme.of(sheetContext)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(color: tokens.textPrimary),
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: Icon(Icons.link_rounded, color: tokens.primary),
-                title: const Text('复制话题链接'),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  await Clipboard.setData(ClipboardData(text: url));
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context)
-                    ..removeCurrentSnackBar()
-                    ..showSnackBar(const SnackBar(
-                      content: Text('话题链接已复制'),
-                      duration: Duration(seconds: 2),
-                    ));
-                },
-              ),
-              ListTile(
-                leading:
-                    Icon(Icons.open_in_browser_rounded, color: tokens.primary),
-                title: const Text('在浏览器打开'),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  final bool ok = await launchUrl(
-                    Uri.parse(url),
-                    mode: LaunchMode.externalApplication,
-                  );
-                  if (!mounted || ok) return;
-                  ScaffoldMessenger.of(context)
-                    ..removeCurrentSnackBar()
-                    ..showSnackBar(const SnackBar(
-                      content: Text('没有可用的浏览器'),
-                      duration: Duration(seconds: 2),
-                    ));
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
+    final TiebaTopicDetail? detail = _detail;
+    if (detail == null) return;
+    final String name = detail.name.isNotEmpty ? detail.name : widget.data.name;
+    final String forumName =
+        detail.forumName.isNotEmpty ? detail.forumName : widget.data.forumName;
+    await showShareSheet(
+      context,
+      ShareContent(
+        title: name,
+        summary: detail.desc,
+        url: _topicUrl,
+        source: forumName.isEmpty ? '话题' : '话题 · $forumName吧',
+        icon: Icons.tag_rounded,
+      ),
     );
   }
 

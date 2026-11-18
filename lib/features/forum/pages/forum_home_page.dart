@@ -22,6 +22,8 @@ import 'package:tiebanana/features/forum/widgets/forum_tab_bar.dart';
 import 'package:tiebanana/shared/widgets/glow_notification_widget.dart';
 import 'package:tiebanana/shared/content/thread_summary.dart';
 import 'package:tiebanana/features/forum/widgets/top_thread.dart';
+import 'package:tiebanana/features/share/models/share_content.dart';
+import 'package:tiebanana/features/share/widgets/share_sheet.dart';
 
 ///吧页面。
 ///
@@ -270,7 +272,7 @@ class _ForumHomePageState extends State<ForumHomePage>
           onPressed: () {
             final ForumPage? page = _forumPage;
             if (page == null) return;
-            showMenu(
+            showMenu<Object>(
                 context: context,
                 position: RelativeRect.fromLTRB(overlay.size.width - 100, 0,
                     overlay.size.width, overlay.size.height),
@@ -278,14 +280,14 @@ class _ForumHomePageState extends State<ForumHomePage>
                     side: const BorderSide(width: 0.1),
                     borderRadius: BorderRadius.circular(8)),
                 items: <PopupMenuEntry<Object>>[
-                  PopupMenuItem(
+                  PopupMenuItem<Object>(
                     onTap: () async {
                       if (page.forum.isLike) {
                         Global.tiebaAPI.unfavoForum(
                             fid: page.forum.fid, forumName: page.forum.name);
                       } else {
-                        Global.tiebaAPI.favoForum(
-                            page.forum.fid, page.forum.name);
+                        Global.tiebaAPI
+                            .favoForum(page.forum.fid, page.forum.name);
                       }
                     },
                     child: Align(
@@ -293,13 +295,33 @@ class _ForumHomePageState extends State<ForumHomePage>
                       child: Text(page.forum.isLike ? "取消关注" : "关注"),
                     ),
                   ),
-                  const PopupMenuItem(
+                  const PopupMenuItem<Object>(
+                    value: 'share',
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text("分享"),
                     ),
                   ),
-                ]);
+                ]).then((Object? value) {
+              // 帖子菜单项会自己 pop，等菜单真正关闭后再弹分享面板，
+              // 否则后面的 pop 会把新面板一起关掉。
+              if (!mounted) return;
+              if (value != 'share') return;
+              final String name = page.forum.name.trim();
+              showShareSheet(
+                context,
+                ShareContent(
+                  title: name.isEmpty ? '贴吧' : '$name吧',
+                  url: Uri.https(
+                    'tieba.baidu.com',
+                    '/f',
+                    <String, String>{'kw': name},
+                  ).toString(),
+                  source: '贴吧',
+                  icon: Icons.forum_outlined,
+                ),
+              );
+            });
           },
           icon: const Icon(Icons.more_vert)),
     ];
@@ -310,8 +332,7 @@ class _ForumHomePageState extends State<ForumHomePage>
     if (!outerController.hasClients) {
       return;
     }
-    final double headerHeight =
-        _headerKey.currentContext?.size?.height ?? 108;
+    final double headerHeight = _headerKey.currentContext?.size?.height ?? 108;
     final bool scrolledAway =
         outerController.offset > headerHeight - TiebananaMetrics.gapXXl - 8;
     _appBarTitle.title = scrolledAway ? "${widget.kw}吧" : "";
@@ -338,8 +359,7 @@ class _ForumHomePageState extends State<ForumHomePage>
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeIn);
                 },
-                child: Text("${widget.kw}吧",
-                    overflow: TextOverflow.ellipsis)),
+                child: Text("${widget.kw}吧", overflow: TextOverflow.ellipsis)),
           );
         },
       ),
@@ -360,18 +380,20 @@ class _ForumHomePageState extends State<ForumHomePage>
   Widget _fab(TiebananaTokens tokens) {
     return FloatingActionButton(
       tooltip: '发帖',
-      onPressed: _forumPage == null ? null : () async {
-        if (!Global.tiebaAPI.isLogin) {
-          await Navigator.pushNamed(context, PageRouter.login);
-          if (!mounted || !Global.tiebaAPI.isLogin) return;
-        }
-        if (!mounted) return;
-        final page = _forumPage;
-        if (page == null) return;
-        await Navigator.pushNamed(context, PageRouter.threadCompose,
-          arguments: ThreadComposeRouteData(fid: page.forum.fid,
-              forumName: widget.kw));
-      },
+      onPressed: _forumPage == null
+          ? null
+          : () async {
+              if (!Global.tiebaAPI.isLogin) {
+                await Navigator.pushNamed(context, PageRouter.login);
+                if (!mounted || !Global.tiebaAPI.isLogin) return;
+              }
+              if (!mounted) return;
+              final page = _forumPage;
+              if (page == null) return;
+              await Navigator.pushNamed(context, PageRouter.threadCompose,
+                  arguments: ThreadComposeRouteData(
+                      fid: page.forum.fid, forumName: widget.kw));
+            },
       backgroundColor: tokens.primaryContainer,
       foregroundColor: tokens.onPrimaryContainer,
       elevation: 2,
@@ -483,8 +505,9 @@ class _ForumHomePageState extends State<ForumHomePage>
                           partitionMenu: current.tab.partitionMenu,
                           partitionValue: current.partitionValue,
                           onPartitionChange: _onPartitionChange,
-                          subTabs:
-                              current.tab.isGoodTab ? current.tab.subTabs : const [],
+                          subTabs: current.tab.isGoodTab
+                              ? current.tab.subTabs
+                              : const [],
                           subTab: current.subTab,
                           onSubTabChange: _onSubTabChange,
                         ),
@@ -766,8 +789,8 @@ class _ControlBarSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 10,
-          TiebananaMetrics.pageGutter, 8),
+      padding: EdgeInsets.fromLTRB(
+          TiebananaMetrics.pageGutter, 10, TiebananaMetrics.pageGutter, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[

@@ -11,6 +11,7 @@ import 'package:tiebanana/core/diagnostics/app_log.dart';
 import 'package:tiebanana/features/message/state/chat_error.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/app/navigation/link_router.dart';
 import 'package:tiebanana/features/message/models/chat_route_data.dart';
 import 'package:tiebanana/features/message/state/chat_time.dart';
 import 'package:tiebanana/features/message/state/chat_content.dart';
@@ -24,6 +25,9 @@ import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+/// 私信正文里的 http(s) 链接。
+final RegExp _chatUrlPattern = RegExp(r'https?://[^\s]+', caseSensitive: false);
 
 /// 聊天页。
 class ChatPage extends StatelessWidget {
@@ -891,11 +895,53 @@ class _ChatViewState extends State<ChatView> {
         ],
       );
     }
-    return ExtendedText(
-      displayText,
+    final String text = displayText;
+    final String? link = _firstChatUrl(text);
+    final Widget body = ExtendedText(
+      text,
       style: textStyle,
       specialTextSpanBuilder: TiebaSpanBuilder(),
     );
+    if (link == null) return body;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        body,
+        const SizedBox(height: 6),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => AppUtil.openLink(context, link),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(
+                Icons.open_in_new_rounded,
+                size: 13,
+                color: textStyle?.color,
+              ),
+              const SizedBox(width: 3),
+              Text(
+                '打开链接',
+                style: textStyle?.copyWith(
+                  fontSize: 12,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 私信里的第一个链接。分享面板发出去的是「标题 + 链接」纯文本，
+  /// 这里给接收方一个明确的打开入口。
+  String? _firstChatUrl(String text) {
+    final RegExpMatch? match = _chatUrlPattern.firstMatch(text);
+    if (match == null) return null;
+    final String url = match.group(0) ?? '';
+    return url.replaceFirst(RegExp(r'[)\]}>.,;!?，。；！？、）】》]+$'), '');
   }
 
   /// 消息组末尾的状态行：发送中 / 未发送 / 时间（己方附带对方已读状态）。

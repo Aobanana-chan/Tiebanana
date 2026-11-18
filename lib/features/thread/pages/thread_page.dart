@@ -21,6 +21,8 @@ import 'package:tiebanana/features/thread/widgets/thread_first_comment.dart';
 import 'package:tiebanana/features/thread/widgets/thread_floor_card.dart';
 import 'package:tiebanana/features/thread/widgets/thread_reply_bar.dart';
 import 'package:tiebanana/features/moderation/widgets/moderation_actions.dart';
+import 'package:tiebanana/features/share/models/share_content.dart';
+import 'package:tiebanana/features/share/widgets/share_sheet.dart';
 
 ///贴页面
 
@@ -1051,11 +1053,15 @@ class ThreadPageMainState extends State<ThreadPageMain>
       return;
     }
     if (value == 'share') {
-      await Clipboard.setData(
-        ClipboardData(text: 'https://tieba.baidu.com/p/${info.tid}'),
+      await showShareSheet(
+        context,
+        ShareContent(
+          title: info.title.trim().isEmpty ? '贴吧帖子' : info.title,
+          url: 'https://tieba.baidu.com/p/${info.tid}',
+          source: info.forumName.isEmpty ? '帖子' : '${info.forumName}吧',
+          icon: Icons.article_outlined,
+        ),
       );
-      if (!mounted) return;
-      Fluttertoast.showToast(msg: '链接已复制');
     }
   }
 
