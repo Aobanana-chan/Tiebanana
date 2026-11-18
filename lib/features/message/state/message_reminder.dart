@@ -3,6 +3,7 @@ import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
+import 'package:tiebanana/features/message/state/notification_reminder.dart';
 
 /// 分类提醒的运行时快照，数据来自消息未读接口。
 class MessageReminder {
@@ -17,14 +18,20 @@ class MessageReminder {
   static final Map<TiebaMessageKind, int> _clearRevisions = {};
   static bool likeOpened = false;
 
-  /// 底栏 / 消息页角标使用的总数（分类提醒 + 私信）。
-  static int get totalUnread => counts.value.total + chatUnread.value;
+  /// 底栏 / 消息页角标使用的总数（分类提醒 + 私信 + 互助未读）。
+  ///
+  /// 官方把广播排除在数字总数之外；互助已屏蔽时也不计入。
+  static int get totalUnread =>
+      counts.value.total +
+      chatUnread.value +
+      NotificationReminder.instance.mutualUnread;
 
   static void reset() {
     likeOpened = false;
     _revision++;
     counts.value = const MessageUnreadCounts();
     chatUnread.value = 0;
+    NotificationReminder.instance.reset();
   }
 
   /// 私信未读来自本地会话表，和 [refresh] 分开请求。

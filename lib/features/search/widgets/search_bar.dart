@@ -23,8 +23,15 @@ const double searchHistoryDropMaxHeight = 280;
 class SearchBar extends StatefulWidget {
   final double? maxHeight;
   final FloatingSearchBarController? barController;
+
+  /// 药丸右侧的附属按钮（消息页铃铛）。不占用搜索输入区。
+  final Widget? trailing;
+
   const SearchBar(
-      {super.key, this.maxHeight = double.infinity, this.barController});
+      {super.key,
+      this.maxHeight = double.infinity,
+      this.barController,
+      this.trailing});
 
   @override
   _SearchBarState createState() => _SearchBarState();
@@ -90,15 +97,17 @@ class _SearchBarState extends State<SearchBar> {
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool hasTrailing = widget.trailing != null;
     // 状态栏留白由 FloatingSearchAppBar 内部固定承担，这里保持布局结构稳定。
-    return FloatingSearchAppBar(
+    final Widget bar = FloatingSearchAppBar(
       color: tokens.surface,
       controller: barController,
       clearQueryOnClose: false,
       height: 48,
       // 胶囊底边到下面内容只留 gapSm：全站都是「搜索栏 → 页签药丸 / 内容」，
       // 14 会空出一大截（消息页的药丸行、首页的吧列表都嫌它松）。
-      margin: const EdgeInsets.fromLTRB(16, 2, 16, TiebananaMetrics.gapSm),
+      margin: EdgeInsets.fromLTRB(
+          16, 2, hasTrailing ? 64 : 16, TiebananaMetrics.gapSm),
       borderRadius: TiebananaMetrics.brPill,
       shadow: tokens.cardShadow,
       onSubmitted: (searchText) => search(context, searchText),
@@ -144,6 +153,18 @@ class _SearchBarState extends State<SearchBar> {
         }
         setState(() {});
       },
+    );
+    if (!hasTrailing) return bar;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        bar,
+        Positioned(
+          top: MediaQuery.of(context).viewPadding.top + 4,
+          right: 16,
+          child: widget.trailing!,
+        ),
+      ],
     );
   }
 }

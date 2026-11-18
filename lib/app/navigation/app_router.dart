@@ -4,7 +4,9 @@ import 'package:tiebanana/features/settings/pages/about_page.dart';
 import 'package:tiebanana/features/settings/pages/app_setting_page.dart';
 import 'package:tiebanana/features/update/pages/app_update_page.dart';
 import 'package:tiebanana/features/forum/pages/forum_home_page.dart';
+import 'package:tiebanana/features/forum/pages/forum_broadcast_page.dart';
 import 'package:tiebanana/features/forum/pages/forum_search_page.dart';
+import 'package:tiebanana/features/message/pages/broadcast_feed_page.dart';
 import 'package:tiebanana/features/home/pages/home_page.dart';
 import 'package:tiebanana/features/media/pages/image_picker_page.dart';
 import 'package:tiebanana/features/message/models/chat_route_data.dart';
@@ -70,6 +72,12 @@ abstract class AppRouter {
         forumName: ModalRoute.of(context)!.settings.arguments as String,
       );
     },
+    "forumBroadcast": (context) {
+      final data =
+          ModalRoute.of(context)!.settings.arguments as ForumBroadcastRouteData;
+      return ForumBroadcastPage(data: data);
+    },
+    "broadcastFeed": (context) => const BroadcastFeedPage(),
     "imagePicker": (context) {
       return const ImagePickerRoute();
     },

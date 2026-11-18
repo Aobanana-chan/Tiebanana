@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:tiebanana/app/lifecycle/app_lifecycle.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
+import 'package:tiebanana/features/message/state/notification_reminder.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/shared/controllers/back_to_top_controller.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';
@@ -92,9 +93,12 @@ class _HomePageState extends State<HomePage> {
     MessageReminder.reset();
     MessageReminder.refresh();
     MessageReminder.refreshChat();
+    NotificationReminder.instance.load();
     // 官方 HTTP 提醒的周期为 600000ms；不为计数预取三个列表。
-    _reminderTimer = Timer.periodic(
-        const Duration(minutes: 10), (_) => MessageReminder.refresh());
+    _reminderTimer = Timer.periodic(const Duration(minutes: 10), (_) {
+      MessageReminder.refresh();
+      NotificationReminder.instance.refresh();
+    });
 
     //监听Scheme
     initPlatformStateForStringUniLinks();
@@ -140,6 +144,7 @@ class _HomePageState extends State<HomePage> {
     MessageReminder.reset();
     MessageReminder.refresh();
     MessageReminder.refreshChat();
+    NotificationReminder.instance.load();
     forumState.refresh();
   }
 
@@ -154,12 +159,28 @@ class _HomePageState extends State<HomePage> {
     if (index == 2) {
       MessageReminder.refresh();
       MessageReminder.refreshChat();
+      NotificationReminder.instance.refresh();
     }
     setState(() {
       _currentPage = index;
       controller.animateToPage(_currentPage,
           duration: const Duration(milliseconds: 200), curve: Curves.easeIn);
     });
+  }
+
+  /// 底部「消息」：数字优先；只有广播未读时才显示红点，且不带数字。
+  Widget _messageBadge(Widget icon) {
+    final int numbers = MessageReminder.totalUnread;
+    final bool dot = numbers <= 0 && NotificationReminder.instance.broadcastDot;
+    if (numbers > 0) {
+      return Badge.count(maxCount: 99, count: numbers, child: icon);
+    }
+    return Badge(
+      isLabelVisible: dot,
+      smallSize: 9,
+      backgroundColor: Theme.of(context).colorScheme.error,
+      child: icon,
+    );
   }
 
   void initPlatformStateForStringUniLinks() {
@@ -222,6 +243,7 @@ class _HomePageState extends State<HomePage> {
             AccountStore.changes,
             MessageReminder.counts,
             MessageReminder.chatUnread,
+            NotificationReminder.instance,
           ]),
           builder: (BuildContext context, Widget? child) => NavigationBar(
             selectedIndex: _currentPage,
@@ -236,18 +258,8 @@ class _HomePageState extends State<HomePage> {
                   selectedIcon: Icon(Icons.explore),
                   label: "动态"),
               NavigationDestination(
-                  icon: Badge.count(
-                    maxCount: 99,
-                    count: MessageReminder.totalUnread,
-                    isLabelVisible: MessageReminder.totalUnread > 0,
-                    child: const Icon(Icons.notifications_none),
-                  ),
-                  selectedIcon: Badge.count(
-                    maxCount: 99,
-                    count: MessageReminder.totalUnread,
-                    isLabelVisible: MessageReminder.totalUnread > 0,
-                    child: const Icon(Icons.notifications),
-                  ),
+                  icon: _messageBadge(const Icon(Icons.notifications_none)),
+                  selectedIcon: _messageBadge(const Icon(Icons.notifications)),
                   label: "消息"),
               NavigationDestination(
                   icon: Icon(Icons.person_outline),

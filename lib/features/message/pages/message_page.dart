@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
+import 'package:tiebanana/features/message/state/notification_reminder.dart';
 import 'package:tiebanana/features/message/pages/private_message_panel.dart';
+import 'package:tiebanana/features/message/services/official_notify_pages.dart';
+import 'package:tiebanana/features/message/widgets/broadcast_entry_card.dart';
+import 'package:tiebanana/features/message/widgets/mutual_help_card.dart';
+import 'package:tiebanana/features/message/widgets/reminder_bar.dart';
+import 'package:tiebanana/features/message/widgets/reminder_bell.dart';
+import 'package:tiebanana/features/message/widgets/reminder_sheet.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -113,6 +120,9 @@ class _MessagePanState extends State<MessagePan>
   late final List<_TabState> _tabs;
   int _selectedTab = 0;
 
+  /// 提醒区的展开状态只在当前页面会话里有效，每次启动默认收起。
+  bool _reminderExpanded = false;
+
   @override
   void initState() {
     super.initState();
@@ -131,6 +141,14 @@ class _MessagePanState extends State<MessagePan>
     _controller.addListener(_onTabChanged);
     MessageReminder.counts.addListener(_onReminderChanged);
     MessageReminder.chatUnread.addListener(_onReminderChanged);
+    NotificationReminder.instance.addListener(_onNotificationChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) NotificationReminder.instance.ensureLoaded();
+    });
+  }
+
+  void _onNotificationChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onReminderChanged() {
@@ -153,6 +171,7 @@ class _MessagePanState extends State<MessagePan>
   void dispose() {
     MessageReminder.counts.removeListener(_onReminderChanged);
     MessageReminder.chatUnread.removeListener(_onReminderChanged);
+    NotificationReminder.instance.removeListener(_onNotificationChanged);
     if (_tabs[_selectedTab].meta.kind == TiebaMessageKind.like) {
       WidgetsBinding.instance.addPostFrameCallback(
           (_) => MessageReminder.clear(TiebaMessageKind.like));
@@ -318,49 +337,173 @@ class _MessagePanState extends State<MessagePan>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints topConstraints) {
-        return Column(
-          children: <Widget>[
-            SearchBar(
-              maxHeight: topConstraints.maxHeight,
-              barController: widget.controller,
-            ),
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () => widget.controller.close(),
-                child: Column(
-                  children: <Widget>[
-                    _tabHeader(context),
-                    Expanded(
-                      child:
-                          NotificationListener<OverscrollIndicatorNotification>(
-                        onNotification:
-                            (OverscrollIndicatorNotification? overscroll) {
-                          overscroll!.disallowIndicator();
-                          return true;
-                        },
-                        child: TabBarView(
-                          controller: _controller,
-                          physics: const ClampingScrollPhysics(),
-                          children: _tabs
-                              .map((_TabState tab) => KeepAliveWrapper(
-                                    child: _TabPage(
-                                      onStart: () => _ensureStarted(tab),
-                                      child: _body(tab),
-                                    ),
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                    ),
-                  ],
+        final double contentWidth =
+            topConstraints.maxWidth >= 900 ? 760 : topConstraints.maxWidth;
+        return Align(
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            width: contentWidth,
+            height: topConstraints.maxHeight,
+            child: Column(
+              children: <Widget>[
+                SearchBar(
+                  maxHeight: topConstraints.maxHeight,
+                  barController: widget.controller,
+                  trailing: _bell(),
                 ),
-              ),
+                _reminderArea(),
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () => widget.controller.close(),
+                    child: Column(
+                      children: <Widget>[
+                        _tabHeader(context),
+                        Expanded(
+                          child: NotificationListener<
+                              OverscrollIndicatorNotification>(
+                            onNotification:
+                                (OverscrollIndicatorNotification? overscroll) {
+                              overscroll!.disallowIndicator();
+                              return true;
+                            },
+                            child: TabBarView(
+                              controller: _controller,
+                              physics: const ClampingScrollPhysics(),
+                              children: _tabs
+                                  .map((_TabState tab) => KeepAliveWrapper(
+                                        child: _TabPage(
+                                          onStart: () => _ensureStarted(tab),
+                                          child: _body(tab),
+                                        ),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
+  }
+
+  /// 铃铛只在提醒条被整条隐藏后出现；它是唯一恢复入口。
+  Widget? _bell() {
+    final NotificationReminder reminder = NotificationReminder.instance;
+    if (!reminder.bellVisible) return null;
+    return ReminderBell(
+      showDot: reminder.bellDot,
+      onTap: () => showReminderSheet(context),
+    );
+  }
+
+  /// 提醒区：默认 48px 收起；展开后最多两张卡。
+  Widget _reminderArea() {
+    final NotificationReminder reminder = NotificationReminder.instance;
+    if (!reminder.reminderVisible) return const SizedBox.shrink();
+    final bool showMutual = reminder.mutualCardVisible;
+    final bool showBroadcast = reminder.broadcastEntryVisible;
+    final bool wide = MediaQuery.sizeOf(context).width >= 900;
+    final Widget cards;
+    if (showMutual && showBroadcast && wide) {
+      cards = Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(child: _mutualCard()),
+          const SizedBox(width: 12),
+          Expanded(child: _broadcastCard()),
+        ],
+      );
+    } else if (showMutual && showBroadcast) {
+      cards = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _mutualCard(),
+          const SizedBox(height: 8),
+          _broadcastCard(),
+        ],
+      );
+    } else if (showMutual) {
+      cards = Align(
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: _mutualCard(),
+        ),
+      );
+    } else {
+      cards = Align(
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: _broadcastCard(),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        ReminderBar(
+          expanded: _reminderExpanded,
+          onToggle: () =>
+              setState(() => _reminderExpanded = !_reminderExpanded),
+          onHide: _hideReminder,
+        ),
+        if (_reminderExpanded)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                TiebananaMetrics.pageGutter, 0, TiebananaMetrics.pageGutter, 8),
+            child: cards,
+          ),
+      ],
+    );
+  }
+
+  Widget _mutualCard() {
+    return MutualHelpCard(
+      onOpen: () => openMutualHelp(context),
+      onMaskChanged: (bool masked) async {
+        final bool ok = await NotificationReminder.instance.setMasked(masked);
+        if (!ok && mounted) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            const SnackBar(content: Text('设置没有保存，请重试')),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _broadcastCard() {
+    final bool wide = MediaQuery.sizeOf(context).width >= 900;
+    return BroadcastEntryCard(
+      vertical: wide,
+      onOpen: () => openBroadcastFeed(context),
+    );
+  }
+
+  void _hideReminder() {
+    final ReminderVisibilitySnapshot snapshot =
+        NotificationReminder.instance.hideAll();
+    final ScaffoldMessengerState? messenger =
+        ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('提醒已隐藏'),
+          action: SnackBarAction(
+            label: '撤销',
+            onPressed: () => NotificationReminder.instance.restore(snapshot),
+          ),
+        ),
+      );
   }
 
   /// 页签栏：药丸选中态 + 该页签的未读数。

@@ -296,6 +296,13 @@ class _ForumHomePageState extends State<ForumHomePage>
                     ),
                   ),
                   const PopupMenuItem<Object>(
+                    value: 'broadcast',
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("吧广播"),
+                    ),
+                  ),
+                  const PopupMenuItem<Object>(
                     value: 'share',
                     child: Align(
                       alignment: Alignment.centerLeft,
@@ -306,6 +313,18 @@ class _ForumHomePageState extends State<ForumHomePage>
               // 帖子菜单项会自己 pop，等菜单真正关闭后再弹分享面板，
               // 否则后面的 pop 会把新面板一起关掉。
               if (!mounted) return;
+              if (value == 'broadcast') {
+                Navigator.pushNamed(
+                  context,
+                  PageRouter.forumBroadcast,
+                  arguments: ForumBroadcastRouteData(
+                    forumId: page.forum.fid,
+                    forumName: page.forum.name,
+                    forumAvatar: page.forum.avatar,
+                  ),
+                );
+                return;
+              }
               if (value != 'share') return;
               final String name = page.forum.name.trim();
               showShareSheet(

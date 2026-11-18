@@ -22,6 +22,12 @@ abstract class PageRouter {
 
   /// 参数：`ChatRouteData`
   static const String chat = "chat";
+
+  /// 参数：`无`；原生「吧广播」聚合流
+  static const String broadcastFeed = "broadcastFeed";
+
+  /// 参数：`ForumBroadcastRouteData`
+  static const String forumBroadcast = "forumBroadcast";
   static const String profileEdit = "profileEdit";
   static const String threadStore = "threadStore";
   static const String viewHistory = "viewHistory";
@@ -62,4 +68,17 @@ class TopicPageRouterData {
   final String topicId;
   final String fid;
   final String forumName;
+}
+
+/// 吧广播历史页路由参数。
+class ForumBroadcastRouteData {
+  const ForumBroadcastRouteData({
+    required this.forumId,
+    required this.forumName,
+    this.forumAvatar = '',
+  });
+
+  final String forumId;
+  final String forumName;
+  final String forumAvatar;
 }
