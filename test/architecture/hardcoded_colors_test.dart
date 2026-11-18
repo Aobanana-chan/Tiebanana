@@ -22,6 +22,8 @@ const Map<String, int> allowedHardcodedColors = <String, int>{
   'lib/features/media/pages/image_picker_page.dart': 1,
   // 性别图标：男蓝女粉是语义色，不该跟主题色走。
   'lib/features/profile/pages/user_profile_page.dart': 2,
+  // 九宫格「+N」遮罩：图片上的固定深色半透明底与白字。
+  'lib/features/thread/widgets/thread_floor_card.dart': 1,
   // 开屏的品牌色：必须与 App 图标逐色一致，不跟主题走（见 lib/features/splash/splash_brand.dart）。
   'lib/features/splash/splash_brand.dart': 5,
   // 主题色卡上的对勾固定白：色块本身就是饱和主色，白勾在明暗主题下都清晰。

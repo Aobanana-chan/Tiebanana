@@ -62,6 +62,7 @@ AGENT.md
 
 # Key
 key.jks
+key.properties
 
 # Database Entity 
 objectbox.g.dart
