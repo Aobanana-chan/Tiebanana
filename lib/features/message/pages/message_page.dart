@@ -2,12 +2,12 @@ import 'package:flutter/material.dart' hide SearchBar;
 import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
+import 'package:tiebanana/features/message/state/notify_entry.dart';
 import 'package:tiebanana/features/message/state/notification_reminder.dart';
 import 'package:tiebanana/features/message/pages/private_message_panel.dart';
 import 'package:tiebanana/features/message/services/official_notify_pages.dart';
-import 'package:tiebanana/features/message/widgets/broadcast_entry_card.dart';
-import 'package:tiebanana/features/message/widgets/mutual_help_card.dart';
-import 'package:tiebanana/features/message/widgets/reminder_bar.dart';
+import 'package:tiebanana/features/message/widgets/notify_entry_row.dart';
+import 'package:tiebanana/features/message/widgets/notify_section_header.dart';
 import 'package:tiebanana/features/message/widgets/reminder_bell.dart';
 import 'package:tiebanana/features/message/widgets/reminder_sheet.dart';
 import 'package:tiebanana/app/global.dart';
@@ -121,8 +121,8 @@ class _MessagePanState extends State<MessagePan>
   late final List<_TabState> _tabs;
   int _selectedTab = 0;
 
-  /// 提醒区的展开状态只在当前页面会话里有效，每次启动默认收起。
-  bool _reminderExpanded = false;
+  /// 提醒区的展开状态只在当前页面会话里有效，每次启动默认展开。
+  bool _reminderExpanded = true;
 
   @override
   void initState() {
@@ -394,7 +394,7 @@ class _MessagePanState extends State<MessagePan>
     );
   }
 
-  /// 铃铛只在提醒条被整条隐藏后出现；它是唯一恢复入口。
+  /// 铃铛常驻搜索栏右侧；红点只提示被隐藏的未读 / 新广播。
   Widget? _bell() {
     final NotificationReminder reminder = NotificationReminder.instance;
     if (!reminder.bellVisible) return null;
@@ -404,89 +404,46 @@ class _MessagePanState extends State<MessagePan>
     );
   }
 
-  /// 提醒区：默认 48px 收起；展开后最多两张卡。
+  /// 提醒区：分组头 + 按数据生成的行；默认展开。
   Widget _reminderArea() {
     final NotificationReminder reminder = NotificationReminder.instance;
     if (!reminder.reminderVisible) return const SizedBox.shrink();
-    final bool showMutual = reminder.mutualCardVisible;
-    final bool showBroadcast = reminder.broadcastEntryVisible;
-    final bool wide = MediaQuery.sizeOf(context).width >= 900;
-    final Widget cards;
-    if (showMutual && showBroadcast && wide) {
-      cards = Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Expanded(child: _mutualCard()),
-          const SizedBox(width: 12),
-          Expanded(child: _broadcastCard()),
-        ],
-      );
-    } else if (showMutual && showBroadcast) {
-      cards = Column(
+    final List<NotifyEntry> entries = reminder.visibleEntries;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          TiebananaMetrics.pageGutter, 0, TiebananaMetrics.pageGutter, 8),
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          _mutualCard(),
-          const SizedBox(height: 8),
-          _broadcastCard(),
-        ],
-      );
-    } else if (showMutual) {
-      cards = Align(
-        alignment: Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: _mutualCard(),
-        ),
-      );
-    } else {
-      cards = Align(
-        alignment: Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: _broadcastCard(),
-        ),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        ReminderBar(
-          expanded: _reminderExpanded,
-          onToggle: () =>
-              setState(() => _reminderExpanded = !_reminderExpanded),
-          onHide: _hideReminder,
-        ),
-        if (_reminderExpanded)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                TiebananaMetrics.pageGutter, 0, TiebananaMetrics.pageGutter, 8),
-            child: cards,
+          NotifySectionHeader(
+            title: '通知',
+            meta: reminder.sectionMeta,
+            showDot: reminder.visibleBroadcastDot,
+            expanded: _reminderExpanded,
+            onToggle: () =>
+                setState(() => _reminderExpanded = !_reminderExpanded),
+            onHide: _hideReminder,
           ),
-      ],
+          if (_reminderExpanded) ...<Widget>[
+            for (final NotifyEntry entry in entries) ...<Widget>[
+              NotifyEntryRow(entry: entry, onTap: () => _openEntry(entry)),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ],
+      ),
     );
   }
 
-  Widget _mutualCard() {
-    return MutualHelpCard(
-      onOpen: () => openMutualHelp(context),
-      onMaskChanged: (bool masked) async {
-        final bool ok = await NotificationReminder.instance.setMasked(masked);
-        if (!ok && mounted) {
-          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-            const SnackBar(content: Text('设置没有保存，请重试')),
-          );
-        }
-      },
-    );
-  }
-
-  Widget _broadcastCard() {
-    final bool wide = MediaQuery.sizeOf(context).width >= 900;
-    return BroadcastEntryCard(
-      vertical: wide,
-      onOpen: () => openBroadcastFeed(context),
-    );
+  void _openEntry(NotifyEntry entry) {
+    switch (entry.kind) {
+      case NotifyEntryKind.mutualHelp:
+        openMutualHelp(context);
+      case NotifyEntryKind.broadcast:
+        openBroadcastFeed(context);
+    }
   }
 
   void _hideReminder() {

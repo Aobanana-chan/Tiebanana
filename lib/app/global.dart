@@ -144,6 +144,17 @@ class Global {
     return address.isEmpty ? null : 'PROXY $address';
   }
 
+  /// 覆盖 IM WebSocket 地址（编译期）。
+  ///
+  /// 默认使用官方 8000 端口的明文 WebSocket；该服务在 80/443 也接受
+  /// `ws://`（但不支持 `wss://` TLS）。部分网络会阻断 8000，可改传：
+  /// `--dart-define=TIEBA_IM_URL=ws://im.tieba.baidu.com:443`
+  static String? get _imSocketUrl {
+    const String url = String.fromEnvironment('TIEBA_IM_URL');
+    final String value = url.trim();
+    return value.isEmpty ? null : value;
+  }
+
   /// 按当前设置构造后端实例。切换账号后会重新调用它（cookie 仓库已替换）。
   static TiebaApi _createTiebaApi({bool useCachedUid = true}) {
     loginFailures.reset();
@@ -162,6 +173,7 @@ class Global {
       signUpperHex: () => setting.protocolSignUpperHex ?? true,
       enableSig: () => setting.protocolEnableSig ?? false,
       debugProxy: _debugProxy,
+      imSocketUrl: _imSocketUrl,
       accountUid:
           useCachedUid ? int.tryParse(AccountStore.currentUid ?? '') : null,
       onLoginFailure: loginFailures.report,

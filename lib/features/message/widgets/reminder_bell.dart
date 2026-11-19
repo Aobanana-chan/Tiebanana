@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 
-/// 搜索栏右侧的铃铛：隐藏提醒后的唯一恢复入口。
+/// 搜索栏右侧的铃铛：常驻的提醒入口。
 ///
 /// 不带数字；红点只表示「有隐藏的未读 / 新广播」。
 class ReminderBell extends StatelessWidget {

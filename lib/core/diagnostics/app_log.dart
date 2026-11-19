@@ -169,7 +169,13 @@ class AppLog {
 
   /// 协议侧传来的快照已脱敏，这里再次做结构过滤。
   void protocolException(String event, Map<String, Object?> data) {
-    if (event != 'parser.unknown_content' &&
+    // 私信长连接只记录失败与慢登录；成功事件不进日志，避免刷屏。
+    const Set<String> chatEvents = <String>{
+      'chat.login_failed',
+      'chat.login_slow',
+    };
+    if (!chatEvents.contains(event) &&
+        event != 'parser.unknown_content' &&
         event != 'parser.failed' &&
         event != 'protocol.failed') {
       return;

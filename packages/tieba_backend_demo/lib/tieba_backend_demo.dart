@@ -21,6 +21,7 @@ TiebaApi createTiebaApi({
   required bool Function() signUpperHex,
   required bool Function() enableSig,
   String? debugProxy,
+  String? imSocketUrl,
   int? accountUid,
   void Function(int code, String message)? onLoginFailure,
   DemoDiagnosticCallback? onDiagnostic,

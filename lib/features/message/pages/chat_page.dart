@@ -22,6 +22,7 @@ import 'package:tiebanana/shared/content/emoji_panel.dart';
 import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/dashed_border.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -709,7 +710,7 @@ class _ChatViewState extends State<ChatView> {
         opacity: sending ? .78 : 1,
         child: CustomPaint(
           foregroundPainter: failed
-              ? _DashedBorderPainter(
+              ? DashedBorderPainter(
                   color: tokens.danger,
                   radius: bubbleRadius,
                 )
@@ -1250,45 +1251,6 @@ class _ChatAvatar extends StatelessWidget {
           : AvatarImage(url: url),
     );
   }
-}
-
-/// 发送失败气泡的虚线描边。
-///
-/// 概念图用 CSS `dashed` 表示“这条没发出去”，实线会被误读成普通边框。
-class _DashedBorderPainter extends CustomPainter {
-  const _DashedBorderPainter({
-    required this.color,
-    required this.radius,
-  });
-
-  final Color color;
-  final BorderRadius radius;
-  static const double strokeWidth = 1.5;
-  static const double dashLength = 5;
-  static const double gapLength = 4;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final RRect rrect =
-        radius.toRRect((Offset.zero & size).deflate(strokeWidth / 2));
-    final Path path = Path()..addRRect(rrect);
-    final Paint paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-    for (final metric in path.computeMetrics()) {
-      double distance = 0;
-      while (distance < metric.length) {
-        final double next = math.min(distance + dashLength, metric.length);
-        canvas.drawPath(metric.extractPath(distance, next), paint);
-        distance = next + gapLength;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
-      color != oldDelegate.color || radius != oldDelegate.radius;
 }
 
 /// 发送被拦截时的弹窗：图标、服务端文案、两个药丸按钮。
