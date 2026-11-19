@@ -15,9 +15,12 @@ import 'package:tiebanana/shared/widgets/state_view.dart';
 
 /// 私信页签：会话列表；宽屏（≥ 900dp）切成左右两栏。
 class PrivateMessagePanel extends StatefulWidget {
-  const PrivateMessagePanel({super.key, this.onBrowse});
+  const PrivateMessagePanel({super.key, this.onBrowse, this.refreshSignal});
 
   final VoidCallback? onBrowse;
+
+  /// 新消息到达时由消息页触发：重新读取会话列表，但不打断当前浏览。
+  final Listenable? refreshSignal;
 
   @override
   State<PrivateMessagePanel> createState() => _PrivateMessagePanelState();
@@ -42,9 +45,29 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
   @override
   void initState() {
     super.initState();
+    widget.refreshSignal?.addListener(_onRefreshSignal);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _load();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant PrivateMessagePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshSignal != widget.refreshSignal) {
+      oldWidget.refreshSignal?.removeListener(_onRefreshSignal);
+      widget.refreshSignal?.addListener(_onRefreshSignal);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.refreshSignal?.removeListener(_onRefreshSignal);
+    super.dispose();
+  }
+
+  void _onRefreshSignal() {
+    if (mounted) _load(silent: true);
   }
 
   Future<void> _load({bool silent = false}) async {

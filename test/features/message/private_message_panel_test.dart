@@ -142,6 +142,31 @@ void main() {
     expect(find.text('未发送 · 点此重发'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('收到刷新信号后重新读取会话列表', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{'uid': '10001'});
+    Global.profile = await SharedPreferences.getInstance();
+    Global.setting = APPSetting.fromJson(defaultAPPSetting);
+    final _RefreshChatApi api = _RefreshChatApi();
+    Global.tiebaAPI = api;
+    final ValueNotifier<int> refresh = ValueNotifier<int>(0);
+    addTearDown(refresh.dispose);
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_app(PrivateMessagePanel(refreshSignal: refresh)));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('新消息会话'), findsNothing);
+
+    api.hasNewConversation = true;
+    refresh.value++;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.text('新消息会话'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _RetryChatApi extends DemoTiebaApi {
@@ -154,6 +179,31 @@ class _RetryChatApi extends DemoTiebaApi {
     attempts++;
     if (attempts == 1) throw StateError('test initialization failure');
     return super.getConversations();
+  }
+}
+
+/// 收到刷新信号后多返回一条会话，用来验证列表会被重新读取。
+class _RefreshChatApi extends DemoTiebaApi {
+  _RefreshChatApi() : super(latency: Duration.zero);
+
+  bool hasNewConversation = false;
+
+  @override
+  Future<List<TiebaConversation>> getConversations() async {
+    final List<TiebaConversation> items = await super.getConversations();
+    if (!hasNewConversation) return items;
+    return <TiebaConversation>[
+      TiebaConversation(
+        id: '29999',
+        peerUid: '29999',
+        title: '新消息会话',
+        groupType: 6,
+        lastMessage: '刚发来的一条',
+        lastTime: DateTime(2026, 11, 20, 12),
+        unread: 1,
+      ),
+      ...items,
+    ];
   }
 }
 

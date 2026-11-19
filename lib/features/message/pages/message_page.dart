@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide SearchBar;
+import 'package:tiebanana/app/navigation/app_route_observer.dart';
 import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:just_throttle_it/just_throttle_it.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
@@ -116,13 +119,28 @@ class MessagePan extends StatefulWidget {
 }
 
 class _MessagePanState extends State<MessagePan>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
+  /// 消息页可见时补拉私信与通知的间隔。
+  ///
+  /// IM 推送只负责把新消息写进本地缓存，界面仍需要一次读取才能看到；
+  /// 与聊天页的 5 秒轮询保持一致。
+  static const Duration _liveRefreshInterval = Duration(seconds: 5);
+
   late TabController _controller;
   late final List<_TabState> _tabs;
   int _selectedTab = 0;
 
   /// 提醒区的展开状态只在当前页面会话里有效，每次启动默认展开。
   bool _reminderExpanded = true;
+
+  /// 自动刷新只在页签可见且没有被其它路由盖住时运行。
+  Timer? _liveRefresh;
+  bool _tabActive = true;
+  bool _routeVisible = true;
+  bool _routeSubscribed = false;
+
+  /// 通知私信页签重新读取会话列表。
+  final ValueNotifier<int> _listRefresh = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -148,6 +166,55 @@ class _MessagePanState extends State<MessagePan>
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_routeSubscribed) {
+      final ModalRoute<void>? route = ModalRoute.of(context);
+      if (route != null) {
+        appRouteObserver.subscribe(this, route);
+        _routeSubscribed = true;
+      }
+    }
+    _tabActive = TickerMode.valuesOf(context).enabled;
+    _syncLiveRefresh();
+  }
+
+  /// 只有页签可见且当前路由在最上层时才轮询，避免在别的页签或子页面
+  /// 后台一直打 IM 同步。
+  void _syncLiveRefresh() {
+    final bool live = _tabActive && _routeVisible;
+    if (live == (_liveRefresh != null)) return;
+    _liveRefresh?.cancel();
+    _liveRefresh = live
+        ? Timer.periodic(_liveRefreshInterval, (_) => unawaited(_refreshLive()))
+        : null;
+  }
+
+  /// 推送把新消息写进本地缓存后，界面侧主动读一次。
+  Future<void> _refreshLive() async {
+    if (!mounted) return;
+    await MessageReminder.refreshChat();
+    if (!mounted) return;
+    // 屏蔽开关变化不频繁，周期刷新只取概览，完整刷新留给首页的慢轮询。
+    await NotificationReminder.instance.refresh(syncMask: false);
+    if (!mounted) return;
+    _listRefresh.value++;
+  }
+
+  @override
+  void didPushNext() {
+    _routeVisible = false;
+    _syncLiveRefresh();
+  }
+
+  @override
+  void didPopNext() {
+    _routeVisible = true;
+    _syncLiveRefresh();
+    if (mounted) unawaited(_refreshLive());
+  }
+
   void _onNotificationChanged() {
     if (mounted) setState(() {});
   }
@@ -170,6 +237,11 @@ class _MessagePanState extends State<MessagePan>
 
   @override
   void dispose() {
+    _liveRefresh?.cancel();
+    if (_routeSubscribed) {
+      appRouteObserver.unsubscribe(this);
+    }
+    _listRefresh.dispose();
     MessageReminder.counts.removeListener(_onReminderChanged);
     MessageReminder.chatUnread.removeListener(_onReminderChanged);
     NotificationReminder.instance.removeListener(_onNotificationChanged);
@@ -544,7 +616,10 @@ class _MessagePanState extends State<MessagePan>
 
   Widget _body(_TabState tab) {
     if (tab.meta.kind == null) {
-      return PrivateMessagePanel(onBrowse: widget.onBrowse);
+      return PrivateMessagePanel(
+        onBrowse: widget.onBrowse,
+        refreshSignal: _listRefresh,
+      );
     }
     return MessageFeed(
       meta: tab.meta,

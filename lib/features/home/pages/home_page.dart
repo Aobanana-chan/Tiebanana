@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
@@ -44,6 +45,9 @@ class _HomePageState extends State<HomePage> {
 
   /// 每个页签一个：返回键先问当前页签「列表回顶了没」，回了才走退出流程。
   List<BackToTopController> backToTopController = [];
+
+  /// 当前页签下标。分页器本身不滚动，只在这里更新；消息页据此暂停后台轮询。
+  final ValueNotifier<int> _activeTab = ValueNotifier<int>(0);
 
   StreamSubscription? _sub;
   late AppLinks _appLinks;
@@ -122,9 +126,13 @@ class _HomePageState extends State<HomePage> {
           )),
       KeepAliveWrapper(
           key: ValueKey<String>('message-$revision'),
-          child: _Notifaction(
-            controller: barController[2],
-            onBrowse: () => goToTab(0),
+          child: _ActiveTab(
+            active: _activeTab,
+            index: 2,
+            child: _Notifaction(
+              controller: barController[2],
+              onBrowse: () => goToTab(0),
+            ),
           )),
       KeepAliveWrapper(
           key: ValueKey<String>('user-$revision'),
@@ -166,6 +174,7 @@ class _HomePageState extends State<HomePage> {
       controller.animateToPage(_currentPage,
           duration: const Duration(milliseconds: 200), curve: Curves.easeIn);
     });
+    _activeTab.value = index;
   }
 
   /// 底部「消息」：数字优先；只有广播未读时才显示红点，且不带数字。
@@ -292,6 +301,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _reminderTimer?.cancel();
+    _activeTab.dispose();
     AccountStore.changes.removeListener(_onAccountChanged);
     forumState.dispose();
     controller.dispose();
@@ -397,6 +407,30 @@ class __UserAndSettingsState extends State<_UserAndSettings> {
   Widget build(BuildContext context) {
     return UserPage(
       controller: widget.controller,
+    );
+  }
+}
+
+/// 只让当前页签保持活跃：离屏页签的 TickerMode 关闭，消息页据此暂停轮询。
+class _ActiveTab extends StatelessWidget {
+  const _ActiveTab({
+    required this.active,
+    required this.index,
+    required this.child,
+  });
+
+  final ValueListenable<int> active;
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: active,
+      child: child,
+      builder: (BuildContext context, int value, Widget? child) {
+        return TickerMode(enabled: value == index, child: child!);
+      },
     );
   }
 }

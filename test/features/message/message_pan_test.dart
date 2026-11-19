@@ -367,4 +367,106 @@ void main() {
     expect(MessageReminder.counts.value.like, 0);
     expect(MessageReminder.counts.value.at, 3);
   });
+
+  testWidgets('消息页可见时自动刷新私信与通知', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{'uid': '10001'});
+    Global.profile = await SharedPreferences.getInstance();
+    final _LiveRefreshApi api = _LiveRefreshApi();
+    Global.tiebaAPI = api;
+    final FloatingSearchBarController search = FloatingSearchBarController();
+    addTearDown(search.dispose);
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_app(MessagePan(controller: search)));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('新来的私信'), findsNothing);
+    expect(find.text('吧友互助'), findsNothing);
+    final int maskCallsBefore = api.maskCalls;
+
+    api.hasNewMessage = true;
+    // 页面可见时每 5 秒补拉一次；推送先落本地缓存，再由这一拍接上界面。
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('新来的私信'), findsOneWidget);
+    expect(find.text('吧友互助'), findsOneWidget);
+    expect(api.maskCalls, maskCallsBefore, reason: '周期刷新只读概览，不重复请求屏蔽开关');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('页签不可见时不轮询', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{'uid': '10001'});
+    Global.profile = await SharedPreferences.getInstance();
+    final _LiveRefreshApi api = _LiveRefreshApi();
+    Global.tiebaAPI = api;
+    final FloatingSearchBarController search = FloatingSearchBarController();
+    addTearDown(search.dispose);
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_app(TickerMode(
+      enabled: false,
+      child: MessagePan(controller: search),
+    )));
+    await tester.pump();
+    await tester.pump();
+
+    api.hasNewMessage = true;
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+
+    expect(find.text('新来的私信'), findsNothing);
+    expect(find.text('吧友互助'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+/// 第一拍之后才有新私信与互助提醒，用来验证消息页会自动补拉。
+class _LiveRefreshApi extends DemoTiebaApi {
+  _LiveRefreshApi() : super(latency: Duration.zero);
+
+  bool hasNewMessage = false;
+  int maskCalls = 0;
+
+  static final DateTime _time = DateTime(2026, 11, 20, 12);
+
+  @override
+  Future<List<TiebaConversation>> getConversations() async {
+    final List<TiebaConversation> items = await super.getConversations();
+    if (!hasNewMessage) return items;
+    return <TiebaConversation>[
+      TiebaConversation(
+        id: '29999',
+        peerUid: '29999',
+        title: '新来的私信',
+        groupType: 6,
+        lastMessage: '刚发来的一条',
+        lastTime: _time,
+        unread: 1,
+      ),
+      ...items,
+    ];
+  }
+
+  @override
+  Future<TiebaNotificationOverview> getNotificationOverview() async {
+    if (!hasNewMessage) return TiebaNotificationOverview.empty;
+    return TiebaNotificationOverview(
+      mutualHelp: TiebaMutualHelpNotice(
+        visible: true,
+        unread: 1,
+        latestTime: _time,
+      ),
+    );
+  }
+
+  @override
+  Future<bool> getMutualHelpMasked() async {
+    maskCalls++;
+    return false;
+  }
 }

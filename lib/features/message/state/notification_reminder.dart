@@ -215,7 +215,10 @@ class NotificationReminder extends ChangeNotifier {
   }
 
   /// 拉取通知概览与互助屏蔽开关。
-  Future<void> refresh() async {
+  ///
+  /// [syncMask] 为 false 时只读 IM 概览：页面可见期间的周期刷新不必每次都
+  /// 请求账号级开关，完整刷新仍由首页慢轮询和进入页面时执行。
+  Future<void> refresh({bool syncMask = true}) async {
     final TiebaApi api;
     try {
       api = Global.tiebaAPI;
@@ -246,14 +249,17 @@ class NotificationReminder extends ChangeNotifier {
       } catch (error, stack) {
         AppLog.shared.error('notification.overview_failed', error, stack);
       }
-      try {
-        maskedRemote = await notifyApi.getMutualHelpMasked();
-      } catch (error, stack) {
-        AppLog.shared.error('notification.mutual_switch_failed', error, stack);
+      if (syncMask) {
+        try {
+          maskedRemote = await notifyApi.getMutualHelpMasked();
+        } catch (error, stack) {
+          AppLog.shared
+              .error('notification.mutual_switch_failed', error, stack);
+        }
       }
     }
 
-    _notifyIfChanged(() {
+    final bool changed = _notifyIfChanged(() {
       if (overview != null) {
         _systemNotificationsEnabled = overview.systemNotificationsEnabled;
         final TiebaBroadcastNotice remoteBroadcast = overview.broadcast;
@@ -284,8 +290,11 @@ class NotificationReminder extends ChangeNotifier {
         _mutual = _mutual.copyWith(masked: maskedRemote);
       }
     });
-    _persistMutual();
-    _persistBroadcast();
+    // 周期刷新只把真正变化过的概览落盘，避免每次读概览都重写本机缓存。
+    if (changed) {
+      _persistMutual();
+      _persistBroadcast();
+    }
   }
 
   /// 远端时间晚于上次阅读时间，才把未读重新亮起来。
@@ -524,17 +533,31 @@ class NotificationReminder extends ChangeNotifier {
 
   String _key(String base) => _uid == null ? base : '$base.$_uid';
 
-  void _notifyIfChanged(VoidCallback mutate) {
+  bool _notifyIfChanged(VoidCallback mutate) {
     final TiebaMutualHelpNotice beforeMutual = _mutual;
     final TiebaBroadcastNotice beforeBroadcast = _broadcast;
     final bool beforeSystem = _systemNotificationsEnabled;
     final bool beforeLoggedIn = _loggedIn;
     mutate();
-    if (beforeMutual != _mutual ||
-        beforeBroadcast != _broadcast ||
+    final bool changed = !_sameMutual(beforeMutual, _mutual) ||
+        !_sameBroadcast(beforeBroadcast, _broadcast) ||
         beforeSystem != _systemNotificationsEnabled ||
-        beforeLoggedIn != _loggedIn) {
+        beforeLoggedIn != _loggedIn;
+    if (changed) {
       notifyListeners();
     }
+    return changed;
   }
+
+  static bool _sameMutual(TiebaMutualHelpNotice a, TiebaMutualHelpNotice b) =>
+      a.visible == b.visible &&
+      a.unread == b.unread &&
+      a.latestTime == b.latestTime &&
+      a.masked == b.masked;
+
+  static bool _sameBroadcast(TiebaBroadcastNotice a, TiebaBroadcastNotice b) =>
+      a.unread == b.unread &&
+      a.latestTime == b.latestTime &&
+      a.title == b.title &&
+      a.summary == b.summary;
 }
