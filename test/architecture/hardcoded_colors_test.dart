@@ -28,6 +28,8 @@ const Map<String, int> allowedHardcodedColors = <String, int>{
   'lib/features/splash/splash_brand.dart': 5,
   // 主题色卡上的对勾固定白：色块本身就是饱和主色，白勾在明暗主题下都清晰。
   'lib/features/settings/widgets/theme_swatch_grid.dart': 1,
+  // 提醒开关的滑块固定白：轨道用主题主色，白色滑块在明暗主题下都清晰。
+  'lib/features/message/widgets/reminder_sheet.dart': 1,
 };
 
 /// 只在 lib 下扫描，排除主题层自身（那里定义颜色是本职）。

@@ -7,7 +7,7 @@
 ## 给后端开发者：怎么选契约版本
 
 1. 在下面的兼容表找到目标 Tiebanana 版本，记下它要求的 `tieba_contract` 范围，
-   例如 `^1.1.0`（等价于 `>=1.1.0 <2.0.0`）。
+   例如 `^1.2.0`（等价于 `>=1.2.0 <2.0.0`）。
 2. 让后端包直接依赖同一份契约，不要把契约源码复制进自己的仓库：
 
    ```yaml
@@ -15,7 +15,7 @@
      tieba_contract:
        git:
          url: https://github.com/Aobanana-chan/tieba_contract.git
-         ref: v1.1.0
+         ref: v1.2.0
    ```
 
    与 Tiebanana 在同一个工作区时也可以继续用 path 依赖，但必须同时写版本范围：
@@ -24,7 +24,7 @@
    dependencies:
      tieba_contract:
        path: packages/tieba_contract
-       version: ^1.1.0
+       version: ^1.2.0
    ```
 
 3. 同一主版本内可以直接使用更高的次版本/补丁版本；主版本变化表示需要修改后端代码。
@@ -38,7 +38,7 @@ Tiebanana 根 `pubspec.yaml` 中的 `tieba_contract` 范围是该版本应用的
 
 | Tiebanana | tieba_contract | 契约 tag | 说明 |
 | --- | --- | --- | --- |
-| 1.1.0（开发中） | >=1.2.0 <2.0.0 | v1.2.0（待打 tag） | 动图识别改用显式标记；新增私信、通知中心模型与可选 `TiebaChatApi` / `TiebaNotificationApi` |
+| 1.1.0 | >=1.2.0 <2.0.0 | v1.2.0 | 动图识别改用显式标记；新增私信、通知中心模型与可选 `TiebaChatApi` / `TiebaNotificationApi` |
 | 1.0.2 | >=1.1.0 <2.0.0 | v1.1.0 | 识别帖子动图；演示头像离线显示 |
 | 1.0.0 – 1.0.1 | >=1.0.0 <2.0.0 | v1.0.0 | 首个公开契约 |
 
