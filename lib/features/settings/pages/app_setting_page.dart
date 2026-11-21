@@ -365,7 +365,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
           title: '自动检查更新',
           // 手动检查入口位于「关于」页。
           trailing: SettingSwitch(
-            value: setting.checkUpdateAutomaticlly ?? true,
+            value: setting.checkUpdateAutomaticlly,
             onChanged: (bool value) =>
                 _commit(() => setting.checkUpdateAutomaticlly = value),
           ),

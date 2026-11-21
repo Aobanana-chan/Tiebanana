@@ -23,7 +23,7 @@ class AutoCheckUpdate extends APPStateCallback {
   void onHomeFormPageCreate(BuildContext context) {
     // 更新页只处理 Android APK；其他平台不弹“去下载 APK”的提示。
     if (!Version.isAndroidPlatform ||
-        Global.setting.checkUpdateAutomaticlly != true ||
+        !Global.setting.checkUpdateAutomaticlly ||
         isCanceled()) {
       done = true;
       return;

@@ -48,7 +48,7 @@ class APPSetting {
   bool? useBuildinBrowser;
 
   ///自动检查更新
-  bool? checkUpdateAutomaticlly;
+  bool checkUpdateAutomaticlly;
 
   ///使用小尾巴
   bool? usePostTail;
@@ -82,7 +82,7 @@ class APPSetting {
       this.darkModel,
       this.signAllsinceOpen,
       this.useBuildinBrowser,
-      this.checkUpdateAutomaticlly,
+      this.checkUpdateAutomaticlly = true,
       this.usePostTail,
       this.showPostingRiskWarning = true,
       this.postTail,
@@ -93,14 +93,14 @@ class APPSetting {
       required this.fontSize});
 
   APPSetting.fromJson(Map<String, dynamic> json)
-      : showPostingRiskWarning = json['showPostingRiskWarning'] ?? true {
+      : checkUpdateAutomaticlly = json['checkUpdateAutomaticlly'] ?? true,
+        showPostingRiskWarning = json['showPostingRiskWarning'] ?? true {
     theme = json['theme'];
     pictureLoadSetting = json['pictureLoadSetting'];
     markedCache = json['MarkedCache'];
     darkModel = json['darkModel'];
     signAllsinceOpen = json['signAllsinceOpen'];
     useBuildinBrowser = json['useBuildinBrowser'];
-    checkUpdateAutomaticlly = json['checkUpdateAutomaticlly'];
     usePostTail = json['usePostTail'];
     postTail = json['postTail'];
     fontSize = json['fontSize'];
