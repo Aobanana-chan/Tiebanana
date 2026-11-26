@@ -74,6 +74,8 @@ void main() {
   });
 
   testWidgets('缓存先构建；删帖不退出、所有自动请求暂停；手动刷新增量更新且保留旧楼层', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.runAsync(() => Global.threadCache
         .savePage('a', fixtures.page(stored: true)..videoInfo = null));
     await tester.runAsync(

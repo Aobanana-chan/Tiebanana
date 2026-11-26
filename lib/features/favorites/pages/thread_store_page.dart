@@ -9,9 +9,12 @@ import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
+import 'package:tiebanana/shared/widgets/hover_actions.dart';
 import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/shared/widgets/swipe_action_row.dart';
@@ -381,46 +384,88 @@ class _ThreadStorePageState extends State<ThreadStorePageRoute> {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final bool canEdit = _loggedIn && _threads.isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      appBar: AppBar(
-        title: const Text("我的收藏"),
-        actions: <Widget>[
-          if (canEdit && _deleteMode)
-            TextButton(
-              onPressed: _toggleSelectAll,
-              style: _actionStyle(tokens),
-              child: Text(_allSelected ? "取消全选" : "全选"),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final bool desktop = width >= AppBreakpoints.compactMax;
+
+        final Widget feed = ThreadStoreFeed(
+          threads: _threads,
+          loading: _loading,
+          error: _error,
+          notLoggedIn: !_loggedIn ||
+              (_error != null && _error.toString().contains("未登录")),
+          loadingMore: _loadingMore,
+          moreError: _moreError,
+          hasMore: _hasMore,
+          deleteMode: _deleteMode,
+          selected: _selected,
+          scrollController: _controller,
+          onRefresh: _refresh,
+          onRetry: _retry,
+          onLoadMore: _loadNextPage,
+          onOpen: _open,
+          onToggleSelected: _toggleSelected,
+          onRemove: _removeOne,
+          onLogin: _onLogin,
+          desktop: desktop,
+        );
+
+        if (desktop) {
+          final Widget? bar = _deleteBar(tokens, desktop: true);
+          return DesktopShellFrame(
+            title: '我的收藏',
+            subtitle: _threads.isEmpty ? null : '共 ${_threads.length} 篇已加载',
+            activeTab: 3,
+            onRefresh: _refresh,
+            topBarTrailing: <Widget>[
+              if (canEdit && _deleteMode)
+                TextButton(
+                  onPressed: _toggleSelectAll,
+                  style: _actionStyle(tokens),
+                  child: Text(_allSelected ? "取消全选" : "全选"),
+                ),
+              if (canEdit)
+                TextButton(
+                  onPressed: _toggleEdit,
+                  style: _actionStyle(tokens),
+                  child: Text(_deleteMode ? "取消" : "编辑"),
+                ),
+            ],
+            child: Column(
+              children: <Widget>[
+                Expanded(child: feed),
+                if (bar != null) bar,
+              ],
             ),
-          if (canEdit)
-            TextButton(
-              onPressed: _toggleEdit,
-              style: _actionStyle(tokens),
-              child: Text(_deleteMode ? "取消" : "编辑"),
-            ),
-        ],
-      ),
-      body: ThreadStoreFeed(
-        threads: _threads,
-        loading: _loading,
-        error: _error,
-        notLoggedIn:
-            !_loggedIn || (_error != null && _error.toString().contains("未登录")),
-        loadingMore: _loadingMore,
-        moreError: _moreError,
-        hasMore: _hasMore,
-        deleteMode: _deleteMode,
-        selected: _selected,
-        scrollController: _controller,
-        onRefresh: _refresh,
-        onRetry: _retry,
-        onLoadMore: _loadNextPage,
-        onOpen: _open,
-        onToggleSelected: _toggleSelected,
-        onRemove: _removeOne,
-        onLogin: _onLogin,
-      ),
-      bottomNavigationBar: _deleteBar(tokens),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: tokens.bg,
+          appBar: AppBar(
+            title: const Text("我的收藏"),
+            actions: <Widget>[
+              if (canEdit && _deleteMode)
+                TextButton(
+                  onPressed: _toggleSelectAll,
+                  style: _actionStyle(tokens),
+                  child: Text(_allSelected ? "取消全选" : "全选"),
+                ),
+              if (canEdit)
+                TextButton(
+                  onPressed: _toggleEdit,
+                  style: _actionStyle(tokens),
+                  child: Text(_deleteMode ? "取消" : "编辑"),
+                ),
+            ],
+          ),
+          body: feed,
+          bottomNavigationBar: _deleteBar(tokens),
+        );
+      },
     );
   }
 
@@ -435,19 +480,19 @@ class _ThreadStorePageState extends State<ThreadStorePageRoute> {
   }
 
   /// 编辑态底部的「删除所选（n）」条目卡（概念图 `.sgroup` 的危险行）。
-  Widget? _deleteBar(TiebananaTokens tokens) {
+  Widget? _deleteBar(TiebananaTokens tokens, {bool desktop = false}) {
     if (!_deleteMode || _threads.isEmpty) {
       return null;
     }
     final bool canDelete = _selected.isNotEmpty && !_deleting;
     final Color foreground = canDelete ? tokens.danger : tokens.textTertiary;
-    return SafeArea(
+    final Widget bar = SafeArea(
       top: false,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(
-          TiebananaMetrics.pageGutter,
+        margin: EdgeInsets.fromLTRB(
+          desktop ? 24 : TiebananaMetrics.pageGutter,
           TiebananaMetrics.gapSm,
-          TiebananaMetrics.pageGutter,
+          desktop ? 24 : TiebananaMetrics.pageGutter,
           TiebananaMetrics.gapSm,
         ),
         decoration: BoxDecoration(
@@ -492,6 +537,13 @@ class _ThreadStorePageState extends State<ThreadStorePageRoute> {
         ),
       ),
     );
+    if (!desktop) return bar;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 820),
+        child: bar,
+      ),
+    );
   }
 }
 
@@ -518,6 +570,7 @@ class ThreadStoreFeed extends StatelessWidget {
     required this.onToggleSelected,
     required this.onRemove,
     required this.onLogin,
+    this.desktop = false,
   });
 
   final List<TiebaStoredThread> threads;
@@ -537,6 +590,17 @@ class ThreadStoreFeed extends StatelessWidget {
   final ValueChanged<TiebaStoredThread> onToggleSelected;
   final ValueChanged<TiebaStoredThread> onRemove;
   final VoidCallback onLogin;
+  final bool desktop;
+
+  Widget _wrapMax(Widget child) {
+    if (!desktop) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 820),
+        child: child,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -562,17 +626,19 @@ class ThreadStoreFeed extends StatelessWidget {
       child: ListView.builder(
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(
-          top: TiebananaMetrics.gapSm,
-          bottom: TiebananaMetrics.gapMd,
+        padding: EdgeInsets.fromLTRB(
+          desktop ? 24 : 0,
+          desktop ? 16 : TiebananaMetrics.gapSm,
+          desktop ? 24 : 0,
+          desktop ? 24 : TiebananaMetrics.gapMd,
         ),
         itemCount: threads.length + extra,
         itemBuilder: (BuildContext context, int index) {
           if (index >= threads.length) {
-            return showFooter ? _footer(context) : _hint(context);
+            return _wrapMax(showFooter ? _footer(context) : _hint(context));
           }
           final TiebaStoredThread item = threads[index];
-          return _row(context, item);
+          return _wrapMax(_row(context, item));
         },
       ),
     );
@@ -592,29 +658,51 @@ class ThreadStoreFeed extends StatelessWidget {
       tokens,
       child: deleteMode
           ? row
-          : SwipeActionRow(
-              borderRadius: TiebananaMetrics.radiusLg,
-              actions: <SwipeAction>[
-                SwipeAction(
-                  label: "取消收藏",
-                  icon: Icons.star_border_rounded,
-                  background: tokens.danger,
-                  foreground: tokens.accentOn,
-                  onTap: () => onRemove(item),
-                ),
-              ],
-              child: row,
-            ),
+          : (desktop
+              ? HoverActions(
+                  actionsBuilder: (BuildContext context, bool hovered) =>
+                      DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: tokens.surface.withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: tokens.line),
+                    ),
+                    child: IconButton(
+                      tooltip: '取消收藏',
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.all(4),
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
+                      icon: Icon(Icons.star_border_rounded,
+                          size: 16, color: tokens.danger),
+                      onPressed: () => onRemove(item),
+                    ),
+                  ),
+                  child: row,
+                )
+              : SwipeActionRow(
+                  borderRadius: TiebananaMetrics.radiusLg,
+                  actions: <SwipeAction>[
+                    SwipeAction(
+                      label: "取消收藏",
+                      icon: Icons.star_border_rounded,
+                      background: tokens.danger,
+                      foreground: tokens.accentOn,
+                      onTap: () => onRemove(item),
+                    ),
+                  ],
+                  child: row,
+                )),
     );
   }
 
   /// 行外面的页面留白 + 投影。投影位于左滑容器的圆角裁剪之外。
   Widget _cardShell(TiebananaTokens tokens, {required Widget child}) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(
-        TiebananaMetrics.pageGutter,
+      margin: EdgeInsets.fromLTRB(
+        desktop ? 0 : TiebananaMetrics.pageGutter,
         0,
-        TiebananaMetrics.pageGutter,
+        desktop ? 0 : TiebananaMetrics.pageGutter,
         TiebananaMetrics.gapSm,
       ),
       decoration: BoxDecoration(

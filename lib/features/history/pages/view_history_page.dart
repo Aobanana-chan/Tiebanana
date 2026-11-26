@@ -7,9 +7,12 @@ import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/history/models/view_history_page_model.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
+import 'package:tiebanana/shared/widgets/hover_actions.dart';
 import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/shared/widgets/swipe_action_row.dart';
@@ -543,31 +546,27 @@ class _ViewHistoryPageState extends State<ViewHistoryPage> {
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
 
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      appBar: AppBar(
-        title: const Text("浏览历史"),
-        actions: <Widget>[
-          TextButton(
-            onPressed: _canClear ? _clearAll : null,
-            style: TextButton.styleFrom(
-              foregroundColor: tokens.danger,
-              disabledForegroundColor: tokens.textTertiary,
-              textStyle: Theme.of(context).textTheme.labelLarge,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: TiebananaMetrics.gapMd),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(_clearing ? "清空中…" : "清空"),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final bool desktop = width >= AppBreakpoints.compactMax;
+
+        final Widget bodyContent = Column(
           children: <Widget>[
-            if (_showSearch) _searchBar(tokens),
+            if (_showSearch)
+              desktop
+                  ? Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 820),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                          child: _searchBar(tokens, desktop: true),
+                        ),
+                      ),
+                    )
+                  : _searchBar(tokens),
             Expanded(
               child: ViewHistoryFeed(
                 items: _items,
@@ -585,25 +584,79 @@ class _ViewHistoryPageState extends State<ViewHistoryPage> {
                 onRemove: _removeOne,
                 onToggleHidden: _toggleHidden,
                 onClearSearch: _clearSearch,
+                desktop: desktop,
               ),
             ),
           ],
-        ),
-      ),
+        );
+
+        if (desktop) {
+          return DesktopShellFrame(
+            title: '浏览历史',
+            subtitle: _items.isEmpty ? null : '已加载 ${_items.length} 条记录',
+            activeTab: 3,
+            onRefresh: _refresh,
+            topBarTrailing: <Widget>[
+              TextButton(
+                onPressed: _canClear ? _clearAll : null,
+                style: TextButton.styleFrom(
+                  foregroundColor: tokens.danger,
+                  disabledForegroundColor: tokens.textTertiary,
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: TiebananaMetrics.gapMd),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(_clearing ? "清空中…" : "清空"),
+              ),
+            ],
+            child: bodyContent,
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: tokens.bg,
+          appBar: AppBar(
+            title: const Text("浏览历史"),
+            actions: <Widget>[
+              TextButton(
+                onPressed: _canClear ? _clearAll : null,
+                style: TextButton.styleFrom(
+                  foregroundColor: tokens.danger,
+                  disabledForegroundColor: tokens.textTertiary,
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: TiebananaMetrics.gapMd),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(_clearing ? "清空中…" : "清空"),
+              ),
+            ],
+          ),
+          body: SafeArea(
+            top: false,
+            child: bodyContent,
+          ),
+        );
+      },
     );
   }
 
   /// 固定在列表上方的药丸搜索框（概念图 `.sbar` / `.sfield`）。
-  Widget _searchBar(TiebananaTokens tokens) {
+  Widget _searchBar(TiebananaTokens tokens, {bool desktop = false}) {
     final bool hasText = _query.isNotEmpty;
     return Container(
       height: 46,
-      margin: const EdgeInsets.fromLTRB(
-        TiebananaMetrics.gapLg,
-        TiebananaMetrics.gapXXs,
-        TiebananaMetrics.gapLg,
-        TiebananaMetrics.gapMd,
-      ),
+      margin: desktop
+          ? const EdgeInsets.only(bottom: 10)
+          : const EdgeInsets.fromLTRB(
+              TiebananaMetrics.gapLg,
+              TiebananaMetrics.gapXXs,
+              TiebananaMetrics.gapLg,
+              TiebananaMetrics.gapMd,
+            ),
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: TiebananaMetrics.brPill,
@@ -679,6 +732,7 @@ class ViewHistoryFeed extends StatelessWidget {
     required this.onRemove,
     required this.onToggleHidden,
     required this.onClearSearch,
+    this.desktop = false,
   });
 
   final List<ViewHistoryPageModel> items;
@@ -696,8 +750,19 @@ class ViewHistoryFeed extends StatelessWidget {
   final ValueChanged<ViewHistoryPageModel> onRemove;
   final ValueChanged<ViewHistoryPageModel> onToggleHidden;
   final VoidCallback onClearSearch;
+  final bool desktop;
 
   bool get _searching => query.isNotEmpty;
+
+  Widget _wrapMax(Widget child) {
+    if (!desktop) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 820),
+        child: child,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -722,23 +787,25 @@ class ViewHistoryFeed extends StatelessWidget {
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.only(
-          top: TiebananaMetrics.gapSm,
-          bottom: TiebananaMetrics.gapMd,
+        padding: EdgeInsets.fromLTRB(
+          desktop ? 24 : 0,
+          desktop ? 6 : TiebananaMetrics.gapSm,
+          desktop ? 24 : 0,
+          desktop ? 24 : TiebananaMetrics.gapMd,
         ),
         itemCount: items.length + (showSearchHeader ? 1 : 0) + extra,
         itemBuilder: (BuildContext context, int index) {
           int itemIndex = index;
           if (showSearchHeader) {
             if (index == 0) {
-              return _searchHeader(context);
+              return _wrapMax(_searchHeader(context));
             }
             itemIndex = index - 1;
           }
           if (itemIndex >= items.length) {
-            return showFooter ? _footer(context) : _hint(context);
+            return _wrapMax(showFooter ? _footer(context) : _hint(context));
           }
-          return _row(context, items[itemIndex]);
+          return _wrapMax(_row(context, items[itemIndex]));
         },
       ),
     );
@@ -752,37 +819,75 @@ class ViewHistoryFeed extends StatelessWidget {
     );
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(
-        TiebananaMetrics.pageGutter,
+      margin: EdgeInsets.fromLTRB(
+        desktop ? 0 : TiebananaMetrics.pageGutter,
         0,
-        TiebananaMetrics.pageGutter,
+        desktop ? 0 : TiebananaMetrics.pageGutter,
         TiebananaMetrics.gapSm,
       ),
       decoration: BoxDecoration(
         borderRadius: TiebananaMetrics.brLg,
         boxShadow: tokens.cardShadow,
       ),
-      child: SwipeActionRow(
-        borderRadius: TiebananaMetrics.radiusLg,
-        actions: <SwipeAction>[
-          if (item.hidden)
-            SwipeAction(
-              label: "取消隐藏",
-              icon: Icons.visibility_outlined,
-              background: tokens.surfaceHigh,
-              foreground: tokens.textSecondary,
-              onTap: () => onToggleHidden(item),
+      child: desktop
+          ? HoverActions(
+              actionsBuilder: (BuildContext context, bool hovered) =>
+                  DecoratedBox(
+                decoration: BoxDecoration(
+                  color: tokens.surface.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: tokens.line),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (item.hidden)
+                      IconButton(
+                        tooltip: '取消隐藏',
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.all(4),
+                        constraints:
+                            const BoxConstraints(minWidth: 28, minHeight: 28),
+                        icon: Icon(Icons.visibility_outlined,
+                            size: 16, color: tokens.textSecondary),
+                        onPressed: () => onToggleHidden(item),
+                      ),
+                    IconButton(
+                      tooltip: '删除',
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.all(4),
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
+                      icon: Icon(Icons.delete_outline_rounded,
+                          size: 16, color: tokens.danger),
+                      onPressed: () => onRemove(item),
+                    ),
+                  ],
+                ),
+              ),
+              child: row,
+            )
+          : SwipeActionRow(
+              borderRadius: TiebananaMetrics.radiusLg,
+              actions: <SwipeAction>[
+                if (item.hidden)
+                  SwipeAction(
+                    label: "取消隐藏",
+                    icon: Icons.visibility_outlined,
+                    background: tokens.surfaceHigh,
+                    foreground: tokens.textSecondary,
+                    onTap: () => onToggleHidden(item),
+                  ),
+                SwipeAction(
+                  label: "删除",
+                  icon: Icons.delete_outline_rounded,
+                  background: tokens.danger,
+                  foreground: tokens.accentOn,
+                  onTap: () => onRemove(item),
+                ),
+              ],
+              child: row,
             ),
-          SwipeAction(
-            label: "删除",
-            icon: Icons.delete_outline_rounded,
-            background: tokens.danger,
-            foreground: tokens.accentOn,
-            onTap: () => onRemove(item),
-          ),
-        ],
-        child: row,
-      ),
     );
   }
 

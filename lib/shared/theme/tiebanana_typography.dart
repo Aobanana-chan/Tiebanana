@@ -9,8 +9,8 @@ class TiebananaTypography {
   /// 设计基准：默认设置 16.0 时，正文约 15.5px，与改动前基本一致。
   static const double baseBodyFontSize = 15.0;
 
-  /// 允许的缩放区间。低于 0.85 中文会难读，高于 1.5 会撑破布局。
-  static const double minScale = 0.85;
+  /// 允许的缩放区间。低于 0.80 中文会难读，高于 1.5 会撑破布局。
+  static const double minScale = 0.80;
   static const double maxScale = 1.5;
 
   static double scaleOf(double userFontSize) =>
