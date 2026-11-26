@@ -11,13 +11,15 @@ import 'package:tiebanana/shared/content/tieba_parser.dart';
 ///
 /// 吧内搜索与全站搜索共用这一张卡。全站结果跨吧，调用方把 [showForum] 打开，
 /// 卡片底部会多一个来源吧名的胶囊。
-class SearchResultCard extends StatelessWidget {
+class SearchResultCard extends StatefulWidget {
   const SearchResultCard({
     super.key,
     required this.post,
     required this.keyword,
     required this.onTap,
     this.showForum = false,
+    this.desktop = false,
+    this.margin,
   });
 
   final TiebaSearchPost post;
@@ -26,11 +28,20 @@ class SearchResultCard extends StatelessWidget {
 
   /// 全站搜索时底部标出 `forumName`；吧内搜索隐藏。
   final bool showForum;
+  final bool desktop;
+  final EdgeInsetsGeometry? margin;
+
+  @override
+  State<SearchResultCard> createState() => _SearchResultCardState();
+}
+
+class _SearchResultCardState extends State<SearchResultCard> {
+  bool _hovered = false;
 
   /// 回复结果的标题接口会带「回复：」前缀，交给「回复」徽章表达，正文里去掉。
   String get _title {
-    final String title = post.title;
-    if (post.type == 2) {
+    final String title = widget.post.title;
+    if (widget.post.type == 2) {
       if (title.startsWith("回复：")) return title.substring(3);
       if (title.startsWith("回复:")) return title.substring(3);
     }
@@ -38,7 +49,7 @@ class SearchResultCard extends StatelessWidget {
   }
 
   String get _timeText {
-    final int stamp = int.tryParse(post.time) ?? 0;
+    final int stamp = int.tryParse(widget.post.time) ?? 0;
     return stamp <= 0 ? "" : TiebaParser.getPostTime(intTime: stamp);
   }
 
@@ -48,16 +59,25 @@ class SearchResultCard extends StatelessWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
     final String title = _title;
     final String time = _timeText;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+    final TiebaSearchPost post = widget.post;
+    final Widget card = Container(
+      margin: widget.margin ??
+          EdgeInsets.fromLTRB(
+            widget.desktop ? 0 : TiebananaMetrics.pageGutter,
+            0,
+            widget.desktop ? 0 : TiebananaMetrics.pageGutter,
+            widget.desktop ? 10 : TiebananaMetrics.gapSm,
+          ),
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: TiebananaMetrics.brLg,
         boxShadow: tokens.cardShadow,
+        border: widget.desktop
+            ? Border.all(color: _hovered ? tokens.line : Colors.transparent)
+            : null,
       ),
       child: MaterialButton(
-        onPressed: onTap,
+        onPressed: widget.onTap,
         color: Colors.transparent,
         elevation: 0,
         highlightElevation: 0,
@@ -74,7 +94,7 @@ class SearchResultCard extends StatelessWidget {
                   onTap: () {
                     // 搜索结果只有昵称与头像，没有 uid，跳不过去用户页；
                     // 点作者等同于点这条结果。
-                    onTap();
+                    widget.onTap();
                   },
                   imgUrl: post.userAvatar,
                   height: TiebananaMetrics.avatarSm,
@@ -114,7 +134,7 @@ class SearchResultCard extends StatelessWidget {
               const SizedBox(height: TiebananaMetrics.gapSm),
               HighlightText(
                 title,
-                keyword: keyword,
+                keyword: widget.keyword,
                 style: textTheme.titleSmall
                     ?.copyWith(color: tokens.textPrimary),
                 maxLines: 2,
@@ -125,20 +145,30 @@ class SearchResultCard extends StatelessWidget {
               const SizedBox(height: TiebananaMetrics.gapXs),
               HighlightText(
                 post.content,
-                keyword: keyword,
+                keyword: widget.keyword,
                 style: textTheme.bodyMedium
                     ?.copyWith(color: tokens.textSecondary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            if (showForum && post.forumName.isNotEmpty) ...<Widget>[
+            if (widget.showForum && post.forumName.isNotEmpty) ...<Widget>[
               const SizedBox(height: TiebananaMetrics.gapSm),
               _ForumSource(forumName: post.forumName, tokens: tokens),
             ],
           ],
         ),
       ),
+    );
+    if (!widget.desktop) return card;
+    return MouseRegion(
+      onEnter: (_) {
+        if (!_hovered) setState(() => _hovered = true);
+      },
+      onExit: (_) {
+        if (_hovered) setState(() => _hovered = false);
+      },
+      child: card,
     );
   }
 }

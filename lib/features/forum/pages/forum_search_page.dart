@@ -6,6 +6,9 @@ import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/layout/page_wrap.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/features/forum/widgets/forum_control_bar.dart';
 import 'package:tiebanana/features/search/widgets/search_result_card.dart';
@@ -227,15 +230,156 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      appBar: _appBar(tokens),
-      body: Column(
-        children: <Widget>[
-          _toolbar(tokens),
-          Expanded(child: _content(context)),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        if (width >= AppBreakpoints.compactMax) {
+          final double hPad = AppBreakpoints.pagePaddingFor(width);
+          return DesktopShellFrame(
+            title: '${widget.forumName}吧内搜索',
+            subtitle: _keyword.isEmpty ? null : '“$_keyword”',
+            activeTab: -1,
+            hideSearchPill: true,
+            onRefresh: _keyword.isEmpty ? null : () => _search(keepList: true),
+            child: Column(
+              children: <Widget>[
+                PageWrap(
+                  maxWidth: AppBreakpoints.pageMaxWidth,
+                  bottomPadding: 0,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Container(
+                        height: 44,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: tokens.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: tokens.lineStrong),
+                          boxShadow: tokens.cardShadow,
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(Icons.search_rounded,
+                                size: 18, color: tokens.textTertiary),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextField(
+                                controller: _input,
+                                focusNode: _focus,
+                                textInputAction: TextInputAction.search,
+                                onSubmitted: (_) => _search(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: tokens.textPrimary),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  hintText: '在 ${widget.forumName}吧 内搜索',
+                                  hintStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(color: tokens.textTertiary),
+                                ),
+                              ),
+                            ),
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _input,
+                              builder: (BuildContext context,
+                                  TextEditingValue value, _) {
+                                if (value.text.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(11),
+                                    onTap: _clearInput,
+                                    child: Container(
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: tokens.fill,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.close_rounded,
+                                        size: 13,
+                                        color: tokens.textTertiary,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(6),
+                              onTap: () => _search(),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: tokens.fill,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: tokens.line),
+                                ),
+                                child: Text(
+                                  'Enter',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        fontSize: 10,
+                                        color: tokens.textTertiary,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: <Widget>[
+                            ForumMenuPill(
+                              menu: kForumSearchSorts,
+                              value: _order,
+                              onChanged: _onSortChange,
+                            ),
+                            const SizedBox(width: 7),
+                            ForumClassifyChip(
+                              label: '只看主题帖',
+                              selected: _filter == 1,
+                              onTap: _onToggleFilter,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(child: _content(context, desktop: true, hPad: hPad)),
+              ],
+            ),
+          );
+        }
+        return Scaffold(
+          backgroundColor: tokens.bg,
+          appBar: _appBar(tokens),
+          body: Column(
+            children: <Widget>[
+              _toolbar(tokens),
+              Expanded(child: _content(context)),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -335,7 +479,7 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
     );
   }
 
-  Widget _content(BuildContext context) {
+  Widget _content(BuildContext context, {bool desktop = false, double hPad = 12}) {
     if (_keyword.isEmpty) {
       return _sheet(context, _idleView(context), center: true);
     }
@@ -364,19 +508,40 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
         child: ListView.builder(
           controller: _scroll,
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(
-              top: TiebananaMetrics.gapXs, bottom: TiebananaMetrics.gapMd),
+          padding: desktop
+              ? EdgeInsets.fromLTRB(hPad, 0, hPad, 24)
+              : const EdgeInsets.only(
+                  top: TiebananaMetrics.gapXs, bottom: TiebananaMetrics.gapMd),
           itemCount: _posts.length + (showFooter ? 1 : 0),
           itemBuilder: (BuildContext context, int index) {
             if (index >= _posts.length) {
-              return _footer(context);
+              final Widget foot = _footer(context);
+              return desktop
+                  ? Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                            maxWidth: AppBreakpoints.pageMaxWidth),
+                        child: foot,
+                      ),
+                    )
+                  : foot;
             }
             final TiebaSearchPost post = _posts[index];
-            return SearchResultCard(
+            final Widget card = SearchResultCard(
               post: post,
               keyword: _keyword,
+              desktop: desktop,
               onTap: () => _openThread(post),
             );
+            return desktop
+                ? Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                          maxWidth: AppBreakpoints.pageMaxWidth),
+                      child: card,
+                    ),
+                  )
+                : card;
           },
         ),
       ),

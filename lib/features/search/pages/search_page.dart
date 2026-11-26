@@ -4,9 +4,13 @@ import 'package:tieba_contract/tieba_contract.dart';
 
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
+import 'package:tiebanana/shared/widgets/desktop_panel.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/features/forum/widgets/forum_control_bar.dart';
@@ -537,20 +541,230 @@ class _SearchPageState extends State<SearchPage>
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      appBar: _appBar(tokens),
-      body: Column(
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        if (width >= AppBreakpoints.compactMax) {
+          return _buildDesktopShell(context, tokens, width);
+        }
+        return Scaffold(
+          backgroundColor: tokens.bg,
+          appBar: _appBar(tokens),
+          body: Column(
+            children: <Widget>[
+              _tabBar(tokens),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabs,
+                  children: <Widget>[
+                    _mixedTab(),
+                    _threadTab(),
+                    _forumTab(),
+                    _userTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopShell(
+    BuildContext context,
+    TiebananaTokens tokens,
+    double width,
+  ) {
+    final double hPad = AppBreakpoints.pagePaddingFor(width);
+    return DesktopShellFrame(
+      title: '搜索',
+      subtitle: _keyword.isEmpty ? null : '“$_keyword”',
+      activeTab: -1,
+      hideSearchPill: true,
+      onRefresh: _keyword.isEmpty
+          ? null
+          : () => _search(keepList: true, recordHistory: false),
+      child: Column(
         children: <Widget>[
-          _tabBar(tokens),
+          PageWrap(
+            maxWidth: AppBreakpoints.pageMaxWidth,
+            bottomPadding: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                // 顶部大搜索框
+                Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: tokens.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: tokens.lineStrong),
+                    boxShadow: tokens.cardShadow,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(Icons.search_rounded,
+                          size: 18, color: tokens.textTertiary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: _input,
+                          focusNode: _focus,
+                          textInputAction: TextInputAction.search,
+                          onSubmitted: (_) => _search(),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: tokens.textPrimary),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            border: InputBorder.none,
+                            hintText: '搜索吧、贴、用户',
+                            hintStyle: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: tokens.textTertiary),
+                          ),
+                        ),
+                      ),
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _input,
+                        builder: (BuildContext context,
+                            TextEditingValue value, _) {
+                          if (value.text.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(11),
+                              onTap: _clearInput,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: tokens.fill,
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 13,
+                                  color: tokens.textTertiary,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(6),
+                        onTap: () => _search(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: tokens.fill,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: tokens.line),
+                          ),
+                          child: Text(
+                            'Enter',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  fontSize: 10,
+                                  color: tokens.textTertiary,
+                                ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 综合 / 贴 / 吧 / 人 页签栏 + 仅「贴」页签展示排序与范围
+                AnimatedBuilder(
+                  animation: _tabs,
+                  builder: (BuildContext context, _) {
+                    const List<String> labels = <String>['综合', '贴', '吧', '人'];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: <Widget>[
+                          for (int i = 0; i < labels.length; i++) ...<Widget>[
+                            if (i > 0) const SizedBox(width: 4),
+                            Material(
+                              color: _tabs.index == i
+                                  ? tokens.primaryContainer
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(9),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(9),
+                                onTap: () => _tabs.animateTo(i),
+                                child: SizedBox(
+                                  height: 30,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12),
+                                    child: Center(
+                                      child: Text(
+                                        labels[i],
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              fontSize: 12,
+                                              fontWeight: _tabs.index == i
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w600,
+                                              color: _tabs.index == i
+                                                  ? tokens.onPrimaryContainer
+                                                  : tokens.textSecondary,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
+                          if (_tabs.index == 1 && _keyword.isNotEmpty) ...<Widget>[
+                            ForumMenuPill(
+                              menu: kSearchSorts,
+                              value: _order,
+                              onChanged: _onSortChange,
+                            ),
+                            const SizedBox(width: 7),
+                            ForumClassifyChip(
+                              label: '只看主题帖',
+                              selected: _filter == 1,
+                              onTap: _onToggleFilter,
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: TabBarView(
               controller: _tabs,
+              physics: const NeverScrollableScrollPhysics(),
               children: <Widget>[
-                _mixedTab(),
-                _threadTab(),
-                _forumTab(),
-                _userTab(),
+                _mixedTab(desktop: true, hPad: hPad),
+                _threadTab(desktop: true, hPad: hPad),
+                _forumTab(desktop: true, hPad: hPad),
+                _userTab(desktop: true, hPad: hPad),
               ],
             ),
           ),
@@ -669,12 +883,21 @@ class _SearchPageState extends State<SearchPage>
 
   // ------------------------------------------------------------------ tabs
 
-  Widget _mixedTab() {
-    if (_keyword.isEmpty) return _idleView();
-    return _withRefresh(_mixedBody());
+  Widget _wrapDesktop(Widget child) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: AppBreakpoints.pageMaxWidth),
+        child: child,
+      ),
+    );
   }
 
-  Widget _mixedBody() {
+  Widget _mixedTab({bool desktop = false, double hPad = 12}) {
+    if (_keyword.isEmpty) return _idleView(desktop: desktop, hPad: hPad);
+    return _withRefresh(_mixedBody(desktop: desktop, hPad: hPad));
+  }
+
+  Widget _mixedBody({bool desktop = false, double hPad = 12}) {
     if (_mixedLoading && _mixed.isEmpty) {
       return _sheet(
           const Column(
@@ -696,6 +919,52 @@ class _SearchPageState extends State<SearchPage>
     final bool showFooter =
         _mixedLoadingMore || _mixedMoreError != null || !_mixedHasMore;
     final String needle = _keyword.trim().toLowerCase();
+
+    if (desktop) {
+      final List<TiebaSearchForum> mixedForums = _mixed
+          .where((SearchMixedCard c) => c.kind == SearchMixedKind.forum)
+          .map((SearchMixedCard c) => c.forum!)
+          .toList();
+      final List<TiebaSearchPost> mixedPosts = _mixed
+          .where((SearchMixedCard c) => c.kind == SearchMixedKind.thread)
+          .map((SearchMixedCard c) => c.post!)
+          .toList();
+      final int leading = mixedForums.isNotEmpty ? 1 : 0;
+
+      return ListView.builder(
+        controller: _mixedScroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 24),
+        itemCount: leading + mixedPosts.length + (showFooter ? 1 : 0),
+        itemBuilder: (BuildContext context, int index) {
+          if (leading == 1 && index == 0) {
+            return _wrapDesktop(Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _DesktopForumGroupPanel(
+                forums: mixedForums,
+                keyword: _keyword,
+                needle: needle,
+                onTapForum: _openForum,
+                onViewAll: () => _tabs.animateTo(2),
+              ),
+            ));
+          }
+          final int postIndex = index - leading;
+          if (postIndex >= mixedPosts.length) {
+            return _wrapDesktop(_mixedFooter());
+          }
+          final TiebaSearchPost post = mixedPosts[postIndex];
+          return _wrapDesktop(SearchResultCard(
+            post: post,
+            keyword: _keyword,
+            showForum: true,
+            desktop: true,
+            onTap: () => _openThread(post),
+          ));
+        },
+      );
+    }
+
     return ListView.builder(
       controller: _mixedScroll,
       physics: const AlwaysScrollableScrollPhysics(),
@@ -730,13 +999,16 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Widget _forumTab() {
-    if (_keyword.isEmpty) return _idleView();
-    return _withRefresh(_forumBody());
+  Widget _forumTab({bool desktop = false, double hPad = 12}) {
+    if (_keyword.isEmpty) return _idleView(desktop: desktop, hPad: hPad);
+    return _withRefresh(_forumBody(desktop: desktop, hPad: hPad));
   }
 
-  Widget _threadTab() {
-    if (_keyword.isEmpty) return _idleView();
+  Widget _threadTab({bool desktop = false, double hPad = 12}) {
+    if (_keyword.isEmpty) return _idleView(desktop: desktop, hPad: hPad);
+    if (desktop) {
+      return _withRefresh(_threadBody(desktop: true, hPad: hPad));
+    }
     return Column(
       children: <Widget>[
         _threadToolbar(),
@@ -745,9 +1017,9 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Widget _userTab() {
-    if (_keyword.isEmpty) return _idleView();
-    return _withRefresh(_userBody());
+  Widget _userTab({bool desktop = false, double hPad = 12}) {
+    if (_keyword.isEmpty) return _idleView(desktop: desktop, hPad: hPad);
+    return _withRefresh(_userBody(desktop: desktop, hPad: hPad));
   }
 
   Widget _withRefresh(Widget child) {
@@ -757,7 +1029,7 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Widget _forumBody() {
+  Widget _forumBody({bool desktop = false, double hPad = 12}) {
     if (_forumLoading && _forums.isEmpty) {
       return _sheet(const _ForumSkeletonList(), center: false);
     }
@@ -768,6 +1040,19 @@ class _SearchPageState extends State<SearchPage>
       return _sheet(_emptyView(2), center: true);
     }
     final String needle = _keyword.trim().toLowerCase();
+    if (desktop) {
+      return SingleChildScrollView(
+        controller: _forumScroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 24),
+        child: _wrapDesktop(_DesktopForumGroupPanel(
+          forums: _forums,
+          keyword: _keyword,
+          needle: needle,
+          onTapForum: _openForum,
+        )),
+      );
+    }
     return ListView.builder(
       controller: _forumScroll,
       physics: const AlwaysScrollableScrollPhysics(),
@@ -811,7 +1096,7 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Widget _threadBody() {
+  Widget _threadBody({bool desktop = false, double hPad = 12}) {
     if (_postLoading && _posts.isEmpty) {
       return _sheet(const SearchResultSkeletonList(), center: false);
     }
@@ -825,25 +1110,29 @@ class _SearchPageState extends State<SearchPage>
     return ListView.builder(
       controller: _postScroll,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(
-          top: TiebananaMetrics.gapXs, bottom: TiebananaMetrics.gapMd),
+      padding: desktop
+          ? EdgeInsets.fromLTRB(hPad, 0, hPad, 24)
+          : const EdgeInsets.only(
+              top: TiebananaMetrics.gapXs, bottom: TiebananaMetrics.gapMd),
       itemCount: _posts.length + (showFooter ? 1 : 0),
       itemBuilder: (BuildContext context, int index) {
         if (index >= _posts.length) {
-          return _postFooter();
+          return desktop ? _wrapDesktop(_postFooter()) : _postFooter();
         }
         final TiebaSearchPost post = _posts[index];
-        return SearchResultCard(
+        final Widget card = SearchResultCard(
           post: post,
           keyword: _keyword,
           showForum: true,
+          desktop: desktop,
           onTap: () => _openThread(post),
         );
+        return desktop ? _wrapDesktop(card) : card;
       },
     );
   }
 
-  Widget _userBody() {
+  Widget _userBody({bool desktop = false, double hPad = 12}) {
     if (_userLoading && _users.isEmpty) {
       return _sheet(const _UserSkeletonList(), center: false);
     }
@@ -852,6 +1141,18 @@ class _SearchPageState extends State<SearchPage>
     }
     if (_users.isEmpty) {
       return _sheet(_emptyView(3), center: true);
+    }
+    if (desktop) {
+      return SingleChildScrollView(
+        controller: _userScroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 24),
+        child: _wrapDesktop(_DesktopUserGroupPanel(
+          users: _users,
+          keyword: _keyword,
+          onTapUser: _openUser,
+        )),
+      );
     }
     return ListView.builder(
       controller: _userScroll,
@@ -887,7 +1188,7 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Widget _idleView() {
+  Widget _idleView({bool desktop = false, double hPad = 12}) {
     final List<String> history = _history;
     if (history.isEmpty) {
       return Center(
@@ -899,73 +1200,88 @@ class _SearchPageState extends State<SearchPage>
       );
     }
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    return ListView(
+    final Widget list = ListView(
       controller: _historyScroll,
-      padding: const EdgeInsets.fromLTRB(
-          TiebananaMetrics.pageGutter, 4, TiebananaMetrics.pageGutter, 24),
+      padding: desktop
+          ? EdgeInsets.fromLTRB(hPad, 0, hPad, 24)
+          : const EdgeInsets.fromLTRB(
+              TiebananaMetrics.pageGutter, 4, TiebananaMetrics.pageGutter, 24),
       children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-              TiebananaMetrics.gapXs, 0, TiebananaMetrics.gapXs, 6),
-          child: Row(
-            children: <Widget>[
-              Text(
-                "搜索历史",
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: tokens.textSecondary, fontWeight: FontWeight.w700),
-              ),
-              const Spacer(),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _clearHistory,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: TiebananaMetrics.gapXs),
-                  child: Text(
-                    "清空",
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: tokens.primary, fontWeight: FontWeight.w700),
+        _maybeMax(
+          desktop,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                TiebananaMetrics.gapXs, 0, TiebananaMetrics.gapXs, 6),
+            child: Row(
+              children: <Widget>[
+                Text(
+                  "搜索历史",
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: tokens.textSecondary, fontWeight: FontWeight.w700),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _clearHistory,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: TiebananaMetrics.gapXs),
+                    child: Text(
+                      "清空",
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: tokens.primary, fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: tokens.surface,
-            borderRadius: TiebananaMetrics.brLg,
-            boxShadow: tokens.cardShadow,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: <Widget>[
-              for (int i = 0; i < history.length; i++) ...<Widget>[
-                if (i > 0) Divider(height: 1, thickness: 1, color: tokens.line),
-                _HistoryRow(
-                  text: history[i],
-                  tokens: tokens,
-                  onTap: () => _useHistory(history[i]),
-                  onDelete: () => _deleteHistory(history[i]),
-                ),
               ],
-            ],
+            ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-              TiebananaMetrics.gapXs, 10, TiebananaMetrics.gapXs, 0),
-          child: Text(
-            "只保存在本机。点历史关键词直接搜索，右侧 × 删除单条。",
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(color: tokens.textTertiary, height: 1.7),
+        _maybeMax(
+          desktop,
+          Container(
+            decoration: BoxDecoration(
+              color: tokens.surface,
+              borderRadius: TiebananaMetrics.brLg,
+              boxShadow: tokens.cardShadow,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: <Widget>[
+                for (int i = 0; i < history.length; i++) ...<Widget>[
+                  if (i > 0) Divider(height: 1, thickness: 1, color: tokens.line),
+                  _HistoryRow(
+                    text: history[i],
+                    tokens: tokens,
+                    onTap: () => _useHistory(history[i]),
+                    onDelete: () => _deleteHistory(history[i]),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        _maybeMax(
+          desktop,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                TiebananaMetrics.gapXs, 10, TiebananaMetrics.gapXs, 0),
+            child: Text(
+              "只保存在本机。点历史关键词直接搜索，右侧 × 删除单条。",
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: tokens.textTertiary, height: 1.7),
+            ),
           ),
         ),
       ],
     );
+    return list;
   }
+
+  Widget _maybeMax(bool desktop, Widget child) =>
+      desktop ? _wrapDesktop(child) : child;
 
   Widget _emptyView(int tab) {
     switch (tab) {
@@ -1475,6 +1791,462 @@ class _UserSkeletonCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DesktopForumGroupPanel extends StatelessWidget {
+  const _DesktopForumGroupPanel({
+    required this.forums,
+    required this.keyword,
+    required this.needle,
+    required this.onTapForum,
+    this.onViewAll,
+  });
+
+  final List<TiebaSearchForum> forums;
+  final String keyword;
+  final String needle;
+  final ValueChanged<TiebaSearchForum> onTapForum;
+  final VoidCallback? onViewAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return DesktopPanel(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          PanelHeader(
+            title: '相关的吧',
+            count: forums.length,
+            trailing: <Widget>[
+              if (onViewAll != null)
+                OutlinedButton(
+                  onPressed: onViewAll,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: tokens.textSecondary,
+                    side: BorderSide(color: tokens.line),
+                    minimumSize: const Size(0, 26),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    textStyle: const TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                  child: const Text('查看全部 ›'),
+                ),
+            ],
+          ),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool twoCol = constraints.maxWidth >= 560;
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(15, 2, 15, 15),
+                child: twoCol
+                    ? Column(
+                        children: <Widget>[
+                          for (int i = 0; i < forums.length; i += 2) ...<Widget>[
+                            if (i > 0) const SizedBox(height: 10),
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: <Widget>[
+                                  Expanded(
+                                    child: _DesktopForumTile(
+                                      forum: forums[i],
+                                      keyword: keyword,
+                                      needle: needle,
+                                      onTap: () => onTapForum(forums[i]),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: i + 1 < forums.length
+                                        ? _DesktopForumTile(
+                                            forum: forums[i + 1],
+                                            keyword: keyword,
+                                            needle: needle,
+                                            onTap: () =>
+                                                onTapForum(forums[i + 1]),
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    : Column(
+                        children: <Widget>[
+                          for (int i = 0; i < forums.length; i++) ...<Widget>[
+                            if (i > 0) const SizedBox(height: 10),
+                            _DesktopForumTile(
+                              forum: forums[i],
+                              keyword: keyword,
+                              needle: needle,
+                              onTap: () => onTapForum(forums[i]),
+                            ),
+                          ],
+                        ],
+                      ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopForumTile extends StatefulWidget {
+  const _DesktopForumTile({
+    required this.forum,
+    required this.keyword,
+    required this.needle,
+    required this.onTap,
+  });
+
+  final TiebaSearchForum forum;
+  final String keyword;
+  final String needle;
+  final VoidCallback onTap;
+
+  @override
+  State<_DesktopForumTile> createState() => _DesktopForumTileState();
+}
+
+class _DesktopForumTileState extends State<_DesktopForumTile> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final TiebaSearchForum forum = widget.forum;
+    final String bare = forum.name.endsWith('吧')
+        ? forum.name.substring(0, forum.name.length - 1)
+        : forum.name;
+    final String displayName =
+        forum.name.endsWith('吧') ? forum.name : '${forum.name}吧';
+    final bool best =
+        bare.toLowerCase() == widget.needle && widget.needle.isNotEmpty;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Material(
+        color: _hovered ? tokens.fill : tokens.surface,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: widget.onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _hovered ? tokens.lineStrong : tokens.line,
+              ),
+            ),
+            child: Row(
+              children: <Widget>[
+                Avatar(
+                  onTap: widget.onTap,
+                  imgUrl: forum.img,
+                  height: 40,
+                  width: 40,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: HighlightText(
+                              displayName,
+                              keyword: widget.keyword,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: tokens.textPrimary,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (best) ...<Widget>[
+                            const SizedBox(width: 6),
+                            _Badge(
+                              label: '最匹配',
+                              background: tokens.primaryContainer,
+                              foreground: tokens.onPrimaryContainer,
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${TiebaParser.numberConvertString(forum.member)} 关注 · ${TiebaParser.numberConvertString(forum.post)} 贴',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontSize: 10.5,
+                              color: tokens.textTertiary,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  height: 25,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: forum.isLike ? tokens.fill : tokens.primaryContainer,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    forum.isLike ? '已关注' : '进入',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: forum.isLike
+                              ? tokens.textSecondary
+                              : tokens.onPrimaryContainer,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopUserGroupPanel extends StatelessWidget {
+  const _DesktopUserGroupPanel({
+    required this.users,
+    required this.keyword,
+    required this.onTapUser,
+  });
+
+  final List<TiebaUserMatch> users;
+  final String keyword;
+  final ValueChanged<TiebaUserMatch> onTapUser;
+
+  @override
+  Widget build(BuildContext context) {
+    return DesktopPanel(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          PanelHeader(title: '相关用户', count: users.length),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool twoCol = constraints.maxWidth >= 560;
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(15, 2, 15, 15),
+                child: twoCol
+                    ? Column(
+                        children: <Widget>[
+                          for (int i = 0; i < users.length; i += 2) ...<Widget>[
+                            if (i > 0) const SizedBox(height: 10),
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: <Widget>[
+                                  Expanded(
+                                    child: _DesktopUserTile(
+                                      user: users[i],
+                                      keyword: keyword,
+                                      onTap: () => onTapUser(users[i]),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: i + 1 < users.length
+                                        ? _DesktopUserTile(
+                                            user: users[i + 1],
+                                            keyword: keyword,
+                                            onTap: () =>
+                                                onTapUser(users[i + 1]),
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    : Column(
+                        children: <Widget>[
+                          for (int i = 0; i < users.length; i++) ...<Widget>[
+                            if (i > 0) const SizedBox(height: 10),
+                            _DesktopUserTile(
+                              user: users[i],
+                              keyword: keyword,
+                              onTap: () => onTapUser(users[i]),
+                            ),
+                          ],
+                        ],
+                      ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopUserTile extends StatefulWidget {
+  const _DesktopUserTile({
+    required this.user,
+    required this.keyword,
+    required this.onTap,
+  });
+
+  final TiebaUserMatch user;
+  final String keyword;
+  final VoidCallback onTap;
+
+  @override
+  State<_DesktopUserTile> createState() => _DesktopUserTileState();
+}
+
+class _DesktopUserTileState extends State<_DesktopUserTile> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final TiebaUserMatch user = widget.user;
+    final String displayName = user.displayName;
+    final bool showHandle = user.name.isNotEmpty && user.name != displayName;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Material(
+        color: _hovered ? tokens.fill : tokens.surface,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: widget.onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _hovered ? tokens.lineStrong : tokens.line,
+              ),
+            ),
+            child: Row(
+              children: <Widget>[
+                Avatar(
+                  onTap: widget.onTap,
+                  imgUrl: user.portrait,
+                  height: 36,
+                  width: 36,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: HighlightText(
+                              displayName,
+                              keyword: widget.keyword,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: tokens.textPrimary,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (showHandle) ...<Widget>[
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                '@${user.name}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      fontSize: 10.5,
+                                      color: tokens.textTertiary,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (user.intro.isNotEmpty) ...<Widget>[
+                        const SizedBox(height: 2),
+                        HighlightText(
+                          user.intro,
+                          keyword: widget.keyword,
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(
+                                fontSize: 10.5,
+                                color: tokens.textSecondary,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  height: 25,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: tokens.fill,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '主页',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: tokens.textSecondary,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
