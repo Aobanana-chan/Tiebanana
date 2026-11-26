@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_text_field/extended_text_field.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
@@ -288,6 +289,10 @@ class ThreadPageMainState extends State<ThreadPageMain>
 
   ///收藏状态。底部条与卡片菜单共用，退出时的续读弹窗也读这里。
   late final ValueNotifier<bool> _stored;
+  bool _confirmingExit = false;
+  double _exitSwipeDistance = 0;
+
+  bool get _needsExitConfirmation => isStored && !session.paused;
 
   ///主题赞 / 踩，仅在底部回复条显示。
   ThreadAgreeController? _threadAgree;
@@ -389,7 +394,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
   }
 
   void _storeChanged() {
-    info.isStored = isStored;
+    setState(() => info.isStored = isStored);
     unawaited(_persistStored());
   }
 
@@ -1357,38 +1362,87 @@ class ThreadPageMainState extends State<ThreadPageMain>
     );
   }
 
+  Future<void> _onExitAttempt(bool didPop, Object? result) async {
+    if (didPop || _confirmingExit || !_needsExitConfirmation) return;
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isCurrent) return;
+
+    setState(() => _confirmingExit = true);
+    try {
+      final bool? update = await showDialog<bool>(
+        context: context,
+        builder: (context) => const TiebaAlterDialog(
+          title: '本次阅读到这里，是否更新收藏楼层?',
+        ),
+      );
+      if (update == null || !mounted || !route.isCurrent) return;
+      if (update) {
+        try {
+          await Global.tiebaAPI.threadAddStore(info.tid, pid);
+        } catch (e) {
+          if (mounted) session.fail(e);
+        }
+      }
+      if (mounted && route.isCurrent) Navigator.pop(context, result);
+    } finally {
+      if (mounted) setState(() => _confirmingExit = false);
+    }
+  }
+
+  Widget _withExitHandling(Widget child) {
+    return PopScope(
+      canPop: !_needsExitConfirmation && !_confirmingExit,
+      onPopInvokedWithResult: _onExitAttempt,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          child,
+          // Cupertino 不会在 canPop 为 false 时识别侧滑；需要确认的帖子用
+          // 同一侧的窄边缘触发 maybePop，和返回按钮共用退出流程。
+          if (defaultTargetPlatform == TargetPlatform.iOS &&
+              _needsExitConfirmation &&
+              !_confirmingExit &&
+              Navigator.canPop(context))
+            _buildExitSwipe(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExitSwipe(BuildContext context) {
+    final bool ltr = Directionality.of(context) == TextDirection.ltr;
+    final EdgeInsets padding = MediaQuery.paddingOf(context);
+    return PositionedDirectional(
+      start: 0,
+      top: 0,
+      bottom: 0,
+      width: math.max(20, ltr ? padding.left : padding.right),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        excludeFromSemantics: true,
+        onHorizontalDragStart: (_) => _exitSwipeDistance = 0,
+        onHorizontalDragUpdate: (details) {
+          _exitSwipeDistance += ltr ? details.delta.dx : -details.delta.dx;
+        },
+        onHorizontalDragEnd: (_) {
+          final route = ModalRoute.of(context);
+          if (_exitSwipeDistance >= 64 &&
+              route?.isCurrent == true &&
+              route?.animation?.isCompleted == true) {
+            Navigator.maybePop(context);
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TiebaThreadPagePost? first = _firstPost;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, Object? result) async {
-        if (didPop) return;
-        if (isStored && !session.paused) {
-          final bool? q = await showDialog<bool>(
-            context: context,
-            builder: (BuildContext context) => const TiebaAlterDialog(
-              title: '本次阅读到这里，是否更新收藏楼层?',
-            ),
-          );
-          if (q == null) {
-            //取消弹窗，留在当前页
-            return;
-          } else if (q == true) {
-            try {
-              await Global.tiebaAPI.threadAddStore(info.tid, pid);
-            } catch (e) {
-              if (mounted) session.fail(e);
-            }
-          }
-        }
-        if (context.mounted) {
-          Navigator.pop(context);
-        }
-      },
-      child: LayoutBuilder(
+    return _withExitHandling(
+      LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final double width = constraints.maxWidth.isFinite
               ? constraints.maxWidth

@@ -6,9 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tieba_contract/testing.dart';
+import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/thread/state/reply_events.dart';
+import 'package:tiebanana/features/thread/data/thread_cache.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/features/thread/pages/thread_page.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
@@ -64,6 +66,12 @@ class _Api extends DemoTiebaApi {
   final List<int> calls = [];
   final List<bool> modes = [];
   Completer<TiebaThreadPage>? pending;
+  final storeUpdates = <(String, String)>[];
+
+  @override
+  Future<void> threadAddStore(String tid, String pid, {int status = 1}) async {
+    storeUpdates.add((tid, pid));
+  }
 
   @override
   Future<TiebaThreadPage> getThreadPage(String kz,
@@ -77,27 +85,39 @@ class _Api extends DemoTiebaApi {
 
 Future<GlobalKey<ThreadPageMainState>> _mount(
     WidgetTester tester, TiebaThreadPage page,
-    {String? pid}) async {
+    {String? pid, bool withPreviousRoute = false}) async {
   await tester.binding.setSurfaceSize(const Size(390, 600));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   final key = GlobalKey<ThreadPageMainState>();
+  final navigator = GlobalKey<NavigatorState>();
+  final detail = Scaffold(
+    body: ThreadPageMain(
+      key: key,
+      kz: '123',
+      page: page,
+      pid: pid,
+      pn: page.page.currentPage,
+      initPost: page.posts,
+    ),
+  );
   await tester.pumpWidget(ChangeNotifierProvider(
     create: (_) => APPSettingProvider(),
     child: MaterialApp(
+      navigatorKey: navigator,
       theme: TiebananaTheme.light(seedOf('blue'), 16),
-      home: Scaffold(
-        body: ThreadPageMain(
-          key: key,
-          kz: '123',
-          page: page,
-          pid: pid,
-          pn: page.page.currentPage,
-          initPost: page.posts,
-        ),
-      ),
+      home: withPreviousRoute ? const Scaffold(body: Text('上一页')) : detail,
     ),
   ));
+  if (withPreviousRoute) {
+    navigator.currentState!.push(appPageRoute<void>(builder: (_) => detail));
+    await tester.pumpAndSettle();
+  }
   return key;
+}
+
+Future<void> _swipeBack(WidgetTester tester, {double x = 4}) async {
+  await tester.dragFrom(Offset(x, 300), const Offset(265, 0));
+  await tester.pumpAndSettle();
 }
 
 /// 滚到列表底部后继续上拉并松手，触发一次底部动作。
@@ -124,10 +144,53 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     Global.profile = await SharedPreferences.getInstance();
     Global.setting = APPSetting.fromJson(defaultAPPSetting);
+    Global.threadCache = ThreadCache();
     api = _Api();
     Global.tiebaAPI = api;
   });
   tearDown(() => Global.tiebaAPI = DemoTiebaApi());
+
+  final iOS = TargetPlatformVariant({TargetPlatform.iOS});
+
+  testWidgets('iOS 未收藏和离线收藏帖允许原生左缘侧滑返回', variant: iOS, (tester) async {
+    for (final stored in [false, true]) {
+      final key = await _mount(tester, _page(1)..isStored = stored,
+          withPreviousRoute: true);
+      if (stored) {
+        key.currentState!.session.fail('离线');
+        await tester.pumpAndSettle();
+      }
+      final route = ModalRoute.of(key.currentContext!)!;
+      expect(route.popGestureEnabled, isTrue);
+      await _swipeBack(tester);
+      expect(find.text('上一页'), findsOneWidget);
+      expect(api.storeUpdates, isEmpty);
+    }
+  });
+
+  testWidgets('iOS 收藏帖左缘侧滑保留确认、取消与更新楼层', variant: iOS, (tester) async {
+    final key = await _mount(tester, _page(1), withPreviousRoute: true);
+    key.currentState!.isStored = true;
+    await tester.pumpAndSettle();
+
+    await _swipeBack(tester, x: 60);
+    expect(find.byType(AlertDialog), findsNothing);
+    await _swipeBack(tester);
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await tester.tapAt(const Offset(4, 300));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(ThreadPageMain), findsOneWidget);
+    expect(api.storeUpdates, isEmpty);
+
+    await _swipeBack(tester);
+    final currentPid = key.currentState!.pid;
+    expect(currentPid, isNotEmpty);
+    await tester.tap(find.text('是'));
+    await tester.pumpAndSettle();
+    expect(api.storeUpdates, [('123', currentPid)]);
+    expect(find.text('上一页'), findsOneWidget);
+  });
 
   testWidgets('回帖成功重新读取末页并补入新增的一页，取消或其他帖子不刷新', (tester) async {
     final key = await _mount(tester, _page(1));
