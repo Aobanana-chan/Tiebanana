@@ -198,7 +198,7 @@ class _TagPanState extends State<TagPan> with RouteAware {
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
         if (availableWidth >= AppBreakpoints.compactMax) {
-          return _buildDesktop(context);
+          return _buildDesktop(context, availableWidth);
         }
         return _buildMobile(context);
       },
@@ -321,11 +321,12 @@ class _TagPanState extends State<TagPan> with RouteAware {
     return '晚上好';
   }
 
-  Widget _buildDesktop(BuildContext context) {
+  Widget _buildDesktop(BuildContext context, double width) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    final double screenWidth = MediaQuery.sizeOf(context).width;
-    final bool twoCol = screenWidth >= AppBreakpoints.mediumMax;
-    final double rightWidth = screenWidth >= 1100 ? 336 : 304;
+    // 用外层 LayoutBuilder 的实际宽度判断分栏：和断点判断保持同一来源，
+    // 避免 MediaQuery 与真实约束不一致时（如被嵌进更窄的容器）错判。
+    final bool twoCol = width >= AppBreakpoints.mediumMax;
+    final double rightWidth = width >= 1100 ? 336 : 304;
 
     String userName = '';
     try {
@@ -358,18 +359,19 @@ class _TagPanState extends State<TagPan> with RouteAware {
                 .toList();
         final bool canExpand = forums.length > maxCount && q.isEmpty;
 
-        final Widget forumsPanel = _buildDesktopForumsPanel(
-          context,
-          tokens,
-          forumState,
-          forums: forums,
-          visible: visible,
-          maxCount: maxCount,
-          signedCount: signedCount,
-          canExpand: canExpand,
-        );
-
         final Widget recentPanel = _buildDesktopRecentPanel(context, tokens);
+
+        Widget forumsPanel({double? gridWidth}) => _buildDesktopForumsPanel(
+              context,
+              tokens,
+              forumState,
+              forums: forums,
+              visible: visible,
+              maxCount: maxCount,
+              signedCount: signedCount,
+              canExpand: canExpand,
+              gridWidth: gridWidth,
+            );
 
         final String greetingTitle =
             userName.isEmpty ? _greeting() : '${_greeting()}，$userName';
@@ -401,18 +403,33 @@ class _TagPanState extends State<TagPan> with RouteAware {
                   ],
                 ),
                 if (twoCol)
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        Expanded(child: forumsPanel),
-                        const SizedBox(width: 16),
-                        SizedBox(width: rightWidth, child: recentPanel),
-                      ],
-                    ),
+                  LayoutBuilder(
+                    builder:
+                        (BuildContext context, BoxConstraints constraints) {
+                      // 先把左栏宽度算出来再交给网格：`IntrinsicHeight` 内部
+                      // 不能出现 `LayoutBuilder`，否则查询固有高度会抛异常。
+                      final double leftWidth =
+                          (constraints.maxWidth - 16 - rightWidth)
+                              .clamp(0.0, double.infinity);
+                      return IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            Expanded(
+                              child: forumsPanel(
+                                gridWidth: (leftWidth - 30)
+                                    .clamp(0.0, double.infinity),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            SizedBox(width: rightWidth, child: recentPanel),
+                          ],
+                        ),
+                      );
+                    },
                   )
                 else ...<Widget>[
-                  forumsPanel,
+                  forumsPanel(),
                   const SizedBox(height: 16),
                   recentPanel,
                 ],
@@ -433,6 +450,7 @@ class _TagPanState extends State<TagPan> with RouteAware {
     required int maxCount,
     required int signedCount,
     required bool canExpand,
+    double? gridWidth,
   }) {
     return DesktopPanel(
       child: Column(
@@ -532,6 +550,7 @@ class _TagPanState extends State<TagPan> with RouteAware {
                     forums: visible,
                     desktop: true,
                     reorderMode: _reorderMode,
+                    width: gridWidth,
                     onOrderChanged: (List<LikeForumInfo> ordered) =>
                         _saveVisibleOrder(forumState, ordered),
                   ),
@@ -776,6 +795,7 @@ class _ForumReorderGrid extends StatefulWidget {
     required this.onOrderChanged,
     this.desktop = false,
     this.reorderMode = false,
+    this.width,
   });
 
   /// 当前可见的吧（缩略态只是关注列表的前 N 个）。
@@ -786,6 +806,12 @@ class _ForumReorderGrid extends StatefulWidget {
 
   final bool desktop;
   final bool reorderMode;
+
+  /// 已知可用宽度时直接使用，避免在 [IntrinsicHeight] 里嵌套 [LayoutBuilder]。
+  ///
+  /// 首页宽屏左右两栏用 `IntrinsicHeight` 对齐高度，而 `LayoutBuilder`
+  /// 不支持被查询固有尺寸；外层已经拿到约束，就把宽度传进来。
+  final double? width;
 
   @override
   State<_ForumReorderGrid> createState() => _ForumReorderGridState();
@@ -944,29 +970,34 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
 
   @override
   Widget build(BuildContext context) {
+    final double? fixedWidth = widget.width;
+    if (fixedWidth != null) {
+      return _buildGrid(context, fixedWidth);
+    }
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final double width = constraints.maxWidth;
-        final double cellWidth = _cellWidthFor(width);
-        final int rows = (_order.length / _columns).ceil();
-        final double height =
-            rows <= 0 ? 0 : rows * _cellHeight + (rows - 1) * _spacing;
-        return Listener(
-          onPointerCancel: _onPointerCancel,
-          child: SizedBox(
-            width: width,
-            height: height,
-            child: Stack(
-              key: _gridKey,
-              clipBehavior: Clip.none,
-              children: <Widget>[
-                for (int i = 0; i < _order.length; i++)
-                  _buildCell(i, cellWidth, i),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (BuildContext context, BoxConstraints constraints) =>
+          _buildGrid(context, constraints.maxWidth),
+    );
+  }
+
+  Widget _buildGrid(BuildContext context, double width) {
+    final double cellWidth = _cellWidthFor(width);
+    final int rows = (_order.length / _columns).ceil();
+    final double height =
+        rows <= 0 ? 0 : rows * _cellHeight + (rows - 1) * _spacing;
+    return Listener(
+      onPointerCancel: _onPointerCancel,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Stack(
+          key: _gridKey,
+          clipBehavior: Clip.none,
+          children: <Widget>[
+            for (int i = 0; i < _order.length; i++) _buildCell(i, cellWidth, i),
+          ],
+        ),
+      ),
     );
   }
 

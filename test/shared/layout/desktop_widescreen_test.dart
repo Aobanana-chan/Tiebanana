@@ -45,11 +45,30 @@ class _TestMessageApi extends DemoTiebaApi {
       );
 }
 
+/// 带真实关注吧的 ForumState：首页宽屏会渲染吧网格，正是启动报错的路径。
+class _ForumsWithData extends ForumState {
+  @override
+  List<LikeForumInfo> get forums => <LikeForumInfo>[
+        for (int i = 0; i < 6; i++)
+          LikeForumInfo(
+            forumId: '$i',
+            avatar: '',
+            forumName: '测试$i',
+            isSign: i.isEven ? '1' : '0',
+            levelId: '${i + 1}',
+          ),
+      ];
+
+  @override
+  Future<void> refresh() async {}
+}
+
 Widget _wrapApp(
   Widget child, {
   String seedKey = 'blue',
   bool dark = false,
   double fontSize = 16,
+  ForumState? forumState,
 }) {
   final TiebananaSeed seed = seedOf(seedKey);
   return MultiProvider(
@@ -60,9 +79,12 @@ Widget _wrapApp(
       ChangeNotifierProvider<User>(
         create: (_) => User(),
       ),
-      ChangeNotifierProvider<ForumState>(
-        create: (_) => ForumState(),
-      ),
+      if (forumState == null)
+        ChangeNotifierProvider<ForumState>(
+          create: (_) => ForumState(),
+        )
+      else
+        ChangeNotifierProvider<ForumState>.value(value: forumState),
     ],
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -286,6 +308,41 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     }
     expect(find.text('只看主题帖'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('首页宽屏在有关注吧与浏览历史时，等高双栏不触发固有尺寸布局异常', (
+    WidgetTester tester,
+  ) async {
+    final _ForumsWithData forums = _ForumsWithData();
+    addTearDown(forums.dispose);
+    await tester.binding.setSurfaceSize(const Size(1280, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrapApp(
+      Scaffold(
+        body: TagPan(
+          historyLoader: () => <ViewHistoryPageModel>[
+            ViewHistoryPageModel(
+              id: 1,
+              tid: '8301124590',
+              title: '老照片里的城南',
+              forumName: '老相机',
+              latestViewTime: DateTime(2026, 11, 20, 12),
+            ),
+          ],
+        ),
+      ),
+      forumState: forums,
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    // 关注吧网格与「最近浏览」同时存在时，左右两栏仍靠 IntrinsicHeight 对齐。
+    expect(find.text('我关注的吧'), findsOneWidget);
+    expect(find.text('最近浏览'), findsOneWidget);
+    expect(find.text('老照片里的城南'), findsOneWidget);
+    expect(find.text('测试0吧'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
