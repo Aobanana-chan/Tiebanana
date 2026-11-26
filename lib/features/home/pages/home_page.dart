@@ -21,8 +21,12 @@ import 'package:tiebanana/features/recommend/pages/recommend_page.dart';
 import 'package:tiebanana/features/profile/pages/my_profile_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:app_links/app_links.dart';
+import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/link_router.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
+import 'package:tiebanana/shared/widgets/message_badge.dart';
 import 'package:tiebanana/core/platform/app_exit.dart';
 import 'package:tiebanana/core/platform/browser_url.dart';
 
@@ -63,6 +67,7 @@ class _HomePageState extends State<HomePage> {
     forumState = ForumState();
     // 切换 / 退出账号后，关注的吧属于另一个账号，首页原地刷新。
     AccountStore.changes.addListener(_onAccountChanged);
+    Global.desktopTabRequest.addListener(_onDesktopTabRequested);
     // 已读状态建议按版本 + 账号记 SharedPreferences（如 introTipsSeen.<version>.<uid>），
     // 多账号各自记录。
     onWillPop = () {
@@ -156,6 +161,13 @@ class _HomePageState extends State<HomePage> {
     forumState.refresh();
   }
 
+  void _onDesktopTabRequested() {
+    final int? target = Global.desktopTabRequest.value;
+    if (target == null) return;
+    Global.desktopTabRequest.value = null;
+    if (mounted) goToTab(target);
+  }
+
   ///切到第 [index] 个页签。底栏与消息页空态的「去逛逛」共用这一条路径。
   void goToTab(int index) {
     if (index == _currentPage) {
@@ -171,26 +183,16 @@ class _HomePageState extends State<HomePage> {
     }
     setState(() {
       _currentPage = index;
-      controller.animateToPage(_currentPage,
-          duration: const Duration(milliseconds: 200), curve: Curves.easeIn);
+      if (controller.hasClients) {
+        controller.animateToPage(_currentPage,
+            duration: const Duration(milliseconds: 200), curve: Curves.easeIn);
+      }
     });
     _activeTab.value = index;
   }
 
   /// 底部「消息」：数字优先；只有广播未读时才显示红点，且不带数字。
-  Widget _messageBadge(Widget icon) {
-    final int numbers = MessageReminder.totalUnread;
-    final bool dot = numbers <= 0 && NotificationReminder.instance.broadcastDot;
-    if (numbers > 0) {
-      return Badge.count(maxCount: 99, count: numbers, child: icon);
-    }
-    return Badge(
-      isLabelVisible: dot,
-      smallSize: 9,
-      backgroundColor: Theme.of(context).colorScheme.error,
-      child: icon,
-    );
-  }
+  Widget _messageBadge(Widget icon) => MessageBadge(child: icon);
 
   void initPlatformStateForStringUniLinks() {
     _appLinks = AppLinks();
@@ -232,37 +234,96 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  ({String title, String subtitle}) _desktopBarMeta(User user) {
+    switch (_currentPage) {
+      case 0:
+        return (title: '首页', subtitle: '轻一点，逛贴吧');
+      case 1:
+        return (title: '动态', subtitle: '发现正在发生的讨论');
+      case 2:
+        final int chatUnread = MessageReminder.chatUnread.value;
+        final String sub =
+            chatUnread > 0 ? '$chatUnread 条未读私信' : '私信与互动消息';
+        return (title: '消息', subtitle: sub);
+      case 3:
+        final String name = user.name.trim();
+        return (
+          title: '个人与设置',
+          subtitle: name.isEmpty ? '账号与外观设置' : name,
+        );
+      default:
+        return (title: 'Tiebanana', subtitle: '轻一点，逛贴吧');
+    }
+  }
+
+  void _refreshActiveDesktopTab() {
+    switch (_currentPage) {
+      case 0:
+        forumState.refresh();
+      case 2:
+        MessageReminder.refresh();
+        MessageReminder.refreshChat();
+        NotificationReminder.instance.refresh();
+    }
+    Global.desktopRefreshTick.value++;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final User user = Provider.of<User>(context);
+    final bool desktop = !AppBreakpoints.isCompact(context);
+    final Widget pageView = PageView(
+      physics: const NeverScrollableScrollPhysics(),
+      controller: controller,
+      children: page,
+    );
+
     Widget childpage;
-    if (Provider.of<User>(context).isLogin == false) {
+    if (user.isLogin == false) {
       childpage = Scaffold(
         body: ChangeNotifierProvider.value(
           value: forumState,
           builder: (context, child) => const LoginPage(),
         ),
       );
+    } else if (desktop) {
+      final ({String title, String subtitle}) meta = _desktopBarMeta(user);
+      childpage = ChangeNotifierProvider.value(
+        value: forumState,
+        builder: (BuildContext context, _) => ListenableBuilder(
+          listenable: MessageBadge.listenable,
+          builder: (BuildContext context, _) {
+            final ({String title, String subtitle}) liveMeta =
+                _desktopBarMeta(user);
+            return DesktopShellFrame(
+              title: liveMeta.title,
+              subtitle: liveMeta.subtitle,
+              activeTab: _currentPage,
+              onSelectTab: goToTab,
+              onRefresh: _refreshActiveDesktopTab,
+              child: pageView,
+            );
+          },
+        ),
+      );
+      // Avoid unused variable warning for meta when ListenableBuilder builds.
+      assert(meta.title.isNotEmpty);
     } else {
       childpage = Scaffold(
         resizeToAvoidBottomInset: false,
         // M3 NavigationBar：药丸指示器 + 常显标签，与概念图一致。
         // 旧的 BottomNavigationBar 在 4 个 item 下会退化成 shifting（只有选中项显示文字）。
         bottomNavigationBar: ListenableBuilder(
-          listenable: Listenable.merge(<Listenable>[
-            AccountStore.changes,
-            MessageReminder.counts,
-            MessageReminder.chatUnread,
-            NotificationReminder.instance,
-          ]),
+          listenable: MessageBadge.listenable,
           builder: (BuildContext context, Widget? child) => NavigationBar(
             selectedIndex: _currentPage,
             onDestinationSelected: goToTab,
             destinations: [
-              NavigationDestination(
+              const NavigationDestination(
                   icon: Icon(Icons.home_outlined),
                   selectedIcon: Icon(Icons.home),
                   label: "首页"),
-              NavigationDestination(
+              const NavigationDestination(
                   icon: Icon(Icons.explore_outlined),
                   selectedIcon: Icon(Icons.explore),
                   label: "动态"),
@@ -270,7 +331,7 @@ class _HomePageState extends State<HomePage> {
                   icon: _messageBadge(const Icon(Icons.notifications_none)),
                   selectedIcon: _messageBadge(const Icon(Icons.notifications)),
                   label: "消息"),
-              NavigationDestination(
+              const NavigationDestination(
                   icon: Icon(Icons.person_outline),
                   selectedIcon: Icon(Icons.person),
                   label: "个人"),
@@ -279,11 +340,7 @@ class _HomePageState extends State<HomePage> {
         ),
         body: ChangeNotifierProvider.value(
           value: forumState,
-          builder: (context, child) => PageView(
-            physics: const NeverScrollableScrollPhysics(),
-            controller: controller,
-            children: page,
-          ),
+          builder: (context, child) => pageView,
         ),
       );
     }
@@ -302,6 +359,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _reminderTimer?.cancel();
     _activeTab.dispose();
+    Global.desktopTabRequest.removeListener(_onDesktopTabRequested);
     AccountStore.changes.removeListener(_onAccountChanged);
     forumState.dispose();
     controller.dispose();

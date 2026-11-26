@@ -4,9 +4,44 @@ import 'package:tiebanana/features/message/state/notify_entry.dart';
 import 'package:tiebanana/features/message/state/notification_reminder.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 
-/// 打开「消息提醒」面板：移动端 bottom sheet，宽屏居中弹层。
-Future<void> showReminderSheet(BuildContext context) async {
-  final bool wide = MediaQuery.sizeOf(context).width >= 900;
+/// 打开「消息提醒」面板：移动端 bottom sheet，宽屏锚定 Popover 或居中弹层。
+Future<void> showReminderSheet(BuildContext context, {Rect? anchorRect}) async {
+  final Size size = MediaQuery.sizeOf(context);
+  final bool wide = size.width >= 720;
+  if (wide && anchorRect != null) {
+    final double rightOffset =
+        (size.width - anchorRect.right).clamp(12.0, size.width - 372.0);
+    final double topOffset =
+        (anchorRect.bottom + 6).clamp(12.0, size.height - 200.0);
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '关闭消息提醒',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 140),
+      pageBuilder: (BuildContext dialogContext, _, __) {
+        return Stack(
+          children: <Widget>[
+            Positioned(
+              top: topOffset,
+              right: rightOffset,
+              child: Material(
+                color: Colors.transparent,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: 360,
+                    maxHeight: (size.height - topOffset - 16).clamp(240.0, 640.0),
+                  ),
+                  child: _ReminderSheet(wide: true, hostContext: context),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return;
+  }
   if (wide) {
     await showDialog<void>(
       context: context,

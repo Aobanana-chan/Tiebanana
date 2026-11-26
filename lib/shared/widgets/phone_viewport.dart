@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/core/platform/platform_capabilities.dart';
 
-/// Windows 按手机宽度布局，再随窗口宽度整体等比缩放。
+/// 桌面端按原生约束与 DPI 渲染，不再等比放大手机视口。
 ///
-/// 放在 MaterialApp.builder 中、Navigator 外，使路由、弹窗和媒体预览
-/// 使用相同的约束与 MediaQuery；系统文字缩放保持不变，像素倍率和
-/// 安全区、键盘等边距换算到内部布局坐标，避免只放大字体或横向拉伸。
+/// 保留此外壳以兼容根节点的挂载点及 [NativeResolutionViewport]。
 class PhoneViewport extends StatelessWidget {
   const PhoneViewport({super.key, required this.child});
 
@@ -15,38 +13,8 @@ class PhoneViewport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isWindows) return child;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth <= 0 || constraints.maxHeight <= 0) {
-          return const SizedBox.shrink();
-        }
-        final scale = constraints.maxWidth / layoutWidth;
-        final size = Size(layoutWidth, constraints.maxHeight / scale);
-        final media = MediaQuery.of(context);
-        return ClipRect(
-          child: FittedBox(
-            fit: BoxFit.contain,
-            alignment: Alignment.topLeft,
-            child: SizedBox.fromSize(
-              size: size,
-              child: MediaQuery(
-                data: media.copyWith(
-                  size: size,
-                  devicePixelRatio: media.devicePixelRatio * scale,
-                  padding: media.padding / scale,
-                  viewPadding: media.viewPadding / scale,
-                  viewInsets: media.viewInsets / scale,
-                  systemGestureInsets: media.systemGestureInsets / scale,
-                ),
-                child: child,
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    if (isDesktop) return child;
+    return child;
   }
 }
 

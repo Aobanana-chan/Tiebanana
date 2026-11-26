@@ -85,4 +85,15 @@ class APPSettingProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// 桌面端侧边栏折叠状态（持久化在 APPSetting 中）。
+  bool get sidebarFolded => Global.setting.sidebarFolded;
+
+  set sidebarFolded(bool value) {
+    if (value != Global.setting.sidebarFolded) {
+      Global.setting.sidebarFolded = value;
+      Global.saveProfile();
+      notifyListeners();
+    }
+  }
 }

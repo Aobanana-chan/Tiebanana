@@ -46,6 +46,12 @@ class Global {
   /// 单吧签到结果广播（见 [SignEventBus]）。
   static final SignEventBus signEvents = SignEventBus();
 
+  /// 桌面端从二级路由点击侧边栏导航时请求切回对应根页签。
+  static final ValueNotifier<int?> desktopTabRequest = ValueNotifier<int?>(null);
+
+  /// 桌面端当前激活页签在根页签内的刷新广播，二级页面按自身回调处理。
+  static final ValueNotifier<int> desktopRefreshTick = ValueNotifier<int>(0);
+
   /// 贴吧后端：界面与业务的唯一入口（具体实现见 `lib/app/backend.dart`）。
   ///
   /// 宿主只提供凭证存储（cookie 目录 + KeyValueStore）与副作用回调，

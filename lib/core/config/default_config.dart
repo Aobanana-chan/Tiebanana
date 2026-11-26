@@ -12,6 +12,7 @@ const defaultAPPSetting = {
   "fontSize": 16.0,
   "homeForumMaxCount": 12,
   "homeHistoryMaxCount": 15,
+  "sidebarFolded": false,
   "protocolSignUpperHex": true,
   "protocolEnableSig": false
 };
@@ -69,6 +70,9 @@ class APPSetting {
   /// 首页最近浏览的显示数量（默认 15，范围 1–50）。
   int? homeHistoryMaxCount;
 
+  /// 桌面端宽屏侧边栏是否折叠（220px ↔ 76px）。
+  bool sidebarFolded;
+
   ///协议层 `sign` 十六进制是否大写（官方为大写）。
   bool? protocolSignUpperHex;
 
@@ -88,13 +92,15 @@ class APPSetting {
       this.postTail,
       this.homeForumMaxCount,
       this.homeHistoryMaxCount,
+      this.sidebarFolded = false,
       this.protocolSignUpperHex,
       this.protocolEnableSig,
       required this.fontSize});
 
   APPSetting.fromJson(Map<String, dynamic> json)
       : checkUpdateAutomaticlly = json['checkUpdateAutomaticlly'] ?? true,
-        showPostingRiskWarning = json['showPostingRiskWarning'] ?? true {
+        showPostingRiskWarning = json['showPostingRiskWarning'] ?? true,
+        sidebarFolded = json['sidebarFolded'] ?? false {
     theme = json['theme'];
     pictureLoadSetting = json['pictureLoadSetting'];
     markedCache = json['MarkedCache'];
@@ -126,6 +132,7 @@ class APPSetting {
     data['fontSize'] = fontSize;
     data['homeForumMaxCount'] = homeForumMaxCount;
     data['homeHistoryMaxCount'] = homeHistoryMaxCount;
+    data['sidebarFolded'] = sidebarFolded;
     data['protocolSignUpperHex'] = protocolSignUpperHex;
     data['protocolEnableSig'] = protocolEnableSig;
     return data;

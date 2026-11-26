@@ -134,9 +134,8 @@ bool Win32Window::Create(const std::wstring& title,
   UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
   double scale_factor = dpi / 96.0;
 
-  // Keep the Flutter client area in the requested portrait aspect ratio.
-  // Maximizing would override that ratio; resizing and minimizing remain enabled.
-  constexpr DWORD style = WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX;
+  // Desktop widescreen window: allow maximizing and free resizing.
+  constexpr DWORD style = WS_OVERLAPPEDWINDOW;
   RECT frame = {0, 0, Scale(size.width, scale_factor),
                 Scale(size.height, scale_factor)};
   AdjustWindowRectExForDpi(&frame, style, FALSE, 0, dpi);
@@ -188,36 +187,12 @@ Win32Window::MessageHandler(HWND hwnd,
     case WM_GETMINMAXINFO: {
       auto limits = reinterpret_cast<MINMAXINFO*>(lparam);
       const UINT dpi = GetDpiForWindow(hwnd);
-      RECT frame = {0, 0, MulDiv(320, dpi, 96), MulDiv(569, dpi, 96)};
+      RECT frame = {0, 0, MulDiv(360, dpi, 96), MulDiv(540, dpi, 96)};
       AdjustWindowRectExForDpi(&frame,
           static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_STYLE)), FALSE,
           static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_EXSTYLE)), dpi);
       limits->ptMinTrackSize = {frame.right - frame.left, frame.bottom - frame.top};
       return 0;
-    }
-    case WM_SIZING: {
-      auto rect = reinterpret_cast<RECT*>(lparam);
-      RECT frame = {0, 0, 0, 0};
-      AdjustWindowRectExForDpi(&frame,
-          static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_STYLE)), FALSE,
-          static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_EXSTYLE)),
-          GetDpiForWindow(hwnd));
-      const LONG border_width = frame.right - frame.left;
-      const LONG border_height = frame.bottom - frame.top;
-      constexpr double ratio = 750.0 / 1334.0;
-      const LONG width = rect->right - rect->left - border_width;
-      const LONG height = rect->bottom - rect->top - border_height;
-      if (wparam == WMSZ_TOP || wparam == WMSZ_BOTTOM) {
-        rect->right = rect->left + static_cast<LONG>(height * ratio + 0.5) + border_width;
-      } else {
-        const LONG outer_height = static_cast<LONG>(width / ratio + 0.5) + border_height;
-        if (wparam == WMSZ_TOPLEFT || wparam == WMSZ_TOPRIGHT) {
-          rect->top = rect->bottom - outer_height;
-        } else {
-          rect->bottom = rect->top + outer_height;
-        }
-      }
-      return TRUE;
     }
     case WM_DESTROY:
       window_handle_ = nullptr;
