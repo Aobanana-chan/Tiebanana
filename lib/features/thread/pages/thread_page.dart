@@ -2,10 +2,23 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:extended_image/extended_image.dart';
+import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:provider/provider.dart';
+import 'package:tiebanana/core/platform/official_tieba.dart';
+import 'package:tiebanana/features/media/state/image_upload.dart';
+import 'package:tiebanana/shared/content/emoji_panel.dart';
+import 'package:tiebanana/shared/content/posting_risk_warning.dart';
+import 'package:tiebanana/shared/content/special_span.dart';
+import 'package:tiebanana/shared/content/tieba_parser.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
+import 'package:tiebanana/shared/widgets/desktop_panel.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
@@ -111,24 +124,44 @@ class _ThreadPageState extends State<ThreadPageRoute> {
   @override
   Widget build(BuildContext context) {
     final data = _page;
-    if (data != null) {
-      return Scaffold(
-          body: ThreadPageMain(
-        key: _mainKey,
-        kz: widget.kz,
-        pid: widget.pid,
-        pn: data.page.currentPage,
-        page: data,
-        initPost: data.posts,
-        session: _session,
-        cacheUid: _uid,
-      ));
-    }
-    return Scaffold(
-      appBar: AppBar(title: const Text('帖子')),
-      body: _showLoadError
-          ? _ThreadLoadError(loading: _loading, onRetry: _retry)
-          : const Center(child: CircularProgressIndicator()),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final bool desktop = width >= AppBreakpoints.compactMax;
+
+        if (data != null) {
+          final Widget main = ThreadPageMain(
+            key: _mainKey,
+            kz: widget.kz,
+            pid: widget.pid,
+            pn: data.page.currentPage,
+            page: data,
+            initPost: data.posts,
+            session: _session,
+            cacheUid: _uid,
+          );
+          if (desktop) return main;
+          return Scaffold(body: main);
+        }
+
+        final Widget body = _showLoadError
+            ? _ThreadLoadError(loading: _loading, onRetry: _retry)
+            : const Center(child: CircularProgressIndicator());
+        if (desktop) {
+          return DesktopShellFrame(
+            title: '帖子详情',
+            activeTab: -1,
+            onRefresh: _retry,
+            child: body,
+          );
+        }
+        return Scaffold(
+          appBar: AppBar(title: const Text('帖子')),
+          body: body,
+        );
+      },
     );
   }
 }
@@ -261,6 +294,10 @@ class ThreadPageMainState extends State<ThreadPageMain>
 
   ///0 = 热门排序，1 = 正序，2 = 倒序。
   int _sortMode = 1;
+
+  /// 桌面端右侧停靠回复框目标楼层（null 表示回复主题）。
+  TiebaThreadPagePost? _replyTargetFloor;
+  final TextEditingController _jumpInput = TextEditingController();
 
   bool _loading = false;
   bool _replyRefreshPending = false;
@@ -985,7 +1022,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
     return floors;
   }
 
-  List<Widget> buildFloor() {
+  List<Widget> buildFloor({bool desktop = false}) {
     final String ownerUid = info.thread.authorUid.isNotEmpty
         ? info.thread.authorUid
         : (_firstPost?.uid ?? '');
@@ -1004,6 +1041,10 @@ class ThreadPageMainState extends State<ThreadPageMain>
         isOp: ownerUid.isNotEmpty && floor.uid == ownerUid,
         threadOwnerUid: ownerUid,
         storedNotifier: _stored,
+        desktop: desktop,
+        onDesktopReply: desktop
+            ? () => setState(() => _replyTargetFloor = floor)
+            : null,
       );
       // 所有楼层保留相同的包裹结构和原来的 GlobalKey，旧楼层不重建 State。
       widgets.add(FadeTransition(
@@ -1348,140 +1389,448 @@ class ThreadPageMainState extends State<ThreadPageMain>
           Navigator.pop(context);
         }
       },
-      child: Column(
-        children: <Widget>[
-          Expanded(
-            child: ClipRect(
-                child: Stack(
-              children: <Widget>[
-                AnimatedBuilder(
-                  animation: _bottomPull,
-                  builder: (context, child) => Transform.translate(
-                      offset: Offset(0, -_bottomPull.value), child: child),
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: _onBottomScrollNotification,
-                    child: CustomScrollView(
-                      controller: _controller,
-                      physics: _ThreadScrollPhysics(
-                          bottomPull: () => _bottomPull.value,
-                          parent: AlwaysScrollableScrollPhysics()),
-                      slivers: <Widget>[
-                        SliverAppBar(
-                          //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
-                          elevation: 0,
-                          scrolledUnderElevation: 0,
-                          backgroundColor: tokens.bg,
-                          surfaceTintColor: Colors.transparent,
-                          foregroundColor: tokens.textPrimary,
-                          pinned: true,
-                          snap: true,
-                          floating: true,
-                          centerTitle: true,
-                          actions: _appBarActions(tokens),
-                          title: GestureDetector(
-                            onTap: () {
-                              _controller.animateTo(
-                                0,
-                                duration: const Duration(milliseconds: 200),
-                                curve: Curves.easeIn,
-                              );
-                            },
-                            child: Text(
-                              info.title,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: tokens.textPrimary,
-                                  ),
-                            ),
-                          ),
-                        ),
-
-                        //一楼
-                        if (first != null)
-                          SliverToBoxAdapter(
-                            child: ThreadFirstComment(
-                              postMain: first,
-                              author: _authorOf(first),
-                              videoInfo: info.videoInfo,
-                              allImgs: info.imgs,
-                              allOrgImgs: info.imgsOrgSrc,
-                              threadID: info.tid,
-                              threadTitle: info.title,
-                              storedNotifier: _stored,
-                              poll: info.thread.poll,
-                              hasPoll: info.thread.hasPoll,
-                              fid: info.fid,
-                              forumName: info.forumName,
-                              onVote: _voteThreadPoll,
-                            ),
-                          ),
-                        SliverToBoxAdapter(
-                          child: FourmBar(
-                            avatar: info.avatar,
-                            name: info.forumName,
-                          ),
-                        ),
-                        SliverToBoxAdapter(child: _sortBar(tokens)),
-                        if (session.paused || _manualRefreshing)
-                          SliverToBoxAdapter(
-                              child: ListTile(
-                            dense: true,
-                            leading: Icon(session.paused
-                                ? Icons.offline_bolt_outlined
-                                : Icons.sync),
-                            title: Text(
-                                session.paused ? '正在浏览缓存，自动请求已暂停' : '正在更新帖子…'),
-                            subtitle: session.paused
-                                ? const Text('服务器暂时无法访问，已保留加载内容')
-                                : null,
-                            trailing: session.paused
-                                ? TextButton(
-                                    onPressed: _manualRefresh,
-                                    child: const Text('刷新'))
-                                : null,
-                          )),
-                        if (_hasPrevious || (_loading && _loadingPrevious))
-                          SliverToBoxAdapter(
-                            child: _previousPageEntry(tokens),
-                          ),
-
-                        //其他楼
-                        SliverList(
-                          delegate: SliverChildListDelegate(buildFloor()),
-                        ),
-                        if (_nextFailed && !session.paused)
-                          SliverToBoxAdapter(
-                            child: Center(
-                              child: TextButton.icon(
-                                onPressed: _loading ? null : _retryNextPage,
-                                icon:
-                                    const Icon(Icons.refresh_rounded, size: 16),
-                                label: const Text('加载失败，点击重试'),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final double width = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width;
+          if (width >= AppBreakpoints.compactMax) {
+            return _buildDesktopShell(context, tokens, first, width);
+          }
+          return Column(
+            children: <Widget>[
+              Expanded(
+                child: ClipRect(
+                    child: Stack(
+                  children: <Widget>[
+                    AnimatedBuilder(
+                      animation: _bottomPull,
+                      builder: (context, child) => Transform.translate(
+                          offset: Offset(0, -_bottomPull.value), child: child),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: _onBottomScrollNotification,
+                        child: CustomScrollView(
+                          controller: _controller,
+                          physics: _ThreadScrollPhysics(
+                              bottomPull: () => _bottomPull.value,
+                              parent: const AlwaysScrollableScrollPhysics()),
+                          slivers: <Widget>[
+                            SliverAppBar(
+                              //issue：#32563，expandedHeight要大于collapsedHeight，不然可能会无法滑动
+                              elevation: 0,
+                              scrolledUnderElevation: 0,
+                              backgroundColor: tokens.bg,
+                              surfaceTintColor: Colors.transparent,
+                              foregroundColor: tokens.textPrimary,
+                              pinned: true,
+                              snap: true,
+                              floating: true,
+                              centerTitle: true,
+                              actions: _appBarActions(tokens),
+                              title: GestureDetector(
+                                onTap: () {
+                                  _controller.animateTo(
+                                    0,
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeIn,
+                                  );
+                                },
+                                child: Text(
+                                  info.title,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: tokens.textPrimary,
+                                      ),
+                                ),
                               ),
                             ),
+
+                            //一楼
+                            if (first != null)
+                              SliverToBoxAdapter(
+                                child: ThreadFirstComment(
+                                  postMain: first,
+                                  author: _authorOf(first),
+                                  videoInfo: info.videoInfo,
+                                  allImgs: info.imgs,
+                                  allOrgImgs: info.imgsOrgSrc,
+                                  threadID: info.tid,
+                                  threadTitle: info.title,
+                                  storedNotifier: _stored,
+                                  poll: info.thread.poll,
+                                  hasPoll: info.thread.hasPoll,
+                                  fid: info.fid,
+                                  forumName: info.forumName,
+                                  onVote: _voteThreadPoll,
+                                ),
+                              ),
+                            SliverToBoxAdapter(
+                              child: FourmBar(
+                                avatar: info.avatar,
+                                name: info.forumName,
+                              ),
+                            ),
+                            SliverToBoxAdapter(child: _sortBar(tokens)),
+                            if (session.paused || _manualRefreshing)
+                              SliverToBoxAdapter(
+                                  child: ListTile(
+                                dense: true,
+                                leading: Icon(session.paused
+                                    ? Icons.offline_bolt_outlined
+                                    : Icons.sync),
+                                title: Text(session.paused
+                                    ? '正在浏览缓存，自动请求已暂停'
+                                    : '正在更新帖子…'),
+                                subtitle: session.paused
+                                    ? const Text('服务器暂时无法访问，已保留加载内容')
+                                    : null,
+                                trailing: session.paused
+                                    ? TextButton(
+                                        onPressed: _manualRefresh,
+                                        child: const Text('刷新'))
+                                    : null,
+                              )),
+                            if (_hasPrevious || (_loading && _loadingPrevious))
+                              SliverToBoxAdapter(
+                                child: _previousPageEntry(tokens),
+                              ),
+
+                            //其他楼
+                            SliverList(
+                              delegate: SliverChildListDelegate(buildFloor()),
+                            ),
+                            if (_nextFailed && !session.paused)
+                              SliverToBoxAdapter(
+                                child: Center(
+                                  child: TextButton.icon(
+                                    onPressed: _loading ? null : _retryNextPage,
+                                    icon: const Icon(Icons.refresh_rounded,
+                                        size: 16),
+                                    label: const Text('加载失败，点击重试'),
+                                  ),
+                                ),
+                              ),
+                            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: IgnorePointer(
+                        ignoring: !_bottomRefreshFailed,
+                        child: _listFooter(tokens),
+                      ),
+                    ),
+                  ],
+                )),
+              ),
+              //回复条
+              ThreadReplyBar(
+                fid: info.fid,
+                tid: info.tid,
+                kw: info.forumName,
+                replyText: info.title,
+                storedNotifier: _stored,
+                agreeController: _threadAgree,
+                storeCount: info.thread.storeCount,
+                initiallyStored: info.isStored,
+              )
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _toggleStoreDesktop() async {
+    final bool next = !_stored.value;
+    try {
+      if (next) {
+        await Global.tiebaAPI.threadAddStore(info.tid, pid);
+      } else {
+        await Global.tiebaAPI.threadRemoveStore(info.tid);
+      }
+      await Global.threadCache.setStored(cacheUid, info.tid, next,
+          keepLongTerm: Global.setting.markedCache ?? true);
+      if (!mounted) return;
+      _stored.value = next;
+      Fluttertoast.showToast(msg: next ? '收藏成功' : '取消收藏');
+    } catch (e) {
+      if (mounted) Fluttertoast.showToast(msg: e.toString());
+    }
+  }
+
+  Future<void> _jumpToPageInput() async {
+    final int? p = int.tryParse(_jumpInput.text.trim());
+    if (p == null || p < 1) {
+      Fluttertoast.showToast(msg: '请输入有效页码');
+      return;
+    }
+    await _fetchPage(p, refresh: true);
+    if (_controller.hasClients) _controller.jumpTo(0);
+  }
+
+  Widget _buildDesktopShell(
+    BuildContext context,
+    TiebananaTokens tokens,
+    TiebaThreadPagePost? first,
+    double width,
+  ) {
+    final bool twoCol = width >= AppBreakpoints.mediumMax;
+    final double sideWidth = width >= 1100 ? 288 : 268;
+    final List<Widget> floors = buildFloor(desktop: true);
+    final int currentPage = info.page.currentPage;
+
+    final Widget mainFeed = ClipRect(
+      child: Stack(
+        children: <Widget>[
+          AnimatedBuilder(
+            animation: _bottomPull,
+            builder: (BuildContext context, Widget? child) =>
+                Transform.translate(
+              offset: Offset(0, -_bottomPull.value),
+              child: child,
+            ),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: _onBottomScrollNotification,
+              child: CustomScrollView(
+                controller: _controller,
+                physics: _ThreadScrollPhysics(
+                  bottomPull: () => _bottomPull.value,
+                  parent: const AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: <Widget>[
+                  if (!twoCol)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: DesktopPanel(
+                          borderRadius: BorderRadius.circular(14),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          child: Row(
+                            children: <Widget>[
+                              InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () => Navigator.pushNamed(
+                                    context, PageRouter.forumHome,
+                                    arguments: info.forumName),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Icon(Icons.tag_rounded,
+                                        size: 15, color: tokens.primary),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${info.forumName}吧',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: tokens.textPrimary,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '只看楼主',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: tokens.textSecondary,
+                                    ),
+                              ),
+                              const SizedBox(width: 6),
+                              Switch(
+                                value: lz,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                onChanged: (_) => onlyLz(),
+                              ),
+                            ],
                           ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                      ],
+                        ),
+                      ),
+                    ),
+                  if (first != null)
+                    SliverToBoxAdapter(
+                      child: ThreadFirstComment(
+                        postMain: first,
+                        author: _authorOf(first),
+                        videoInfo: info.videoInfo,
+                        allImgs: info.imgs,
+                        allOrgImgs: info.imgsOrgSrc,
+                        threadID: info.tid,
+                        threadTitle: info.title,
+                        storedNotifier: _stored,
+                        poll: info.thread.poll,
+                        hasPoll: info.thread.hasPoll,
+                        fid: info.fid,
+                        forumName: info.forumName,
+                        onVote: _voteThreadPoll,
+                        desktop: true,
+                        agreeController: _threadAgree,
+                        onToggleStore: _toggleStoreDesktop,
+                        onShare: () => _handleMenu('share'),
+                        replyCount: floors.length,
+                      ),
+                    ),
+                  SliverToBoxAdapter(
+                      child: _desktopSortRow(tokens, floors.length)),
+                  if (session.paused || _manualRefreshing)
+                    SliverToBoxAdapter(
+                      child: DesktopPanel(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              session.paused
+                                  ? Icons.offline_bolt_outlined
+                                  : Icons.sync_rounded,
+                              size: 16,
+                              color: tokens.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                session.paused
+                                    ? '正在浏览缓存，自动请求已暂停'
+                                    : '正在更新帖子…',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                            if (session.paused)
+                              TextButton(
+                                onPressed: _manualRefresh,
+                                child: const Text('刷新'),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (_hasPrevious || (_loading && _loadingPrevious))
+                    SliverToBoxAdapter(child: _previousPageEntry(tokens)),
+                  SliverList(delegate: SliverChildListDelegate(floors)),
+                  if (_nextFailed && !session.paused)
+                    SliverToBoxAdapter(
+                      child: Center(
+                        child: TextButton.icon(
+                          onPressed: _loading ? null : _retryNextPage,
+                          icon: const Icon(Icons.refresh_rounded, size: 16),
+                          label: const Text('加载失败，点击重试'),
+                        ),
+                      ),
+                    ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 24),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          OutlinedButton.icon(
+                            onPressed:
+                                _manualRefreshing ? null : _manualRefresh,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: tokens.textSecondary,
+                              side: BorderSide(color: tokens.line),
+                              minimumSize: const Size(0, 28),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              textStyle: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                            icon: const Icon(Icons.refresh_rounded, size: 14),
+                            label: const Text('刷新最新回复'),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            '第 $currentPage 页',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  fontSize: 11,
+                                  color: tokens.textTertiary,
+                                ),
+                          ),
+                          if (info.hasMore) ...<Widget>[
+                            const SizedBox(width: 10),
+                            OutlinedButton(
+                              onPressed: _loading ? null : nextPage,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: tokens.textSecondary,
+                                side: BorderSide(color: tokens.line),
+                                minimumSize: const Size(0, 28),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
+                                textStyle: const TextStyle(
+                                    fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                              child: const Text('下一页'),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: IgnorePointer(
-                    ignoring: !_bottomRefreshFailed,
-                    child: _listFooter(tokens),
-                  ),
-                ),
-              ],
-            )),
+                ],
+              ),
+            ),
           ),
-          //回复条
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              ignoring: !_bottomRefreshFailed,
+              child: _listFooter(tokens),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final Widget bodyContent = Column(
+      children: <Widget>[
+        Expanded(
+          child: PageWrap(
+            bottomPadding: 0,
+            child: twoCol
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(child: mainFeed),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: sideWidth,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: _desktopSideColumn(tokens),
+                        ),
+                      ),
+                    ],
+                  )
+                : mainFeed,
+          ),
+        ),
+        if (!twoCol)
           ThreadReplyBar(
             fid: info.fid,
             tid: info.tid,
@@ -1491,9 +1840,402 @@ class ThreadPageMainState extends State<ThreadPageMain>
             agreeController: _threadAgree,
             storeCount: info.thread.storeCount,
             initiallyStored: info.isStored,
-          )
+          ),
+      ],
+    );
+
+    return DesktopShellFrame(
+      title: '帖子详情',
+      subtitle: '${info.forumName}吧 · ${info.title}',
+      activeTab: -1,
+      onRefresh: _manualRefresh,
+      child: bodyContent,
+    );
+  }
+
+  Widget _desktopSortRow(TiebananaTokens tokens, int loadedCount) {
+    const List<String> labels = <String>['热门排序', '正序', '倒序'];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 12, 2, 10),
+      child: Row(
+        children: <Widget>[
+          for (int i = 0; i < labels.length; i++) ...<Widget>[
+            if (i > 0) const SizedBox(width: 6),
+            Material(
+              color: _sortMode == i ? tokens.surface : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => setState(() => _sortMode = i),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  child: Text(
+                    labels[i],
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 11.5,
+                          fontWeight:
+                              _sortMode == i ? FontWeight.w700 : FontWeight.w500,
+                          color: _sortMode == i
+                              ? tokens.textPrimary
+                              : tokens.textSecondary,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const Spacer(),
+          Text(
+            '已加载 $loadedCount 条回复',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 11,
+                  color: tokens.textTertiary,
+                ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _desktopSideColumn(TiebananaTokens tokens) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        // 所属吧卡片
+        DesktopPanel(
+          borderRadius: BorderRadius.circular(14),
+          padding: const EdgeInsets.fromLTRB(13, 12, 13, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(Icons.tag_rounded, size: 13, color: tokens.textTertiary),
+                  const SizedBox(width: 6),
+                  Text(
+                    '所属吧',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textTertiary,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 9),
+              InkWell(
+                borderRadius: BorderRadius.circular(9),
+                onTap: () => Navigator.pushNamed(context, PageRouter.forumHome,
+                    arguments: info.forumName),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Row(
+                    children: <Widget>[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: SizedBox(
+                          width: 34,
+                          height: 34,
+                          child: info.avatar.isEmpty
+                              ? Container(
+                                  color: tokens.fill,
+                                  child: Icon(Icons.forum_outlined,
+                                      size: 18, color: tokens.textTertiary),
+                                )
+                              : ExtendedImage.network(info.avatar,
+                                  fit: BoxFit.cover, cache: true),
+                        ),
+                      ),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          '${info.forumName}吧',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: tokens.textPrimary,
+                                  ),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded,
+                          size: 15, color: tokens.textTertiary),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 16),
+              OutlinedButton(
+                onPressed: () => Navigator.pushNamed(
+                    context, PageRouter.forumHome,
+                    arguments: info.forumName),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: tokens.textSecondary,
+                  side: BorderSide(color: tokens.line),
+                  minimumSize: const Size(double.infinity, 30),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  textStyle: const TextStyle(
+                      fontSize: 11.5, fontWeight: FontWeight.w600),
+                ),
+                child: const Text('进入吧主页'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        // 互动统计卡
+        DesktopPanel(
+          borderRadius: BorderRadius.circular(14),
+          padding: const EdgeInsets.fromLTRB(13, 12, 13, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(Icons.favorite_border_rounded,
+                      size: 13, color: tokens.textTertiary),
+                  const SizedBox(width: 6),
+                  Text(
+                    '互动',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textTertiary,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 9),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _threadAgree == null
+                        ? const _SideStatBtn(
+                            icon: Icons.thumb_up_alt_outlined,
+                            count: '0',
+                            label: '赞',
+                            active: false,
+                          )
+                        : AnimatedBuilder(
+                            animation: _threadAgree!,
+                            builder: (BuildContext context, _) => _SideStatBtn(
+                              icon: _threadAgree!.liked
+                                  ? Icons.thumb_up_alt_rounded
+                                  : Icons.thumb_up_alt_outlined,
+                              count: threadCountText(_threadAgree!.agreeNum),
+                              label: '赞',
+                              active: _threadAgree!.liked,
+                              onTap: _threadAgree!.busy
+                                  ? null
+                                  : () => _threadAgree!.toggleLike(),
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: _threadAgree == null
+                        ? const _SideStatBtn(
+                            icon: Icons.thumb_down_alt_outlined,
+                            count: '0',
+                            label: '踩',
+                            active: false,
+                          )
+                        : AnimatedBuilder(
+                            animation: _threadAgree!,
+                            builder: (BuildContext context, _) => _SideStatBtn(
+                              icon: _threadAgree!.disliked
+                                  ? Icons.thumb_down_alt_rounded
+                                  : Icons.thumb_down_alt_outlined,
+                              count: threadCountText(_threadAgree!.disagreeNum),
+                              label: '踩',
+                              active: _threadAgree!.disliked,
+                              onTap: _threadAgree!.busy
+                                  ? null
+                                  : () => _threadAgree!.toggleDislike(),
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: _stored,
+                      builder: (BuildContext context, bool stored, _) {
+                        final int count = (info.thread.storeCount +
+                                (stored ? 1 : 0) -
+                                (info.isStored ? 1 : 0))
+                            .clamp(0, 1 << 53);
+                        return _SideStatBtn(
+                          icon: stored
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          count: threadCountText(count),
+                          label: stored ? '已收藏' : '收藏',
+                          active: stored,
+                          onTap: _toggleStoreDesktop,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        // 阅读控制卡
+        DesktopPanel(
+          borderRadius: BorderRadius.circular(14),
+          padding: const EdgeInsets.fromLTRB(13, 12, 13, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(Icons.tune_rounded,
+                      size: 13, color: tokens.textTertiary),
+                  const SizedBox(width: 6),
+                  Text(
+                    '阅读控制',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textTertiary,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '只看楼主',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: tokens.textSecondary,
+                          ),
+                    ),
+                  ),
+                  Switch(
+                    value: lz,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onChanged: (_) => onlyLz(),
+                  ),
+                ],
+              ),
+              Divider(height: 12, color: tokens.line),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '跳转页码',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: tokens.textSecondary,
+                          ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 48,
+                    height: 26,
+                    child: TextField(
+                      controller: _jumpInput,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      onSubmitted: (_) => _jumpToPageInput(),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontSize: 11,
+                            color: tokens.textPrimary,
+                          ),
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.zero,
+                        filled: true,
+                        fillColor: tokens.fill,
+                        hintText: '${info.page.currentPage}',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: BorderSide(color: tokens.line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: BorderSide(color: tokens.line),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  SizedBox(
+                    height: 26,
+                    child: OutlinedButton(
+                      onPressed: _jumpToPageInput,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: tokens.textSecondary,
+                        side: BorderSide(color: tokens.line),
+                        minimumSize: const Size(34, 26),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                        textStyle: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w600),
+                      ),
+                      child: const Text('Go'),
+                    ),
+                  ),
+                ],
+              ),
+              Divider(height: 12, color: tokens.line),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '刷新 / 分享 / 举报',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: tokens.textSecondary,
+                          ),
+                    ),
+                  ),
+                  _SmallCtrlIcon(
+                    icon: Icons.refresh_rounded,
+                    tooltip: '刷新',
+                    onTap: _manualRefresh,
+                  ),
+                  _SmallCtrlIcon(
+                    icon: Icons.share_outlined,
+                    tooltip: '分享',
+                    onTap: () => _handleMenu('share'),
+                  ),
+                  if ((int.tryParse(info.tid) ?? 0) > 0)
+                    _SmallCtrlIcon(
+                      icon: Icons.flag_outlined,
+                      tooltip: '举报',
+                      onTap: () => _handleMenu('report'),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        // 停靠回复框
+        _DesktopDockedReplyBox(
+          kw: info.forumName,
+          fid: info.fid,
+          tid: info.tid,
+          targetFloor: _replyTargetFloor,
+          targetAuthorName: _replyTargetFloor == null
+              ? null
+              : _authorOf(_replyTargetFloor!).name,
+          onClearTarget: () => setState(() => _replyTargetFloor = null),
+        ),
+      ],
     );
   }
 
@@ -1508,6 +2250,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
     _newFloorFade.dispose();
     _stored.removeListener(_storeChanged);
     _stored.dispose();
+    _jumpInput.dispose();
     session.removeListener(_sessionChanged);
     if (widget.session == null) session.dispose();
     _threadAgree?.dispose();
@@ -1797,6 +2540,434 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
           child: const Text('跳转'),
         ),
       ],
+    );
+  }
+}
+
+class _SideStatBtn extends StatelessWidget {
+  const _SideStatBtn({
+    required this.icon,
+    required this.count,
+    required this.label,
+    required this.active,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String count;
+  final String label;
+  final bool active;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final Color bg = active ? tokens.primaryContainer : Colors.transparent;
+    final Color fg = active ? tokens.onPrimaryContainer : tokens.textSecondary;
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(9),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(9),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 17, color: fg),
+              const SizedBox(height: 3),
+              Text(
+                count,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: fg,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
+              ),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 9.5,
+                      color: fg,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SmallCtrlIcon extends StatelessWidget {
+  const _SmallCtrlIcon({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(7),
+        onTap: onTap,
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: Icon(icon, size: 16, color: tokens.textSecondary),
+        ),
+      ),
+    );
+  }
+}
+
+/// 桌面端右侧栏停靠回复框：支持回复楼层目标、贴吧表情 Popover、图片上传与 Ctrl+Enter 发送。
+class _DesktopDockedReplyBox extends StatefulWidget {
+  const _DesktopDockedReplyBox({
+    required this.kw,
+    required this.fid,
+    required this.tid,
+    required this.targetFloor,
+    required this.targetAuthorName,
+    required this.onClearTarget,
+  });
+
+  final String kw;
+  final String fid;
+  final String tid;
+  final TiebaThreadPagePost? targetFloor;
+  final String? targetAuthorName;
+  final VoidCallback onClearTarget;
+
+  @override
+  State<_DesktopDockedReplyBox> createState() => _DesktopDockedReplyBoxState();
+}
+
+class _DesktopDockedReplyBoxState extends State<_DesktopDockedReplyBox> {
+  final TextEditingController _input = TextEditingController();
+  final FocusNode _focus = FocusNode();
+  final GlobalKey _emojiKey = GlobalKey();
+  late final ImageUploadProviderModel _uploads =
+      ImageUploadProviderModel(widget.kw);
+  bool _sending = false;
+  bool _riskAcked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _riskAcked = !Global.setting.showPostingRiskWarning;
+    _input.addListener(_onChanged);
+  }
+
+  void _onChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _input.removeListener(_onChanged);
+    _input.dispose();
+    _focus.dispose();
+    _uploads.dispose();
+    super.dispose();
+  }
+
+  Future<bool> _ensureRiskAcked() async {
+    if (_riskAcked) return true;
+    await showPostingRiskWarning(
+      context,
+      OfficialTiebaTarget(
+        forumName: widget.kw,
+        tid: widget.tid,
+        pid: widget.targetFloor?.id,
+      ),
+    );
+    if (!mounted) return false;
+    setState(() => _riskAcked = true);
+    return true;
+  }
+
+  Future<void> _pickImage() async {
+    if (!await _ensureRiskAcked()) return;
+    if (!mounted) return;
+    final dynamic data =
+        await Navigator.pushNamed(context, PageRouter.imagePicker);
+    if (!mounted || data == null) return;
+    final Set<AssetEntity> pic = (data as List)[0] as Set<AssetEntity>;
+    final bool saveOrigin = data[1] as bool;
+    for (final AssetEntity p in pic) {
+      final ImageUploadTask task = _uploads.enqueue(p, saveOrigin);
+      final TiebaUploadedImage? image = await _uploads.upload(task);
+      if (!mounted || image == null) continue;
+      final String token =
+          TiebaParser.contentBuilder(ContentBuilderType.Picture, image: image);
+      final String cur = _input.text;
+      _input.text = cur.isEmpty ? token : '$cur\n$token';
+      _input.selection = TextSelection.collapsed(offset: _input.text.length);
+    }
+  }
+
+  Future<void> _send() async {
+    if (_sending) return;
+    if (!await _ensureRiskAcked()) return;
+    if (!mounted) return;
+    if (_uploads.hasPending) {
+      Fluttertoast.showToast(msg: '请等待图片上传完成，或重试/移除失败图片');
+      return;
+    }
+    final String text = _input.text.trim();
+    if (text.isEmpty) {
+      Fluttertoast.showToast(msg: '说点什么吧');
+      return;
+    }
+    if (text.length > 2000) {
+      Fluttertoast.showToast(msg: '回复最多 2000 字');
+      return;
+    }
+    final List<String> photos = _uploads.pictures.keys
+        .where((TiebaUploadedImage image) => text.contains(
+            TiebaParser.contentBuilder(ContentBuilderType.Picture,
+                image: image)))
+        .map((TiebaUploadedImage image) => image.picId)
+        .toList();
+    setState(() => _sending = true);
+    try {
+      final TiebaThreadPagePost? floor = widget.targetFloor;
+      final String msg = floor == null
+          ? await Global.tiebaAPI.replyThread(
+              text,
+              widget.kw,
+              widget.fid,
+              widget.tid,
+              photos: photos,
+            )
+          : await Global.tiebaAPI.replyFloor(
+              text,
+              widget.kw,
+              widget.fid,
+              widget.tid,
+              floor.id,
+              photos: photos,
+            );
+      if (!mounted) return;
+      _input.clear();
+      _uploads.tasks.clear();
+      _uploads.pictures.clear();
+      Fluttertoast.showToast(msg: msg.isNotEmpty ? msg : '发送成功');
+      replyEvents.sent(widget.tid, pid: floor?.id);
+      if (floor != null) widget.onClearTarget();
+    } catch (e) {
+      if (mounted) Fluttertoast.showToast(msg: e.toString());
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final TiebaThreadPagePost? floor = widget.targetFloor;
+    final bool hasText = _input.text.trim().isNotEmpty;
+
+    return DesktopPanel(
+      borderRadius: BorderRadius.circular(14),
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+      child: ChangeNotifierProvider<ImageUploadProviderModel>.value(
+        value: _uploads,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              '回复帖子',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textPrimary,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            if (floor != null) ...<Widget>[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: widget.onClearTarget,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: tokens.primaryContainer,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            '回复 @${widget.targetAuthorName ?? ''}（#${floor.floor ?? ''}）',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.onPrimaryContainer,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.close_rounded,
+                            size: 11, color: tokens.onPrimaryContainer),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 7),
+            ],
+            CallbackShortcuts(
+              bindings: <ShortcutActivator, VoidCallback>{
+                const SingleActivator(LogicalKeyboardKey.enter, control: true):
+                    _send,
+                const SingleActivator(LogicalKeyboardKey.numpadEnter,
+                    control: true): _send,
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+                decoration: BoxDecoration(
+                  color: tokens.fill,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                constraints: const BoxConstraints(minHeight: 62, maxHeight: 132),
+                child: Consumer<ImageUploadProviderModel>(
+                  builder: (BuildContext context,
+                      ImageUploadProviderModel value, _) {
+                    return ExtendedTextField(
+                      specialTextSpanBuilder:
+                          TiebaSpanBuilder(uploadImages: value),
+                      controller: _input,
+                      focusNode: _focus,
+                      minLines: 3,
+                      maxLines: 5,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            height: 1.55,
+                            color: tokens.textPrimary,
+                          ),
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        hintText: '写回复…支持贴吧表情与图片',
+                        hintStyle:
+                            Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontSize: 11.5,
+                                  color: tokens.textTertiary,
+                                ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            if (_uploads.tasks.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: <Widget>[
+                  for (final ImageUploadTask t in _uploads.tasks)
+                    Chip(
+                      label: Text(
+                        t.uploading
+                            ? '上传中'
+                            : (t.error != null ? '失败' : '已传图'),
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      deleteIcon: const Icon(Icons.close, size: 13),
+                      onDeleted: t.uploading ? null : () => _uploads.remove(t),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 7),
+            Row(
+              children: <Widget>[
+                _SmallCtrlIcon(
+                  key: _emojiKey,
+                  icon: Icons.emoji_emotions_outlined,
+                  tooltip: '贴吧表情',
+                  onTap: () => showEmojiPopover(
+                    context: context,
+                    anchorKey: _emojiKey,
+                    controller: _input,
+                    onInserted: () => setState(() {}),
+                  ),
+                ),
+                _SmallCtrlIcon(
+                  icon: Icons.image_outlined,
+                  tooltip: '选择图片',
+                  onTap: _pickImage,
+                ),
+                const Spacer(),
+                SizedBox(
+                  height: 26,
+                  child: FilledButton(
+                    onPressed: (_sending || !hasText) ? null : _send,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: tokens.accentFill,
+                      foregroundColor: tokens.accentOn,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      textStyle: const TextStyle(
+                          fontSize: 11.5, fontWeight: FontWeight.w600),
+                    ),
+                    child: Text(_sending ? '发送中' : '发送'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text(
+                  'Ctrl + Enter 发送',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 9.5,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+                Text(
+                  '纯文本 · 表情 · 图片',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 9.5,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

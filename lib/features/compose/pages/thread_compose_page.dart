@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:tiebanana/features/media/data/local_image_asset.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/core/platform/official_tieba.dart';
+import 'package:tiebanana/features/compose/models/thread_compose_route_data.dart';
 import 'package:tiebanana/features/media/state/image_upload.dart';
 import 'package:tiebanana/features/compose/models/thread_compose_draft.dart';
 import 'package:tiebanana/app/navigation/app_page_route.dart';
@@ -16,14 +18,38 @@ import 'package:tiebanana/features/media/pages/image_picker_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/compose/pages/compose_topic_page.dart';
 import 'package:tiebanana/features/compose/pages/compose_score_page.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/features/compose/widgets/compose_poll_editor.dart';
 import 'package:tiebanana/shared/content/emoji_panel.dart';
 import 'package:tiebanana/shared/content/posting_risk_warning.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 import 'package:tiebanana/shared/widgets/setting_group.dart';
 import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
+
+/// 打开发帖界面：`< 720dp` 全屏路由，`≥ 720dp` 居中模态对话框（宽 660dp、最高 85vh）。
+Future<void> showThreadCompose(
+  BuildContext context,
+  ThreadComposeRouteData data,
+) {
+  if (AppBreakpoints.isCompact(context)) {
+    return Navigator.pushNamed(context, PageRouter.threadCompose,
+        arguments: data);
+  }
+  return showAdaptivePanel<void>(
+    context: context,
+    maxWidth: 660,
+    maxHeightFactor: 0.85,
+    builder: (_) => ThreadComposePage(
+      fid: data.fid,
+      forumName: data.forumName,
+      topicId: data.topicId,
+      topicName: data.topicName,
+    ),
+  );
+}
 
 /// 发帖界面，提交正文、配图、话题和投票。
 class ThreadComposePage extends StatefulWidget {
@@ -953,7 +979,20 @@ class _ThreadComposePageState extends State<ThreadComposePage>
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) _leave();
       },
-      child: Scaffold(
+      child: CallbackShortcuts(
+        bindings: <ShortcutActivator, VoidCallback>{
+          const SingleActivator(LogicalKeyboardKey.enter, control: true): () {
+            if (canPublish) _publish();
+          },
+          const SingleActivator(LogicalKeyboardKey.numpadEnter, control: true):
+              () {
+            if (canPublish) _publish();
+          },
+          const SingleActivator(LogicalKeyboardKey.escape): () {
+            if (_active) _leave();
+          },
+        },
+        child: Scaffold(
         backgroundColor: tokens.bg,
         appBar: AppBar(
           backgroundColor: tokens.bg,
@@ -1216,6 +1255,7 @@ class _ThreadComposePageState extends State<ThreadComposePage>
                     ])),
                 _toolbar(keyboard),
               ]),
+        ),
       ),
     );
   }

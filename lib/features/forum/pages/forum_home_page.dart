@@ -1,14 +1,21 @@
-import 'package:tiebanana/features/compose/models/thread_compose_route_data.dart';
-
+import 'package:extended_image/extended_image.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
+import 'package:tiebanana/features/compose/models/thread_compose_route_data.dart';
+import 'package:tiebanana/features/compose/pages/thread_compose_page.dart';
+import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/controllers/app_bar_title.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
+import 'package:tiebanana/shared/widgets/desktop_panel.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 import 'package:tiebanana/shared/widgets/extended_nested_scroll_view_wrapper.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
 import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
@@ -393,23 +400,41 @@ class _ForumHomePageState extends State<ForumHomePage>
     );
   }
 
+  Future<void> _composeThread() async {
+    if (!Global.tiebaAPI.isLogin) {
+      await Navigator.pushNamed(context, PageRouter.login);
+      if (!mounted || !Global.tiebaAPI.isLogin) return;
+    }
+    if (!mounted) return;
+    final ForumPage? page = _forumPage;
+    if (page == null) return;
+    await showThreadCompose(
+      context,
+      ThreadComposeRouteData(fid: page.forum.fid, forumName: widget.kw),
+    );
+  }
+
+  void _shareForum(TiebaForumHeader forum) {
+    final String name = forum.name.trim();
+    showShareSheet(
+      context,
+      ShareContent(
+        title: name.isEmpty ? '贴吧' : '$name吧',
+        url: Uri.https(
+          'tieba.baidu.com',
+          '/f',
+          <String, String>{'kw': name},
+        ).toString(),
+        source: '贴吧',
+        icon: Icons.forum_outlined,
+      ),
+    );
+  }
+
   Widget _fab(TiebananaTokens tokens) {
     return FloatingActionButton(
       tooltip: '发帖',
-      onPressed: _forumPage == null
-          ? null
-          : () async {
-              if (!Global.tiebaAPI.isLogin) {
-                await Navigator.pushNamed(context, PageRouter.login);
-                if (!mounted || !Global.tiebaAPI.isLogin) return;
-              }
-              if (!mounted) return;
-              final page = _forumPage;
-              if (page == null) return;
-              await Navigator.pushNamed(context, PageRouter.threadCompose,
-                  arguments: ThreadComposeRouteData(
-                      fid: page.forum.fid, forumName: widget.kw));
-            },
+      onPressed: _forumPage == null ? null : _composeThread,
       backgroundColor: tokens.primaryContainer,
       foregroundColor: tokens.onPrimaryContainer,
       elevation: 2,
@@ -421,16 +446,20 @@ class _ForumHomePageState extends State<ForumHomePage>
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    return ChangeNotifierProvider.value(
-      value: _appBarTitle,
-      child: FutureBuilder<ForumPage>(
-        future: initForum,
-        initialData: null,
-        builder: (BuildContext context, AsyncSnapshot<ForumPage?> snapshot) {
-          if (snapshot.hasError) {
-            return _shell(context,
-                appBar: _appBar(tokens, actions: const <Widget>[]),
-                body: Center(
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final bool desktop = width >= AppBreakpoints.compactMax;
+        return ChangeNotifierProvider.value(
+          value: _appBarTitle,
+          child: FutureBuilder<ForumPage>(
+            future: initForum,
+            initialData: null,
+            builder: (BuildContext context, AsyncSnapshot<ForumPage?> snapshot) {
+              if (snapshot.hasError) {
+                final Widget errBody = Center(
                   child: StateView(
                     icon: Icons.wifi_off_rounded,
                     title: "进不去这个吧",
@@ -439,32 +468,232 @@ class _ForumHomePageState extends State<ForumHomePage>
                     primaryIcon: Icons.refresh,
                     onPrimary: () => setState(init),
                   ),
-                ));
-          }
-          if (!snapshot.hasData) {
-            return _shell(context,
-                appBar: _appBar(tokens, actions: const <Widget>[]),
-                fab: _fab(tokens),
-                body: const ForumSkeleton());
-          }
-          if (_forumPage == null) {
-            _bootstrap(snapshot.data!);
-          }
-          if (_tabs.isEmpty) {
-            return _shell(context,
-                appBar: _appBar(tokens),
-                fab: _fab(tokens),
-                body: const Center(
+                );
+                if (desktop) {
+                  return DesktopShellFrame(
+                    title: '${widget.kw}吧',
+                    activeTab: -1,
+                    replaceForumRoute: true,
+                    onRefresh: () => setState(init),
+                    child: errBody,
+                  );
+                }
+                return _shell(context,
+                    appBar: _appBar(tokens, actions: const <Widget>[]),
+                    body: errBody);
+              }
+              if (!snapshot.hasData) {
+                if (desktop) {
+                  return DesktopShellFrame(
+                    title: '${widget.kw}吧',
+                    activeTab: -1,
+                    replaceForumRoute: true,
+                    child: const PageWrap(child: ForumSkeleton()),
+                  );
+                }
+                return _shell(context,
+                    appBar: _appBar(tokens, actions: const <Widget>[]),
+                    fab: _fab(tokens),
+                    body: const ForumSkeleton());
+              }
+              if (_forumPage == null) {
+                _bootstrap(snapshot.data!);
+              }
+              if (_tabs.isEmpty) {
+                const Widget emptyTabs = Center(
                   child: StateView(
                     icon: Icons.forum_outlined,
                     title: "这个吧还没有页签",
                     body: "过一会儿再来看看",
                   ),
-                ));
-          }
-          return _shell(context,
-              appBar: _appBar(tokens), fab: _fab(tokens), body: _body(context));
-        },
+                );
+                if (desktop) {
+                  return DesktopShellFrame(
+                    title: '${widget.kw}吧',
+                    activeTab: -1,
+                    replaceForumRoute: true,
+                    onRefresh: () => setState(init),
+                    child: emptyTabs,
+                  );
+                }
+                return _shell(context,
+                    appBar: _appBar(tokens),
+                    fab: _fab(tokens),
+                    body: emptyTabs);
+              }
+              if (desktop) {
+                final TiebaForumHeader forum = _forumPage!.forum;
+                final String sub =
+                    '关注 ${_countLabel(forum.memberNum)} · 帖子 ${_countLabel(forum.postNum)}';
+                return DesktopShellFrame(
+                  title: '${forum.name.isEmpty ? widget.kw : forum.name}吧',
+                  subtitle: sub,
+                  activeTab: -1,
+                  replaceForumRoute: true,
+                  onRefresh: () => _fetch(_tabIndex, refresh: true),
+                  child: _desktopBody(context, width),
+                );
+              }
+              return _shell(context,
+                  appBar: _appBar(tokens),
+                  fab: _fab(tokens),
+                  body: _body(context));
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  String _countLabel(String raw) {
+    final int? value = int.tryParse(raw);
+    return value == null ? raw : TiebaParser.numberConvertString(value);
+  }
+
+  Widget _desktopBody(BuildContext context, double width) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final ForumPage page = _forumPage!;
+    final _ForumTabState current = _tabs[_tabIndex];
+    final bool twoCol = width >= AppBreakpoints.mediumMax;
+    final double dockWidth = width >= 1100 ? 288 : 264;
+
+    final String sortLabel = current.tab.sortMenu
+            .where((TiebaForumMenuItem m) => m.value == current.sortValue)
+            .firstOrNull
+            ?.text ??
+        current.tab.name;
+
+    final Widget controlBar = _DesktopForumControlBar(
+      tabs: <TiebaForumTab>[for (final _ForumTabState s in _tabs) s.tab],
+      tabIndex: _tabIndex,
+      onSelectTab: (int i) => tabbarController?.animateTo(i),
+      sortMenu: current.tab.sortMenu,
+      sortValue: current.sortValue,
+      onSortChange: _onSortChange,
+      partitionMenu: current.tab.partitionMenu,
+      partitionValue: current.partitionValue,
+      onPartitionChange: _onPartitionChange,
+      subTabs: current.tab.isGoodTab ? current.tab.subTabs : const [],
+      subTab: current.subTab,
+      onSubTabChange: _onSubTabChange,
+    );
+
+    final Widget tabContent = TabBarView(
+      controller: tabbarController,
+      children: <Widget>[
+        for (int i = 0; i < _tabs.length; i++) _tabView(i, desktop: true),
+      ],
+    );
+
+    final Widget dock = _DesktopForumDock(
+      forum: page.forum,
+      compact: !twoCol,
+      onCompose: _composeThread,
+      onSearch: () => Navigator.pushNamed(context, PageRouter.forumSearch,
+          arguments: widget.kw),
+      onBroadcast: () => Navigator.pushNamed(
+        context,
+        PageRouter.forumBroadcast,
+        arguments: ForumBroadcastRouteData(
+          forumId: page.forum.fid,
+          forumName: page.forum.name,
+          forumAvatar: page.forum.avatar,
+        ),
+      ),
+      onShare: () => _shareForum(page.forum),
+    );
+
+    return PageWrap(
+      bottomPadding: 0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          DesktopPageHeader(
+            title: '吧内帖子',
+            subtitle: page.forum.levelName.isNotEmpty
+                ? '$sortLabel · ${page.forum.levelName}'
+                : sortLabel,
+            tools: <Widget>[
+              OutlinedButton.icon(
+                onPressed: () => _shareForum(page.forum),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: tokens.textSecondary,
+                  side: BorderSide(color: tokens.line),
+                  minimumSize: const Size(0, 28),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  textStyle: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+                icon: const Icon(Icons.share_outlined, size: 13),
+                label: const Text('分享'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  PageRouter.forumBroadcast,
+                  arguments: ForumBroadcastRouteData(
+                    forumId: page.forum.fid,
+                    forumName: page.forum.name,
+                    forumAvatar: page.forum.avatar,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: tokens.textSecondary,
+                  side: BorderSide(color: tokens.line),
+                  minimumSize: const Size(0, 28),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  textStyle: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+                icon: const Icon(Icons.campaign_outlined, size: 14),
+                label: const Text('吧广播'),
+              ),
+            ],
+          ),
+          if (twoCol)
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(
+                    width: dockWidth,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: dock,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        controlBar,
+                        const SizedBox(height: 10),
+                        Expanded(child: tabContent),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  dock,
+                  const SizedBox(height: 12),
+                  controlBar,
+                  const SizedBox(height: 10),
+                  Expanded(child: tabContent),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -556,7 +785,7 @@ class _ForumHomePageState extends State<ForumHomePage>
     );
   }
 
-  Widget _tabView(int index) {
+  Widget _tabView(int index, {bool desktop = false}) {
     final _ForumTabState s = _tabs[index];
     return KeepAliveWrapper(
       child: TiebananaRefreshIndicator(
@@ -578,14 +807,14 @@ class _ForumHomePageState extends State<ForumHomePage>
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            slivers: _tabSlivers(index),
+            slivers: _tabSlivers(index, desktop: desktop),
           ),
         )),
       ),
     );
   }
 
-  List<Widget> _tabSlivers(int index) {
+  List<Widget> _tabSlivers(int index, {bool desktop = false}) {
     final _ForumTabState s = _tabs[index];
     if (s.error != null && s.threads.isEmpty) {
       return <Widget>[
@@ -625,7 +854,8 @@ class _ForumHomePageState extends State<ForumHomePage>
     return <Widget>[
       SliverList(
         delegate: SliverChildBuilderDelegate(
-          (BuildContext context, int i) => _threadItem(items[i], s),
+          (BuildContext context, int i) =>
+              _threadItem(items[i], s, desktop: desktop),
           childCount: items.length,
         ),
       ),
@@ -634,12 +864,15 @@ class _ForumHomePageState extends State<ForumHomePage>
   }
 
   /// 同一张卡按列表形态分派：卡片流用 [ForumFeedCard]，帖子流用 [ThreadSummary]。
-  Widget _threadItem(TiebaThreadInfo item, _ForumTabState s) {
+  Widget _threadItem(TiebaThreadInfo item, _ForumTabState s,
+      {bool desktop = false}) {
+    final EdgeInsetsGeometry? desktopMargin =
+        desktop ? const EdgeInsets.only(bottom: 10) : null;
     if (item.isTop) {
-      return TopThread(tid: item.id, title: item.title);
+      return TopThread(tid: item.id, title: item.title, margin: desktopMargin);
     }
     if (s.isCardFeed) {
-      return ForumFeedCard(item: item);
+      return ForumFeedCard(item: item, margin: desktopMargin);
     }
     return ThreadSummary(
       firstPostContent: item.firstPostContent,
@@ -653,6 +886,9 @@ class _ForumHomePageState extends State<ForumHomePage>
       agreeNum: item.agreeNum,
       disagreeNum: item.disagreeNum,
       replyNum: item.replyNum,
+      margin: desktopMargin,
+      desktop: desktop,
+      showForumChip: false,
     );
   }
 
@@ -971,6 +1207,607 @@ class _SkeletonLine extends StatelessWidget {
     return SizedBox(
       height: lineHeight,
       child: Align(alignment: Alignment.centerLeft, child: bar),
+    );
+  }
+}
+
+class _DesktopForumDock extends StatefulWidget {
+  const _DesktopForumDock({
+    required this.forum,
+    required this.compact,
+    required this.onCompose,
+    required this.onSearch,
+    required this.onBroadcast,
+    required this.onShare,
+  });
+
+  final TiebaForumHeader forum;
+  final bool compact;
+  final VoidCallback onCompose;
+  final VoidCallback onSearch;
+  final VoidCallback onBroadcast;
+  final VoidCallback onShare;
+
+  @override
+  State<_DesktopForumDock> createState() => _DesktopForumDockState();
+}
+
+class _DesktopForumDockState extends State<_DesktopForumDock> {
+  late bool _isLike = widget.forum.isLike;
+  late bool _isSigned = widget.forum.isSigned;
+  late String _curScore = widget.forum.curScore;
+  late String _levelupScore = widget.forum.levelupScore;
+  bool _busy = false;
+
+  @override
+  void didUpdateWidget(covariant _DesktopForumDock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.forum != widget.forum) {
+      _isLike = widget.forum.isLike;
+      _isSigned = widget.forum.isSigned;
+      _curScore = widget.forum.curScore;
+      _levelupScore = widget.forum.levelupScore;
+    }
+  }
+
+  String _count(String raw) {
+    final int? value = int.tryParse(raw);
+    return value == null ? raw : TiebaParser.numberConvertString(value);
+  }
+
+  double get _progress {
+    final int max = int.tryParse(_levelupScore) ?? 0;
+    final int cur = int.tryParse(_curScore) ?? 0;
+    if (max <= 0) return 0;
+    return (cur / max).clamp(0.0, 1.0);
+  }
+
+  int get _scoreGap {
+    final int max = int.tryParse(_levelupScore) ?? 0;
+    final int cur = int.tryParse(_curScore) ?? 0;
+    return (max - cur) < 0 ? 0 : max - cur;
+  }
+
+  Future<void> _onSign() async {
+    if (_busy || _isSigned) return;
+    setState(() => _busy = true);
+    try {
+      final SignResult res =
+          await Global.tiebaAPI.signOneForum(widget.forum.name);
+      Fluttertoast.showToast(msg: res.message);
+      if (!mounted) return;
+      setState(() {
+        if (res.levelupScore.isNotEmpty) _levelupScore = res.levelupScore;
+        final int prev = int.tryParse(_curScore) ?? 0;
+        _curScore = (prev + (int.tryParse(res.bonusPoint) ?? 0)).toString();
+        if (res.ok) _isSigned = true;
+      });
+    } catch (e) {
+      if (mounted) Fluttertoast.showToast(msg: e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _onToggleFollow() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      if (_isLike) {
+        await Global.tiebaAPI
+            .unfavoForum(fid: widget.forum.fid, forumName: widget.forum.name);
+        if (mounted) setState(() => _isLike = false);
+      } else {
+        await Global.tiebaAPI.favoForum(widget.forum.fid, widget.forum.name);
+        if (mounted) setState(() => _isLike = true);
+      }
+    } catch (e) {
+      if (mounted) Fluttertoast.showToast(msg: e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _avatar(TiebananaTokens tokens, {double size = 64}) {
+    final String url = widget.forum.avatar;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: size,
+        height: size,
+        color: tokens.fill,
+        child: url.isEmpty
+            ? Icon(Icons.forum_outlined, size: 28, color: tokens.textTertiary)
+            : ExtendedImage.network(
+                url,
+                fit: BoxFit.cover,
+                cache: true,
+                loadStateChanged: (ExtendedImageState s) =>
+                    s.extendedImageLoadState == LoadState.failed
+                        ? Icon(Icons.forum_outlined,
+                            size: 28, color: tokens.textTertiary)
+                        : null,
+              ),
+      ),
+    );
+  }
+
+  Widget _headerRow(TiebananaTokens tokens) {
+    final int? lv = int.tryParse(widget.forum.levelId);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _avatar(tokens, size: widget.compact ? 52 : 64),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: <Widget>[
+                  Text(
+                    '${widget.forum.name}吧',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textPrimary,
+                        ),
+                  ),
+                  if (lv != null && lv > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: tokens.primaryContainer,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        'Lv.$lv',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.onPrimaryContainer,
+                            ),
+                      ),
+                    ),
+                ],
+              ),
+              if (widget.forum.levelName.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 3),
+                Text(
+                  widget.forum.levelName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 11,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statsRow(TiebananaTokens tokens) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+            decoration: BoxDecoration(
+              color: tokens.fill,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  _count(widget.forum.memberNum),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textPrimary,
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
+                ),
+                Text(
+                  '关注',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+            decoration: BoxDecoration(
+              color: tokens.fill,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  _count(widget.forum.postNum),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textPrimary,
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
+                ),
+                Text(
+                  '帖子',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _expSection(TiebananaTokens tokens) {
+    final int curLv = int.tryParse(widget.forum.levelId) ?? 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              '经验 $_curScore / $_levelupScore',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 10.5,
+                    color: tokens.textSecondary,
+                  ),
+            ),
+            Text(
+              curLv > 0 ? '还差 $_scoreGap 升 Lv.${curLv + 1}' : '还差 $_scoreGap',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 10.5,
+                    color: tokens.textTertiary,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LinearProgressIndicator(
+            value: _progress,
+            minHeight: 5,
+            backgroundColor: tokens.fill,
+            valueColor: AlwaysStoppedAnimation<Color>(tokens.accentFill),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _actionsSection(TiebananaTokens tokens) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: _DockOutlineBtn(
+                icon: _isSigned ? Icons.check_rounded : Icons.edit_calendar_outlined,
+                label: _isSigned ? '已签到' : '签到',
+                onTap: (!_isLike || _isSigned) ? null : _onSign,
+              ),
+            ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: _DockOutlineBtn(
+                icon: _isLike ? Icons.people_outline_rounded : Icons.add_rounded,
+                label: _isLike ? '已关注' : '关注',
+                onTap: _onToggleFollow,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        SizedBox(
+          height: 36,
+          child: FilledButton.icon(
+            onPressed: widget.onCompose,
+            style: FilledButton.styleFrom(
+              backgroundColor: tokens.accentFill,
+              foregroundColor: tokens.accentOn,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            icon: const Icon(Icons.edit_outlined, size: 15),
+            label: const Text('发帖'),
+          ),
+        ),
+        const SizedBox(height: 9),
+        Material(
+          color: tokens.fill,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: widget.onSearch,
+            child: SizedBox(
+              height: 34,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: <Widget>[
+                    Icon(Icons.search_rounded,
+                        size: 16, color: tokens.textTertiary),
+                    const SizedBox(width: 7),
+                    Text(
+                      '在本吧搜索',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 11.5,
+                            color: tokens.textTertiary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 9),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: _DockOutlineBtn(
+                icon: Icons.notifications_none_rounded,
+                label: '吧广播',
+                height: 30,
+                fontSize: 11,
+                onTap: widget.onBroadcast,
+              ),
+            ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: _DockOutlineBtn(
+                icon: Icons.link_rounded,
+                label: '分享本吧',
+                height: 30,
+                fontSize: 11,
+                onTap: widget.onShare,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return DesktopPanel(
+      padding: const EdgeInsets.all(16),
+      child: widget.compact
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      _headerRow(tokens),
+                      const SizedBox(height: 10),
+                      _statsRow(tokens),
+                      const SizedBox(height: 10),
+                      _expSection(tokens),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                SizedBox(width: 230, child: _actionsSection(tokens)),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _headerRow(tokens),
+                const SizedBox(height: 13),
+                _statsRow(tokens),
+                const SizedBox(height: 10),
+                _expSection(tokens),
+                const SizedBox(height: 13),
+                _actionsSection(tokens),
+              ],
+            ),
+    );
+  }
+}
+
+class _DockOutlineBtn extends StatelessWidget {
+  const _DockOutlineBtn({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.height = 32,
+    this.fontSize = 12,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final double height;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final Color fg = onTap == null ? tokens.textTertiary : tokens.textSecondary;
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: tokens.line),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: SizedBox(
+          height: height,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(icon, size: 14, color: fg),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w600,
+                      color: fg,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopForumControlBar extends StatelessWidget {
+  const _DesktopForumControlBar({
+    required this.tabs,
+    required this.tabIndex,
+    required this.onSelectTab,
+    required this.sortMenu,
+    required this.sortValue,
+    required this.onSortChange,
+    required this.partitionMenu,
+    required this.partitionValue,
+    required this.onPartitionChange,
+    required this.subTabs,
+    required this.subTab,
+    required this.onSubTabChange,
+  });
+
+  final List<TiebaForumTab> tabs;
+  final int tabIndex;
+  final ValueChanged<int> onSelectTab;
+  final List<TiebaForumMenuItem> sortMenu;
+  final int sortValue;
+  final ValueChanged<int> onSortChange;
+  final List<TiebaForumMenuItem> partitionMenu;
+  final int partitionValue;
+  final ValueChanged<int> onPartitionChange;
+  final List<TiebaGoodPostClassify> subTabs;
+  final String? subTab;
+  final ValueChanged<String> onSubTabChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return DesktopPanel(
+      borderRadius: TiebananaMetrics.brCtl,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: <Widget>[
+                    for (int i = 0; i < tabs.length; i++)
+                      Material(
+                        color: i == tabIndex
+                            ? tokens.primaryContainer
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => onSelectTab(i),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 11, vertical: 6),
+                            child: Text(
+                              tabs[i].name,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: i == tabIndex
+                                        ? tokens.onPrimaryContainer
+                                        : tokens.textSecondary,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (sortMenu.isNotEmpty) ...<Widget>[
+                const SizedBox(width: 8),
+                ForumMenuPill(
+                  menu: sortMenu,
+                  value: sortValue,
+                  onChanged: onSortChange,
+                ),
+              ],
+              if (partitionMenu.isNotEmpty) ...<Widget>[
+                const SizedBox(width: 6),
+                ForumMenuPill(
+                  menu: partitionMenu,
+                  value: partitionValue,
+                  onChanged: onPartitionChange,
+                ),
+              ],
+            ],
+          ),
+          if (subTabs.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: <Widget>[
+                for (final TiebaGoodPostClassify c in subTabs)
+                  ForumClassifyChip(
+                    label: c.className,
+                    selected: c.classId == subTab,
+                    onTap: () => onSubTabChange(c.classId),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

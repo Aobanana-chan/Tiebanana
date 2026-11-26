@@ -112,6 +112,8 @@ void main() {
     final source = _HistorySource(<List<ViewHistoryPageModel>>[
       List.generate(25, (i) => _history('记录 $i', i + 1)),
     ]);
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester
         .pumpWidget(_app(forumState, TagPan(historyLoader: source.load)));
     await tester.pumpAndSettle();
@@ -134,6 +136,8 @@ void main() {
   testWidgets('没有关注吧也显示最近浏览，记录不足时按实际数量显示', (tester) async {
     final forumState = _FakeForumState()..forums.clear();
     addTearDown(forumState.dispose);
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(_app(
         forumState,
         TagPan(
@@ -153,6 +157,8 @@ void main() {
       <ViewHistoryPageModel>[_history('新记录', 2), _history('旧记录', 1)],
     ]);
 
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester
         .pumpWidget(_app(forumState, TagPan(historyLoader: source.load)));
     await tester.pumpAndSettle();
@@ -178,6 +184,8 @@ void main() {
       <ViewHistoryPageModel>[_history('新记录', 2)],
     ]);
 
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester
         .pumpWidget(_app(forumState, TagPan(historyLoader: source.load)));
     await tester.pumpAndSettle();
@@ -198,6 +206,8 @@ void main() {
       <ViewHistoryPageModel>[_history('记录', 1)],
     ]);
 
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester
         .pumpWidget(_app(forumState, TagPan(historyLoader: source.load)));
     await tester.pumpAndSettle();

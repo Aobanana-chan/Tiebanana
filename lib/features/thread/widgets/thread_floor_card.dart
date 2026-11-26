@@ -13,9 +13,11 @@ import 'package:tiebanana/features/thread/data/thread_cache.dart';
 import 'package:tiebanana/app/navigation/link_router.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/features/moderation/widgets/moderation_actions.dart';
 import 'package:tiebanana/features/thread/pages/thread_page.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/shared/content/post_link_span.dart';
 import 'package:tiebanana/features/thread/widgets/thread_common.dart';
@@ -30,7 +32,7 @@ import 'package:tiebanana/features/thread/widgets/thread_poll_card.dart';
 /// 对应概念图 `design/mockups/thread.html` 的 `.floor`：
 /// 左轨（头像 + 楼层号）· 作者身份 · 正文 · 底部赞踩 / 更多，整卡可点即回复；
 /// 楼中楼是卡内的 `surface-2` 容器。
-class ThreadFloorComment extends StatelessWidget {
+class ThreadFloorComment extends StatefulWidget {
   final TiebaForum forum;
   final TiebaThreadPagePost postMain;
   final TiebaAuthor author;
@@ -43,6 +45,9 @@ class ThreadFloorComment extends StatelessWidget {
   final bool isOp;
   final String threadOwnerUid;
   final ValueNotifier<bool>? storedNotifier;
+  final bool desktop;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? onDesktopReply;
 
   const ThreadFloorComment({
     super.key,
@@ -58,27 +63,58 @@ class ThreadFloorComment extends StatelessWidget {
     this.isOp = false,
     this.threadOwnerUid = '',
     this.storedNotifier,
+    this.desktop = false,
+    this.margin,
+    this.onDesktopReply,
   });
 
+  @override
+  State<ThreadFloorComment> createState() => _ThreadFloorCommentState();
+}
+
+class _ThreadFloorCommentState extends State<ThreadFloorComment> {
+  bool _hovered = false;
+
   void _openReply(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
+    if (widget.onDesktopReply != null) {
+      widget.onDesktopReply!();
+      return;
+    }
+    showReplyPanel(
+      context,
+      (BuildContext context) {
         return ReplyBottomSheet(
-          replyText: TiebaParser.parserContentString(postMain.content),
-          targetName: author.name,
-          targetMeta: '${postMain.floor}楼 · '
-              '${threadMetaText(threadTimeText(postMain.createTime), postMain.ipLocation)}',
-          threadTitle: threadTitle,
-          kw: forum.forumName,
-          fid: forum.fid,
-          tid: threadID,
-          floorId: postMain.id,
+          replyText: TiebaParser.parserContentString(widget.postMain.content),
+          targetName: widget.author.name,
+          targetMeta: '${widget.postMain.floor}楼 · '
+              '${threadMetaText(threadTimeText(widget.postMain.createTime), widget.postMain.ipLocation)}',
+          threadTitle: widget.threadTitle,
+          kw: widget.forum.forumName,
+          fid: widget.forum.fid,
+          tid: widget.threadID,
+          floorId: widget.postMain.id,
           isReplyThread: false,
         );
       },
+    );
+  }
+
+  void _openReport(BuildContext context) {
+    openReportPage(
+      context,
+      TiebaReportTarget(
+        kind: TiebaReportKind.reply,
+        userId: widget.author.id,
+        name: widget.author.name,
+        portrait: widget.author.portrait,
+        threadId: widget.threadID,
+        postId: widget.postMain.id,
+        summary: widget.postMain.content
+            .whereType<TiebaTextContent>()
+            .map((part) => part.text)
+            .join(),
+        source: '${widget.postMain.floor ?? ''} 楼',
+      ),
     );
   }
 
@@ -86,33 +122,38 @@ class ThreadFloorComment extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThreadPageMainState? readingHistoryPid =
         context.findAncestorStateOfType<ThreadPageMainState>();
-    readingHistoryPid?.pid = postMain.id;
+    readingHistoryPid?.pid = widget.postMain.id;
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    final List<Widget> icons = TiebaParser.processIcon(author) ?? <Widget>[];
-    final int subCount =
-        int.tryParse(postMain.subPostNumber) ?? postMain.subPostList.length;
+    final List<Widget> icons =
+        TiebaParser.processIcon(widget.author) ?? <Widget>[];
+    final int subCount = int.tryParse(widget.postMain.subPostNumber) ??
+        widget.postMain.subPostList.length;
 
     // 当帖子含有投票时，content 里的投票封面 / 阵营图片常常没有可用地址。
     // 这里剔除这类无效图片，正常配图保留。
     final List<TiebaPostContent> displayContent =
-        postMain.hasPoll || postMain.poll != null
-            ? contentWithoutUnusableImages(postMain.content)
-            : postMain.content;
+        widget.postMain.hasPoll || widget.postMain.poll != null
+            ? contentWithoutUnusableImages(widget.postMain.content)
+            : widget.postMain.content;
     // 作者投的阵营徽章（type 52）。官方把徽章放在正文最前面。
     final TiebaVoteBadgeContent? voteBadge =
-        postMain.content.whereType<TiebaVoteBadgeContent>().firstOrNull;
+        widget.postMain.content.whereType<TiebaVoteBadgeContent>().firstOrNull;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        TiebananaMetrics.pageGutter,
-        0,
-        TiebananaMetrics.pageGutter,
-        TiebananaMetrics.gapSm,
-      ),
+    final Widget card = Container(
+      margin: widget.margin ??
+          EdgeInsets.fromLTRB(
+            widget.desktop ? 0 : TiebananaMetrics.pageGutter,
+            0,
+            widget.desktop ? 0 : TiebananaMetrics.pageGutter,
+            widget.desktop ? 10 : TiebananaMetrics.gapSm,
+          ),
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: TiebananaMetrics.brLg,
         boxShadow: tokens.cardShadow,
+        border: widget.desktop
+            ? Border.all(color: _hovered ? tokens.line : Colors.transparent)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -130,18 +171,18 @@ class ThreadFloorComment extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Avatar(
-                      imgUrl: resolveAvatarUrl(author.portrait),
+                      imgUrl: resolveAvatarUrl(widget.author.portrait),
                       height: 34,
                       width: 34,
                       onTap: () {
                         Navigator.pushNamed(context, PageRouter.user,
-                            arguments: author.id);
+                            arguments: widget.author.id);
                       },
                     ),
                     const SizedBox(height: TiebananaMetrics.gapXXs),
                     ThreadFloorTag(
-                      floor: postMain.floor,
-                      isOp: isOp,
+                      floor: widget.postMain.floor,
+                      isOp: widget.isOp,
                     ),
                     if (voteBadge != null) ...[
                       const SizedBox(height: TiebananaMetrics.gapXXs),
@@ -163,67 +204,87 @@ class ThreadFloorComment extends StatelessWidget {
                         children: <Widget>[
                           Expanded(
                             child: ThreadAuthorLine(
-                              forumRole: author.forumRole,
-                              name: author.name,
-                              level: author.levelID,
+                              forumRole: widget.author.forumRole,
+                              name: widget.author.name,
+                              level: widget.author.levelID,
                               icons: icons,
-                              isOp: isOp,
-                              isDeleted: postMain.isDeleted,
+                              isOp: widget.isOp,
+                              isDeleted: widget.postMain.isDeleted,
                             ),
                           ),
                           const SizedBox(width: TiebananaMetrics.gapSm),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              ThreadVoteBar(
-                                key: ValueKey<String>('vote-${postMain.id}'),
-                                postId: postMain.id,
-                                threadId: threadID,
-                                objType: 1,
-                                forumId: forum.fid,
-                                agreeNum: int.tryParse(postMain.agreeNum) ?? 0,
-                                disagreeNum:
-                                    int.tryParse(postMain.disagreeNum) ?? 0,
-                                hasAgree: postMain.hasAgree,
-                                agreeType:
-                                    int.tryParse(postMain.agreeType) ?? 0,
+                          if (widget.desktop)
+                            Text(
+                              '#${widget.postMain.floor ?? ''}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                color: tokens.textTertiary,
+                                fontFeatures: const <FontFeature>[
+                                  FontFeature.tabularFigures(),
+                                ],
                               ),
-                              const SizedBox(width: 5),
-                              ThreadMoreButton(
-                                threadId: threadID,
-                                postId: postMain.id,
-                                storedNotifier: storedNotifier,
-                                authorId: author.id,
-                                authorName: author.name,
-                                portrait: author.portrait,
-                                summary: postMain.content
-                                    .whereType<TiebaTextContent>()
-                                    .map((part) => part.text)
-                                    .join(),
-                                source: '${postMain.floor ?? ''} 楼',
-                              ),
-                            ],
-                          ),
+                            )
+                          else
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                ThreadVoteBar(
+                                  key: ValueKey<String>(
+                                      'vote-${widget.postMain.id}'),
+                                  postId: widget.postMain.id,
+                                  threadId: widget.threadID,
+                                  objType: 1,
+                                  forumId: widget.forum.fid,
+                                  agreeNum:
+                                      int.tryParse(widget.postMain.agreeNum) ??
+                                          0,
+                                  disagreeNum: int.tryParse(
+                                          widget.postMain.disagreeNum) ??
+                                      0,
+                                  hasAgree: widget.postMain.hasAgree,
+                                  agreeType:
+                                      int.tryParse(widget.postMain.agreeType) ??
+                                          0,
+                                ),
+                                const SizedBox(width: 5),
+                                ThreadMoreButton(
+                                  threadId: widget.threadID,
+                                  postId: widget.postMain.id,
+                                  storedNotifier: widget.storedNotifier,
+                                  authorId: widget.author.id,
+                                  authorName: widget.author.name,
+                                  portrait: widget.author.portrait,
+                                  summary: widget.postMain.content
+                                      .whereType<TiebaTextContent>()
+                                      .map((part) => part.text)
+                                      .join(),
+                                  source: '${widget.postMain.floor ?? ''} 楼',
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                       const SizedBox(height: TiebananaMetrics.gapXs),
                       ThreadPostMeta(
-                        time: threadTimeText(postMain.createTime),
-                        ipLocation: postMain.ipLocation,
+                        time: threadTimeText(widget.postMain.createTime),
+                        ipLocation: widget.postMain.ipLocation,
                       ),
                       const SizedBox(height: TiebananaMetrics.gapSm),
                       Wrap(
                         children: TiebaParser.parseContent(
                           context,
                           displayContent,
-                          allImgs,
-                          allOrgImgs,
-                          videoInfo: videoInfo,
+                          widget.allImgs,
+                          widget.allOrgImgs,
+                          videoInfo: widget.videoInfo,
                           selectable: true,
-                          forumName: forum.forumName,
+                          forumName: widget.forum.forumName,
                         ),
                       ),
-                      if (postMain.poll != null || postMain.hasPoll) ...[
+                      if (widget.postMain.poll != null ||
+                          widget.postMain.hasPoll) ...[
                         const SizedBox(height: TiebananaMetrics.gapMd),
                         // 卡内投票区域拦截点击，避免触发整层的「回复」操作。
                         // 当 poll==null（服务端仅标记 hasPoll）时，只显示文字占位。
@@ -231,26 +292,129 @@ class ThreadFloorComment extends StatelessWidget {
                           behavior: HitTestBehavior.opaque,
                           onTap: () {},
                           child: ThreadPollCard(
-                              poll: postMain.poll, compact: true),
+                              poll: widget.postMain.poll, compact: true),
                         ),
                       ],
-                      if (subCount > 0 || postMain.subPostList.isNotEmpty)
+                      if (subCount > 0 || widget.postMain.subPostList.isNotEmpty)
                         InnerFloorEntry(
-                          subPostList: postMain.subPostList,
-                          userlist: userList,
-                          subPostNumber: postMain.subPostNumber,
-                          floorNum: postMain.floor.toString(),
-                          kz: threadID,
-                          pid: postMain.id,
-                          forum: forum,
-                          threadTitle: threadTitle,
-                          threadOwnerUid: threadOwnerUid,
+                          subPostList: widget.postMain.subPostList,
+                          userlist: widget.userList,
+                          subPostNumber: widget.postMain.subPostNumber,
+                          floorNum: widget.postMain.floor.toString(),
+                          kz: widget.threadID,
+                          pid: widget.postMain.id,
+                          forum: widget.forum,
+                          threadTitle: widget.threadTitle,
+                          threadOwnerUid: widget.threadOwnerUid,
                         ),
+                      if (widget.desktop) ...<Widget>[
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IgnorePointer(
+                            ignoring: !_hovered,
+                            child: AnimatedOpacity(
+                              opacity: _hovered ? 1 : 0,
+                              duration: TiebananaMetrics.durationFast,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  _DesktopFloorBtn(
+                                    icon: Icons.reply_rounded,
+                                    label: '回复',
+                                    onTap: () => _openReply(context),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  ThreadVoteBar(
+                                    key: ValueKey<String>(
+                                        'vote-${widget.postMain.id}'),
+                                    postId: widget.postMain.id,
+                                    threadId: widget.threadID,
+                                    objType: 1,
+                                    forumId: widget.forum.fid,
+                                    agreeNum: int.tryParse(
+                                            widget.postMain.agreeNum) ??
+                                        0,
+                                    disagreeNum: int.tryParse(
+                                            widget.postMain.disagreeNum) ??
+                                        0,
+                                    hasAgree: widget.postMain.hasAgree,
+                                    agreeType: int.tryParse(
+                                            widget.postMain.agreeType) ??
+                                        0,
+                                  ),
+                                  if ((int.tryParse(widget.postMain.id) ?? 0) >
+                                      0) ...<Widget>[
+                                    const SizedBox(width: 6),
+                                    _DesktopFloorBtn(
+                                      icon: Icons.flag_outlined,
+                                      label: '举报',
+                                      onTap: () => _openReport(context),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+
+    if (!widget.desktop) return card;
+    return MouseRegion(
+      onEnter: (_) {
+        if (!_hovered) setState(() => _hovered = true);
+      },
+      onExit: (_) {
+        if (_hovered) setState(() => _hovered = false);
+      },
+      child: card,
+    );
+  }
+}
+
+class _DesktopFloorBtn extends StatelessWidget {
+  const _DesktopFloorBtn({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(6),
+      onTap: onTap,
+      child: SizedBox(
+        height: 25,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 13, color: tokens.textTertiary),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 10.5,
+                      color: tokens.textTertiary,
+                    ),
+              ),
+            ],
           ),
         ),
       ),
@@ -290,10 +454,9 @@ class InnerFloorEntry extends StatelessWidget {
 
   void _openSheet(BuildContext context, {String spid = ''}) {
     final page = context.findAncestorStateOfType<ThreadPageMainState>();
-    showModalBottomSheet<void>(
+    showAdaptivePanel<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
+      maxWidth: 560,
       builder: (BuildContext context) => InnerFloorBottomSheet(
         floorNum: floorNum,
         kz: kz,
@@ -312,11 +475,9 @@ class InnerFloorEntry extends StatelessWidget {
   void _openReply(BuildContext context, TiebaSubPost post) {
     final TiebaAuthor? author = userlist[post.uid];
     if (author == null) return;
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (BuildContext context) => ReplyBottomSheet(
+    showReplyPanel(
+      context,
+      (BuildContext context) => ReplyBottomSheet(
         replyText: TiebaParser.parserContentString(_innerPreviewBody(post)),
         targetName: author.name,
         targetMeta: '$floorNum楼回复',
@@ -1312,11 +1473,9 @@ class InnerFloorCard extends StatelessWidget {
   }
 
   void _openReply(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
+    showReplyPanel(
+      context,
+      (BuildContext context) {
         return ReplyBottomSheet(
           replyText: TiebaParser.parserContentString(postMain.content),
           targetName: author.name,

@@ -82,6 +82,8 @@ void main() {
     );
     addTearDown(forumState.dispose);
 
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(_app(forumState));
     await tester.pumpAndSettle();
 
@@ -124,6 +126,8 @@ void main() {
     );
     addTearDown(forumState.dispose);
 
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(_app(forumState));
     await tester.pumpAndSettle();
 
@@ -201,6 +205,8 @@ void main() {
     );
     addTearDown(forumState.dispose);
 
+    await tester.binding.setSurfaceSize(const Size(390, 600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(_app(forumState));
     await tester.pumpAndSettle();
 

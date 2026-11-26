@@ -137,6 +137,242 @@ class _EmojiPanelState extends State<EmojiPanel> {
   }
 }
 
+/// 桌面端锚定在表情按钮上方的悬浮 Popover（`364 × 280dp`，标题「贴吧表情」，`7 × 3` 分页）。
+Future<void> showEmojiPopover({
+  required BuildContext context,
+  required GlobalKey anchorKey,
+  required TextEditingController controller,
+  VoidCallback? onInserted,
+}) async {
+  final RenderBox? box =
+      anchorKey.currentContext?.findRenderObject() as RenderBox?;
+  final Size screen = MediaQuery.sizeOf(context);
+  const double popW = 364;
+  const double popH = 280;
+
+  double left = 16;
+  double top = (screen.height - popH) / 2;
+  if (box != null && box.attached) {
+    final Offset pos = box.localToGlobal(Offset.zero);
+    left = pos.dx.clamp(12.0, (screen.width - popW - 12).clamp(12.0, screen.width));
+    final double aboveTop = pos.dy - popH - 8;
+    if (aboveTop >= 12) {
+      top = aboveTop;
+    } else {
+      top = (pos.dy + box.size.height + 8)
+          .clamp(12.0, (screen.height - popH - 12).clamp(12.0, screen.height));
+    }
+  }
+
+  await showGeneralDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: '关闭贴吧表情',
+    barrierColor: Colors.transparent,
+    transitionDuration: const Duration(milliseconds: 120),
+    pageBuilder: (BuildContext dialogContext, _, __) {
+      return Stack(
+        children: <Widget>[
+          Positioned(
+            left: left,
+            top: top,
+            child: Material(
+              color: Colors.transparent,
+              child: DesktopEmojiPopover(
+                controller: controller,
+                onInserted: onInserted,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class DesktopEmojiPopover extends StatefulWidget {
+  const DesktopEmojiPopover({
+    super.key,
+    required this.controller,
+    this.onInserted,
+  });
+
+  final TextEditingController controller;
+  final VoidCallback? onInserted;
+
+  @override
+  State<DesktopEmojiPopover> createState() => _DesktopEmojiPopoverState();
+}
+
+class _DesktopEmojiPopoverState extends State<DesktopEmojiPopover> {
+  static const int _cols = 7;
+  static const int _rows = 3;
+  static const int _perPage = _cols * _rows;
+
+  late final List<String> _emojis = <String>[
+    'image_emoticon.png',
+    for (int i = 2; i <= 129; i++)
+      if (AssetList.emojis.contains('image_emoticon$i.png'))
+        'image_emoticon$i.png',
+  ];
+
+  int _page = 0;
+
+  int get _pageCount => (_emojis.length / _perPage).ceil();
+
+  List<String> _itemsFor(int page) {
+    final int start = page * _perPage;
+    final int end =
+        (start + _perPage) > _emojis.length ? _emojis.length : start + _perPage;
+    return _emojis.sublist(start, end);
+  }
+
+  void _insert(String fileName) {
+    final String key = fileName.replaceFirst('.png', '');
+    final String? label = emojiFileMapping[key];
+    if (label == null) return;
+    final String token = '#($label)';
+    final TextEditingValue value = widget.controller.value;
+    final int start = value.selection.baseOffset;
+    int end = value.selection.extentOffset;
+    if (value.selection.isValid) {
+      final String newText = value.selection.isCollapsed
+          ? value.text.substring(0, end) + token + value.text.substring(end)
+          : value.text.replaceRange(start, end, token);
+      if (!value.selection.isCollapsed) end = start;
+      widget.controller.value = value.copyWith(
+        text: newText,
+        selection: TextSelection.collapsed(offset: end + token.length),
+      );
+    } else {
+      final String next = widget.controller.text + token;
+      widget.controller.value = TextEditingValue(
+        text: next,
+        selection: TextSelection.collapsed(offset: next.length),
+      );
+    }
+    widget.onInserted?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final List<String> pageItems = _itemsFor(_page);
+    return Container(
+      width: 364,
+      height: 280,
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: tokens.line),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: tokens.shadow,
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Text(
+                '贴吧表情',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textSecondary,
+                    ),
+              ),
+              const Spacer(),
+              _pageBtn(
+                tokens,
+                icon: Icons.chevron_left_rounded,
+                onTap: _page > 0 ? () => setState(() => _page--) : null,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${_page + 1} / $_pageCount',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.textSecondary,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              _pageBtn(
+                tokens,
+                icon: Icons.chevron_right_rounded,
+                onTap: _page < _pageCount - 1
+                    ? () => setState(() => _page++)
+                    : null,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: _cols,
+                mainAxisSpacing: 6,
+                crossAxisSpacing: 4,
+              ),
+              itemCount: pageItems.length,
+              itemBuilder: (BuildContext context, int index) {
+                final String file = pageItems[index];
+                return InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _insert(file),
+                  child: Center(
+                    child: ExtendedImage.asset(
+                      'assets/emoji/$file',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pageBtn(
+    TiebananaTokens tokens, {
+    required IconData icon,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(6),
+      onTap: onTap,
+      child: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: tokens.fill,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Icon(
+          icon,
+          size: 15,
+          color: onTap == null
+              ? tokens.textTertiary.withValues(alpha: 0.4)
+              : tokens.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
 class _UploadThumbnail extends StatefulWidget {
   const _UploadThumbnail({super.key, required this.asset});
   final AssetEntity asset;

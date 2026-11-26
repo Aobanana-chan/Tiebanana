@@ -260,13 +260,36 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
+  void _prevImage() {
+    if (_current <= 0) return;
+    _pages.animateToPage(_current - 1,
+        duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+  }
+
+  void _nextImage() {
+    if (_current >= widget.imgUrls.length - 1) return;
+    _pages.animateToPage(_current + 1,
+        duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+  }
+
   @override
   Widget build(BuildContext context) => Theme(
         data: TiebananaTheme.dark(
           seedOf(Global.setting.theme),
           Global.setting.fontSize,
         ),
-        child: Builder(builder: _buildViewer),
+        child: CallbackShortcuts(
+          bindings: <ShortcutActivator, VoidCallback>{
+            const SingleActivator(LogicalKeyboardKey.escape): () =>
+                Navigator.maybePop(context),
+            const SingleActivator(LogicalKeyboardKey.arrowLeft): _prevImage,
+            const SingleActivator(LogicalKeyboardKey.arrowRight): _nextImage,
+          },
+          child: Focus(
+            autofocus: true,
+            child: Builder(builder: _buildViewer),
+          ),
+        ),
       );
 
   Widget _buildViewer(BuildContext context) {
@@ -337,6 +360,46 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                     : const Center(
                         child: Text('暂无图片', style: TextStyle(color: _ink))),
               ),
+              if (hasImages && isDesktop && widget.imgUrls.length > 1) ...<Widget>[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: _chrome(_glass(IconButton(
+                      tooltip: '上一张 (←)',
+                      onPressed: _current > 0 ? _prevImage : null,
+                      style: IconButton.styleFrom(
+                        foregroundColor: _ink,
+                        disabledForegroundColor: _ink.withValues(alpha: .3),
+                        backgroundColor: _backdrop.withValues(alpha: .36),
+                        fixedSize: const Size(44, 44),
+                        side: BorderSide(color: _ink.withValues(alpha: .1)),
+                      ),
+                      icon: const Icon(Icons.chevron_left_rounded, size: 24),
+                    ))),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: _chrome(_glass(IconButton(
+                      tooltip: '下一张 (→)',
+                      onPressed: _current < widget.imgUrls.length - 1
+                          ? _nextImage
+                          : null,
+                      style: IconButton.styleFrom(
+                        foregroundColor: _ink,
+                        disabledForegroundColor: _ink.withValues(alpha: .3),
+                        backgroundColor: _backdrop.withValues(alpha: .36),
+                        fixedSize: const Size(44, 44),
+                        side: BorderSide(color: _ink.withValues(alpha: .1)),
+                      ),
+                      icon: const Icon(Icons.chevron_right_rounded, size: 24),
+                    ))),
+                  ),
+                ),
+              ],
               Align(
                 alignment: Alignment.topCenter,
                 child: _chrome(Padding(

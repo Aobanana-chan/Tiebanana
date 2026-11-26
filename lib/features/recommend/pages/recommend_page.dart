@@ -2,7 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:just_throttle_it/just_throttle_it.dart';
+import 'package:provider/provider.dart';
+import 'package:tiebanana/features/forum/state/forum_state.dart';
+import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/controllers/back_to_top_controller.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/layout/page_wrap.dart';
+import 'package:tiebanana/shared/widgets/avatar_image.dart';
+import 'package:tiebanana/shared/widgets/desktop_panel.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/shared/widgets/skeleton.dart';
@@ -58,12 +65,17 @@ class _RecommendPanState extends State<RecommendPan> {
 
   Future<void>? _refreshTask;
 
+  /// 桌面端分栏看帖开关与当前选中帖子。
+  bool _splitMode = false;
+  String? _selectedThreadId;
+
   RecommendLoader get _loader => widget.loader ?? Global.tiebaAPI.getRecommThread;
 
   @override
   void initState() {
     super.initState();
     refresh();
+    Global.desktopRefreshTick.addListener(_onDesktopRefresh);
 
     widget.backController?.attach(
       this,
@@ -80,8 +92,13 @@ class _RecommendPanState extends State<RecommendPan> {
     });
   }
 
+  void _onDesktopRefresh() {
+    if (mounted) refresh();
+  }
+
   @override
   void dispose() {
+    Global.desktopRefreshTick.removeListener(_onDesktopRefresh);
     widget.backController?.detach(this);
     controller.dispose();
     super.dispose();
@@ -205,6 +222,12 @@ class _RecommendPanState extends State<RecommendPan> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        if (width >= AppBreakpoints.compactMax) {
+          return _buildDesktop(context, width);
+        }
         return Column(
           children: [
             SearchBar(
@@ -235,6 +258,318 @@ class _RecommendPanState extends State<RecommendPan> {
       },
     );
   }
+
+  TiebaThreadInfo? get _selectedThread {
+    final List<TiebaThreadInfo> nonNull =
+        recommend.whereType<TiebaThreadInfo>().toList();
+    if (nonNull.isEmpty) return null;
+    if (_selectedThreadId != null) {
+      for (final TiebaThreadInfo item in nonNull) {
+        if (item.id == _selectedThreadId) return item;
+      }
+    }
+    return nonNull.first;
+  }
+
+  /// 查找 `null` 续读锚点下方紧邻的那条旧帖子（仅当锚点真实存在时返回非空）。
+  TiebaThreadInfo? get _resumeAnchorThread {
+    final int idx = recommend.indexWhere((TiebaThreadInfo? e) => e == null);
+    if (idx < 0) return null;
+    for (int i = idx + 1; i < recommend.length; i++) {
+      if (recommend[i] != null) return recommend[i];
+    }
+    for (int i = idx - 1; i >= 0; i--) {
+      if (recommend[i] != null) return recommend[i];
+    }
+    return null;
+  }
+
+  Widget _buildDesktop(BuildContext context, double availableWidth) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool twoCol = availableWidth >= AppBreakpoints.mediumMax;
+    final bool split = twoCol && _splitMode;
+    final double railWidth = availableWidth >= 1100 ? 296 : 268;
+    final TiebaThreadInfo? selected = _selectedThread;
+
+    final Widget feed = RecommendFeed(
+      items: recommend,
+      loading: _loading,
+      error: _error,
+      notLoggedIn: _error != null && _error.toString().contains('未登录'),
+      loadingMore: _loadingMore,
+      moreError: _moreError,
+      scrollController: controller,
+      refreshController: _refreshController,
+      onRefresh: refresh,
+      onResumeTap: _onResumeTap,
+      onRetry: _retry,
+      onLoadMore: nextPage,
+      desktop: true,
+      selectedThreadId: split ? selected?.id : null,
+      onSelectThread: split
+          ? (TiebaThreadInfo info) =>
+              setState(() => _selectedThreadId = info.id)
+          : null,
+    );
+
+    return PageWrap(
+      bottomPadding: 0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          DesktopPageHeader(
+            title: '正在发生',
+            subtitle: '个性化推荐流 · 下滑加载更多',
+            tools: <Widget>[
+              if (twoCol) ...<Widget>[
+                Text(
+                  '分栏看帖',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 11.5,
+                        color: tokens.textSecondary,
+                      ),
+                ),
+                Switch(
+                  value: _splitMode,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (bool v) => setState(() => _splitMode = v),
+                ),
+              ],
+            ],
+          ),
+          Expanded(
+            child: !twoCol
+                ? feed
+                : split
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(width: 380, child: feed),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: _DesktopSplitReader(thread: selected),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Expanded(child: feed),
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: railWidth,
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: _buildDesktopRail(context, tokens),
+                            ),
+                          ),
+                        ],
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopRail(BuildContext context, TiebananaTokens tokens) {
+    final TiebaThreadInfo? anchor = _resumeAnchorThread;
+    ForumState? forumState;
+    try {
+      forumState = Provider.of<ForumState>(context);
+    } catch (_) {
+      forumState = null;
+    }
+    final List<LikeForumInfo> quickForums =
+        forumState?.forums.take(5).toList() ?? <LikeForumInfo>[];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (anchor != null) ...<Widget>[
+          DesktopPanel(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '上次读到这里',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  anchor.title.isEmpty ? '${anchor.fname}吧帖子' : anchor.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        height: 1.45,
+                        color: tokens.textPrimary,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '列表定位锚点 · 上次刷新的衔接位置',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 10.5,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 30,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, PageRouter.threadPage,
+                          arguments:
+                              ThreadPageRouterData(kz: anchor.id, pid: null));
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: tokens.accentFill,
+                      foregroundColor: tokens.accentOn,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      textStyle: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    icon: const Icon(Icons.chevron_right_rounded, size: 15),
+                    label: const Text('打开这条帖子'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (quickForums.isNotEmpty) ...<Widget>[
+          DesktopPanel(
+            padding: const EdgeInsets.fromLTRB(14, 13, 14, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        '快捷跳转',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.textPrimary,
+                            ),
+                      ),
+                    ),
+                    Icon(Icons.tag_rounded,
+                        size: 14, color: tokens.textTertiary),
+                  ],
+                ),
+                const SizedBox(height: 7),
+                for (final LikeForumInfo f in quickForums)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => Navigator.pushNamed(
+                        context, PageRouter.forumHome,
+                        arguments: f.forumName),
+                    child: SizedBox(
+                      height: 30,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Row(
+                          children: <Widget>[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(5),
+                              child: Container(
+                                width: 18,
+                                height: 18,
+                                color: tokens.fill,
+                                child: resolveAvatarUrl(f.avatar).isEmpty
+                                    ? Icon(Icons.forum_outlined,
+                                        size: 11, color: tokens.textTertiary)
+                                    : AvatarImage(
+                                        url: resolveAvatarUrl(f.avatar)),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${f.forumName}吧',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      fontSize: 11.5,
+                                      color: tokens.textSecondary,
+                                    ),
+                              ),
+                            ),
+                            Text(
+                              'Lv.${f.levelId}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    fontSize: 10,
+                                    color: tokens.textTertiary,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        DesktopPanel(
+          padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '桌面快捷键',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.textPrimary,
+                          ),
+                    ),
+                  ),
+                  Icon(Icons.keyboard_outlined,
+                      size: 14, color: tokens.textTertiary),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const _ShortcutRow(label: '全局搜索', keys: 'Ctrl K'),
+              const _ShortcutRow(label: '切换四个分区', keys: 'Ctrl 1–4'),
+              const _ShortcutRow(label: '返回上一视图', keys: 'Alt ←'),
+              const _ShortcutRow(label: '刷新当前列表', keys: 'F5'),
+              const _ShortcutRow(label: '关闭弹层', keys: 'Esc', last: true),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 ///动态流的展示层：骨架 / 空 / 错误 / 未登录 / 列表。
@@ -255,6 +590,9 @@ class RecommendFeed extends StatelessWidget {
     required this.onRetry,
     required this.onLoadMore,
     this.refreshController,
+    this.desktop = false,
+    this.selectedThreadId,
+    this.onSelectThread,
   });
 
   ///`null` 元素是续读条占位。
@@ -272,12 +610,17 @@ class RecommendFeed extends StatelessWidget {
   final Future<void> Function() onResumeTap;
   final VoidCallback onRetry;
   final VoidCallback onLoadMore;
+  final bool desktop;
+  final String? selectedThreadId;
+  final ValueChanged<TiebaThreadInfo>? onSelectThread;
 
   @override
   Widget build(BuildContext context) {
     if (loading && items.isEmpty) {
-      return _sheet(context, const _RecommendSkeletonList(), center: false);
-    }    if (error != null && items.isEmpty) {
+      return _sheet(context, _RecommendSkeletonList(desktop: desktop),
+          center: false);
+    }
+    if (error != null && items.isEmpty) {
       return _sheet(context, _errorView(context));
     }
     if (items.isEmpty) {
@@ -288,8 +631,10 @@ class RecommendFeed extends StatelessWidget {
       controller: refreshController,
       onRefresh: onRefresh,
       child: ListView.builder(
-        padding: const EdgeInsets.only(
-            top: TiebananaMetrics.gapSm, bottom: TiebananaMetrics.gapMd),
+        padding: EdgeInsets.only(
+          top: desktop ? 0 : TiebananaMetrics.gapSm,
+          bottom: desktop ? 24 : TiebananaMetrics.gapMd,
+        ),
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: items.length + (showFooter ? 1 : 0),
@@ -299,7 +644,7 @@ class RecommendFeed extends StatelessWidget {
           }
           final TiebaThreadInfo? item = items[index];
           return item == null
-              ? _ResumeBar(onTap: onResumeTap)
+              ? _ResumeBar(onTap: onResumeTap, desktop: desktop)
               : _threadCard(context, item);
         },
       ),
@@ -393,6 +738,8 @@ class RecommendFeed extends StatelessWidget {
   }
 
   Widget _threadCard(BuildContext context, TiebaThreadInfo info) {
+    final bool isSelected =
+        selectedThreadId != null && selectedThreadId == info.id;
     return ThreadSummary(
       firstPostContent: info.firstPostContent,
       author: info.author,
@@ -405,6 +752,11 @@ class RecommendFeed extends StatelessWidget {
       agreeNum: info.agreeNum,
       disagreeNum: info.disagreeNum,
       replyNum: info.replyNum,
+      margin: desktop ? const EdgeInsets.only(bottom: 11) : null,
+      desktop: desktop,
+      showForumChip: desktop,
+      selected: isSelected,
+      onTap: onSelectThread == null ? null : () => onSelectThread!(info),
     );
   }
 }
@@ -413,12 +765,13 @@ class RecommendFeed extends StatelessWidget {
 ///
 ///使用 primaryContainer 作为位置标记，视觉层级低于帖子卡片。
 class _ResumeBar extends StatelessWidget {
-  const _ResumeBar({required this.onTap});
+  const _ResumeBar({required this.onTap, this.desktop = false});
 
   /// 续读条高度。比普通按钮矮一点，夹在两条帖子中间时不至于把留白撑大。
   static const double _height = 36;
 
   final Future<void> Function() onTap;
+  final bool desktop;
 
   @override
   Widget build(BuildContext context) {
@@ -426,8 +779,11 @@ class _ResumeBar extends StatelessWidget {
     return Padding(
       // 上一张帖子自带 gapSm 下边距，这里上边留 0、下边留 gapSm，
       // 保持两段间距均匀。
-      padding: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+      padding: EdgeInsets.fromLTRB(
+          desktop ? 0 : TiebananaMetrics.pageGutter,
+          0,
+          desktop ? 0 : TiebananaMetrics.pageGutter,
+          desktop ? 11 : TiebananaMetrics.gapSm),
       child: Material(
         color: tokens.primaryContainer,
         borderRadius: TiebananaMetrics.brCtl,
@@ -458,31 +814,38 @@ class _ResumeBar extends StatelessWidget {
 
 ///首屏骨架：三张卡片，形状与 [ThreadSummary] 对齐。
 class _RecommendSkeletonList extends StatelessWidget {
-  const _RecommendSkeletonList();
+  const _RecommendSkeletonList({this.desktop = false});
+
+  final bool desktop;
 
   @override
   Widget build(BuildContext context) {
     //用 Column 排版，外层 _sheet 已是滚动容器。
-    return const Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        _ThreadSkeletonCard(),
-        _ThreadSkeletonCard(),
-        _ThreadSkeletonCard(),
+        _ThreadSkeletonCard(desktop: desktop),
+        _ThreadSkeletonCard(desktop: desktop),
+        _ThreadSkeletonCard(desktop: desktop),
       ],
     );
   }
 }
 
 class _ThreadSkeletonCard extends StatelessWidget {
-  const _ThreadSkeletonCard();
+  const _ThreadSkeletonCard({this.desktop = false});
+
+  final bool desktop;
 
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+      margin: EdgeInsets.fromLTRB(
+          desktop ? 0 : TiebananaMetrics.pageGutter,
+          0,
+          desktop ? 0 : TiebananaMetrics.pageGutter,
+          desktop ? 11 : TiebananaMetrics.gapSm),
       padding: const EdgeInsets.all(TiebananaMetrics.cardPadding),
       decoration: BoxDecoration(
         color: tokens.surface,
@@ -520,6 +883,277 @@ class _ThreadSkeletonCard extends StatelessWidget {
           ),
           const SizedBox(height: TiebananaMetrics.gapSm + 2),
           const SkeletonBox(height: 70, radius: TiebananaMetrics.radiusSm),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShortcutRow extends StatelessWidget {
+  const _ShortcutRow({
+    required this.label,
+    required this.keys,
+    this.last = false,
+  });
+
+  final String label;
+  final String keys;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : 7),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 11.5,
+                    color: tokens.textSecondary,
+                  ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: tokens.fill,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(color: tokens.line),
+            ),
+            child: Text(
+              keys,
+              style: TextStyle(
+                fontSize: 10,
+                height: 1,
+                color: tokens.textTertiary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 桌面「分栏看帖」右侧阅读器：展示选中贴正文并拉取真实楼层预览。
+class _DesktopSplitReader extends StatefulWidget {
+  const _DesktopSplitReader({required this.thread});
+
+  final TiebaThreadInfo? thread;
+
+  @override
+  State<_DesktopSplitReader> createState() => _DesktopSplitReaderState();
+}
+
+class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
+  TiebaThreadPage? _page;
+  bool _loading = false;
+  String? _loadedTid;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DesktopSplitReader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.thread?.id != widget.thread?.id) {
+      _load();
+    }
+  }
+
+  Future<void> _load() async {
+    final TiebaThreadInfo? t = widget.thread;
+    if (t == null) return;
+    if (_loadedTid == t.id && _page != null) return;
+    setState(() {
+      _loading = true;
+      _page = null;
+      _loadedTid = t.id;
+    });
+    try {
+      final TiebaThreadPage res = await Global.tiebaAPI.getThreadPage(t.id);
+      if (!mounted || _loadedTid != t.id) return;
+      setState(() {
+        _page = res;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted || _loadedTid != t.id) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final TiebaThreadInfo? t = widget.thread;
+    if (t == null) {
+      return DesktopPanel(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Text(
+            '从左侧选择一条帖子查看详情',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: tokens.textTertiary),
+          ),
+        ),
+      );
+    }
+
+    final int stamp = int.tryParse(t.lastTimeInt) ??
+        int.tryParse(t.createTime) ??
+        0;
+    final String when = stamp > 0 ? TiebaParser.getPostTime(intTime: stamp) : '';
+    final List<TiebaThreadPagePost> replies = _page?.posts
+            .where((TiebaThreadPagePost p) => p.floor != '1')
+            .take(5)
+            .toList() ??
+        const <TiebaThreadPagePost>[];
+
+    return DesktopPanel(
+      borderRadius: TiebananaMetrics.brXl,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              if (t.fname.isNotEmpty) ...<Widget>[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: tokens.primaryContainer,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    '${t.fname}吧',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.onPrimaryContainer,
+                        ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  when.isEmpty ? t.author.name : '${t.author.name} · $when',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 11.5,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  PageRouter.threadPage,
+                  arguments: ThreadPageRouterData(kz: t.id, pid: null),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: tokens.textSecondary,
+                  side: BorderSide(color: tokens.line),
+                  minimumSize: const Size(0, 28),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  textStyle: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+                icon: const Icon(Icons.open_in_new_rounded, size: 13),
+                label: const Text('全屏阅读'),
+              ),
+            ],
+          ),
+          if (t.title.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            Text(
+              t.title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    height: 1.4,
+                    color: tokens.textPrimary,
+                  ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          ...TiebaParser.parseContent(
+            context,
+            _page?.posts.firstOrNull?.content ?? t.firstPostContent,
+            _page?.imgs ?? const <String>[],
+            _page?.imgsOrgSrc ?? const <String>[],
+            selectable: true,
+            forumName: t.fname,
+          ),
+          const Divider(height: 22),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else if (replies.isEmpty)
+            Text(
+              '暂无回复预览，点击「全屏阅读」查看完整帖子',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: tokens.textTertiary),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                for (final TiebaThreadPagePost floor in replies) ...<Widget>[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text.rich(
+                      TextSpan(
+                        children: <InlineSpan>[
+                          TextSpan(
+                            text:
+                                '#${floor.floor ?? ''} ${_page?.userListSet[floor.uid]?.name ?? floor.nameShow}：',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: tokens.textPrimary,
+                            ),
+                          ),
+                          TextSpan(
+                            text: TiebaParser.parserContentString(floor.content),
+                            style: TextStyle(color: tokens.textSecondary),
+                          ),
+                        ],
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(height: 1.65),
+                    ),
+                  ),
+                ],
+              ],
+            ),
         ],
       ),
     );

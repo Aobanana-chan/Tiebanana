@@ -10,14 +10,17 @@ import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 class TopThread extends StatelessWidget {
   final String tid;
   final String title;
-  const TopThread({super.key, required this.tid, required this.title});
+  final EdgeInsetsGeometry? margin;
+  const TopThread(
+      {super.key, required this.tid, required this.title, this.margin});
 
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+      margin: margin ??
+          const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
+              TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: TiebananaMetrics.brLg,

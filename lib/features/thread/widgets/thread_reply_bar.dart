@@ -1,6 +1,8 @@
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +22,15 @@ import 'package:tiebanana/shared/content/emoji_panel.dart';
 import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/features/thread/widgets/thread_common.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
+
+/// 打开回复弹层：`< 720dp` 底部抽屉，`≥ 720dp` 560dp 居中对话框。
+Future<void> showReplyPanel(BuildContext context, WidgetBuilder builder) {
+  return showAdaptivePanel<void>(
+    context: context,
+    maxWidth: 560,
+    builder: builder,
+  );
+}
 
 /// 帖子底部回复条。
 ///
@@ -49,11 +60,9 @@ class ThreadReplyBar extends StatelessWidget {
   });
 
   void _openReply(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (BuildContext context) => ReplyBottomSheet(
+    showReplyPanel(
+      context,
+      (BuildContext context) => ReplyBottomSheet(
         replyText: replyText,
         threadTitle: replyText,
         kw: kw,
@@ -169,11 +178,9 @@ class InnerFloorReplyBar extends StatelessWidget {
         top: false,
         child: _ReplyEntryPill(
           onTap: () {
-            showModalBottomSheet<void>(
-              context: context,
-              backgroundColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (BuildContext context) => ReplyBottomSheet(
+            showReplyPanel(
+              context,
+              (BuildContext context) => ReplyBottomSheet(
                 replyText: TiebaParser.parserContentString(postMain.content),
                 targetName: author.name,
                 targetMeta: '楼中楼回复',
@@ -747,7 +754,18 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet>
                                 ImageUploadProviderModel value,
                                 Widget? child,
                               ) {
-                                return ExtendedTextField(
+                                return CallbackShortcuts(
+                                  bindings: <ShortcutActivator, VoidCallback>{
+                                    const SingleActivator(
+                                      LogicalKeyboardKey.enter,
+                                      control: true,
+                                    ): _send,
+                                    const SingleActivator(
+                                      LogicalKeyboardKey.numpadEnter,
+                                      control: true,
+                                    ): _send,
+                                  },
+                                  child: ExtendedTextField(
                                   specialTextSpanBuilder:
                                       TiebaSpanBuilder(uploadImages: value),
                                   controller: controller,
@@ -788,7 +806,8 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet>
                                     focusedBorder: InputBorder.none,
                                     contentPadding: EdgeInsets.zero,
                                   ),
-                                );
+                                ),
+                              );
                               },
                             ),
                           ),

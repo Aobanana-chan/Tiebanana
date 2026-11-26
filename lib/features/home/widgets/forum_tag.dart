@@ -19,7 +19,14 @@ import 'package:tiebanana/shared/widgets/section_header.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
-
+import 'package:tiebanana/features/account/data/account_store.dart';
+import 'package:tiebanana/features/account/state/user_state.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/layout/page_wrap.dart';
+import 'package:tiebanana/shared/widgets/avatar_image.dart';
+import 'package:tiebanana/shared/widgets/dashed_border.dart';
+import 'package:tiebanana/shared/widgets/desktop_panel.dart';
+import 'package:tiebanana/shared/widgets/hover_actions.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 
 ///主页贴合集
@@ -41,8 +48,25 @@ class _TagPanState extends State<TagPan> with RouteAware {
   /// 展开全部吧（默认缩略，只显示设置里的数量）。
   bool _expanded = false;
 
+  /// 桌面端排序模式。
+  bool _reorderMode = false;
+
+  /// 桌面端本地筛选关注的吧。
+  final TextEditingController _filterController = TextEditingController();
+  String _filterQuery = '';
+
   /// 是否已向 [appRouteObserver] 订阅，didChangeDependencies 中按此判断是否注册。
   bool _routeSubscribed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Global.desktopRefreshTick.addListener(_onDesktopRefresh);
+  }
+
+  void _onDesktopRefresh() {
+    if (mounted) _refresh(syncForums: true);
+  }
 
   @override
   void didChangeDependencies() {
@@ -64,6 +88,8 @@ class _TagPanState extends State<TagPan> with RouteAware {
 
   @override
   void dispose() {
+    Global.desktopRefreshTick.removeListener(_onDesktopRefresh);
+    _filterController.dispose();
     if (_routeSubscribed) {
       appRouteObserver.unsubscribe(this);
     }
@@ -166,6 +192,20 @@ class _TagPanState extends State<TagPan> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double availableWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        if (availableWidth >= AppBreakpoints.compactMax) {
+          return _buildDesktop(context);
+        }
+        return _buildMobile(context);
+      },
+    );
+  }
+
+  Widget _buildMobile(BuildContext context) {
     return TiebananaRefreshIndicator(
       onRefresh: _refresh,
       child: Consumer<ForumState>(builder: (context, forumState, _) {
@@ -271,6 +311,336 @@ class _TagPanState extends State<TagPan> with RouteAware {
           ],
         );
       }),
+    );
+  }
+
+  String _greeting() {
+    final int h = DateTime.now().hour;
+    if (h < 12) return '早上好';
+    if (h < 18) return '下午好';
+    return '晚上好';
+  }
+
+  Widget _buildDesktop(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final bool twoCol = screenWidth >= AppBreakpoints.mediumMax;
+    final double rightWidth = screenWidth >= 1100 ? 336 : 304;
+
+    String userName = '';
+    try {
+      userName = Provider.of<User>(context).name.trim();
+    } catch (_) {
+      userName = AccountStore.current?.name ?? '';
+    }
+    if (userName.isEmpty) {
+      userName = AccountStore.current?.name ?? '';
+    }
+
+    return Consumer<ForumState>(
+      builder: (BuildContext context, ForumState forumState, _) {
+        final List<LikeForumInfo> forums = forumState.forums;
+        final int maxCount =
+            Provider.of<APPSettingProvider>(context).homeForumMaxCount;
+        final int signedCount =
+            forums.where((LikeForumInfo f) => f.isSign != '0').length;
+        final int unsignedCount = forums.length - signedCount;
+
+        final String q = _filterQuery.trim().toLowerCase();
+        final List<LikeForumInfo> baseList =
+            (_expanded || q.isNotEmpty) ? forums : forums.take(maxCount).toList();
+        final List<LikeForumInfo> visible = q.isEmpty
+            ? baseList
+            : baseList
+                .where(
+                    (LikeForumInfo f) => f.forumName.toLowerCase().contains(q))
+                .toList();
+        final bool canExpand = forums.length > maxCount && q.isEmpty;
+
+        final Widget forumsPanel = _buildDesktopForumsPanel(
+          context,
+          tokens,
+          forumState,
+          forums: forums,
+          visible: visible,
+          maxCount: maxCount,
+          signedCount: signedCount,
+          canExpand: canExpand,
+        );
+
+        final Widget recentPanel = _buildDesktopRecentPanel(context, tokens);
+
+        final String greetingTitle =
+            userName.isEmpty ? _greeting() : '${_greeting()}，$userName';
+        final String subtitle = forums.isEmpty
+            ? '关注几个贴吧，开始浏览'
+            : '${forums.length} 个关注的吧 · $signedCount 个今天已签到'
+                '${unsignedCount > 0 ? '，还差 $unsignedCount 个' : '，今日已全签'}';
+
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: PageWrap(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                DesktopPageHeader(
+                  title: greetingTitle,
+                  subtitle: subtitle,
+                  tools: <Widget>[
+                    _DesktopGhostButton(
+                      icon: _reorderMode
+                          ? Icons.check_rounded
+                          : Icons.tune_rounded,
+                      label: _reorderMode ? '完成排序' : '管理排序',
+                      active: _reorderMode,
+                      onTap: forums.isEmpty
+                          ? null
+                          : () => setState(() => _reorderMode = !_reorderMode),
+                    ),
+                  ],
+                ),
+                if (twoCol)
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Expanded(child: forumsPanel),
+                        const SizedBox(width: 16),
+                        SizedBox(width: rightWidth, child: recentPanel),
+                      ],
+                    ),
+                  )
+                else ...<Widget>[
+                  forumsPanel,
+                  const SizedBox(height: 16),
+                  recentPanel,
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopForumsPanel(
+    BuildContext context,
+    TiebananaTokens tokens,
+    ForumState forumState, {
+    required List<LikeForumInfo> forums,
+    required List<LikeForumInfo> visible,
+    required int maxCount,
+    required int signedCount,
+    required bool canExpand,
+  }) {
+    return DesktopPanel(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              PanelHeader(
+                title: '我关注的吧',
+                count: forums.length,
+                trailing: <Widget>[
+                  Container(
+                    width: 150,
+                    height: 29,
+                    decoration: BoxDecoration(
+                      color: tokens.fill,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 9),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(Icons.search_rounded,
+                            size: 14, color: tokens.textTertiary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: TextField(
+                            controller: _filterController,
+                            onChanged: (String v) =>
+                                setState(() => _filterQuery = v),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: 11.5,
+                                      color: tokens.textPrimary,
+                                    ),
+                            decoration: InputDecoration(
+                              isCollapsed: true,
+                              border: InputBorder.none,
+                              hintText: '筛选关注的吧',
+                              hintStyle: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    fontSize: 11.5,
+                                    color: tokens.textTertiary,
+                                  ),
+                            ),
+                          ),
+                        ),
+                        if (_filterQuery.isNotEmpty)
+                          InkWell(
+                            onTap: () {
+                              _filterController.clear();
+                              setState(() => _filterQuery = '');
+                            },
+                            child: Icon(Icons.close_rounded,
+                                size: 13, color: tokens.textTertiary),
+                          ),
+                      ],
+                    ),
+                  ),
+                  _DesktopSignAllButton(
+                    onDone: () => forumState.refresh(),
+                  ),
+                  if (canExpand)
+                    _DesktopGhostButton(
+                      label: _expanded ? '收起' : '展开全部 (${forums.length})',
+                      onTap: () => setState(() => _expanded = !_expanded),
+                    ),
+                ],
+              ),
+              if (forumState.error != null && forums.isEmpty)
+                const HomeEmptyHint(
+                  icon: Icons.error_outline,
+                  title: '关注列表加载失败',
+                  body: '请检查网络或在账号管理中重新登录，然后刷新',
+                )
+              else if (forums.isEmpty)
+                const HomeEmptyHint(
+                  icon: Icons.add_circle_outline,
+                  title: '还没有关注的吧',
+                  body: '在搜索里找一个吧并关注，这里就会显示出来',
+                )
+              else if (visible.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 28),
+                  child: Center(
+                    child: Text('没有匹配的吧'),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(15, 4, 15, 14),
+                  child: _ForumReorderGrid(
+                    forums: visible,
+                    desktop: true,
+                    reorderMode: _reorderMode,
+                    onOrderChanged: (List<LikeForumInfo> ordered) =>
+                        _saveVisibleOrder(forumState, ordered),
+                  ),
+                ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(15, 10, 15, 14),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: tokens.line)),
+            ),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    _expanded
+                        ? '已显示全部 ${forums.length} 个（已签 $signedCount）'
+                        : '默认显示 ${math.min(maxCount, forums.length)} 个（共 ${forums.length} 个，已签 $signedCount）',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 11,
+                          color: tokens.textTertiary,
+                        ),
+                  ),
+                ),
+                Text(
+                  _reorderMode ? '拖动卡片调整顺序，松手自动保存' : '点击「管理排序」后可拖动卡片排序',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 11,
+                        color: tokens.textTertiary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopRecentPanel(
+      BuildContext context, TiebananaTokens tokens) {
+    return DesktopPanel(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              PanelHeader(
+                title: '最近浏览',
+                count: _history.length,
+                trailing: <Widget>[
+                  _DesktopGhostButton(
+                    label: '清空',
+                    onTap: _history.isEmpty ? null : _confirmClearHistory,
+                  ),
+                ],
+              ),
+              if (_history.isEmpty)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 28),
+                  child: Center(
+                    child: Text(
+                      '暂无最近浏览记录',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: tokens.textTertiary,
+                          ),
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      for (final ViewHistoryPageModel info in _history)
+                        _DesktopRecentRow(
+                          info: info,
+                          onHide: () => _hideHistory(info),
+                          onDelete: () => _confirmDeleteHistory(info),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: tokens.fill,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '桌面端不再需要“左滑隐藏”。鼠标悬停行时右上角出现隐藏 / 删除；'
+              '隐藏记录仍在「个人与设置 → 浏览历史」中保留，可随时恢复。',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 10.5,
+                    height: 1.65,
+                    color: tokens.textTertiary,
+                  ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -403,6 +773,8 @@ class _ForumReorderGrid extends StatefulWidget {
   const _ForumReorderGrid({
     required this.forums,
     required this.onOrderChanged,
+    this.desktop = false,
+    this.reorderMode = false,
   });
 
   /// 当前可见的吧（缩略态只是关注列表的前 N 个）。
@@ -411,18 +783,24 @@ class _ForumReorderGrid extends StatefulWidget {
   /// 拖动结束后的新可见顺序；顺序没变时不会回调。
   final ValueChanged<List<LikeForumInfo>> onOrderChanged;
 
+  final bool desktop;
+  final bool reorderMode;
+
   @override
   State<_ForumReorderGrid> createState() => _ForumReorderGridState();
 }
 
 class _ForumReorderGridState extends State<_ForumReorderGrid>
     with TickerProviderStateMixin {
-  static const int _columns = 3;
-  static const double _cellHeight = 38;
-  static const double _spacing = 7;
+  int get _columns =>
+      widget.desktop && MediaQuery.sizeOf(context).width < 720 ? 2 : 3;
+  double get _cellHeight => widget.desktop ? 60 : 38;
+  double get _spacing => widget.desktop ? 10 : 7;
 
-  /// 长按判定：比默认 500ms 稍短，抬起更跟手。
-  static const Duration _longPressDuration = Duration(milliseconds: 400);
+  /// 长按判定：排序模式下 80ms 即可拖起，普通模式下 400ms 防误触。
+  Duration get _longPressDuration => widget.reorderMode
+      ? const Duration(milliseconds: 80)
+      : const Duration(milliseconds: 400);
 
   /// 其余标签让位的动画。
   static const Duration _shiftDuration = Duration(milliseconds: 200);
@@ -627,7 +1005,12 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
           phase: (info.forumId.hashCode & 0x7fffffff) % 7 * 0.9,
           child: Opacity(
             opacity: lifted ? 0 : 1,
-            child: ForumTag(info: info, compact: true),
+            child: ForumTag(
+              info: info,
+              compact: !widget.desktop,
+              desktopTile: widget.desktop,
+              reorderMode: widget.reorderMode,
+            ),
           ),
         ),
       ),
@@ -941,7 +1324,9 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
               type: MaterialType.transparency,
               child: ForumTag(
                 info: info,
-                compact: true,
+                compact: !widget.desktop,
+                desktopTile: widget.desktop,
+                reorderMode: widget.reorderMode,
                 dragging: true,
                 onTap: () {},
               ),
@@ -1160,6 +1545,12 @@ class ForumTag extends StatelessWidget {
   /// 缩略态。
   final bool compact;
 
+  /// 桌面端 60dp 宽卡形态。
+  final bool desktopTile;
+
+  /// 桌面端排序模式（虚线描边）。
+  final bool reorderMode;
+
   /// 正在被拖动：主色描边（抬起放大 / 落位动画由首页网格负责）。
   final bool dragging;
 
@@ -1170,6 +1561,8 @@ class ForumTag extends StatelessWidget {
     super.key,
     required this.info,
     this.compact = false,
+    this.desktopTile = false,
+    this.reorderMode = false,
     this.dragging = false,
     this.onTap,
   });
@@ -1177,6 +1570,9 @@ class ForumTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
+    if (desktopTile) {
+      return _buildDesktopTile(context, tokens);
+    }
     final TextStyle? nameStyle = compact
         ? Theme.of(context)
             .textTheme
@@ -1223,6 +1619,108 @@ class ForumTag extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildDesktopTile(BuildContext context, TiebananaTokens tokens) {
+    final bool signed = info.isSign != '0';
+    final String avatarUrl = resolveAvatarUrl(info.avatar);
+    final Widget tile = DecoratedBox(
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: TiebananaMetrics.brCtl,
+        border: dragging
+            ? Border.all(color: tokens.primary, width: 1.4)
+            : (reorderMode ? null : Border.all(color: tokens.line)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: TiebananaMetrics.brCtl,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          borderRadius: TiebananaMetrics.brCtl,
+          hoverColor: tokens.primary.withValues(alpha: .04),
+          onTap: reorderMode
+              ? () {}
+              : (onTap ??
+                  () {
+                    Navigator.pushNamed(context, PageRouter.forumHome,
+                        arguments: info.forumName);
+                  }),
+          child: SizedBox(
+            height: 60,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: <Widget>[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      color: tokens.fill,
+                      child: avatarUrl.isEmpty
+                          ? Icon(Icons.forum_outlined,
+                              size: 18, color: tokens.textTertiary)
+                          : AvatarImage(url: avatarUrl),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          '${info.forumName}吧',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: tokens.textPrimary,
+                                  ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Lv.${info.levelId} · ${signed ? '今日已签' : '未签到'}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    fontSize: 10.5,
+                                    color: tokens.textTertiary,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (signed) ...<Widget>[
+                    const SizedBox(width: 6),
+                    Opacity(
+                      opacity: reorderMode ? 0.3 : 1,
+                      child: Icon(Icons.check_rounded,
+                          size: 14, color: tokens.primary),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (reorderMode && !dragging) {
+      return CustomPaint(
+        foregroundPainter: DashedBorderPainter(
+          color: tokens.lineStrong,
+          radius: TiebananaMetrics.brCtl,
+        ),
+        child: tile,
+      );
+    }
+    return tile;
   }
 }
 
@@ -1425,6 +1923,252 @@ class _Rank extends StatelessWidget {
                 size: compact ? 11 : 13, color: tokens.primary),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _DesktopGhostButton extends StatelessWidget {
+  const _DesktopGhostButton({
+    required this.label,
+    this.icon,
+    this.onTap,
+    this.active = false,
+  });
+
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onTap;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final Color fg = active
+        ? tokens.onPrimaryContainer
+        : (onTap == null
+            ? tokens.textTertiary.withValues(alpha: 0.5)
+            : tokens.textSecondary);
+    return Material(
+      color: active ? tokens.primaryContainer : Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: active ? Colors.transparent : tokens.line,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: SizedBox(
+          height: 27,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                if (icon != null) ...<Widget>[
+                  Icon(icon, size: 13, color: fg),
+                  const SizedBox(width: 5),
+                ],
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: fg,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopSignAllButton extends StatefulWidget {
+  const _DesktopSignAllButton({required this.onDone});
+
+  final Future<void> Function() onDone;
+
+  @override
+  State<_DesktopSignAllButton> createState() => _DesktopSignAllButtonState();
+}
+
+class _DesktopSignAllButtonState extends State<_DesktopSignAllButton> {
+  bool _busy = false;
+
+  Future<void> _tap() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    Fluttertoast.showToast(msg: '签到开始，可前往通知栏查看签到进度');
+    try {
+      await Global.tiebaAPI.signAll();
+    } catch (e) {
+      final String message =
+          e is NetAPIError ? (e.errorMessage ?? '一键签到失败') : '一键签到失败';
+      Fluttertoast.showToast(msg: message);
+    } finally {
+      await widget.onDone();
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Material(
+      color: tokens.accentFill,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: _busy ? null : _tap,
+        child: SizedBox(
+          height: 27,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(Icons.check_rounded, size: 13, color: tokens.accentOn),
+                const SizedBox(width: 5),
+                Text(
+                  _busy ? '签到中…' : '签到',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: tokens.accentOn,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopRecentRow extends StatelessWidget {
+  const _DesktopRecentRow({
+    required this.info,
+    required this.onHide,
+    required this.onDelete,
+  });
+
+  final ViewHistoryPageModel info;
+  final VoidCallback onHide;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: HoverActions(
+        actionsBuilder: (BuildContext context, bool hovered) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _HoverIconBtn(
+                icon: Icons.visibility_off_outlined,
+                tooltip: '从首页隐藏（可在浏览历史恢复）',
+                onTap: onHide,
+              ),
+              const SizedBox(width: 2),
+              _HoverIconBtn(
+                icon: Icons.delete_outline_rounded,
+                tooltip: '删除这条记录',
+                danger: true,
+                onTap: onDelete,
+              ),
+            ],
+          );
+        },
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            hoverColor: tokens.primary.withValues(alpha: .05),
+            onTap: () {
+              Navigator.pushNamed(context, PageRouter.threadPage,
+                  arguments: ThreadPageRouterData(kz: info.tid, pid: null));
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 9, 64, 9),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    info.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.48,
+                          color: tokens.textPrimary,
+                        ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${info.forumName}吧 · ${TiebaParser.getPostTime(dateTime: info.latestViewTime)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          color: tokens.textTertiary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverIconBtn extends StatelessWidget {
+  const _HoverIconBtn({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.danger = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(7),
+        elevation: 1,
+        shadowColor: tokens.shadow,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(7),
+          onTap: onTap,
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: Icon(
+              icon,
+              size: 13,
+              color: danger ? tokens.danger : tokens.textTertiary,
+            ),
+          ),
+        ),
       ),
     );
   }

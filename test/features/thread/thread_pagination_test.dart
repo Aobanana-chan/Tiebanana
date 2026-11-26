@@ -78,6 +78,8 @@ class _Api extends DemoTiebaApi {
 Future<GlobalKey<ThreadPageMainState>> _mount(
     WidgetTester tester, TiebaThreadPage page,
     {String? pid}) async {
+  await tester.binding.setSurfaceSize(const Size(390, 600));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
   final key = GlobalKey<ThreadPageMainState>();
   await tester.pumpWidget(ChangeNotifierProvider(
     create: (_) => APPSettingProvider(),
