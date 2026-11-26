@@ -57,7 +57,7 @@ class ThreadPreviewExcerpt extends StatelessWidget {
   }
 }
 
-/// 图片和视频按原始顺序展示；图片固定 16:9，视频按真实画面比例排版。
+/// 图片和视频按原始顺序展示；固定 3 列等宽等高，1 张占 1 列不拉伸、2 张占 2 列、3 张占满。
 class ThreadPreviewMedia extends StatelessWidget {
   const ThreadPreviewMedia(
       {super.key, required this.contents, required this.threadId});
@@ -68,7 +68,7 @@ class ThreadPreviewMedia extends StatelessWidget {
 
   static bool _isMedia(TiebaPostContent c) => switch (c) {
         // 没有可用地址的图片（如投票封面）不算媒体，
-        // 不生成 16:9 占位块。
+        // 不生成占位块。
         TiebaImageContent image => _usableImage(image),
         TiebaVideoContent _ || TiebaVideoLinkContent _ => true,
         _ => false,
@@ -84,71 +84,79 @@ class ThreadPreviewMedia extends StatelessWidget {
   static bool hasContent(List<TiebaPostContent> contents) =>
       contents.any(_isMedia);
 
-  static double _aspectRatioOf(TiebaPostContent content) => switch (content) {
-        TiebaVideoContent video => normalizeVideoAspectRatio(
-            videoAspectRatioOf(video.width, video.height)),
-        _ => 16 / 9,
-      };
-
   @override
   Widget build(BuildContext context) {
-    final media = contents.where(_isMedia).toList();
-    final images = contents
+    final List<TiebaPostContent> media = contents.where(_isMedia).toList();
+    final List<TiebaImageContent> images = contents
         .whereType<TiebaImageContent>()
         .where(_usableImage)
         .toList();
-    final tokens = TiebananaTokens.of(context);
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final double thumbHeight =
+        MediaQuery.sizeOf(context).width < 720 ? 88 : 106;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (var i = 0; i < media.length && i < _limit; i++) ...[
-          if (i > 0) const SizedBox(width: TiebananaMetrics.gapXs),
+      children: <Widget>[
+        for (int i = 0; i < _limit; i++) ...<Widget>[
+          if (i > 0) const SizedBox(width: TiebananaMetrics.gapSm),
           Expanded(
-            child: ClipRRect(
-              borderRadius: TiebananaMetrics.brSm,
-              child: AspectRatio(
-                aspectRatio: _aspectRatioOf(media[i]),
-                child: Stack(fit: StackFit.expand, children: [
-                  if (media[i] case final TiebaImageContent image)
-                    Thumbnail(
-                      imgs: images.map((c) => c.displaySrc).toList(),
-                      imgsOriginSrc: images.map((c) => c.originalSrc).toList(),
-                      controller: ExtendedPageController(
-                          initialPage: images.indexOf(image)),
-                      img: image.displaySrc,
-                      animated: image.isAnimated,
-                      gifBadgeMargin: EdgeInsets.only(
-                        right: TiebananaMetrics.gapXs,
-                        bottom: TiebananaMetrics.gapXs +
-                            (i == _limit - 1 && media.length > _limit ? 18 : 0),
-                      ),
-                      padding: EdgeInsets.zero,
-                      radius: TiebananaMetrics.radiusSm,
-                    )
-                  else
-                    _VideoPreview(content: media[i], threadId: threadId),
-                  if (i == _limit - 1 && media.length > _limit)
-                    Positioned(
-                      right: TiebananaMetrics.gapXs,
-                      bottom: TiebananaMetrics.gapXs,
-                      child: IgnorePointer(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: TiebananaMetrics.gapXs, vertical: 1),
-                          decoration: BoxDecoration(
-                              color: tokens.accentFill,
-                              borderRadius: TiebananaMetrics.brXs),
-                          child: Text('${media.length}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(color: tokens.accentOn)),
-                        ),
+            child: i < media.length
+                ? SizedBox(
+                    key: ValueKey<String>('thread-media-slot-$i'),
+                    height: thumbHeight,
+                    child: ClipRRect(
+                      borderRadius: TiebananaMetrics.brSm,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: <Widget>[
+                          if (media[i] case final TiebaImageContent image)
+                            Thumbnail(
+                              imgs: images.map((c) => c.displaySrc).toList(),
+                              imgsOriginSrc:
+                                  images.map((c) => c.originalSrc).toList(),
+                              controller: ExtendedPageController(
+                                  initialPage: images.indexOf(image)),
+                              img: image.displaySrc,
+                              animated: image.isAnimated,
+                              gifBadgeMargin: EdgeInsets.only(
+                                right: TiebananaMetrics.gapXs,
+                                bottom: TiebananaMetrics.gapXs +
+                                    (i == _limit - 1 && media.length > _limit
+                                        ? 18
+                                        : 0),
+                              ),
+                              padding: EdgeInsets.zero,
+                              radius: TiebananaMetrics.radiusSm,
+                            )
+                          else
+                            _VideoPreview(
+                                content: media[i], threadId: threadId),
+                          if (i == _limit - 1 && media.length > _limit)
+                            Positioned(
+                              right: TiebananaMetrics.gapXs,
+                              bottom: TiebananaMetrics.gapXs,
+                              child: IgnorePointer(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: TiebananaMetrics.gapXs,
+                                      vertical: 1),
+                                  decoration: BoxDecoration(
+                                      color: tokens.accentFill,
+                                      borderRadius: TiebananaMetrics.brXs),
+                                  child: Text('${media.length}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(color: tokens.accentOn)),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                ]),
-              ),
-            ),
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ],

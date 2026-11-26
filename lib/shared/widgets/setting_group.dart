@@ -8,20 +8,22 @@ import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 /// 圆角 18 的 `surface` 卡浮在页面底色上，卡片之间只留 `gapSm + 2` 的间距。
 /// 设置页的分组卡与「关于」页的品牌卡共用这一份外边距 + 投影 + 圆角。
 class SettingCard extends StatelessWidget {
-  const SettingCard({super.key, required this.child});
+  const SettingCard({super.key, required this.child, this.margin});
 
   final Widget child;
+  final EdgeInsetsGeometry? margin;
 
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(
-        TiebananaMetrics.pageGutter,
-        TiebananaMetrics.gapSm + 2,
-        TiebananaMetrics.pageGutter,
-        0,
-      ),
+      margin: margin ??
+          const EdgeInsets.fromLTRB(
+            TiebananaMetrics.pageGutter,
+            TiebananaMetrics.gapSm + 2,
+            TiebananaMetrics.pageGutter,
+            0,
+          ),
       decoration: BoxDecoration(
         borderRadius: TiebananaMetrics.brLg,
         boxShadow: tokens.cardShadow,
@@ -43,11 +45,17 @@ class SettingCard extends StatelessWidget {
 /// 靠横线把「控件属于哪一行」划清楚；纯入口列表（「我的」页）为假，
 /// 与概念图 `user.html` 的 `.srow` 一致，只靠留白分隔。
 class SettingGroup extends StatelessWidget {
-  const SettingGroup({super.key, required this.children, this.divided = true});
+  const SettingGroup({
+    super.key,
+    required this.children,
+    this.divided = true,
+    this.margin,
+  });
 
   final List<Widget> children;
 
   final bool divided;
+  final EdgeInsetsGeometry? margin;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +68,7 @@ class SettingGroup extends StatelessWidget {
       rows.add(children[i]);
     }
     return SettingCard(
+      margin: margin,
       child: Column(mainAxisSize: MainAxisSize.min, children: rows),
     );
   }

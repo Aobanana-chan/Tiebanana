@@ -6,21 +6,15 @@ import 'package:tiebanana/features/account/state/user_state.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 import 'package:tiebanana/shared/content/thread_summary.dart' show Avatar;
 
-/// 打开「切换账号」面板（概念图 `design/mockups/user.html` 的 `.sheet`）。
+/// 打开「切换账号」面板：`< 720dp` 底部抽屉，`≥ 720dp` 居中弹层。
 Future<void> showAccountSwitchSheet(BuildContext context) {
-  final TiebananaTokens tokens = TiebananaTokens.of(context);
-  return showModalBottomSheet<void>(
+  return showAdaptivePanel<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: tokens.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(TiebananaMetrics.radiusXl),
-      ),
-    ),
+    maxWidth: 420,
     builder: (BuildContext sheetContext) => const AccountSwitchSheet(),
   );
 }

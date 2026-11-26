@@ -16,6 +16,8 @@ import 'package:tiebanana/shared/content/thread_preview_content.dart';
 import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/moderation/widgets/moderation_actions.dart';
+import 'package:tiebanana/features/share/models/share_content.dart';
+import 'package:tiebanana/features/share/widgets/share_sheet.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:tieba_contract/tieba_contract.dart';
@@ -47,6 +49,18 @@ class ThreadSummary extends StatelessWidget {
   /// 右上角的内容操作入口（举报帖子 / 拉黑作者）。
   final bool dismissible;
 
+  /// 外边距；传 `EdgeInsets.only(bottom: 11)` 可与 PageWrap 严格对齐。
+  final EdgeInsetsGeometry? margin;
+
+  /// 分栏阅读中当前选中的帖子高亮。
+  final bool selected;
+
+  /// 覆盖默认进帖跳转（用于分栏阅读选中）。
+  final VoidCallback? onTap;
+
+  /// 是否在作者行显示所属吧胶囊（桌面推荐流开启，吧主页关闭）。
+  final bool showForumChip;
+
   const ThreadSummary(
       {super.key,
       required this.firstPostContent,
@@ -61,7 +75,11 @@ class ThreadSummary extends StatelessWidget {
       required this.disagreeNum,
       required this.replyNum,
       this.quote = "",
-      this.dismissible = true});
+      this.dismissible = true,
+      this.margin,
+      this.selected = false,
+      this.onTap,
+      this.showForumChip = false});
 
   ///摘要：只收文字类内容，图片 / 视频由缩略图行展示。
   String _excerpt() {
@@ -100,6 +118,7 @@ class ThreadSummary extends StatelessWidget {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TextTheme textTheme = Theme.of(context).textTheme;
     final List<Widget> icons = TiebaParser.processIcon(author) ?? <Widget>[];
+    final bool desktopLayout = MediaQuery.sizeOf(context).width >= 720;
 
     //动态流看的是「最近一次活动」，拿不到时退回发帖时间。
     final String latest = _timeText(latestTime);
@@ -107,22 +126,27 @@ class ThreadSummary extends StatelessWidget {
 
     final String excerpt = _excerpt();
 
-    final TextStyle? metaStyle =
-        textTheme.labelSmall?.copyWith(color: tokens.textTertiary);
+    final Color fgPrimary =
+        selected ? tokens.onPrimaryContainer : tokens.textPrimary;
+    final Color fgMeta =
+        selected ? tokens.onPrimaryContainer : tokens.textTertiary;
+    final TextStyle? metaStyle = textTheme.labelSmall?.copyWith(color: fgMeta);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+      margin: margin ??
+          const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
+              TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
       decoration: BoxDecoration(
-        color: tokens.surface,
+        color: selected ? tokens.primaryContainer : tokens.surface,
         borderRadius: TiebananaMetrics.brLg,
-        boxShadow: tokens.cardShadow,
+        boxShadow: selected ? null : tokens.cardShadow,
       ),
       child: MaterialButton(
-        onPressed: () async {
-          Navigator.pushNamed(context, PageRouter.threadPage,
-              arguments: ThreadPageRouterData(kz: tid, pid: null));
-        },
+        onPressed: onTap ??
+            () async {
+              Navigator.pushNamed(context, PageRouter.threadPage,
+                  arguments: ThreadPageRouterData(kz: tid, pid: null));
+            },
         color: Colors.transparent,
         elevation: 0,
         // 透明按钮默认悬停高度为 4，会在整张卡片上产生明显暗影。
@@ -132,12 +156,13 @@ class ThreadSummary extends StatelessWidget {
         highlightElevation: 0,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         minWidth: 0,
-        padding: const EdgeInsets.all(TiebananaMetrics.cardPadding),
+        padding: EdgeInsets.all(
+            desktopLayout ? 15 : TiebananaMetrics.cardPadding),
         shape: RoundedRectangleBorder(borderRadius: TiebananaMetrics.brLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            //作者行：头像 + 昵称（含等级图标）+ 时间 + 不感兴趣
+            //作者行：头像 + 昵称（含等级图标）+ 吧胶囊 + 时间 + 操作
             Row(
               children: <Widget>[
                 Avatar(
@@ -146,8 +171,8 @@ class ThreadSummary extends StatelessWidget {
                         arguments: author.id);
                   },
                   imgUrl: resolveAvatarUrl(author.portrait),
-                  height: TiebananaMetrics.avatarSm,
-                  width: TiebananaMetrics.avatarSm,
+                  height: desktopLayout ? 24 : TiebananaMetrics.avatarSm,
+                  width: desktopLayout ? 24 : TiebananaMetrics.avatarSm,
                 ),
                 const SizedBox(width: TiebananaMetrics.gapSm),
                 Expanded(
@@ -159,10 +184,35 @@ class ThreadSummary extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.labelMedium
-                              ?.copyWith(color: tokens.textPrimary),
+                              ?.copyWith(color: fgPrimary),
                         ),
                       ),
                       ...icons,
+                      if (showForumChip && fname.isNotEmpty) ...<Widget>[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? tokens.surface.withValues(alpha: .45)
+                                : tokens.fill,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '$fname吧',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.labelSmall?.copyWith(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: selected
+                                  ? tokens.onPrimaryContainer
+                                  : tokens.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                       if (when.isNotEmpty) ...<Widget>[
                         const SizedBox(width: TiebananaMetrics.gapXs),
                         Text(when, style: metaStyle),
@@ -187,9 +237,12 @@ class ThreadSummary extends StatelessWidget {
                                 source: fname)),
                         child: Padding(
                           padding: const EdgeInsets.all(TiebananaMetrics.gapXs),
-                          child: Icon(Icons.close,
-                              size: TiebananaMetrics.iconSizeSmall,
-                              color: tokens.textTertiary),
+                          child: Icon(
+                              desktopLayout ? Icons.more_horiz : Icons.close,
+                              size: desktopLayout
+                                  ? 16
+                                  : TiebananaMetrics.iconSizeSmall,
+                              color: fgMeta),
                         )),
                   ),
               ],
@@ -202,8 +255,7 @@ class ThreadSummary extends StatelessWidget {
                 specialTextSpanBuilder: TiebaSpanBuilder(),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style:
-                    textTheme.titleSmall?.copyWith(color: tokens.textPrimary),
+                style: textTheme.titleSmall?.copyWith(color: fgPrimary),
               ),
             ],
             //被引用内容：用户主页的回复会带一条被引用的原文。
@@ -233,57 +285,102 @@ class ThreadSummary extends StatelessWidget {
               const SizedBox(height: TiebananaMetrics.gapXs),
               ThreadPreviewExcerpt(contents: firstPostContent),
             ],
-            //缩略图（最多三张）
+            //缩略图（最多三张，固定 3 列等宽等高）
             if (ThreadPreviewMedia.hasContent(firstPostContent)) ...<Widget>[
               const SizedBox(height: TiebananaMetrics.gapSm),
               ThreadPreviewMedia(contents: firstPostContent, threadId: tid),
             ],
-            //页脚：吧名 + 浏览量 / 赞同 / 回复
+            //页脚：桌面展示赞/回复/浏览 + 右侧分享；移动端保留吧名 + 右侧统计
             const SizedBox(height: TiebananaMetrics.gapSm),
             DefaultTextStyle(
               style: metaStyle ?? const TextStyle(),
-              child: Row(
-                children: <Widget>[
-                  // 吧名占满剩余宽度，统计组保持在右侧固定位置。
-                  Expanded(
-                    child: Visibility(
-                      visible: fname != "",
-                      child: Text(
-                        "$fname吧",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+              child: IconTheme(
+                data: IconThemeData(
+                    color: fgMeta, size: TiebananaMetrics.iconSizeSmall),
+                child: desktopLayout
+                    ? Row(
+                        children: <Widget>[
+                          if (agreeNum.isNotEmpty) ...<Widget>[
+                            const Icon(Icons.thumb_up_outlined),
+                            const SizedBox(width: TiebananaMetrics.gapXs),
+                            Text(agreeNum),
+                            const SizedBox(width: TiebananaMetrics.gapMd),
+                          ],
+                          const Icon(Icons.chat_bubble_outline_rounded),
+                          const SizedBox(width: TiebananaMetrics.gapXs),
+                          Text(replyNum),
+                          if (viewNum.isNotEmpty) ...<Widget>[
+                            const SizedBox(width: TiebananaMetrics.gapMd),
+                            const Icon(Icons.visibility_outlined),
+                            const SizedBox(width: TiebananaMetrics.gapXs),
+                            Text(viewNum),
+                          ],
+                          const Spacer(),
+                          InkWell(
+                            borderRadius: TiebananaMetrics.brXs,
+                            onTap: () => showShareSheet(
+                              context,
+                              ShareContent(
+                                title: title.trim().isEmpty
+                                    ? (excerpt.isEmpty ? '贴吧帖子' : excerpt)
+                                    : title,
+                                url: 'https://tieba.baidu.com/p/$tid',
+                                source: fname.isEmpty ? '贴吧' : '$fname吧',
+                                icon: Icons.article_outlined,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 2),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Icon(Icons.share_outlined,
+                                      size: TiebananaMetrics.iconSizeSmall,
+                                      color: fgMeta),
+                                  const SizedBox(width: TiebananaMetrics.gapXs),
+                                  Text('分享', style: metaStyle),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Visibility(
+                              visible: fname != "",
+                              child: Text(
+                                "$fname吧",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            children: <Widget>[
+                              if (viewNum.isNotEmpty) ...<Widget>[
+                                const Icon(Icons.remove_red_eye),
+                                const SizedBox(width: TiebananaMetrics.gapXXs),
+                                Text(viewNum),
+                                const SizedBox(width: TiebananaMetrics.gapMd),
+                              ],
+                              if (agreeNum.isNotEmpty) ...<Widget>[
+                                const Icon(Icons.thumb_up),
+                                const SizedBox(width: TiebananaMetrics.gapXXs),
+                                Text(agreeNum),
+                                const SizedBox(width: TiebananaMetrics.gapMd),
+                              ],
+                              const Icon(Icons.speaker_notes),
+                              const SizedBox(width: TiebananaMetrics.gapXXs),
+                              Text(replyNum),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                  IconTheme(
-                    data: IconThemeData(
-                        color: tokens.textTertiary,
-                        size: TiebananaMetrics.iconSizeSmall),
-                    child: Row(
-                      children: <Widget>[
-                        // 用户帖没有浏览量，空串时整组收掉（不然会显示一个孤零零的眼睛 + 0）。
-                        if (viewNum.isNotEmpty) ...<Widget>[
-                          const Icon(Icons.remove_red_eye),
-                          const SizedBox(width: TiebananaMetrics.gapXXs),
-                          Text(viewNum),
-                          const SizedBox(width: TiebananaMetrics.gapMd),
-                        ],
-                        // 话题流等来源没有点赞数时整组收掉，不显示一个孤零零的大拇指。
-                        if (agreeNum.isNotEmpty) ...<Widget>[
-                          const Icon(Icons.thumb_up),
-                          const SizedBox(width: TiebananaMetrics.gapXXs),
-                          Text(agreeNum),
-                          const SizedBox(width: TiebananaMetrics.gapMd),
-                        ],
-                        const Icon(Icons.speaker_notes),
-                        const SizedBox(width: TiebananaMetrics.gapXXs),
-                        Text(replyNum),
-                      ],
-                    ),
-                  ),
-                ],
               ),
-            )
+            ),
           ],
         ),
       ),

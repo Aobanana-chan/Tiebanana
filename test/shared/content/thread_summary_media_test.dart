@@ -111,7 +111,8 @@ void main() {
     });
 
     for (final count in [1, 2, 3, 4]) {
-      testWidgets('媒体16:9并保留视频 ${feed ? "卡片流" : "帖子流"} $count', (tester) async {
+      testWidgets('媒体固定3列等宽等高不拉伸 ${feed ? "卡片流" : "帖子流"} $count',
+          (tester) async {
         final contents = <TiebaPostContent>[
           TiebaVideoContent(cover: 'https://example.com/cover.jpg'),
           for (var i = 1; i < count; i++)
@@ -120,13 +121,19 @@ void main() {
         await mount(tester, card(contents));
         expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
         expect(find.byType(VideoPlayer), findsNothing);
-        final ratios = find.descendant(
-            of: find.byType(ThreadPreviewMedia),
-            matching: find.byType(AspectRatio));
-        expect(ratios, findsNWidgets(count > 3 ? 3 : count));
-        for (final element in ratios.evaluate()) {
-          final size = tester.getSize(find.byWidget(element.widget));
-          expect(size.width / size.height, closeTo(16 / 9, 0.001));
+        final mediaBox = tester.getSize(find.byType(ThreadPreviewMedia));
+        final expectedCount = count > 3 ? 3 : count;
+        final expectedSlotWidth = (mediaBox.width - 16) / 3;
+        for (int i = 0; i < 3; i++) {
+          final slot = find.byKey(ValueKey<String>('thread-media-slot-$i'));
+          if (i < expectedCount) {
+            expect(slot, findsOneWidget);
+            final size = tester.getSize(slot);
+            expect(size.width, closeTo(expectedSlotWidth, 0.5));
+            expect(size.height, closeTo(106, 0.5));
+          } else {
+            expect(slot, findsNothing);
+          }
         }
         if (count == 4) expect(find.text('4'), findsOneWidget);
         expect(tester.takeException(), isNull);
@@ -134,7 +141,7 @@ void main() {
     }
   }
 
-  testWidgets('视频预览按画面比例排版，竖屏不再套 16:9', (tester) async {
+  testWidgets('单张竖屏视频缩略图也保持 1/3 列宽与恒定高度', (tester) async {
     await mount(
         tester,
         summary([
@@ -143,14 +150,11 @@ void main() {
               width: 1080,
               height: 1920),
         ]));
-    final ratio = tester.widget<AspectRatio>(find
-        .descendant(
-            of: find.byType(ThreadPreviewMedia),
-            matching: find.byType(AspectRatio))
-        .first);
-    expect(ratio.aspectRatio, closeTo(9 / 16, .001));
-    final size = tester.getSize(find.byWidget(ratio));
-    expect(size.width / size.height, closeTo(9 / 16, .001));
+    final mediaBox = tester.getSize(find.byType(ThreadPreviewMedia));
+    final slot = find.byKey(const ValueKey<String>('thread-media-slot-0'));
+    final size = tester.getSize(slot);
+    expect(size.width, closeTo((mediaBox.width - 16) / 3, 0.5));
+    expect(size.height, closeTo(106, 0.5));
     expect(tester.takeException(), isNull);
   });
 

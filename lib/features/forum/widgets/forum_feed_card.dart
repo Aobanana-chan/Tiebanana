@@ -13,8 +13,9 @@ import 'package:tiebanana/app/navigation/route_names.dart';
 /// 正文摘要与缩略图保留。
 class ForumFeedCard extends StatelessWidget {
   final TiebaThreadInfo item;
+  final EdgeInsetsGeometry? margin;
 
-  const ForumFeedCard({super.key, required this.item});
+  const ForumFeedCard({super.key, required this.item, this.margin});
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +25,9 @@ class ForumFeedCard extends StatelessWidget {
         textTheme.labelSmall?.copyWith(color: tokens.textTertiary);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+      margin: margin ??
+          const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
+              TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: TiebananaMetrics.brLg,

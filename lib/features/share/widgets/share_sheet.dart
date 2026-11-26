@@ -5,6 +5,7 @@ import 'package:tiebanana/features/share/models/share_content.dart';
 import 'package:tiebanana/features/share/widgets/share_friend_picker.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 
 /// 分享面板的入口动作。面板只负责收集选择，具体执行放在这里。
@@ -14,17 +15,10 @@ enum _ShareAction { friend, apps, copy }
 ///
 /// 顺序与官方一致：先分享给好友，再交给其他应用，最后才是复制链接。
 Future<void> showShareSheet(BuildContext context, ShareContent content) async {
-  final TiebananaTokens tokens = TiebananaTokens.of(context);
-  final _ShareAction? action = await showModalBottomSheet<_ShareAction>(
+  final _ShareAction? action = await showAdaptivePanel<_ShareAction>(
     context: context,
+    maxWidth: 420,
     showDragHandle: true,
-    isScrollControlled: true,
-    backgroundColor: tokens.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(TiebananaMetrics.radiusXl),
-      ),
-    ),
     builder: (BuildContext sheetContext) => _ShareSheet(content: content),
   );
   if (!context.mounted || action == null) return;
