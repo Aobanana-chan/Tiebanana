@@ -11,22 +11,33 @@ import 'package:tiebanana/shared/widgets/avatar_image.dart';
 /// 会话卡片：头像 / 昵称 / 时间 / 最后一条摘要 / 未读。
 ///
 /// 没有关系标签、没有置顶，也不提供长按菜单。
-class ConversationCard extends StatelessWidget {
+class ConversationCard extends StatefulWidget {
   const ConversationCard({
     super.key,
     required this.conversation,
     required this.onTap,
     this.selected = false,
+    this.desktop = false,
   });
 
   final TiebaConversation conversation;
   final VoidCallback onTap;
   final bool selected;
+  final bool desktop;
+
+  @override
+  State<ConversationCard> createState() => _ConversationCardState();
+}
+
+class _ConversationCardState extends State<ConversationCard> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TextTheme textTheme = Theme.of(context).textTheme;
+    final TiebaConversation conversation = widget.conversation;
+    final bool selected = widget.selected;
     final bool unread = conversation.unread > 0;
     final Color nameColor =
         selected ? tokens.onPrimaryContainer : tokens.textPrimary;
@@ -48,19 +59,29 @@ class ConversationCard extends StatelessWidget {
             summary: true,
           );
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-          TiebananaMetrics.pageGutter, 0, TiebananaMetrics.pageGutter, 8),
+    final Widget card = Container(
+      margin: EdgeInsets.fromLTRB(
+        widget.desktop ? 10 : TiebananaMetrics.pageGutter,
+        0,
+        widget.desktop ? 10 : TiebananaMetrics.pageGutter,
+        7,
+      ),
       decoration: BoxDecoration(
         color: selected ? tokens.primaryContainer : tokens.surface,
-        borderRadius: TiebananaMetrics.brLg,
+        borderRadius:
+            widget.desktop ? BorderRadius.circular(14) : TiebananaMetrics.brLg,
         boxShadow: selected ? null : tokens.cardShadow,
+        border: widget.desktop && !selected
+            ? Border.all(color: _hovered ? tokens.line : Colors.transparent)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: TiebananaMetrics.brLg,
-          onTap: onTap,
+          borderRadius: widget.desktop
+              ? BorderRadius.circular(14)
+              : TiebananaMetrics.brLg,
+          onTap: widget.onTap,
           child: Padding(
             padding: const EdgeInsets.all(TiebananaMetrics.gapMd),
             child: Row(
@@ -171,6 +192,17 @@ class ConversationCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (!widget.desktop) return card;
+    return MouseRegion(
+      onEnter: (_) {
+        if (!_hovered) setState(() => _hovered = true);
+      },
+      onExit: (_) {
+        if (_hovered) setState(() => _hovered = false);
+      },
+      child: card,
     );
   }
 }

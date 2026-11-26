@@ -87,8 +87,9 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
       if (!(api as TiebaApi).isLogin) {
         throw StateError('未登录');
       }
-      final List<TiebaConversation> conversations =
-          await api.getConversations();
+      final List<TiebaConversation> conversations = (await api.getConversations())
+          .where((TiebaConversation item) => item.isPrivate)
+          .toList();
       if (!mounted) return;
       setState(() {
         _items
@@ -161,29 +162,35 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
             child: Column(
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                   child: Row(
                     children: <Widget>[
                       Text(
                         '私信',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 18,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontSize: 13.5,
                               fontWeight: FontWeight.w700,
+                              color: tokens.textPrimary,
                             ),
                       ),
-                      if (MessageReminder.chatUnread.value > 0) ...<Widget>[
-                        const SizedBox(width: 8),
-                        UnreadCountBadge(
-                          count: MessageReminder.chatUnread.value,
-                        ),
-                      ],
                       const Spacer(),
-                      Text(
-                        '按最近消息排序',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(color: tokens.textTertiary),
+                      ValueListenableBuilder<int>(
+                        valueListenable: MessageReminder.chatUnread,
+                        builder: (BuildContext context, int chatUnread, _) {
+                          return Text(
+                            chatUnread > 0 ? '$chatUnread 条未读' : '按最近消息排序',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  fontSize: 11,
+                                  color: tokens.textTertiary,
+                                  fontFeatures: const <FontFeature>[
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -301,6 +308,7 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
         return ConversationCard(
           conversation: conversation,
           selected: side && conversation.id == _selectedId,
+          desktop: side,
           onTap: () {
             if (side) {
               setState(() => _selectedId = conversation.id);

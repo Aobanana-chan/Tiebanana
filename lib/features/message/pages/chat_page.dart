@@ -20,10 +20,12 @@ import 'package:tiebanana/features/message/widgets/chat_settings_sheet.dart';
 import 'package:tiebanana/features/message/widgets/chat_notice_card.dart';
 import 'package:tiebanana/shared/content/emoji_panel.dart';
 import 'package:tiebanana/shared/content/special_span.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/dashed_border.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -39,11 +41,26 @@ class ChatPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      body: SafeArea(
-        child: ChatView(data: data),
-      ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        if (width >= AppBreakpoints.compactMax) {
+          return DesktopShellFrame(
+            title: '私信',
+            subtitle: data.title.isEmpty ? null : data.title,
+            activeTab: 2,
+            child: ChatView(data: data, embedded: true),
+          );
+        }
+        return Scaffold(
+          backgroundColor: tokens.bg,
+          body: SafeArea(
+            child: ChatView(data: data),
+          ),
+        );
+      },
     );
   }
 }
@@ -82,7 +99,12 @@ class _ChatViewState extends State<ChatView> {
   final ScrollController _scroll = ScrollController();
   final TextEditingController _input = TextEditingController();
   final FocusNode _inputFocus = FocusNode();
+  final GlobalKey _emojiBtnKey = GlobalKey();
   Timer? _poll;
+
+  bool get _isDesktopView =>
+      widget.embedded ||
+      MediaQuery.sizeOf(context).width >= AppBreakpoints.compactMax;
 
   final List<TiebaChatMessage> _messages = <TiebaChatMessage>[];
   String _title = '';
@@ -430,6 +452,7 @@ class _ChatViewState extends State<ChatView> {
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool desktop = _isDesktopView;
     if (_error != null && _messages.isEmpty) {
       final bool notLoggedIn =
           _error is StateError && '$_error'.contains('未登录');
@@ -437,7 +460,7 @@ class _ChatViewState extends State<ChatView> {
           _error is StateError && '$_error'.contains('不支持');
       return Column(
         children: <Widget>[
-          _header(tokens),
+          _header(tokens, desktop: desktop),
           Expanded(
             child: _state(
               icon: notLoggedIn
@@ -469,14 +492,14 @@ class _ChatViewState extends State<ChatView> {
     }
     return Column(
       children: <Widget>[
-        _header(tokens),
+        _header(tokens, desktop: desktop),
         Expanded(
           child: _loading
               ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-              : _messageList(tokens),
+              : _messageList(tokens, desktop: desktop),
         ),
-        _composerOrNotice(tokens),
-        if (_emojiOpen && !_readOnly)
+        _composerOrNotice(tokens, desktop: desktop),
+        if (!desktop && _emojiOpen && !_readOnly)
           Container(
             color: tokens.surface,
             child: Column(
@@ -505,15 +528,15 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _header(TiebananaTokens tokens) {
+  Widget _header(TiebananaTokens tokens, {required bool desktop}) {
     final TextTheme textTheme = Theme.of(context).textTheme;
     return Container(
-      height: TiebananaMetrics.appBarHeight,
+      height: desktop ? 54 : TiebananaMetrics.appBarHeight,
       decoration: BoxDecoration(
-        color: tokens.bar,
+        color: desktop ? tokens.surface : tokens.bar,
         border: Border(bottom: BorderSide(color: tokens.line)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: EdgeInsets.symmetric(horizontal: desktop ? 16 : 12),
       child: Row(
         children: <Widget>[
           if (!widget.embedded)
@@ -521,17 +544,15 @@ class _ChatViewState extends State<ChatView> {
               icon: Icons.arrow_back_ios_new_rounded,
               tooltip: '返回',
               onTap: () => Navigator.maybePop(context),
-            )
-          else
-            const SizedBox(width: 4),
-          const SizedBox(width: 4),
+            ),
+          if (!widget.embedded) const SizedBox(width: 4),
           Expanded(
             child: InkWell(
               borderRadius: TiebananaMetrics.brSm,
               onTap: _openPeerProfile,
               child: Row(
                 children: <Widget>[
-                  _ChatAvatar(url: _avatar, size: 32),
+                  _ChatAvatar(url: _avatar, size: desktop ? 34 : 32),
                   const SizedBox(width: 9),
                   Expanded(
                     child: Text(
@@ -539,7 +560,7 @@ class _ChatViewState extends State<ChatView> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.titleSmall?.copyWith(
-                        fontSize: 15,
+                        fontSize: desktop ? 14 : 15,
                         fontWeight: FontWeight.w700,
                         color: tokens.textPrimary,
                       ),
@@ -569,7 +590,7 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _messageList(TiebananaTokens tokens) {
+  Widget _messageList(TiebananaTokens tokens, {required bool desktop}) {
     final List<_ChatRow> rows = _buildRows();
     if (rows.isEmpty) {
       return Center(
@@ -583,7 +604,10 @@ class _ChatViewState extends State<ChatView> {
     final int extra = _boundaryRow ? 1 : 0;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final double side = constraints.maxWidth >= 700 ? 48 : 14;
+        final double listWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final double side = listWidth >= 700 ? 48 : (desktop ? 22 : 14);
         return ListView.builder(
           reverse: true,
           controller: _scroll,
@@ -598,7 +622,12 @@ class _ChatViewState extends State<ChatView> {
               case _ChatRowKind.date:
                 return _datePill(tokens, row.time!);
               case _ChatRowKind.message:
-                return _messageLine(tokens, row.message!, row);
+                return _messageLine(
+                  tokens,
+                  row.message!,
+                  row,
+                  listWidth: listWidth,
+                );
             }
           },
         );
@@ -665,7 +694,11 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Widget _messageLine(
-      TiebananaTokens tokens, TiebaChatMessage message, _ChatRow row) {
+    TiebananaTokens tokens,
+    TiebaChatMessage message,
+    _ChatRow row, {
+    required double listWidth,
+  }) {
     if (message.type == ChatMessageType.picText ||
         message.type == ChatMessageType.questionThread) {
       final List<ChatNoticeCardData> cards = chatNoticeCards(message.content);
@@ -717,8 +750,7 @@ class _ChatViewState extends State<ChatView> {
               : null,
           child: Container(
             constraints: BoxConstraints(
-              maxWidth:
-                  math.min(520.0, MediaQuery.sizeOf(context).width * 0.76),
+              maxWidth: math.min(520.0, listWidth * 0.76),
             ),
             padding: hasImage
                 ? const EdgeInsets.all(5)
@@ -1034,15 +1066,15 @@ class _ChatViewState extends State<ChatView> {
     return rows;
   }
 
-  Widget _composerOrNotice(TiebananaTokens tokens) {
-    if (!_readOnly) return _composer(tokens);
+  Widget _composerOrNotice(TiebananaTokens tokens, {required bool desktop}) {
+    if (!_readOnly) return _composer(tokens, desktop: desktop);
     final TextTheme textTheme = Theme.of(context).textTheme;
     return Container(
       key: const Key('chat-read-only-bar'),
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 15),
       decoration: BoxDecoration(
-        color: tokens.bar,
+        color: desktop ? tokens.surface : tokens.bar,
         border: Border(top: BorderSide(color: tokens.line)),
       ),
       child: Text(
@@ -1053,9 +1085,140 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _composer(TiebananaTokens tokens) {
+  Widget _composer(TiebananaTokens tokens, {required bool desktop}) {
     final bool canSend = _input.text.trim().isNotEmpty;
     final TextTheme textTheme = Theme.of(context).textTheme;
+
+    if (desktop) {
+      return Container(
+        padding: const EdgeInsets.fromLTRB(16, 9, 16, 10),
+        decoration: BoxDecoration(
+          color: tokens.surface,
+          border: Border(top: BorderSide(color: tokens.line)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Container(
+              constraints: const BoxConstraints(minHeight: 40, maxHeight: 112),
+              decoration: BoxDecoration(
+                color: tokens.fill,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              padding: const EdgeInsets.fromLTRB(6, 4, 5, 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Tooltip(
+                    message: '贴吧表情',
+                    child: InkWell(
+                      key: _emojiBtnKey,
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => showEmojiPopover(
+                        context: context,
+                        anchorKey: _emojiBtnKey,
+                        controller: _input,
+                        onInserted: () => setState(() {}),
+                      ),
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Icon(
+                          Icons.emoji_emotions_outlined,
+                          size: 18,
+                          color: tokens.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: CallbackShortcuts(
+                      bindings: <ShortcutActivator, VoidCallback>{
+                        const SingleActivator(LogicalKeyboardKey.enter): _send,
+                        const SingleActivator(LogicalKeyboardKey.numpadEnter):
+                            _send,
+                        const SingleActivator(LogicalKeyboardKey.enter,
+                            shift: true): _insertNewline,
+                        const SingleActivator(LogicalKeyboardKey.numpadEnter,
+                            shift: true): _insertNewline,
+                      },
+                      child: ExtendedTextField(
+                        specialTextSpanBuilder: TiebaSpanBuilder(),
+                        controller: _input,
+                        focusNode: _inputFocus,
+                        minLines: 1,
+                        maxLines: 5,
+                        textInputAction: TextInputAction.newline,
+                        keyboardType: TextInputType.multiline,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontSize: 13,
+                          height: 1.5,
+                          color: tokens.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 6),
+                          border: InputBorder.none,
+                          hintText: '发消息…',
+                          hintStyle: textTheme.bodyMedium?.copyWith(
+                            fontSize: 13,
+                            color: tokens.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Material(
+                    color: tokens.accentFill,
+                    borderRadius: BorderRadius.circular(9),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(9),
+                      onTap: canSend ? _send : null,
+                      child: Opacity(
+                        opacity: canSend ? 1 : .4,
+                        child: SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: Icon(
+                            Icons.send_rounded,
+                            size: 16,
+                            color: tokens.accentOn,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text(
+                  'Enter 发送 · Shift + Enter 换行',
+                  style: textTheme.labelSmall?.copyWith(
+                    fontSize: 9.5,
+                    color: tokens.textTertiary,
+                  ),
+                ),
+                Text(
+                  '文本与贴吧表情',
+                  style: textTheme.labelSmall?.copyWith(
+                    fontSize: 9.5,
+                    color: tokens.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     final Widget field = Container(
       constraints: const BoxConstraints(minHeight: 44, maxHeight: 120),
       decoration: BoxDecoration(

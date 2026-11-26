@@ -16,6 +16,7 @@ import 'package:tiebanana/features/message/widgets/reminder_sheet.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
@@ -141,6 +142,7 @@ class _MessagePanState extends State<MessagePan>
 
   /// 通知私信页签重新读取会话列表。
   final ValueNotifier<int> _listRefresh = ValueNotifier<int>(0);
+  final GlobalKey _desktopReminderKey = GlobalKey();
 
   @override
   void initState() {
@@ -161,9 +163,20 @@ class _MessagePanState extends State<MessagePan>
     MessageReminder.counts.addListener(_onReminderChanged);
     MessageReminder.chatUnread.addListener(_onReminderChanged);
     NotificationReminder.instance.addListener(_onNotificationChanged);
+    Global.desktopRefreshTick.addListener(_onDesktopRefresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) NotificationReminder.instance.ensureLoaded();
     });
+  }
+
+  void _onDesktopRefresh() {
+    if (!mounted) return;
+    final _TabState tab = _tabs[_selectedTab];
+    if (tab.meta.kind == null) {
+      _listRefresh.value++;
+    } else {
+      _refresh(tab);
+    }
   }
 
   @override
@@ -242,6 +255,7 @@ class _MessagePanState extends State<MessagePan>
       appRouteObserver.unsubscribe(this);
     }
     _listRefresh.dispose();
+    Global.desktopRefreshTick.removeListener(_onDesktopRefresh);
     MessageReminder.counts.removeListener(_onReminderChanged);
     MessageReminder.chatUnread.removeListener(_onReminderChanged);
     NotificationReminder.instance.removeListener(_onNotificationChanged);
@@ -410,59 +424,175 @@ class _MessagePanState extends State<MessagePan>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints topConstraints) {
-        final double contentWidth =
-            topConstraints.maxWidth >= 900 ? 760 : topConstraints.maxWidth;
-        return Align(
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            width: contentWidth,
-            height: topConstraints.maxHeight,
-            child: Column(
-              children: <Widget>[
-                SearchBar(
-                  maxHeight: topConstraints.maxHeight,
-                  barController: widget.controller,
-                  trailing: _bell(),
+        final double width = topConstraints.maxWidth.isFinite
+            ? topConstraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        if (width >= AppBreakpoints.compactMax) {
+          return _buildDesktop(context, width);
+        }
+        return Column(
+          children: <Widget>[
+            SearchBar(
+              maxHeight: topConstraints.maxHeight,
+              barController: widget.controller,
+              trailing: _bell(),
+            ),
+            _reminderArea(),
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => widget.controller.close(),
+                child: Column(
+                  children: <Widget>[
+                    _tabHeader(context),
+                    Expanded(
+                      child: NotificationListener<
+                          OverscrollIndicatorNotification>(
+                        onNotification:
+                            (OverscrollIndicatorNotification? overscroll) {
+                          overscroll!.disallowIndicator();
+                          return true;
+                        },
+                        child: TabBarView(
+                          controller: _controller,
+                          physics: const ClampingScrollPhysics(),
+                          children: _tabs
+                              .map((_TabState tab) => KeepAliveWrapper(
+                                    child: _TabPage(
+                                      onStart: () => _ensureStarted(tab),
+                                      child: _body(tab),
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                _reminderArea(),
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: () => widget.controller.close(),
-                    child: Column(
-                      children: <Widget>[
-                        _tabHeader(context),
-                        Expanded(
-                          child: NotificationListener<
-                              OverscrollIndicatorNotification>(
-                            onNotification:
-                                (OverscrollIndicatorNotification? overscroll) {
-                              overscroll!.disallowIndicator();
-                              return true;
-                            },
-                            child: TabBarView(
-                              controller: _controller,
-                              physics: const ClampingScrollPhysics(),
-                              children: _tabs
-                                  .map((_TabState tab) => KeepAliveWrapper(
-                                        child: _TabPage(
-                                          onStart: () => _ensureStarted(tab),
-                                          child: _body(tab),
-                                        ),
-                                      ))
-                                  .toList(),
-                            ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktop(BuildContext context, double width) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final double hPad = width >= AppBreakpoints.mediumMax ? 24 : 12;
+    return Column(
+      children: <Widget>[
+        _desktopTabHeader(context, tokens, width),
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => widget.controller.close(),
+            child: TabBarView(
+              controller: _controller,
+              physics: const NeverScrollableScrollPhysics(),
+              children: _tabs
+                  .map((_TabState tab) => KeepAliveWrapper(
+                        child: _TabPage(
+                          onStart: () => _ensureStarted(tab),
+                          child: _body(
+                            tab,
+                            desktop: true,
+                            horizontalPadding: hPad,
                           ),
                         ),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openDesktopReminderSheet() {
+    final RenderBox? box =
+        _desktopReminderKey.currentContext?.findRenderObject() as RenderBox?;
+    Rect? anchor;
+    if (box != null && box.attached) {
+      anchor = box.localToGlobal(Offset.zero) & box.size;
+    }
+    showReminderSheet(context, anchorRect: anchor);
+  }
+
+  Widget _desktopTabHeader(
+    BuildContext context,
+    TiebananaTokens tokens,
+    double width,
+  ) {
+    final NotificationReminder reminder = NotificationReminder.instance;
+    final List<NotifyEntry> entries = reminder.visibleEntries;
+    final double hPad = width >= AppBreakpoints.mediumMax ? 16 : 12;
+
+    return Container(
+      height: 48,
+      padding: EdgeInsets.symmetric(horizontal: hPad),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        border: Border(bottom: BorderSide(color: tokens.line)),
+      ),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, _) {
+          return Row(
+            children: <Widget>[
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      for (int i = 0; i < _tabs.length; i++) ...<Widget>[
+                        if (i > 0) const SizedBox(width: 6),
+                        _DesktopMsgTabPill(
+                          label: _tabs[i].meta.label,
+                          unreadCount: _tabs[i].unreadCount,
+                          selected: _controller.index == i,
+                          onTap: () => _controller.animateTo(i),
+                        ),
                       ],
+                    ],
+                  ),
+                ),
+              ),
+              if (entries.isNotEmpty) ...<Widget>[
+                const SizedBox(width: 8),
+                for (int i = 0; i < entries.length; i++) ...<Widget>[
+                  if (i > 0) const SizedBox(width: 6),
+                  _DesktopNotifyPill(
+                    entry: entries[i],
+                    onTap: () => _openEntry(entries[i]),
+                  ),
+                ],
+              ],
+              if (reminder.bellVisible) ...<Widget>[
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: '消息提醒设置',
+                  child: InkWell(
+                    key: _desktopReminderKey,
+                    borderRadius: BorderRadius.circular(9),
+                    onTap: _openDesktopReminderSheet,
+                    child: SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: Icon(
+                        Icons.settings_outlined,
+                        size: 16,
+                        color: tokens.textSecondary,
+                      ),
                     ),
                   ),
                 ),
               ],
-            ),
-          ),
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -477,14 +607,16 @@ class _MessagePanState extends State<MessagePan>
   }
 
   /// 提醒区：分组头 + 按数据生成的行；默认展开。
-  Widget _reminderArea() {
+  Widget _reminderArea({bool desktop = false}) {
     final NotificationReminder reminder = NotificationReminder.instance;
     if (!reminder.reminderVisible) return const SizedBox.shrink();
     final List<NotifyEntry> entries = reminder.visibleEntries;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          TiebananaMetrics.pageGutter, 0, TiebananaMetrics.pageGutter, 8),
+      padding: desktop
+          ? const EdgeInsets.only(bottom: 12)
+          : const EdgeInsets.fromLTRB(
+              TiebananaMetrics.pageGutter, 0, TiebananaMetrics.pageGutter, 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -614,7 +746,11 @@ class _MessagePanState extends State<MessagePan>
     );
   }
 
-  Widget _body(_TabState tab) {
+  Widget _body(
+    _TabState tab, {
+    bool desktop = false,
+    double horizontalPadding = TiebananaMetrics.pageGutter,
+  }) {
     if (tab.meta.kind == null) {
       return PrivateMessagePanel(
         onBrowse: widget.onBrowse,
@@ -635,6 +771,9 @@ class _MessagePanState extends State<MessagePan>
       onLoadMore: () => _nextPage(tab),
       onBrowse: widget.onBrowse,
       onRead: (TiebaMessage message) => _markRead(tab, message),
+      desktop: desktop,
+      horizontalPadding: horizontalPadding,
+      header: desktop ? _reminderArea(desktop: true) : null,
     );
   }
 }
@@ -712,6 +851,9 @@ class MessageFeed extends StatelessWidget {
     required this.onLoadMore,
     this.onBrowse,
     this.onRead,
+    this.desktop = false,
+    this.horizontalPadding = TiebananaMetrics.pageGutter,
+    this.header,
   });
 
   final MessageTabMeta meta;
@@ -729,11 +871,28 @@ class MessageFeed extends StatelessWidget {
   /// 空态的「去逛逛」：切到首页页签。为空时隐藏按钮。
   final VoidCallback? onBrowse;
   final void Function(TiebaMessage message)? onRead;
+  final bool desktop;
+  final double horizontalPadding;
+  final Widget? header;
+
+  Widget _wrapMax(Widget child) {
+    if (!desktop) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: AppBreakpoints.feedMaxWidth),
+        child: child,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     if (loading && items.isEmpty) {
-      return _sheet(context, const _MessageSkeletonList(), center: false);
+      return _sheet(
+        context,
+        _MessageSkeletonList(desktop: desktop),
+        center: false,
+      );
     }
     if (error != null && items.isEmpty) {
       return _sheet(context, _errorView(context));
@@ -741,23 +900,32 @@ class MessageFeed extends StatelessWidget {
     if (items.isEmpty) {
       return _sheet(context, _emptyView(context));
     }
+    final bool hasHeader = desktop && header != null;
     final bool showFooter = loadingMore || moreError != null;
+    final int leading = hasHeader ? 1 : 0;
     return TiebananaRefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: TiebananaMetrics.gapMd),
+        padding: desktop
+            ? EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 26)
+            : const EdgeInsets.only(bottom: TiebananaMetrics.gapMd),
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: items.length + (showFooter ? 1 : 0),
+        itemCount: leading + items.length + (showFooter ? 1 : 0),
         itemBuilder: (BuildContext context, int index) {
-          if (index >= items.length) {
-            return _footer(context);
+          if (hasHeader && index == 0) {
+            return _wrapMax(header!);
           }
-          final TiebaMessage message = items[index];
-          return MessageCard(
+          final int itemIndex = index - leading;
+          if (itemIndex >= items.length) {
+            return _wrapMax(_footer(context));
+          }
+          final TiebaMessage message = items[itemIndex];
+          return _wrapMax(MessageCard(
             message: message,
+            desktop: desktop,
             onRead: onRead == null ? null : () => onRead!(message),
-          );
+          ));
         },
       ),
     );
@@ -767,6 +935,7 @@ class MessageFeed extends StatelessWidget {
   ///
   ///骨架屏不居中（[center] = false）：它模拟列表，从顶部往下铺更贴近内容到达后的样子。
   Widget _sheet(BuildContext context, Widget child, {bool center = true}) {
+    final Widget bodyChild = _wrapMax(child);
     return TiebananaRefreshIndicator(
       onRefresh: onRefresh,
       child: LayoutBuilder(
@@ -774,9 +943,29 @@ class MessageFeed extends StatelessWidget {
           return SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             controller: scrollController,
+            padding: desktop
+                ? EdgeInsets.fromLTRB(
+                    horizontalPadding, 16, horizontalPadding, 26)
+                : EdgeInsets.zero,
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: center ? Center(child: child) : child,
+              constraints: BoxConstraints(
+                minHeight: (constraints.maxHeight - (desktop ? 42 : 0))
+                    .clamp(0.0, double.infinity),
+              ),
+              child: desktop && header != null
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        _wrapMax(header!),
+                        center
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 40),
+                                child: bodyChild,
+                              )
+                            : bodyChild,
+                      ],
+                    )
+                  : (center ? Center(child: bodyChild) : bodyChild),
             ),
           );
         },
@@ -850,31 +1039,39 @@ class MessageFeed extends StatelessWidget {
 
 ///首屏骨架：三张卡片，形状与 [MessageCard] 对齐。
 class _MessageSkeletonList extends StatelessWidget {
-  const _MessageSkeletonList();
+  const _MessageSkeletonList({this.desktop = false});
+
+  final bool desktop;
 
   @override
   Widget build(BuildContext context) {
     //用 Column 排版，外层 _sheet 已是滚动容器。
-    return const Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        _MessageSkeletonCard(),
-        _MessageSkeletonCard(),
-        _MessageSkeletonCard(),
+        _MessageSkeletonCard(desktop: desktop),
+        _MessageSkeletonCard(desktop: desktop),
+        _MessageSkeletonCard(desktop: desktop),
       ],
     );
   }
 }
 
 class _MessageSkeletonCard extends StatelessWidget {
-  const _MessageSkeletonCard();
+  const _MessageSkeletonCard({this.desktop = false});
+
+  final bool desktop;
 
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+      margin: EdgeInsets.fromLTRB(
+        desktop ? 0 : TiebananaMetrics.pageGutter,
+        0,
+        desktop ? 0 : TiebananaMetrics.pageGutter,
+        desktop ? 10 : TiebananaMetrics.gapSm,
+      ),
       padding: const EdgeInsets.all(TiebananaMetrics.cardPadding),
       decoration: BoxDecoration(
         color: tokens.surface,
@@ -907,6 +1104,169 @@ class _MessageSkeletonCard extends StatelessWidget {
             child: SkeletonBox(height: 11),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DesktopMsgTabPill extends StatelessWidget {
+  const _DesktopMsgTabPill({
+    required this.label,
+    required this.unreadCount,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final int unreadCount;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Material(
+      color: selected ? tokens.primaryContainer : Colors.transparent,
+      borderRadius: TiebananaMetrics.brPill,
+      child: InkWell(
+        borderRadius: TiebananaMetrics.brPill,
+        hoverColor: tokens.fill,
+        onTap: onTap,
+        child: SizedBox(
+          height: 30,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? tokens.onPrimaryContainer
+                            : tokens.textSecondary,
+                      ),
+                ),
+                if (unreadCount > 0) ...<Widget>[
+                  const SizedBox(width: 6),
+                  Container(
+                    constraints: const BoxConstraints(minWidth: 16),
+                    height: 16,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: tokens.danger,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      unreadCount > 99 ? '99+' : '$unreadCount',
+                      style: TextStyle(
+                        color: tokens.onImage,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopNotifyPill extends StatelessWidget {
+  const _DesktopNotifyPill({
+    required this.entry,
+    required this.onTap,
+  });
+
+  final NotifyEntry entry;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final IconData icon = switch (entry.kind) {
+      NotifyEntryKind.mutualHelp => Icons.people_outline_rounded,
+      NotifyEntryKind.broadcast => Icons.notifications_none_rounded,
+    };
+    return Material(
+      color: tokens.fill,
+      borderRadius: TiebananaMetrics.brPill,
+      child: InkWell(
+        borderRadius: TiebananaMetrics.brPill,
+        onTap: onTap,
+        child: Container(
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            borderRadius: TiebananaMetrics.brPill,
+            border: Border.all(color: tokens.line),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 13, color: tokens.textSecondary),
+              const SizedBox(width: 5),
+              Text(
+                entry.title,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: tokens.textSecondary,
+                    ),
+              ),
+              if (entry.badge == NotifyBadgeKind.count &&
+                  entry.count > 0) ...<Widget>[
+                const SizedBox(width: 5),
+                Container(
+                  constraints: const BoxConstraints(minWidth: 15),
+                  height: 15,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: tokens.danger,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    entry.count > 99 ? '99+' : '${entry.count}',
+                    style: TextStyle(
+                      color: tokens.onImage,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                      fontFeatures: const <FontFeature>[
+                        FontFeature.tabularFigures(),
+                      ],
+                    ),
+                  ),
+                ),
+              ] else if (entry.badge == NotifyBadgeKind.dot) ...<Widget>[
+                const SizedBox(width: 5),
+                Semantics(
+                  label: '有新公告',
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: tokens.danger,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

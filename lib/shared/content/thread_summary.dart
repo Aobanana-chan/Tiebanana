@@ -61,6 +61,9 @@ class ThreadSummary extends StatelessWidget {
   /// 是否在作者行显示所属吧胶囊（桌面推荐流开启，吧主页关闭）。
   final bool showForumChip;
 
+  /// 是否使用桌面端卡片排版（24dp 头像、左统计右分享页脚）。
+  final bool desktop;
+
   const ThreadSummary(
       {super.key,
       required this.firstPostContent,
@@ -79,7 +82,8 @@ class ThreadSummary extends StatelessWidget {
       this.margin,
       this.selected = false,
       this.onTap,
-      this.showForumChip = false});
+      this.showForumChip = false,
+      this.desktop = false});
 
   ///摘要：只收文字类内容，图片 / 视频由缩略图行展示。
   String _excerpt() {
@@ -118,7 +122,7 @@ class ThreadSummary extends StatelessWidget {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TextTheme textTheme = Theme.of(context).textTheme;
     final List<Widget> icons = TiebaParser.processIcon(author) ?? <Widget>[];
-    final bool desktopLayout = MediaQuery.sizeOf(context).width >= 720;
+    final bool desktopLayout = desktop;
 
     //动态流看的是「最近一次活动」，拿不到时退回发帖时间。
     final String latest = _timeText(latestTime);

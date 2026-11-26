@@ -56,51 +56,67 @@ class PanelHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final Widget titleBlock = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: tokens.textPrimary,
+              ),
+        ),
+        if (count != null) ...<Widget>[
+          const SizedBox(width: 8),
+          Container(
+            constraints: const BoxConstraints(minWidth: 19),
+            height: 19,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            decoration: BoxDecoration(
+              color: tokens.fill,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '$count',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: tokens.textSecondary,
+                height: 1,
+                fontFeatures: const <FontFeature>[
+                  FontFeature.tabularFigures(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+
+    if (trailing.isEmpty) {
+      return Padding(padding: padding, child: titleBlock);
+    }
+
     return Padding(
       padding: padding,
       child: Row(
         children: <Widget>[
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.textPrimary,
-                ),
+          titleBlock,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: trailing,
+              ),
+            ),
           ),
-          if (count != null) ...<Widget>[
-            const SizedBox(width: 8),
-            Container(
-              constraints: const BoxConstraints(minWidth: 19),
-              height: 19,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: tokens.fill,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '$count',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.textSecondary,
-                  height: 1,
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          const Spacer(),
-          if (trailing.isNotEmpty)
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: trailing,
-            ),
         ],
       ),
     );

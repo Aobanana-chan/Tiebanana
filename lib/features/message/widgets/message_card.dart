@@ -13,27 +13,43 @@ import 'package:tiebanana/shared/content/tieba_parser.dart';
 ///对应概念图 `design/mockups/message.html`（方向 A）：
 ///头像 + 昵称 + 时间 → 引用行 → 正文 → 来自 X吧，未读点固定在内容区最右侧。
 ///点赞消息与另外两种共用这张卡片，仅文案和内容来源不同。
-class MessageCard extends StatelessWidget {
-  const MessageCard(
-      {super.key, required this.message, this.unread, this.onRead});
+class MessageCard extends StatefulWidget {
+  const MessageCard({
+    super.key,
+    required this.message,
+    this.unread,
+    this.onRead,
+    this.desktop = false,
+    this.margin,
+  });
 
   final TiebaMessage message;
   final bool? unread;
   final VoidCallback? onRead;
+  final bool desktop;
+  final EdgeInsetsGeometry? margin;
+
+  @override
+  State<MessageCard> createState() => _MessageCardState();
+}
+
+class _MessageCardState extends State<MessageCard> {
+  bool _hovered = false;
 
   ///未读点直径，概念图为 7px。
   static const double _dotSize = 7;
 
   ///点卡片进贴：接口给了楼层 id 就落到那一层，没给就进主题首页。
   void _open(BuildContext context) {
-    final String tid = message.threadId;
+    final String tid = widget.message.threadId;
     if (tid.isEmpty || tid == "0") {
       return;
     }
-    onRead?.call();
+    widget.onRead?.call();
     Navigator.pushNamed(context, PageRouter.threadPage,
         arguments: ThreadPageRouterData(
-            kz: tid, pid: message.postId.isEmpty ? null : message.postId));
+            kz: tid,
+            pid: widget.message.postId.isEmpty ? null : widget.message.postId));
   }
 
   ///正文使用 ExtendedText，用于渲染 @某人 / `#(滑稽)` 这类贴吧语法。
@@ -51,19 +67,28 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TextTheme textTheme = Theme.of(context).textTheme;
-    final bool isLike = message.kind == TiebaMessageKind.like;
+    final bool isLike = widget.message.kind == TiebaMessageKind.like;
     final TextStyle? metaStyle =
         textTheme.labelSmall?.copyWith(color: tokens.textTertiary);
-    final String time =
-        message.hasTime ? TiebaParser.getPostTime(dateTime: message.time) : "";
+    final String time = widget.message.hasTime
+        ? TiebaParser.getPostTime(dateTime: widget.message.time)
+        : "";
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(TiebananaMetrics.pageGutter, 0,
-          TiebananaMetrics.pageGutter, TiebananaMetrics.gapSm),
+    final Widget card = Container(
+      margin: widget.margin ??
+          EdgeInsets.fromLTRB(
+            widget.desktop ? 0 : TiebananaMetrics.pageGutter,
+            0,
+            widget.desktop ? 0 : TiebananaMetrics.pageGutter,
+            widget.desktop ? 10 : TiebananaMetrics.gapSm,
+          ),
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: TiebananaMetrics.brLg,
         boxShadow: tokens.cardShadow,
+        border: widget.desktop
+            ? Border.all(color: _hovered ? tokens.line : Colors.transparent)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -83,7 +108,7 @@ class MessageCard extends StatelessWidget {
                   _quoteBlock(
                     tokens,
                     child: _richText(
-                      message.likedText,
+                      widget.message.likedText,
                       maxLines: 2,
                       style: textTheme.bodySmall
                           ?.copyWith(color: tokens.textSecondary),
@@ -93,7 +118,7 @@ class MessageCard extends StatelessWidget {
                   _quoteBlock(
                     tokens,
                     child: Text(
-                      message.quoteLine,
+                      widget.message.quoteLine,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodySmall
@@ -102,7 +127,7 @@ class MessageCard extends StatelessWidget {
                   ),
                   const SizedBox(height: TiebananaMetrics.gapSm),
                   _richText(
-                    message.content,
+                    widget.message.content,
                     maxLines: 3,
                     style: textTheme.bodyLarge
                         ?.copyWith(color: tokens.textPrimary),
@@ -110,7 +135,9 @@ class MessageCard extends StatelessWidget {
                 ],
                 const SizedBox(height: TiebananaMetrics.gapSm),
                 Text(
-                  message.fname.isEmpty ? "" : "来自 ${message.fname}吧",
+                  widget.message.fname.isEmpty
+                      ? ""
+                      : "来自 ${widget.message.fname}吧",
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: metaStyle,
@@ -120,6 +147,17 @@ class MessageCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (!widget.desktop) return card;
+    return MouseRegion(
+      onEnter: (_) {
+        if (!_hovered) setState(() => _hovered = true);
+      },
+      onExit: (_) {
+        if (_hovered) setState(() => _hovered = false);
+      },
+      child: card,
     );
   }
 
@@ -134,14 +172,14 @@ class MessageCard extends StatelessWidget {
     return Row(
       children: <Widget>[
         Avatar(
-          imgUrl: resolveAvatarUrl(message.portrait),
+          imgUrl: resolveAvatarUrl(widget.message.portrait),
           height: TiebananaMetrics.avatarSm,
           width: TiebananaMetrics.avatarSm,
-          onTap: message.uid.isEmpty
+          onTap: widget.message.uid.isEmpty
               ? null
               : () {
                   Navigator.pushNamed(context, PageRouter.user,
-                      arguments: message.uid);
+                      arguments: widget.message.uid);
                 },
         ),
         const SizedBox(width: TiebananaMetrics.gapSm),
@@ -149,7 +187,7 @@ class MessageCard extends StatelessWidget {
           child: Row(children: <Widget>[
             Flexible(
                 child: Text(
-              message.name,
+              widget.message.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: textTheme.labelMedium?.copyWith(color: tokens.textPrimary),
@@ -165,7 +203,7 @@ class MessageCard extends StatelessWidget {
         SizedBox(
           width: _dotSize,
           height: _dotSize,
-          child: (unread ?? message.unread)
+          child: (widget.unread ?? widget.message.unread)
               ? Semantics(
                   label: '未读消息',
                   child: Container(
@@ -200,7 +238,7 @@ class MessageCard extends StatelessWidget {
             children: <InlineSpan>[
               const TextSpan(text: "赞了我的"),
               TextSpan(
-                text: message.likedThread ? "主题" : "回复",
+                text: widget.message.likedThread ? "主题" : "回复",
                 style: base?.copyWith(
                     color: tokens.textPrimary, fontWeight: FontWeight.w600),
               ),

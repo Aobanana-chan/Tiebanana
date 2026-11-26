@@ -3,8 +3,10 @@ import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/message/models/chat_route_data.dart';
 import 'package:tiebanana/features/moderation/widgets/moderation_actions.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
 
 /// 会话设置：免打扰 / 屏蔽 / 举报。
@@ -15,16 +17,10 @@ Future<void> showChatSettings(
   ChatRouteData data, {
   VoidCallback? onChanged,
 }) async {
-  await showModalBottomSheet<void>(
+  await showAdaptivePanel<void>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    backgroundColor: TiebananaTokens.of(context).surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(26),
-      ),
-    ),
+    maxWidth: 400,
+    showDragHandle: AppBreakpoints.isCompact(context),
     builder: (BuildContext context) => _ChatSettingsSheet(
       data: data,
       onChanged: onChanged,
@@ -116,8 +112,9 @@ class _ChatSettingsSheetState extends State<_ChatSettingsSheet> {
     final String name = widget.data.title.isEmpty ? '贴吧用户' : widget.data.title;
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+            16, AppBreakpoints.isCompact(context) ? 0 : 18, 16, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
