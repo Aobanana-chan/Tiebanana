@@ -154,7 +154,8 @@ Future<void> showEmojiPopover({
   double top = (screen.height - popH) / 2;
   if (box != null && box.attached) {
     final Offset pos = box.localToGlobal(Offset.zero);
-    left = pos.dx.clamp(12.0, (screen.width - popW - 12).clamp(12.0, screen.width));
+    left = pos.dx
+        .clamp(12.0, (screen.width - popW - 12).clamp(12.0, screen.width));
     final double aboveTop = pos.dy - popH - 8;
     if (aboveTop >= 12) {
       top = aboveTop;

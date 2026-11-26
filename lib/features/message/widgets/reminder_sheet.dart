@@ -30,7 +30,8 @@ Future<void> showReminderSheet(BuildContext context, {Rect? anchorRect}) async {
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: 360,
-                    maxHeight: (size.height - topOffset - 16).clamp(240.0, 640.0),
+                    maxHeight:
+                        (size.height - topOffset - 16).clamp(240.0, 640.0),
                   ),
                   child: _ReminderSheet(wide: true, hostContext: context),
                 ),

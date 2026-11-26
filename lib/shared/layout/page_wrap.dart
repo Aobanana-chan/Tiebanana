@@ -40,7 +40,8 @@ class PageWrap extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: Padding(
-              padding: padding ?? EdgeInsets.fromLTRB(hPad, vTop, hPad, vBottom),
+              padding:
+                  padding ?? EdgeInsets.fromLTRB(hPad, vTop, hPad, vBottom),
               child: child,
             ),
           ),
@@ -67,7 +68,8 @@ class DesktopPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TextTheme textTheme = Theme.of(context).textTheme;
-    final bool compact = MediaQuery.sizeOf(context).width < AppBreakpoints.mediumMax;
+    final bool compact =
+        MediaQuery.sizeOf(context).width < AppBreakpoints.mediumMax;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),

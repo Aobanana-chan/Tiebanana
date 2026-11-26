@@ -418,8 +418,7 @@ class _DesktopPhotoGrid extends StatelessWidget {
     int index,
     int picSetting,
   ) {
-    final String url =
-        picSetting == 2 ? image.originalSrc : image.lowFlowSrc;
+    final String url = picSetting == 2 ? image.originalSrc : image.lowFlowSrc;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(

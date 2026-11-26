@@ -360,7 +360,9 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                     : const Center(
                         child: Text('暂无图片', style: TextStyle(color: _ink))),
               ),
-              if (hasImages && isDesktop && widget.imgUrls.length > 1) ...<Widget>[
+              if (hasImages &&
+                  isDesktop &&
+                  widget.imgUrls.length > 1) ...<Widget>[
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(

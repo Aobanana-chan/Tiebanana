@@ -22,7 +22,6 @@ import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 
-
 ///拉取一页推荐贴的实现。默认走 [Global.tiebaAPI]，测试里注入假数据。
 typedef RecommendLoader = Future<RecommendPage> Function(
     int pageThreadCount, int pn);
@@ -34,10 +33,7 @@ class RecommendPan extends StatefulWidget {
   final BackToTopController? backController;
   final RecommendLoader? loader;
   const RecommendPan(
-      {super.key,
-      required this.controller,
-      this.backController,
-      this.loader});
+      {super.key, required this.controller, this.backController, this.loader});
 
   @override
   _RecommendPanState createState() => _RecommendPanState();
@@ -69,7 +65,8 @@ class _RecommendPanState extends State<RecommendPan> {
   bool _splitMode = false;
   String? _selectedThreadId;
 
-  RecommendLoader get _loader => widget.loader ?? Global.tiebaAPI.getRecommThread;
+  RecommendLoader get _loader =>
+      widget.loader ?? Global.tiebaAPI.getRecommThread;
 
   @override
   void initState() {
@@ -119,8 +116,7 @@ class _RecommendPanState extends State<RecommendPan> {
     //首屏没有旧内容，自然也没有续读条；从第二次刷新（下拉 / 返回回顶）开始才会出现。
     final bool hadContent = recommend.any((TiebaThreadInfo? e) => e != null);
     try {
-      final List<TiebaThreadInfo> fresh =
-          (await _loader(_pageSize, 1)).threads;
+      final List<TiebaThreadInfo> fresh = (await _loader(_pageSize, 1)).threads;
       if (!mounted) {
         return;
       }
@@ -242,8 +238,8 @@ class _RecommendPanState extends State<RecommendPan> {
                       items: recommend,
                       loading: _loading,
                       error: _error,
-                      notLoggedIn: _error != null &&
-                          _error.toString().contains("未登录"),
+                      notLoggedIn:
+                          _error != null && _error.toString().contains("未登录"),
                       loadingMore: _loadingMore,
                       moreError: _moreError,
                       scrollController: controller,
@@ -1009,10 +1005,10 @@ class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
       );
     }
 
-    final int stamp = int.tryParse(t.lastTimeInt) ??
-        int.tryParse(t.createTime) ??
-        0;
-    final String when = stamp > 0 ? TiebaParser.getPostTime(intTime: stamp) : '';
+    final int stamp =
+        int.tryParse(t.lastTimeInt) ?? int.tryParse(t.createTime) ?? 0;
+    final String when =
+        stamp > 0 ? TiebaParser.getPostTime(intTime: stamp) : '';
     final List<TiebaThreadPagePost> replies = _page?.posts
             .where((TiebaThreadPagePost p) => p.floor != '1')
             .take(5)
@@ -1138,7 +1134,8 @@ class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
                             ),
                           ),
                           TextSpan(
-                            text: TiebaParser.parserContentString(floor.content),
+                            text:
+                                TiebaParser.parserContentString(floor.content),
                             style: TextStyle(color: tokens.textSecondary),
                           ),
                         ],

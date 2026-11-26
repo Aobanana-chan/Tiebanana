@@ -347,8 +347,9 @@ class _TagPanState extends State<TagPan> with RouteAware {
         final int unsignedCount = forums.length - signedCount;
 
         final String q = _filterQuery.trim().toLowerCase();
-        final List<LikeForumInfo> baseList =
-            (_expanded || q.isNotEmpty) ? forums : forums.take(maxCount).toList();
+        final List<LikeForumInfo> baseList = (_expanded || q.isNotEmpty)
+            ? forums
+            : forums.take(maxCount).toList();
         final List<LikeForumInfo> visible = q.isEmpty
             ? baseList
             : baseList

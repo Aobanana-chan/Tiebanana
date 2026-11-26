@@ -140,7 +140,8 @@ class _DesktopShellFrameState extends State<DesktopShellFrame> {
     try {
       await Global.tiebaAPI.signAll();
     } catch (e) {
-      final String msg = e is NetAPIError ? (e.errorMessage ?? '一键签到失败') : '一键签到失败';
+      final String msg =
+          e is NetAPIError ? (e.errorMessage ?? '一键签到失败') : '一键签到失败';
       Fluttertoast.showToast(msg: msg);
     } finally {
       await forumState?.refresh();
@@ -234,8 +235,8 @@ class _DesktopShellFrameState extends State<DesktopShellFrame> {
                     _DesktopTopBar(
                       title: widget.title,
                       subtitle: widget.subtitle,
-                      canGoBack:
-                          widget.onBack != null || Navigator.of(context).canPop(),
+                      canGoBack: widget.onBack != null ||
+                          Navigator.of(context).canPop(),
                       onBack: _goBack,
                       hideSearchPill: widget.hideSearchPill,
                       onSearchTap: _openSearch,
@@ -341,7 +342,9 @@ class _DesktopSidebar extends StatelessWidget {
             _buildNavItem(context, tokens, i, _navItems[i]),
             if (i < _navItems.length - 1) const SizedBox(height: 3),
           ],
-          if (expanded && forumState != null && forumState!.forums.isNotEmpty) ...<Widget>[
+          if (expanded &&
+              forumState != null &&
+              forumState!.forums.isNotEmpty) ...<Widget>[
             const SizedBox(height: 12),
             Expanded(child: _buildQuickForums(context, tokens)),
           ] else
@@ -427,7 +430,8 @@ class _DesktopSidebar extends StatelessWidget {
     ({IconData icon, IconData activeIcon, String label}) item,
   ) {
     final bool selected = activeTab == index;
-    final Color fg = selected ? tokens.onPrimaryContainer : tokens.textSecondary;
+    final Color fg =
+        selected ? tokens.onPrimaryContainer : tokens.textSecondary;
     final Color bg = selected ? tokens.primaryContainer : Colors.transparent;
     final IconData iconData = selected ? item.activeIcon : item.icon;
     final bool isMessage = index == 2;
@@ -578,13 +582,13 @@ class _DesktopSidebar extends StatelessWidget {
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: tokens.textTertiary,
-                                  fontFeatures: const <FontFeature>[
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.textTertiary,
+                              fontFeatures: const <FontFeature>[
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
                           ),
                       ],
                     ),
@@ -961,8 +965,9 @@ class _TopIconBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    final Color fg =
-        onTap == null ? tokens.textTertiary.withValues(alpha: 0.45) : tokens.textSecondary;
+    final Color fg = onTap == null
+        ? tokens.textTertiary.withValues(alpha: 0.45)
+        : tokens.textSecondary;
     return Tooltip(
       message: tooltip,
       child: InkWell(

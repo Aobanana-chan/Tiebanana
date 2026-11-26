@@ -993,268 +993,274 @@ class _ThreadComposePageState extends State<ThreadComposePage>
           },
         },
         child: Scaffold(
-        backgroundColor: tokens.bg,
-        appBar: AppBar(
           backgroundColor: tokens.bg,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-              tooltip: '关闭发帖',
-              onPressed: _active ? _leave : null,
-              icon: const Icon(Icons.close_rounded)),
-          title: const Text('发帖'),
-          centerTitle: false,
-          actions: [
-            Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: FilledButton.icon(
-                    onPressed: canPublish ? _publish : null,
-                    icon: _publishing
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.send_outlined, size: 16),
-                    label: Text(_publishing ? '发布中' : '发布')))
-          ],
-        ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(children: [
-                Expanded(
-                    child: ListView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        children: [
-                      Padding(
-                          padding: const EdgeInsets.fromLTRB(19, 8, 19, 18),
-                          child: Row(children: [
-                            Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                    color: tokens.primaryContainer,
-                                    borderRadius: TiebananaMetrics.brCtl),
-                                child: Icon(Icons.forum_outlined,
-                                    color: tokens.primary)),
-                            const SizedBox(width: 10),
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  Text('发布到',
-                                      style: text.labelSmall?.copyWith(
-                                          color: tokens.textTertiary)),
-                                  Text('${widget.forumName}吧',
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: text.titleSmall),
-                                ])),
-                            const SizedBox(width: 8),
-                            Chip(
-                                label: Text('当前吧', style: text.labelSmall),
-                                side: BorderSide.none,
-                                backgroundColor: tokens.fill,
-                                visualDensity: VisualDensity.compact),
-                          ])),
-                      Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 12),
-                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
-                          decoration: BoxDecoration(
-                              color: tokens.surface,
-                              borderRadius: TiebananaMetrics.brXl,
-                              boxShadow: tokens.cardShadow),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                TextField(
-                                    key: const ValueKey('compose-title'),
-                                    controller: _title,
-                                    enabled: _active,
-                                    minLines: 1,
-                                    maxLines: null,
-                                    textInputAction: TextInputAction.next,
-                                    onSubmitted: (_) =>
-                                        _bodyFocus.requestFocus(),
-                                    style: text.headlineSmall,
-                                    decoration: _inputDecoration('给你的帖子起个标题')),
-                                Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                    child:
-                                        Divider(height: 1, color: tokens.line)),
-                                ExtendedTextField(
-                                    key: const ValueKey('compose-body'),
-                                    controller: _body,
-                                    focusNode: _bodyFocus,
-                                    readOnly: !_active,
-                                    minLines: keyboard ? 3 : 5,
-                                    maxLines: null,
-                                    specialTextSpanBuilder: TiebaSpanBuilder(),
-                                    style: text.bodyLarge?.copyWith(
-                                        height: 1.9,
-                                        color: tokens.textSecondary),
-                                    decoration:
-                                        _inputDecoration('分享新鲜事，也记录小日常…')),
-                                Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: TextButton.icon(
-                                        onPressed:
-                                            _active ? _selectTopic : null,
-                                        icon: const Icon(Icons.tag, size: 17),
-                                        label: const Text('添加话题'))),
-                                if (_topic != null)
+          appBar: AppBar(
+            backgroundColor: tokens.bg,
+            surfaceTintColor: Colors.transparent,
+            leading: IconButton(
+                tooltip: '关闭发帖',
+                onPressed: _active ? _leave : null,
+                icon: const Icon(Icons.close_rounded)),
+            title: const Text('发帖'),
+            centerTitle: false,
+            actions: [
+              Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: FilledButton.icon(
+                      onPressed: canPublish ? _publish : null,
+                      icon: _publishing
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.send_outlined, size: 16),
+                      label: Text(_publishing ? '发布中' : '发布')))
+            ],
+          ),
+          body: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(children: [
+                  Expanded(
+                      child: ListView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: const EdgeInsets.only(bottom: 16),
+                          children: [
+                        Padding(
+                            padding: const EdgeInsets.fromLTRB(19, 8, 19, 18),
+                            child: Row(children: [
+                              Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                      color: tokens.primaryContainer,
+                                      borderRadius: TiebananaMetrics.brCtl),
+                                  child: Icon(Icons.forum_outlined,
+                                      color: tokens.primary)),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                    Text('发布到',
+                                        style: text.labelSmall?.copyWith(
+                                            color: tokens.textTertiary)),
+                                    Text('${widget.forumName}吧',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: text.titleSmall),
+                                  ])),
+                              const SizedBox(width: 8),
+                              Chip(
+                                  label: Text('当前吧', style: text.labelSmall),
+                                  side: BorderSide.none,
+                                  backgroundColor: tokens.fill,
+                                  visualDensity: VisualDensity.compact),
+                            ])),
+                        Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+                            decoration: BoxDecoration(
+                                color: tokens.surface,
+                                borderRadius: TiebananaMetrics.brXl,
+                                boxShadow: tokens.cardShadow),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextField(
+                                      key: const ValueKey('compose-title'),
+                                      controller: _title,
+                                      enabled: _active,
+                                      minLines: 1,
+                                      maxLines: null,
+                                      textInputAction: TextInputAction.next,
+                                      onSubmitted: (_) =>
+                                          _bodyFocus.requestFocus(),
+                                      style: text.headlineSmall,
+                                      decoration:
+                                          _inputDecoration('给你的帖子起个标题')),
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      child: Divider(
+                                          height: 1, color: tokens.line)),
+                                  ExtendedTextField(
+                                      key: const ValueKey('compose-body'),
+                                      controller: _body,
+                                      focusNode: _bodyFocus,
+                                      readOnly: !_active,
+                                      minLines: keyboard ? 3 : 5,
+                                      maxLines: null,
+                                      specialTextSpanBuilder:
+                                          TiebaSpanBuilder(),
+                                      style: text.bodyLarge?.copyWith(
+                                          height: 1.9,
+                                          color: tokens.textSecondary),
+                                      decoration:
+                                          _inputDecoration('分享新鲜事，也记录小日常…')),
                                   Align(
                                       alignment: Alignment.centerLeft,
-                                      child: InputChip(
-                                          label: Text('# ${_topic!.name}'),
-                                          onDeleted: _active
-                                              ? () {
-                                                  _topic = null;
-                                                  _changed();
-                                                }
-                                              : null)),
-                                if (_images.tasks.isNotEmpty) ...[
-                                  const SizedBox(height: 8),
-                                  Text('配图 · ${_images.tasks.length} 张',
-                                      style: text.labelSmall?.copyWith(
-                                          color: tokens.textTertiary)),
-                                  const SizedBox(height: 10),
-                                  _imageGrid(),
-                                ],
-                                if (_unavailableImages.isNotEmpty)
-                                  Padding(
-                                      padding: const EdgeInsets.only(top: 12),
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                                '${_unavailableImages.length} 张草稿图片已失效或没有访问权限，请重新选择。',
-                                                style: text.bodySmall?.copyWith(
-                                                    color: tokens.danger)),
-                                            TextButton(
-                                                onPressed: () {
-                                                  _unavailableImages.clear();
-                                                  _changed();
-                                                },
-                                                child: const Text('移除失效图片引用')),
-                                          ])),
-                                if (_poll != null) _pollCard(),
-                                if (_score != null) _scoreCard(),
-                                const SizedBox(height: 14),
-                                Row(children: [
-                                  Icon(
-                                      _draftSaved && !_dirty
-                                          ? Icons.check_rounded
-                                          : Icons.edit_outlined,
-                                      size: 13,
-                                      color: tokens.primary),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                      child: Text(
-                                          _saving
-                                              ? '正在保存…'
-                                              : _storageError != null
-                                                  ? '草稿未保存'
-                                                  : _draftSaved && !_dirty
-                                                      ? '草稿已暂存 · 仅本机'
-                                                      : _dirty
-                                                          ? '未保存的修改'
-                                                          : '仅自己可见的创作空间',
-                                          style: text.labelSmall?.copyWith(
-                                              color: tokens.textTertiary))),
-                                  Text('${_body.text.runes.length} 字',
-                                      style: text.labelSmall?.copyWith(
-                                          color: tokens.textTertiary)),
-                                ]),
-                              ])),
-                      if (_publishError != null)
-                        Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(_publishError!,
-                                      style: text.bodySmall
-                                          ?.copyWith(color: tokens.danger)),
-                                  if (_publishUncertain)
-                                    const Text(
-                                        '结果未确认，已暂停再次发布。请先到个人主页核对，草稿仍保留。'),
-                                  if (_publishUncertain)
-                                    TextButton(
-                                        onPressed: _confirmRetry,
-                                        child: const Text('已核对主页，申请重新发布')),
-                                  if (_published != null)
-                                    Text('帖子 ID：${_published!.tid}'),
+                                      child: TextButton.icon(
+                                          onPressed:
+                                              _active ? _selectTopic : null,
+                                          icon: const Icon(Icons.tag, size: 17),
+                                          label: const Text('添加话题'))),
+                                  if (_topic != null)
+                                    Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: InputChip(
+                                            label: Text('# ${_topic!.name}'),
+                                            onDeleted: _active
+                                                ? () {
+                                                    _topic = null;
+                                                    _changed();
+                                                  }
+                                                : null)),
+                                  if (_images.tasks.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Text('配图 · ${_images.tasks.length} 张',
+                                        style: text.labelSmall?.copyWith(
+                                            color: tokens.textTertiary)),
+                                    const SizedBox(height: 10),
+                                    _imageGrid(),
+                                  ],
+                                  if (_unavailableImages.isNotEmpty)
+                                    Padding(
+                                        padding: const EdgeInsets.only(top: 12),
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                  '${_unavailableImages.length} 张草稿图片已失效或没有访问权限，请重新选择。',
+                                                  style: text.bodySmall
+                                                      ?.copyWith(
+                                                          color:
+                                                              tokens.danger)),
+                                              TextButton(
+                                                  onPressed: () {
+                                                    _unavailableImages.clear();
+                                                    _changed();
+                                                  },
+                                                  child:
+                                                      const Text('移除失效图片引用')),
+                                            ])),
+                                  if (_poll != null) _pollCard(),
+                                  if (_score != null) _scoreCard(),
+                                  const SizedBox(height: 14),
+                                  Row(children: [
+                                    Icon(
+                                        _draftSaved && !_dirty
+                                            ? Icons.check_rounded
+                                            : Icons.edit_outlined,
+                                        size: 13,
+                                        color: tokens.primary),
+                                    const SizedBox(width: 5),
+                                    Expanded(
+                                        child: Text(
+                                            _saving
+                                                ? '正在保存…'
+                                                : _storageError != null
+                                                    ? '草稿未保存'
+                                                    : _draftSaved && !_dirty
+                                                        ? '草稿已暂存 · 仅本机'
+                                                        : _dirty
+                                                            ? '未保存的修改'
+                                                            : '仅自己可见的创作空间',
+                                            style: text.labelSmall?.copyWith(
+                                                color: tokens.textTertiary))),
+                                    Text('${_body.text.runes.length} 字',
+                                        style: text.labelSmall?.copyWith(
+                                            color: tokens.textTertiary)),
+                                  ]),
                                 ])),
-                      if (_storageError != null)
-                        Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(children: [
-                              Text(_storageError!,
-                                  style: text.bodySmall
-                                      ?.copyWith(color: tokens.danger)),
-                              if (_dirty)
-                                TextButton(
-                                    onPressed: _saving ? null : _save,
-                                    child: const Text('重试保存')),
-                            ])),
-                      if (!keyboard) ...[
-                        SettingGroup(children: [
-                          SettingRow(
-                              icon: Icons.poll_outlined,
-                              title: '互动组件',
-                              value: _score != null
-                                  ? '已添加打分'
-                                  : _poll == null
-                                      ? '投票 / 打分'
-                                      : '已添加投票',
-                              showChevron: true,
-                              onTap: _active ? _interactions : null)
-                        ]),
-                        SettingGroup(children: [
-                          SettingRow(
-                              icon: Icons.visibility_outlined,
-                              title: '展示范围',
-                              value: _hideFromProfile ? '个人主页不可见' : '全场景可见',
-                              showChevron: true,
-                              onTap: _active ? _selectRange : null),
-                          SettingRow(
-                              icon: Icons.verified_user_outlined,
-                              title: '内容声明',
-                              value: _contentStatement.isNotEmpty
-                                  ? _contentStatement
-                                  : _configLoading
-                                      ? '读取中'
-                                      : _configError != null
-                                          ? '读取失败'
-                                          : '不声明',
-                              showChevron: true,
-                              onTap: _active ? _selectStatement : null),
-                        ]),
-                        Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
-                            child: SettingRow(
-                                icon: Icons.sell_outlined,
-                                title: '小尾巴',
-                                subtitle: _useTail ? _tail : '本帖不添加',
+                        if (_publishError != null)
+                          Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_publishError!,
+                                        style: text.bodySmall
+                                            ?.copyWith(color: tokens.danger)),
+                                    if (_publishUncertain)
+                                      const Text(
+                                          '结果未确认，已暂停再次发布。请先到个人主页核对，草稿仍保留。'),
+                                    if (_publishUncertain)
+                                      TextButton(
+                                          onPressed: _confirmRetry,
+                                          child: const Text('已核对主页，申请重新发布')),
+                                    if (_published != null)
+                                      Text('帖子 ID：${_published!.tid}'),
+                                  ])),
+                        if (_storageError != null)
+                          Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(children: [
+                                Text(_storageError!,
+                                    style: text.bodySmall
+                                        ?.copyWith(color: tokens.danger)),
+                                if (_dirty)
+                                  TextButton(
+                                      onPressed: _saving ? null : _save,
+                                      child: const Text('重试保存')),
+                              ])),
+                        if (!keyboard) ...[
+                          SettingGroup(children: [
+                            SettingRow(
+                                icon: Icons.poll_outlined,
+                                title: '互动组件',
+                                value: _score != null
+                                    ? '已添加打分'
+                                    : _poll == null
+                                        ? '投票 / 打分'
+                                        : '已添加投票',
                                 showChevron: true,
-                                onTap: _active ? _editTail : null)),
-                        Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                                _published != null
-                                    ? '帖子已提交，请勿重复发布'
-                                    : '发布即提交到贴吧，请确认内容与配图',
-                                style: text.labelSmall
-                                    ?.copyWith(color: tokens.textTertiary))),
-                      ],
-                    ])),
-                _toolbar(keyboard),
-              ]),
+                                onTap: _active ? _interactions : null)
+                          ]),
+                          SettingGroup(children: [
+                            SettingRow(
+                                icon: Icons.visibility_outlined,
+                                title: '展示范围',
+                                value: _hideFromProfile ? '个人主页不可见' : '全场景可见',
+                                showChevron: true,
+                                onTap: _active ? _selectRange : null),
+                            SettingRow(
+                                icon: Icons.verified_user_outlined,
+                                title: '内容声明',
+                                value: _contentStatement.isNotEmpty
+                                    ? _contentStatement
+                                    : _configLoading
+                                        ? '读取中'
+                                        : _configError != null
+                                            ? '读取失败'
+                                            : '不声明',
+                                showChevron: true,
+                                onTap: _active ? _selectStatement : null),
+                          ]),
+                          Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              child: SettingRow(
+                                  icon: Icons.sell_outlined,
+                                  title: '小尾巴',
+                                  subtitle: _useTail ? _tail : '本帖不添加',
+                                  showChevron: true,
+                                  onTap: _active ? _editTail : null)),
+                          Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                  _published != null
+                                      ? '帖子已提交，请勿重复发布'
+                                      : '发布即提交到贴吧，请确认内容与配图',
+                                  style: text.labelSmall
+                                      ?.copyWith(color: tokens.textTertiary))),
+                        ],
+                      ])),
+                  _toolbar(keyboard),
+                ]),
         ),
       ),
     );

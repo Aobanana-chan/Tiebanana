@@ -355,8 +355,7 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
               fansNum: user.fansNum,
               likeForumNum: user.likeForumNum,
               postNum: user.postNum,
-              portraitUrl:
-                  profileEvents.avatarUrl(user.uid, user.portraitUrl),
+              portraitUrl: profileEvents.avatarUrl(user.uid, user.portraitUrl),
               id: user.uid,
               name: widget.displayName,
               intro: user.intro,
@@ -390,8 +389,9 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
   }
 
   Widget _buildVerticalMenu(BuildContext context, TiebananaTokens tokens) {
-    final String? cacheText =
-        _imageCacheBytes == null ? null : formatImageCacheSize(_imageCacheBytes!);
+    final String? cacheText = _imageCacheBytes == null
+        ? null
+        : formatImageCacheSize(_imageCacheBytes!);
     final String? storeBadge =
         _storeLoaded && _stored.isNotEmpty ? '${_stored.length}' : null;
     final String? historyBadge =
@@ -475,11 +475,27 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
   Widget _buildHorizontalMenu(BuildContext context, TiebananaTokens tokens) {
     final List<({_ProfileSection sec, IconData icon, String label})> items =
         <({_ProfileSection sec, IconData icon, String label})>[
-      (sec: _ProfileSection.store, icon: Icons.bookmark_border_rounded, label: '我的收藏'),
-      (sec: _ProfileSection.history, icon: Icons.history_rounded, label: '浏览历史'),
-      (sec: _ProfileSection.theme, icon: Icons.palette_outlined, label: '外观与主题'),
+      (
+        sec: _ProfileSection.store,
+        icon: Icons.bookmark_border_rounded,
+        label: '我的收藏'
+      ),
+      (
+        sec: _ProfileSection.history,
+        icon: Icons.history_rounded,
+        label: '浏览历史'
+      ),
+      (
+        sec: _ProfileSection.theme,
+        icon: Icons.palette_outlined,
+        label: '外观与主题'
+      ),
       (sec: _ProfileSection.general, icon: Icons.tune_rounded, label: '阅读与通用'),
-      (sec: _ProfileSection.storage, icon: Icons.storage_outlined, label: '存储与诊断'),
+      (
+        sec: _ProfileSection.storage,
+        icon: Icons.storage_outlined,
+        label: '存储与诊断'
+      ),
     ];
     return DesktopPanel(
       padding: const EdgeInsets.all(6),
@@ -664,7 +680,8 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
                   value: _fontSize.clamp(12.0, 20.0),
                   onChanged: (double v) =>
                       setState(() => _fontSize = v.roundToDouble()),
-                  onChangeEnd: (double v) => setting.fontSize = v.roundToDouble(),
+                  onChangeEnd: (double v) =>
+                      setting.fontSize = v.roundToDouble(),
                 ),
               ),
             ),
@@ -904,8 +921,7 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
                 value: (setting.usePostTail ?? false) && tail.isNotEmpty,
                 onChanged: tail.isEmpty
                     ? null
-                    : (bool v) =>
-                        _commitSetting(() => setting.usePostTail = v),
+                    : (bool v) => _commitSetting(() => setting.usePostTail = v),
               ),
             ],
           ),
@@ -1129,7 +1145,8 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
           context,
           tokens,
           title: '我的收藏',
-          subtitle: _stored.isEmpty ? '收藏的帖子会出现在这里' : '已加载 ${_stored.length} 篇收藏',
+          subtitle:
+              _stored.isEmpty ? '收藏的帖子会出现在这里' : '已加载 ${_stored.length} 篇收藏',
           trailing: OutlinedButton(
             onPressed: () async {
               await Navigator.pushNamed(context, PageRouter.threadStore);
@@ -1197,8 +1214,8 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
                         await Global.threadCache
                             .setStored(widget.user.uid, item.id, false);
                         if (!mounted) return;
-                        setState(() =>
-                            _stored.removeWhere((e) => e.id == item.id));
+                        setState(
+                            () => _stored.removeWhere((e) => e.id == item.id));
                         Fluttertoast.showToast(msg: '已取消收藏');
                       } catch (_) {
                         Fluttertoast.showToast(msg: '取消收藏失败');

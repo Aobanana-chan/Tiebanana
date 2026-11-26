@@ -15,7 +15,8 @@ import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 import 'package:tiebanana/features/forum/widgets/forum_control_bar.dart';
 import 'package:tiebanana/shared/widgets/highlight_text.dart';
-import 'package:tiebanana/features/search/widgets/search_bar.dart' show searchHistoryKey;
+import 'package:tiebanana/features/search/widgets/search_bar.dart'
+    show searchHistoryKey;
 import 'package:tiebanana/features/search/widgets/search_result_card.dart';
 import 'package:tiebanana/shared/content/thread_summary.dart' show Avatar;
 import 'package:tiebanana/shared/content/tieba_parser.dart';
@@ -633,8 +634,8 @@ class _SearchPageState extends State<SearchPage>
                       ),
                       ValueListenableBuilder<TextEditingValue>(
                         valueListenable: _input,
-                        builder: (BuildContext context,
-                            TextEditingValue value, _) {
+                        builder:
+                            (BuildContext context, TextEditingValue value, _) {
                           if (value.text.isEmpty) {
                             return const SizedBox.shrink();
                           }
@@ -735,7 +736,8 @@ class _SearchPageState extends State<SearchPage>
                             ),
                           ],
                           const Spacer(),
-                          if (_tabs.index == 1 && _keyword.isNotEmpty) ...<Widget>[
+                          if (_tabs.index == 1 &&
+                              _keyword.isNotEmpty) ...<Widget>[
                             ForumMenuPill(
                               menu: kSearchSorts,
                               value: _order,
@@ -886,7 +888,8 @@ class _SearchPageState extends State<SearchPage>
   Widget _wrapDesktop(Widget child) {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: AppBreakpoints.pageMaxWidth),
+        constraints:
+            const BoxConstraints(maxWidth: AppBreakpoints.pageMaxWidth),
         child: child,
       ),
     );
@@ -1249,7 +1252,8 @@ class _SearchPageState extends State<SearchPage>
             child: Column(
               children: <Widget>[
                 for (int i = 0; i < history.length; i++) ...<Widget>[
-                  if (i > 0) Divider(height: 1, thickness: 1, color: tokens.line),
+                  if (i > 0)
+                    Divider(height: 1, thickness: 1, color: tokens.line),
                   _HistoryRow(
                     text: history[i],
                     tokens: tokens,
@@ -1848,7 +1852,9 @@ class _DesktopForumGroupPanel extends StatelessWidget {
                 child: twoCol
                     ? Column(
                         children: <Widget>[
-                          for (int i = 0; i < forums.length; i += 2) ...<Widget>[
+                          for (int i = 0;
+                              i < forums.length;
+                              i += 2) ...<Widget>[
                             if (i > 0) const SizedBox(height: 10),
                             IntrinsicHeight(
                               child: Row(
@@ -2211,13 +2217,11 @@ class _DesktopUserTileState extends State<_DesktopUserTile> {
                         HighlightText(
                           user.intro,
                           keyword: widget.keyword,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(
-                                fontSize: 10.5,
-                                color: tokens.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    fontSize: 10.5,
+                                    color: tokens.textSecondary,
+                                  ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

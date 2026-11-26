@@ -160,8 +160,8 @@ class ThreadSummary extends StatelessWidget {
         highlightElevation: 0,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         minWidth: 0,
-        padding: EdgeInsets.all(
-            desktopLayout ? 15 : TiebananaMetrics.cardPadding),
+        padding:
+            EdgeInsets.all(desktopLayout ? 15 : TiebananaMetrics.cardPadding),
         shape: RoundedRectangleBorder(borderRadius: TiebananaMetrics.brLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,8 +187,8 @@ class ThreadSummary extends StatelessWidget {
                           author.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: textTheme.labelMedium
-                              ?.copyWith(color: fgPrimary),
+                          style:
+                              textTheme.labelMedium?.copyWith(color: fgPrimary),
                         ),
                       ),
                       ...icons,

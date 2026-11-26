@@ -87,9 +87,10 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
       if (!(api as TiebaApi).isLogin) {
         throw StateError('未登录');
       }
-      final List<TiebaConversation> conversations = (await api.getConversations())
-          .where((TiebaConversation item) => item.isPrivate)
-          .toList();
+      final List<TiebaConversation> conversations =
+          (await api.getConversations())
+              .where((TiebaConversation item) => item.isPrivate)
+              .toList();
       if (!mounted) return;
       setState(() {
         _items
@@ -183,12 +184,12 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  fontSize: 11,
-                                  color: tokens.textTertiary,
-                                  fontFeatures: const <FontFeature>[
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
+                              fontSize: 11,
+                              color: tokens.textTertiary,
+                              fontFeatures: const <FontFeature>[
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
                           );
                         },
                       ),

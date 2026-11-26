@@ -135,8 +135,8 @@ class _SearchResultCardState extends State<SearchResultCard> {
               HighlightText(
                 title,
                 keyword: widget.keyword,
-                style: textTheme.titleSmall
-                    ?.copyWith(color: tokens.textPrimary),
+                style:
+                    textTheme.titleSmall?.copyWith(color: tokens.textPrimary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -146,8 +146,8 @@ class _SearchResultCardState extends State<SearchResultCard> {
               HighlightText(
                 post.content,
                 keyword: widget.keyword,
-                style: textTheme.bodyMedium
-                    ?.copyWith(color: tokens.textSecondary),
+                style:
+                    textTheme.bodyMedium?.copyWith(color: tokens.textSecondary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -190,10 +190,8 @@ class _ForumSource extends StatelessWidget {
       ),
       child: Text(
         forumName.endsWith("吧") ? forumName : "$forumName吧",
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: tokens.textSecondary, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: tokens.textSecondary, fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -401,8 +401,7 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(left: 12, right: 8),
-              child: Icon(Icons.search,
-                  size: 18, color: tokens.textTertiary),
+              child: Icon(Icons.search, size: 18, color: tokens.textTertiary),
             ),
             Expanded(
               child: TextField(
@@ -434,8 +433,8 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
                   onTap: _clearInput,
                   child: Padding(
                     padding: const EdgeInsets.all(6),
-                    child: Icon(Icons.close,
-                        size: 16, color: tokens.textTertiary),
+                    child:
+                        Icon(Icons.close, size: 16, color: tokens.textTertiary),
                   ),
                 );
               },
@@ -479,7 +478,8 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
     );
   }
 
-  Widget _content(BuildContext context, {bool desktop = false, double hPad = 12}) {
+  Widget _content(BuildContext context,
+      {bool desktop = false, double hPad = 12}) {
     if (_keyword.isEmpty) {
       return _sheet(context, _idleView(context), center: true);
     }
@@ -579,9 +579,7 @@ class _ForumSearchPageState extends State<ForumSearchPage> {
     return StateView(
       icon: Icons.search_off_rounded,
       title: "没有找到相关帖子",
-      body: _filter == 1
-          ? "换个关键词试试，或关掉「只看主题帖」再搜一次"
-          : "换个关键词试试",
+      body: _filter == 1 ? "换个关键词试试，或关掉「只看主题帖」再搜一次" : "换个关键词试试",
       primaryLabel: "重新搜索",
       primaryIcon: Icons.refresh,
       onPrimary: () => _search(),

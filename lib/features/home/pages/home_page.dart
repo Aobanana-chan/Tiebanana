@@ -242,8 +242,7 @@ class _HomePageState extends State<HomePage> {
         return (title: '动态', subtitle: '发现正在发生的讨论');
       case 2:
         final int chatUnread = MessageReminder.chatUnread.value;
-        final String sub =
-            chatUnread > 0 ? '$chatUnread 条未读私信' : '私信与互动消息';
+        final String sub = chatUnread > 0 ? '$chatUnread 条未读私信' : '私信与互动消息';
         return (title: '消息', subtitle: sub);
       case 3:
         final String name = user.name.trim();

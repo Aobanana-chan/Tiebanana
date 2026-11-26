@@ -457,7 +457,8 @@ class _ForumHomePageState extends State<ForumHomePage>
           child: FutureBuilder<ForumPage>(
             future: initForum,
             initialData: null,
-            builder: (BuildContext context, AsyncSnapshot<ForumPage?> snapshot) {
+            builder:
+                (BuildContext context, AsyncSnapshot<ForumPage?> snapshot) {
               if (snapshot.hasError) {
                 final Widget errBody = Center(
                   child: StateView(
@@ -1512,7 +1513,9 @@ class _DesktopForumDockState extends State<_DesktopForumDock> {
           children: <Widget>[
             Expanded(
               child: _DockOutlineBtn(
-                icon: _isSigned ? Icons.check_rounded : Icons.edit_calendar_outlined,
+                icon: _isSigned
+                    ? Icons.check_rounded
+                    : Icons.edit_calendar_outlined,
                 label: _isSigned ? '已签到' : '签到',
                 onTap: (!_isLike || _isSigned) ? null : _onSign,
               ),
@@ -1520,7 +1523,8 @@ class _DesktopForumDockState extends State<_DesktopForumDock> {
             const SizedBox(width: 7),
             Expanded(
               child: _DockOutlineBtn(
-                icon: _isLike ? Icons.people_outline_rounded : Icons.add_rounded,
+                icon:
+                    _isLike ? Icons.people_outline_rounded : Icons.add_rounded,
                 label: _isLike ? '已关注' : '关注',
                 onTap: _onToggleFollow,
               ),

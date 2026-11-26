@@ -766,48 +766,48 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet>
                                     ): _send,
                                   },
                                   child: ExtendedTextField(
-                                  specialTextSpanBuilder:
-                                      TiebaSpanBuilder(uploadImages: value),
-                                  controller: controller,
-                                  maxLines: 7,
-                                  minLines: 3,
-                                  style: textTheme.bodyLarge
-                                      ?.copyWith(color: tokens.textPrimary),
-                                  maxLength: 2000,
-                                  buildCounter: (
-                                    BuildContext context, {
-                                    required int currentLength,
-                                    required int? maxLength,
-                                    required bool isFocused,
-                                  }) =>
-                                      null,
-                                  focusNode: focusNode,
-                                  autofocus: _riskAcknowledged,
-                                  onTap: () {
-                                    if (!showCustomKeyBoard) return;
-                                    setState(() {
-                                      emojiInputActive = false;
-                                      imageInputActive = false;
-                                    });
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: widget.isReplyThread
-                                        ? '写点什么…'
-                                        : (widget.targetName?.isNotEmpty ??
-                                                false)
-                                            ? '回复 @${widget.targetName}…'
-                                            : '写点什么…',
-                                    hintStyle: textTheme.bodyLarge
-                                        ?.copyWith(color: tokens.textTertiary),
-                                    isCollapsed: true,
-                                    filled: false,
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
+                                    specialTextSpanBuilder:
+                                        TiebaSpanBuilder(uploadImages: value),
+                                    controller: controller,
+                                    maxLines: 7,
+                                    minLines: 3,
+                                    style: textTheme.bodyLarge
+                                        ?.copyWith(color: tokens.textPrimary),
+                                    maxLength: 2000,
+                                    buildCounter: (
+                                      BuildContext context, {
+                                      required int currentLength,
+                                      required int? maxLength,
+                                      required bool isFocused,
+                                    }) =>
+                                        null,
+                                    focusNode: focusNode,
+                                    autofocus: _riskAcknowledged,
+                                    onTap: () {
+                                      if (!showCustomKeyBoard) return;
+                                      setState(() {
+                                        emojiInputActive = false;
+                                        imageInputActive = false;
+                                      });
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: widget.isReplyThread
+                                          ? '写点什么…'
+                                          : (widget.targetName?.isNotEmpty ??
+                                                  false)
+                                              ? '回复 @${widget.targetName}…'
+                                              : '写点什么…',
+                                      hintStyle: textTheme.bodyLarge?.copyWith(
+                                          color: tokens.textTertiary),
+                                      isCollapsed: true,
+                                      filled: false,
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
                               },
                             ),
                           ),

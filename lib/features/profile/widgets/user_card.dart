@@ -146,9 +146,8 @@ class UserCard extends StatelessWidget {
     TextTheme textTheme, {
     required bool showChevron,
   }) {
-    final String metaLine = tbAge.trim().isNotEmpty
-        ? 'ID $id · 吧龄 ${tbAge.trim()}'
-        : 'ID $id';
+    final String metaLine =
+        tbAge.trim().isNotEmpty ? 'ID $id · 吧龄 ${tbAge.trim()}' : 'ID $id';
     return InkWell(
       borderRadius: TiebananaMetrics.brLg,
       onTap: () => _openProfile(context),

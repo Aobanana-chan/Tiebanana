@@ -295,7 +295,8 @@ class _ThreadFloorCommentState extends State<ThreadFloorComment> {
                               poll: widget.postMain.poll, compact: true),
                         ),
                       ],
-                      if (subCount > 0 || widget.postMain.subPostList.isNotEmpty)
+                      if (subCount > 0 ||
+                          widget.postMain.subPostList.isNotEmpty)
                         InnerFloorEntry(
                           subPostList: widget.postMain.subPostList,
                           userlist: widget.userList,
@@ -718,7 +719,7 @@ class _InnerFloorRow extends StatelessWidget {
                           authorId: post.uid,
                           authorName: user.name,
                           portrait: user.portrait,
-                           summary: body
+                          summary: body
                               .whereType<TiebaTextContent>()
                               .map((part) => part.text)
                               .join(),

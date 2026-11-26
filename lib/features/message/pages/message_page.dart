@@ -446,8 +446,8 @@ class _MessagePanState extends State<MessagePan>
                   children: <Widget>[
                     _tabHeader(context),
                     Expanded(
-                      child: NotificationListener<
-                          OverscrollIndicatorNotification>(
+                      child:
+                          NotificationListener<OverscrollIndicatorNotification>(
                         onNotification:
                             (OverscrollIndicatorNotification? overscroll) {
                           overscroll!.disallowIndicator();
@@ -879,7 +879,8 @@ class MessageFeed extends StatelessWidget {
     if (!desktop) return child;
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: AppBreakpoints.feedMaxWidth),
+        constraints:
+            const BoxConstraints(maxWidth: AppBreakpoints.feedMaxWidth),
         child: child,
       ),
     );

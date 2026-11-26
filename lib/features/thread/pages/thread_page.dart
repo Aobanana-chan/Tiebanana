@@ -1042,9 +1042,8 @@ class ThreadPageMainState extends State<ThreadPageMain>
         threadOwnerUid: ownerUid,
         storedNotifier: _stored,
         desktop: desktop,
-        onDesktopReply: desktop
-            ? () => setState(() => _replyTargetFloor = floor)
-            : null,
+        onDesktopReply:
+            desktop ? () => setState(() => _replyTargetFloor = floor) : null,
       );
       // 所有楼层保留相同的包裹结构和原来的 GlobalKey，旧楼层不重建 State。
       widgets.add(FadeTransition(
@@ -1514,7 +1513,8 @@ class ThreadPageMainState extends State<ThreadPageMain>
                                   ),
                                 ),
                               ),
-                            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                            const SliverToBoxAdapter(
+                                child: SizedBox(height: 8)),
                           ],
                         ),
                       ),
@@ -1706,9 +1706,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                session.paused
-                                    ? '正在浏览缓存，自动请求已暂停'
-                                    : '正在更新帖子…',
+                                session.paused ? '正在浏览缓存，自动请求已暂停' : '正在更新帖子…',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
@@ -1874,8 +1872,9 @@ class ThreadPageMainState extends State<ThreadPageMain>
                     labels[i],
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontSize: 11.5,
-                          fontWeight:
-                              _sortMode == i ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: _sortMode == i
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: _sortMode == i
                               ? tokens.textPrimary
                               : tokens.textSecondary,
@@ -2854,7 +2853,8 @@ class _DesktopDockedReplyBoxState extends State<_DesktopDockedReplyBox> {
                   color: tokens.fill,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                constraints: const BoxConstraints(minHeight: 62, maxHeight: 132),
+                constraints:
+                    const BoxConstraints(minHeight: 62, maxHeight: 132),
                 child: Consumer<ImageUploadProviderModel>(
                   builder: (BuildContext context,
                       ImageUploadProviderModel value, _) {
@@ -2894,9 +2894,7 @@ class _DesktopDockedReplyBoxState extends State<_DesktopDockedReplyBox> {
                   for (final ImageUploadTask t in _uploads.tasks)
                     Chip(
                       label: Text(
-                        t.uploading
-                            ? '上传中'
-                            : (t.error != null ? '失败' : '已传图'),
+                        t.uploading ? '上传中' : (t.error != null ? '失败' : '已传图'),
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
                       deleteIcon: const Icon(Icons.close, size: 13),
@@ -2946,8 +2944,10 @@ class _DesktopDockedReplyBoxState extends State<_DesktopDockedReplyBox> {
               ],
             ),
             const SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: 8,
+              runSpacing: 2,
               children: <Widget>[
                 Text(
                   'Ctrl + Enter 发送',
