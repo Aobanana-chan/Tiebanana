@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
 import 'package:tiebanana/features/message/state/chat_error.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -1134,15 +1135,21 @@ class _ChatViewState extends State<ChatView> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: CallbackShortcuts(
-                      bindings: <ShortcutActivator, VoidCallback>{
-                        const SingleActivator(LogicalKeyboardKey.enter): _send,
-                        const SingleActivator(LogicalKeyboardKey.numpadEnter):
-                            _send,
-                        const SingleActivator(LogicalKeyboardKey.enter,
-                            shift: true): _insertNewline,
-                        const SingleActivator(LogicalKeyboardKey.numpadEnter,
-                            shift: true): _insertNewline,
-                      },
+                      // 只有桌面平台（硬件键盘）用 Enter 发送；平板 / iPad 的
+                      // 软键盘回车应当换行，发送交给右侧按钮。
+                      bindings: isDesktop
+                          ? <ShortcutActivator, VoidCallback>{
+                              const SingleActivator(LogicalKeyboardKey.enter):
+                                  _send,
+                              const SingleActivator(
+                                  LogicalKeyboardKey.numpadEnter): _send,
+                              const SingleActivator(LogicalKeyboardKey.enter,
+                                  shift: true): _insertNewline,
+                              const SingleActivator(
+                                  LogicalKeyboardKey.numpadEnter,
+                                  shift: true): _insertNewline,
+                            }
+                          : const <ShortcutActivator, VoidCallback>{},
                       child: ExtendedTextField(
                         specialTextSpanBuilder: TiebaSpanBuilder(),
                         controller: _input,
@@ -1199,7 +1206,7 @@ class _ChatViewState extends State<ChatView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(
-                  'Enter 发送 · Shift + Enter 换行',
+                  isDesktop ? 'Enter 发送 · Shift + Enter 换行' : '点击右侧按钮发送',
                   style: textTheme.labelSmall?.copyWith(
                     fontSize: 9.5,
                     color: tokens.textTertiary,

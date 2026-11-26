@@ -26,6 +26,7 @@ import 'package:tiebanana/shared/content/thread_summary.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/media/img_explorer.dart';
 import 'package:tiebanana/features/thread/widgets/thread_poll_card.dart';
+import 'package:tiebanana/core/platform/platform_capabilities.dart';
 
 /// 帖子楼层卡片。
 ///
@@ -313,9 +314,13 @@ class _ThreadFloorCommentState extends State<ThreadFloorComment> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: IgnorePointer(
-                            ignoring: !_hovered,
+                            key: ValueKey<String>(
+                                'floor-actions-${widget.postMain.id}'),
+                            // 触摸设备没有鼠标悬停：平板 / iPad 走桌面排版时
+                            // 也必须常显操作，否则回复、赞踩与举报无法点到。
+                            ignoring: isDesktop && !_hovered,
                             child: AnimatedOpacity(
-                              opacity: _hovered ? 1 : 0,
+                              opacity: !isDesktop || _hovered ? 1 : 0,
                               duration: TiebananaMetrics.durationFast,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,

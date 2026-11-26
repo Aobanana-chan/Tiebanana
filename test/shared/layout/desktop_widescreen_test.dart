@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -313,5 +314,56 @@ void main() {
     expect(find.text('阅读控制'), findsOneWidget);
     expect(find.text('回复帖子'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('平板触摸端走桌面排版时，楼层回复/举报操作无需悬停即可点击', (
+    WidgetTester tester,
+  ) async {
+    final TiebaThreadPage page =
+        await Global.tiebaAPI.getThreadPage('8301124590');
+    await tester.binding.setSurfaceSize(const Size(820, 1180));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    bool ignoringOf() {
+      final Finder guard = find
+          .byWidgetPredicate((Widget w) =>
+              w is IgnorePointer &&
+              w.key is ValueKey<String> &&
+              (w.key! as ValueKey<String>).value.startsWith('floor-actions-'))
+          .first;
+      return tester.widget<IgnorePointer>(guard).ignoring;
+    }
+
+    Widget host() => _wrapApp(
+          ThreadPageMain(
+            kz: '8301124590',
+            pid: null,
+            pn: page.page.currentPage,
+            page: page,
+            initPost: page.posts,
+          ),
+        );
+
+    // 桌面平台：鼠标未悬停时操作行隐藏，避免每层都堆一排按钮。
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    await tester.pumpWidget(host());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(ignoringOf(), isTrue);
+
+    // Android 平板 / iPad：没有悬停，必须常显且可点。
+    for (final TargetPlatform platform in <TargetPlatform>[
+      TargetPlatform.android,
+      TargetPlatform.iOS,
+    ]) {
+      debugDefaultTargetPlatformOverride = platform;
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(host());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(ignoringOf(), isFalse, reason: '$platform 应常显楼层操作');
+      expect(tester.takeException(), isNull);
+    }
+    debugDefaultTargetPlatformOverride = null;
   });
 }
