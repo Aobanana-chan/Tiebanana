@@ -393,6 +393,9 @@ class __HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     LifeTimeCallback().onHomeFormPageCreate(context);
+    if (!AppBreakpoints.isCompact(context)) {
+      return const TagPan();
+    }
     // decoration: const BoxDecoration(color: Color(0xFFF2F2F5)),
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {

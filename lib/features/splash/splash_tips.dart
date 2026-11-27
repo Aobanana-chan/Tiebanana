@@ -12,7 +12,7 @@ class SplashTips {
 
   /// Tips 文案。保持短句，不要以句号结尾。
   static const List<String> all = <String>[
-    '长按主页的吧标签，可以移动排序',
+    '长按首页的吧标签，可以拖动调整排序',
     '贴浏览后会保存一天的缓存，期间贴被删除也可以访问',
   ];
 

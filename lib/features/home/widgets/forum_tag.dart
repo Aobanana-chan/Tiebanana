@@ -24,7 +24,6 @@ import 'package:tiebanana/features/account/state/user_state.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
-import 'package:tiebanana/shared/widgets/dashed_border.dart';
 import 'package:tiebanana/shared/widgets/desktop_panel.dart';
 import 'package:tiebanana/shared/widgets/hover_actions.dart';
 import 'package:tieba_contract/tieba_contract.dart';
@@ -47,9 +46,6 @@ class _TagPanState extends State<TagPan> with RouteAware {
 
   /// 展开全部吧（默认缩略，只显示设置里的数量）。
   bool _expanded = false;
-
-  /// 桌面端排序模式。
-  bool _reorderMode = false;
 
   /// 桌面端本地筛选关注的吧。
   final TextEditingController _filterController = TextEditingController();
@@ -341,23 +337,17 @@ class _TagPanState extends State<TagPan> with RouteAware {
     return Consumer<ForumState>(
       builder: (BuildContext context, ForumState forumState, _) {
         final List<LikeForumInfo> forums = forumState.forums;
-        final int maxCount =
-            Provider.of<APPSettingProvider>(context).homeForumMaxCount;
         final int signedCount =
             forums.where((LikeForumInfo f) => f.isSign != '0').length;
         final int unsignedCount = forums.length - signedCount;
 
         final String q = _filterQuery.trim().toLowerCase();
-        final List<LikeForumInfo> baseList = (_expanded || q.isNotEmpty)
-            ? forums
-            : forums.take(maxCount).toList();
         final List<LikeForumInfo> visible = q.isEmpty
-            ? baseList
-            : baseList
+            ? forums
+            : forums
                 .where(
                     (LikeForumInfo f) => f.forumName.toLowerCase().contains(q))
                 .toList();
-        final bool canExpand = forums.length > maxCount && q.isEmpty;
 
         final Widget recentPanel = _buildDesktopRecentPanel(context, tokens);
 
@@ -367,9 +357,8 @@ class _TagPanState extends State<TagPan> with RouteAware {
               forumState,
               forums: forums,
               visible: visible,
-              maxCount: maxCount,
               signedCount: signedCount,
-              canExpand: canExpand,
+              isFiltered: q.isNotEmpty,
               gridWidth: gridWidth,
             );
 
@@ -389,18 +378,6 @@ class _TagPanState extends State<TagPan> with RouteAware {
                 DesktopPageHeader(
                   title: greetingTitle,
                   subtitle: subtitle,
-                  tools: <Widget>[
-                    _DesktopGhostButton(
-                      icon: _reorderMode
-                          ? Icons.check_rounded
-                          : Icons.tune_rounded,
-                      label: _reorderMode ? '完成排序' : '管理排序',
-                      active: _reorderMode,
-                      onTap: forums.isEmpty
-                          ? null
-                          : () => setState(() => _reorderMode = !_reorderMode),
-                    ),
-                  ],
                 ),
                 if (twoCol)
                   LayoutBuilder(
@@ -447,9 +424,8 @@ class _TagPanState extends State<TagPan> with RouteAware {
     ForumState forumState, {
     required List<LikeForumInfo> forums,
     required List<LikeForumInfo> visible,
-    required int maxCount,
     required int signedCount,
-    required bool canExpand,
+    required bool isFiltered,
     double? gridWidth,
   }) {
     return DesktopPanel(
@@ -517,11 +493,6 @@ class _TagPanState extends State<TagPan> with RouteAware {
                   _DesktopSignAllButton(
                     onDone: () => forumState.refresh(),
                   ),
-                  if (canExpand)
-                    _DesktopGhostButton(
-                      label: _expanded ? '收起' : '展开全部 (${forums.length})',
-                      onTap: () => setState(() => _expanded = !_expanded),
-                    ),
                 ],
               ),
               if (forumState.error != null && forums.isEmpty)
@@ -549,7 +520,6 @@ class _TagPanState extends State<TagPan> with RouteAware {
                   child: _ForumReorderGrid(
                     forums: visible,
                     desktop: true,
-                    reorderMode: _reorderMode,
                     width: gridWidth,
                     onOrderChanged: (List<LikeForumInfo> ordered) =>
                         _saveVisibleOrder(forumState, ordered),
@@ -566,9 +536,9 @@ class _TagPanState extends State<TagPan> with RouteAware {
               children: <Widget>[
                 Expanded(
                   child: Text(
-                    _expanded
-                        ? '已显示全部 ${forums.length} 个（已签 $signedCount）'
-                        : '默认显示 ${math.min(maxCount, forums.length)} 个（共 ${forums.length} 个，已签 $signedCount）',
+                    isFiltered
+                        ? '匹配 ${visible.length} 个（共 ${forums.length} 个）'
+                        : '共 ${forums.length} 个（已签 $signedCount）',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontSize: 11,
                           color: tokens.textTertiary,
@@ -576,7 +546,7 @@ class _TagPanState extends State<TagPan> with RouteAware {
                   ),
                 ),
                 Text(
-                  _reorderMode ? '拖动卡片调整顺序，松手自动保存' : '点击「管理排序」后可拖动卡片排序',
+                  '长按卡片可拖动排序，松手自动保存',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontSize: 11,
                         color: tokens.textTertiary,
@@ -594,71 +564,47 @@ class _TagPanState extends State<TagPan> with RouteAware {
       BuildContext context, TiebananaTokens tokens) {
     return DesktopPanel(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              PanelHeader(
-                title: '最近浏览',
-                count: _history.length,
-                trailing: <Widget>[
-                  _DesktopGhostButton(
-                    label: '清空',
-                    onTap: _history.isEmpty ? null : _confirmClearHistory,
-                  ),
-                ],
+          PanelHeader(
+            title: '最近浏览',
+            count: _history.length,
+            trailing: <Widget>[
+              _DesktopGhostButton(
+                label: '清空',
+                onTap: _history.isEmpty ? null : _confirmClearHistory,
               ),
-              if (_history.isEmpty)
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 28),
-                  child: Center(
-                    child: Text(
-                      '暂无最近浏览记录',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: tokens.textTertiary,
-                          ),
-                    ),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      for (final ViewHistoryPageModel info in _history)
-                        _DesktopRecentRow(
-                          info: info,
-                          onHide: () => _hideHistory(info),
-                          onDelete: () => _confirmDeleteHistory(info),
-                        ),
-                    ],
-                  ),
-                ),
             ],
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: tokens.fill,
-              borderRadius: BorderRadius.circular(12),
+          if (_history.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 28),
+              child: Center(
+                child: Text(
+                  '暂无最近浏览记录',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: tokens.textTertiary,
+                      ),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  for (final ViewHistoryPageModel info in _history)
+                    _DesktopRecentRow(
+                      info: info,
+                      onHide: () => _hideHistory(info),
+                      onDelete: () => _confirmDeleteHistory(info),
+                    ),
+                ],
+              ),
             ),
-            child: Text(
-              '桌面端不再需要“左滑隐藏”。鼠标悬停行时右上角出现隐藏 / 删除；'
-              '隐藏记录仍在「个人与设置 → 浏览历史」中保留，可随时恢复。',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontSize: 10.5,
-                    height: 1.65,
-                    color: tokens.textTertiary,
-                  ),
-            ),
-          ),
         ],
       ),
     );
@@ -794,7 +740,6 @@ class _ForumReorderGrid extends StatefulWidget {
     required this.forums,
     required this.onOrderChanged,
     this.desktop = false,
-    this.reorderMode = false,
     this.width,
   });
 
@@ -805,7 +750,6 @@ class _ForumReorderGrid extends StatefulWidget {
   final ValueChanged<List<LikeForumInfo>> onOrderChanged;
 
   final bool desktop;
-  final bool reorderMode;
 
   /// 已知可用宽度时直接使用，避免在 [IntrinsicHeight] 里嵌套 [LayoutBuilder]。
   ///
@@ -824,10 +768,8 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
   double get _cellHeight => widget.desktop ? 60 : 38;
   double get _spacing => widget.desktop ? 10 : 7;
 
-  /// 长按判定：排序模式下 80ms 即可拖起，普通模式下 400ms 防误触。
-  Duration get _longPressDuration => widget.reorderMode
-      ? const Duration(milliseconds: 80)
-      : const Duration(milliseconds: 400);
+  /// 长按判定：400ms 防误触。
+  static const Duration _longPressDuration = Duration(milliseconds: 400);
 
   /// 其余标签让位的动画。
   static const Duration _shiftDuration = Duration(milliseconds: 200);
@@ -1041,7 +983,6 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
               info: info,
               compact: !widget.desktop,
               desktopTile: widget.desktop,
-              reorderMode: widget.reorderMode,
             ),
           ),
         ),
@@ -1358,7 +1299,6 @@ class _ForumReorderGridState extends State<_ForumReorderGrid>
                 info: info,
                 compact: !widget.desktop,
                 desktopTile: widget.desktop,
-                reorderMode: widget.reorderMode,
                 dragging: true,
                 onTap: () {},
               ),
@@ -1580,9 +1520,6 @@ class ForumTag extends StatelessWidget {
   /// 桌面端 60dp 宽卡形态。
   final bool desktopTile;
 
-  /// 桌面端排序模式（虚线描边）。
-  final bool reorderMode;
-
   /// 正在被拖动：主色描边（抬起放大 / 落位动画由首页网格负责）。
   final bool dragging;
 
@@ -1594,7 +1531,6 @@ class ForumTag extends StatelessWidget {
     required this.info,
     this.compact = false,
     this.desktopTile = false,
-    this.reorderMode = false,
     this.dragging = false,
     this.onTap,
   });
@@ -1656,13 +1592,13 @@ class ForumTag extends StatelessWidget {
   Widget _buildDesktopTile(BuildContext context, TiebananaTokens tokens) {
     final bool signed = info.isSign != '0';
     final String avatarUrl = resolveAvatarUrl(info.avatar);
-    final Widget tile = DecoratedBox(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: TiebananaMetrics.brCtl,
         border: dragging
             ? Border.all(color: tokens.primary, width: 1.4)
-            : (reorderMode ? null : Border.all(color: tokens.line)),
+            : Border.all(color: tokens.line),
       ),
       child: Material(
         color: Colors.transparent,
@@ -1671,13 +1607,11 @@ class ForumTag extends StatelessWidget {
         child: InkWell(
           borderRadius: TiebananaMetrics.brCtl,
           hoverColor: tokens.primary.withValues(alpha: .04),
-          onTap: reorderMode
-              ? () {}
-              : (onTap ??
-                  () {
-                    Navigator.pushNamed(context, PageRouter.forumHome,
-                        arguments: info.forumName);
-                  }),
+          onTap: onTap ??
+              () {
+                Navigator.pushNamed(context, PageRouter.forumHome,
+                    arguments: info.forumName);
+              },
           child: SizedBox(
             height: 60,
             child: Padding(
@@ -1729,11 +1663,7 @@ class ForumTag extends StatelessWidget {
                   ),
                   if (signed) ...<Widget>[
                     const SizedBox(width: 6),
-                    Opacity(
-                      opacity: reorderMode ? 0.3 : 1,
-                      child: Icon(Icons.check_rounded,
-                          size: 14, color: tokens.primary),
-                    ),
+                    Icon(Icons.check_rounded, size: 14, color: tokens.primary),
                   ],
                 ],
               ),
@@ -1742,17 +1672,6 @@ class ForumTag extends StatelessWidget {
         ),
       ),
     );
-
-    if (reorderMode && !dragging) {
-      return CustomPaint(
-        foregroundPainter: DashedBorderPainter(
-          color: tokens.lineStrong,
-          radius: TiebananaMetrics.brCtl,
-        ),
-        child: tile,
-      );
-    }
-    return tile;
   }
 }
 
@@ -1963,31 +1882,23 @@ class _Rank extends StatelessWidget {
 class _DesktopGhostButton extends StatelessWidget {
   const _DesktopGhostButton({
     required this.label,
-    this.icon,
     this.onTap,
-    this.active = false,
   });
 
   final String label;
-  final IconData? icon;
   final VoidCallback? onTap;
-  final bool active;
 
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    final Color fg = active
-        ? tokens.onPrimaryContainer
-        : (onTap == null
-            ? tokens.textTertiary.withValues(alpha: 0.5)
-            : tokens.textSecondary);
+    final Color fg = onTap == null
+        ? tokens.textTertiary.withValues(alpha: 0.5)
+        : tokens.textSecondary;
     return Material(
-      color: active ? tokens.primaryContainer : Colors.transparent,
+      color: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: active ? Colors.transparent : tokens.line,
-        ),
+        side: BorderSide(color: tokens.line),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -1999,10 +1910,6 @@ class _DesktopGhostButton extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                if (icon != null) ...<Widget>[
-                  Icon(icon, size: 13, color: fg),
-                  const SizedBox(width: 5),
-                ],
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -2129,33 +2036,36 @@ class _DesktopRecentRow extends StatelessWidget {
               Navigator.pushNamed(context, PageRouter.threadPage,
                   arguments: ThreadPageRouterData(kz: info.tid, pid: null));
             },
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 9, 64, 9),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    info.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          height: 1.48,
-                          color: tokens.textPrimary,
-                        ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${info.forumName}吧 · ${TiebaParser.getPostTime(dateTime: info.latestViewTime)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontSize: 10.5,
-                          color: tokens.textTertiary,
-                        ),
-                  ),
-                ],
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 9, 64, 9),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Text(
+                      info.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            height: 1.48,
+                            color: tokens.textPrimary,
+                          ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${info.forumName}吧 · ${TiebaParser.getPostTime(dateTime: info.latestViewTime)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontSize: 10.5,
+                            color: tokens.textTertiary,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

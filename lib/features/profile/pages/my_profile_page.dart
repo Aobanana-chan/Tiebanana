@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
@@ -14,9 +15,7 @@ import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';
 import 'package:tiebanana/features/account/widgets/account_switch_sheet.dart';
 import 'package:tiebanana/features/diagnostics/pages/diagnostics_page.dart';
-import 'package:tiebanana/features/favorites/widgets/stored_thread_widget.dart';
 import 'package:tiebanana/features/history/models/view_history_page_model.dart';
-import 'package:tiebanana/features/history/widgets/view_history_row.dart';
 import 'package:tiebanana/features/profile/state/profile_events.dart';
 import 'package:tiebanana/features/profile/widgets/user_card.dart';
 import 'package:tiebanana/features/search/widgets/search_bar.dart';
@@ -24,6 +23,7 @@ import 'package:tiebanana/features/settings/pages/image_cache_page.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/features/settings/widgets/setting_panel.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
@@ -35,7 +35,6 @@ import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/desktop_panel.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
-import 'package:tiebanana/shared/widgets/hover_actions.dart';
 import 'package:tiebanana/shared/widgets/setting_group.dart';
 
 ///用户信息和设置界面
@@ -247,6 +246,8 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
   }
 
   Future<void> _loadCounts() async {
+    unawaited(_loadHistory());
+    unawaited(_loadStore());
     try {
       final int bytes = await ImageCacheManager.shared.sizeBytes();
       if (mounted) setState(() => _imageCacheBytes = bytes);
@@ -255,8 +256,6 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
       final int logBytes = await AppLog.shared.sizeBytes();
       if (mounted) setState(() => _logBytes = logBytes);
     } catch (_) {}
-    unawaited(_loadHistory());
-    unawaited(_loadStore());
   }
 
   Future<void> _loadStore() async {
@@ -348,7 +347,7 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
           children: <Widget>[
             const DesktopPageHeader(
               title: '我的空间',
-              subtitle: '个人资料卡顶置通栏，下方菜单与设置面板左右对齐',
+              subtitle: '个人资料卡顶置通栏，左侧固定导航，右侧展开详情',
             ),
             UserCard(
               concernNum: user.concernNum,
@@ -362,20 +361,18 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
               margin: const EdgeInsets.only(bottom: 14),
             ),
             if (twoCol)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    SizedBox(
-                      width: 230,
-                      child: _buildVerticalMenu(context, tokens),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildActivePanel(context, tokens),
-                    ),
-                  ],
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(
+                    width: 230,
+                    child: _buildVerticalMenu(context, tokens),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildActivePanel(context, tokens),
+                  ),
+                ],
               )
             else ...<Widget>[
               _buildHorizontalMenu(context, tokens),
@@ -400,72 +397,61 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
     return DesktopPanel(
       padding: const EdgeInsets.all(8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _MenuRow(
-                icon: Icons.bookmark_border_rounded,
-                label: '我的收藏',
-                badge: storeBadge,
-                selected: _section == _ProfileSection.store,
-                onTap: () => setState(() => _section = _ProfileSection.store),
-              ),
-              _MenuRow(
-                icon: Icons.history_rounded,
-                label: '浏览历史',
-                badge: historyBadge,
-                selected: _section == _ProfileSection.history,
-                onTap: () => setState(() => _section = _ProfileSection.history),
-              ),
-              _MenuRow(
-                icon: Icons.palette_outlined,
-                label: '外观与主题',
-                selected: _section == _ProfileSection.theme,
-                showChevron: true,
-                onTap: () => setState(() => _section = _ProfileSection.theme),
-              ),
-              _MenuRow(
-                icon: Icons.tune_rounded,
-                label: '阅读与通用',
-                selected: _section == _ProfileSection.general,
-                showChevron: true,
-                onTap: () => setState(() => _section = _ProfileSection.general),
-              ),
-              _MenuRow(
-                icon: Icons.storage_outlined,
-                label: '存储与诊断',
-                badge: cacheText,
-                selected: _section == _ProfileSection.storage,
-                onTap: () => setState(() => _section = _ProfileSection.storage),
-              ),
-            ],
+          _MenuRow(
+            icon: Icons.bookmark_border_rounded,
+            label: '我的收藏',
+            badge: storeBadge,
+            selected: _section == _ProfileSection.store,
+            onTap: () => setState(() => _section = _ProfileSection.store),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Divider(height: 1, color: tokens.line),
-              ),
-              _MenuRow(
-                icon: Icons.people_outline_rounded,
-                label: '切换账号',
-                selected: false,
-                onTap: () => showAccountSwitchSheet(context),
-              ),
-              _MenuRow(
-                icon: Icons.logout_rounded,
-                label: '退出登录',
-                selected: false,
-                danger: true,
-                onTap: () => _logout(context),
-              ),
-            ],
+          _MenuRow(
+            icon: Icons.history_rounded,
+            label: '浏览历史',
+            badge: historyBadge,
+            selected: _section == _ProfileSection.history,
+            onTap: () => setState(() => _section = _ProfileSection.history),
+          ),
+          _MenuRow(
+            icon: Icons.palette_outlined,
+            label: '外观与主题',
+            selected: _section == _ProfileSection.theme,
+            showChevron: true,
+            onTap: () => setState(() => _section = _ProfileSection.theme),
+          ),
+          _MenuRow(
+            icon: Icons.tune_rounded,
+            label: '阅读与通用',
+            selected: _section == _ProfileSection.general,
+            showChevron: true,
+            onTap: () => setState(() => _section = _ProfileSection.general),
+          ),
+          _MenuRow(
+            icon: Icons.storage_outlined,
+            label: '存储与诊断',
+            badge: cacheText,
+            selected: _section == _ProfileSection.storage,
+            onTap: () => setState(() => _section = _ProfileSection.storage),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Divider(height: 1, color: tokens.line),
+          ),
+          _MenuRow(
+            icon: Icons.people_outline_rounded,
+            label: '切换账号',
+            selected: false,
+            onTap: () => showAccountSwitchSheet(context),
+          ),
+          _MenuRow(
+            icon: Icons.logout_rounded,
+            label: '退出登录',
+            selected: false,
+            danger: true,
+            onTap: () => _logout(context),
           ),
         ],
       ),
@@ -1184,59 +1170,32 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
             ),
           )
         else
-          for (int i = 0; i < _stored.length; i++) ...<Widget>[
-            if (i > 0) const SizedBox(height: 8),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: TiebananaMetrics.brLg,
-                border: Border.all(color: tokens.line),
-              ),
-              child: HoverActions(
-                actionsBuilder: (BuildContext context, bool hovered) =>
-                    DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: tokens.surface.withValues(alpha: 0.94),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: tokens.line),
-                  ),
-                  child: IconButton(
-                    tooltip: '取消收藏',
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.all(4),
-                    constraints:
-                        const BoxConstraints(minWidth: 28, minHeight: 28),
-                    icon: Icon(Icons.star_border_rounded,
-                        size: 16, color: tokens.danger),
-                    onPressed: () async {
-                      final TiebaStoredThread item = _stored[i];
-                      try {
-                        await Global.tiebaAPI.threadRemoveStore(item.id);
-                        await Global.threadCache
-                            .setStored(widget.user.uid, item.id, false);
-                        if (!mounted) return;
-                        setState(
-                            () => _stored.removeWhere((e) => e.id == item.id));
-                        Fluttertoast.showToast(msg: '已取消收藏');
-                      } catch (_) {
-                        Fluttertoast.showToast(msg: '取消收藏失败');
-                      }
-                    },
-                  ),
-                ),
-                child: StoredThreadWidget(
-                  info: _stored[i],
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    PageRouter.threadPage,
-                    arguments: ThreadPageRouterData(
-                      kz: _stored[i].id,
-                      pid: _stored[i].pid,
-                    ),
-                  ),
+          for (int i = 0; i < _stored.length; i++)
+            _DesktopStoreItem(
+              info: _stored[i],
+              showTopBorder: i > 0,
+              onOpen: () => Navigator.pushNamed(
+                context,
+                PageRouter.threadPage,
+                arguments: ThreadPageRouterData(
+                  kz: _stored[i].id,
+                  pid: _stored[i].pid,
                 ),
               ),
+              onRemove: () async {
+                final TiebaStoredThread item = _stored[i];
+                try {
+                  await Global.tiebaAPI.threadRemoveStore(item.id);
+                  await Global.threadCache
+                      .setStored(widget.user.uid, item.id, false);
+                  if (!mounted) return;
+                  setState(() => _stored.removeWhere((e) => e.id == item.id));
+                  Fluttertoast.showToast(msg: '已取消收藏');
+                } catch (_) {
+                  Fluttertoast.showToast(msg: '取消收藏失败');
+                }
+              },
             ),
-          ],
       ],
     );
   }
@@ -1287,69 +1246,28 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
             ),
           )
         else
-          for (int i = 0; i < _history.length; i++) ...<Widget>[
-            if (i > 0) const SizedBox(height: 8),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: TiebananaMetrics.brLg,
-                border: Border.all(color: tokens.line),
+          for (int i = 0; i < _history.length; i++)
+            _DesktopHistoryItem(
+              info: _history[i],
+              showTopBorder: i > 0,
+              onOpen: () => Navigator.pushNamed(
+                context,
+                PageRouter.threadPage,
+                arguments: ThreadPageRouterData(kz: _history[i].tid, pid: null),
               ),
-              child: HoverActions(
-                actionsBuilder: (BuildContext context, bool hovered) =>
-                    DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: tokens.surface.withValues(alpha: 0.94),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: tokens.line),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      if (_history[i].hidden)
-                        IconButton(
-                          tooltip: '取消在首页隐藏',
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(4),
-                          constraints:
-                              const BoxConstraints(minWidth: 28, minHeight: 28),
-                          icon: Icon(Icons.visibility_outlined,
-                              size: 16, color: tokens.textSecondary),
-                          onPressed: () {
-                            final ViewHistoryPageModel item = _history[i];
-                            Global.daoapi.setViewHistoryHidden(item.id, false);
-                            setState(() => item.hidden = false);
-                          },
-                        ),
-                      IconButton(
-                        tooltip: '删除记录',
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.all(4),
-                        constraints:
-                            const BoxConstraints(minWidth: 28, minHeight: 28),
-                        icon: Icon(Icons.delete_outline_rounded,
-                            size: 16, color: tokens.danger),
-                        onPressed: () {
-                          final ViewHistoryPageModel item = _history[i];
-                          Global.daoapi.deleteViewHistory(item.id);
-                          setState(() =>
-                              _history.removeWhere((e) => e.id == item.id));
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                child: ViewHistoryRow(
-                  info: _history[i],
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    PageRouter.threadPage,
-                    arguments:
-                        ThreadPageRouterData(kz: _history[i].tid, pid: null),
-                  ),
-                ),
-              ),
+              onUnhide: _history[i].hidden
+                  ? () {
+                      final ViewHistoryPageModel item = _history[i];
+                      Global.daoapi.setViewHistoryHidden(item.id, false);
+                      setState(() => item.hidden = false);
+                    }
+                  : null,
+              onDelete: () {
+                final ViewHistoryPageModel item = _history[i];
+                Global.daoapi.deleteViewHistory(item.id);
+                setState(() => _history.removeWhere((e) => e.id == item.id));
+              },
             ),
-          ],
       ],
     );
   }
@@ -1777,6 +1695,327 @@ class _SettingItemRow extends StatelessWidget {
           const SizedBox(width: 12),
           trailing,
         ],
+      ),
+    );
+  }
+}
+
+class _DesktopStoreItem extends StatelessWidget {
+  const _DesktopStoreItem({
+    required this.info,
+    required this.onOpen,
+    required this.onRemove,
+    this.showTopBorder = true,
+  });
+
+  final TiebaStoredThread info;
+  final VoidCallback onOpen;
+  final VoidCallback onRemove;
+  final bool showTopBorder;
+
+  String get _meta {
+    final List<String> parts = <String>[];
+    if (info.name.isNotEmpty) parts.add(info.name);
+    final String msg = info.postNoMsg?.trim() ?? '';
+    if (msg.isNotEmpty) parts.add(msg);
+    return parts.join(' · ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final String? image = info.getImage;
+    final String meta = _meta;
+    final int newCount = info.newCount;
+
+    return Container(
+      decoration: showTopBorder
+          ? BoxDecoration(border: Border(top: BorderSide(color: tokens.line)))
+          : null,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                hoverColor: tokens.primary.withValues(alpha: .04),
+                onTap: onOpen,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              info.title.isEmpty ? '（无标题）' : info.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.4,
+                                    color: info.isDeleted
+                                        ? tokens.textTertiary
+                                        : tokens.textPrimary,
+                                  ),
+                            ),
+                            if (meta.isNotEmpty ||
+                                newCount > 0 ||
+                                info.isDeleted) ...<Widget>[
+                              const SizedBox(height: 5),
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: <Widget>[
+                                  if (meta.isNotEmpty)
+                                    Text(
+                                      meta,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontSize: 11,
+                                            color: tokens.textTertiary,
+                                          ),
+                                    ),
+                                  if (newCount > 0)
+                                    _DesktopItemPill(
+                                      text: '$newCount 条更新',
+                                      background: tokens.primaryContainer,
+                                      foreground: tokens.onPrimaryContainer,
+                                    ),
+                                  if (info.isDeleted)
+                                    _DesktopItemPill(
+                                      text: '已删除',
+                                      background:
+                                          tokens.danger.withValues(alpha: .10),
+                                      foreground: tokens.danger,
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (image != null && image.isNotEmpty) ...<Widget>[
+                        const SizedBox(width: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: ExtendedImage.network(
+                            image,
+                            width: 46,
+                            height: 46,
+                            fit: BoxFit.cover,
+                            cache: true,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          _DesktopItemActionBtn(
+            icon: Icons.star_border_rounded,
+            tooltip: '取消收藏',
+            color: tokens.danger,
+            onTap: onRemove,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopHistoryItem extends StatelessWidget {
+  const _DesktopHistoryItem({
+    required this.info,
+    required this.onOpen,
+    required this.onDelete,
+    this.onUnhide,
+    this.showTopBorder = true,
+  });
+
+  final ViewHistoryPageModel info;
+  final VoidCallback onOpen;
+  final VoidCallback? onUnhide;
+  final VoidCallback onDelete;
+  final bool showTopBorder;
+
+  String get _meta {
+    final String time = TiebaParser.getPostTime(dateTime: info.latestViewTime);
+    if (info.forumName.isEmpty) return '浏览于 $time';
+    return '${info.forumName}吧 · 浏览于 $time';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Container(
+      decoration: showTopBorder
+          ? BoxDecoration(border: Border(top: BorderSide(color: tokens.line)))
+          : null,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                hoverColor: tokens.primary.withValues(alpha: .04),
+                onTap: onOpen,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        info.title.isEmpty ? '（无标题）' : info.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                              color: tokens.textPrimary,
+                            ),
+                      ),
+                      const SizedBox(height: 5),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: <Widget>[
+                          Text(
+                            _meta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  fontSize: 11,
+                                  color: tokens.textTertiary,
+                                ),
+                          ),
+                          if (info.hidden)
+                            _DesktopItemPill(
+                              text: '已隐藏',
+                              background: tokens.fill,
+                              foreground: tokens.textSecondary,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          if (onUnhide != null) ...<Widget>[
+            _DesktopItemActionBtn(
+              icon: Icons.visibility_outlined,
+              tooltip: '取消在首页隐藏',
+              color: tokens.textSecondary,
+              onTap: onUnhide!,
+            ),
+            const SizedBox(width: 4),
+          ],
+          _DesktopItemActionBtn(
+            icon: Icons.delete_outline_rounded,
+            tooltip: '删除记录',
+            color: tokens.danger,
+            onTap: onDelete,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopItemPill extends StatelessWidget {
+  const _DesktopItemPill({
+    required this.text,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String text;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: foreground,
+              height: 1.1,
+            ),
+      ),
+    );
+  }
+}
+
+class _DesktopItemActionBtn extends StatelessWidget {
+  const _DesktopItemActionBtn({
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: tokens.fill,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          hoverColor: color.withValues(alpha: .10),
+          onTap: onTap,
+          child: SizedBox(
+            width: 30,
+            height: 30,
+            child: Icon(icon, size: 16, color: color),
+          ),
+        ),
       ),
     );
   }
