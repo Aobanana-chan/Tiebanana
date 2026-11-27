@@ -19,6 +19,11 @@ TiebaThreadInfo fakeThreadInfo({
   String fname = 'Flutter',
   String text = '正文摘要，够两行就行',
   int hoursAgo = 2,
+  bool isReply = false,
+  String originTitle = '',
+  String? replyPostId,
+  String authorName = '青葉ナナ',
+  List<TiebaPostContent>? contents,
 }) {
   final DateTime now = DateTime.now();
   return TiebaThreadInfo(
@@ -34,8 +39,12 @@ TiebaThreadInfo fakeThreadInfo({
     agreeNum: '128',
     disagreeNum: '3',
     isTop: false,
-    author: fakeAuthor(),
-    firstPostContent: [TiebaTextContent(text: text, uid: '7')],
+    isReply: isReply,
+    originTitle: originTitle,
+    replyPostId: replyPostId,
+    author: fakeAuthor(name: authorName),
+    firstPostContent:
+        contents ?? <TiebaPostContent>[TiebaTextContent(text: text, uid: '7')],
   );
 }
 
@@ -46,9 +55,24 @@ TiebaThreadInfo fakeRecommendThread({
   String fname = 'Flutter',
   String text = '正文摘要，够两行就行',
   int hoursAgo = 2,
+  bool isReply = false,
+  String originTitle = '',
+  String? replyPostId,
+  String authorName = '青葉ナナ',
+  List<TiebaPostContent>? contents,
 }) =>
     fakeThreadInfo(
-        tid: tid, title: title, fname: fname, text: text, hoursAgo: hoursAgo);
+      tid: tid,
+      title: title,
+      fname: fname,
+      text: text,
+      hoursAgo: hoursAgo,
+      isReply: isReply,
+      originTitle: originTitle,
+      replyPostId: replyPostId,
+      authorName: authorName,
+      contents: contents,
+    );
 
 /// 一页推荐响应。
 RecommendPage fakeRecommendPage(List<TiebaThreadInfo> threads) =>

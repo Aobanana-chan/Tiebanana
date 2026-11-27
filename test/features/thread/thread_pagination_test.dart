@@ -261,8 +261,21 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('带 pid 打开时滚动到合并缓存后才出现的目标楼层', (tester) async {
+    final key = await _mount(tester, _page(1), pid: '27');
+    key.currentState!.applyFreshPage(_page(5, start: 22, end: 29));
+    await tester.pumpAndSettle();
+    final target = find.byWidgetPredicate(
+        (w) => w is ThreadFloorComment && w.postMain.id == '27');
+    final viewport = tester.getRect(find.byType(CustomScrollView));
+    expect(tester.getTopLeft(target).dy,
+        inExclusiveRange(viewport.top, viewport.bottom));
+    expect(api.calls, isEmpty);
+  });
+
   testWidgets('收藏定位先补全当前页，避免遗漏目标之前的同页楼层', (tester) async {
     final key = await _mount(tester, _page(2, start: 9), pid: '9');
+    await tester.pumpAndSettle();
     final anchor = find.byWidgetPredicate(
         (w) => w is ThreadFloorComment && w.postMain.id == '9');
     final before = tester.getTopLeft(anchor).dy;

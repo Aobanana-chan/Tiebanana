@@ -11,9 +11,18 @@ import 'package:tiebanana/shared/media/video_player.dart';
 
 /// 列表摘要保留表情资源与动态表情地址。
 class ThreadPreviewExcerpt extends StatelessWidget {
-  const ThreadPreviewExcerpt({super.key, required this.contents});
+  const ThreadPreviewExcerpt({
+    super.key,
+    required this.contents,
+    this.color,
+    this.maxLines = 2,
+    this.textStyle,
+  });
 
   final List<TiebaPostContent> contents;
+  final Color? color;
+  final int maxLines;
+  final TextStyle? textStyle;
 
   static String textOf(TiebaPostContent content) => switch (content) {
         TiebaTextContent c => c.text,
@@ -29,10 +38,8 @@ class ThreadPreviewExcerpt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context)
-        .textTheme
-        .bodyMedium
-        ?.copyWith(color: TiebananaTokens.of(context).textSecondary);
+    final style = (textStyle ?? Theme.of(context).textTheme.bodyMedium)
+        ?.copyWith(color: color ?? TiebananaTokens.of(context).textSecondary);
     final spans = <InlineSpan>[];
     var length = 0;
     final size = (style?.fontSize ?? 14) + 2;
@@ -53,7 +60,7 @@ class ThreadPreviewExcerpt extends StatelessWidget {
       if (length > 200) break;
     }
     return ExtendedText.rich(TextSpan(children: spans),
-        style: style, maxLines: 2, overflow: TextOverflow.ellipsis);
+        style: style, maxLines: maxLines, overflow: TextOverflow.ellipsis);
   }
 }
 

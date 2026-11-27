@@ -64,6 +64,15 @@ class ThreadSummary extends StatelessWidget {
   /// 是否使用桌面端卡片排版（24dp 头像、左统计右分享页脚）。
   final bool desktop;
 
+  /// 是否为「回复动态」卡片（如推荐流 `thread_type == 81`）。
+  final bool isReply;
+
+  /// 回复动态对应的原帖纯标题；为空时尝试从 [title] 剥离「回复：」前缀并兜底。
+  final String originTitle;
+
+  /// 点击「回复原帖」语境条时的回调；未传时默认打开原帖详情。
+  final VoidCallback? onOriginTap;
+
   const ThreadSummary(
       {super.key,
       required this.firstPostContent,
@@ -83,7 +92,27 @@ class ThreadSummary extends StatelessWidget {
       this.selected = false,
       this.onTap,
       this.showForumChip = false,
-      this.desktop = false});
+      this.desktop = false,
+      this.isReply = false,
+      this.originTitle = "",
+      this.onOriginTap});
+
+  void _openThread(BuildContext context) {
+    Navigator.pushNamed(context, PageRouter.threadPage,
+        arguments: ThreadPageRouterData(kz: tid, pid: null));
+  }
+
+  String _resolvedOriginTitle() {
+    final String explicit = TiebaThreadInfo.stripReplyPrefix(originTitle);
+    if (explicit.isNotEmpty) {
+      return explicit;
+    }
+    final String stripped = TiebaThreadInfo.stripReplyPrefix(title);
+    if (stripped.isNotEmpty) {
+      return stripped;
+    }
+    return fname.isNotEmpty ? '$fname吧的帖子' : '查看原帖';
+  }
 
   ///摘要：只收文字类内容，图片 / 视频由缩略图行展示。
   String _excerpt() {
@@ -129,6 +158,11 @@ class ThreadSummary extends StatelessWidget {
     final String when = latest.isNotEmpty ? latest : _timeText(createTime);
 
     final String excerpt = _excerpt();
+    final String resolvedOrigin = isReply ? _resolvedOriginTitle() : '';
+    final String displayAuthor =
+        isReply && author.name.trim().isEmpty ? '贴吧用户' : author.name;
+    final bool hasExcerpt = ThreadPreviewExcerpt.hasContent(firstPostContent);
+    final bool hasMedia = ThreadPreviewMedia.hasContent(firstPostContent);
 
     final Color fgPrimary =
         selected ? tokens.onPrimaryContainer : tokens.textPrimary;
@@ -146,11 +180,7 @@ class ThreadSummary extends StatelessWidget {
         boxShadow: selected ? null : tokens.cardShadow,
       ),
       child: MaterialButton(
-        onPressed: onTap ??
-            () async {
-              Navigator.pushNamed(context, PageRouter.threadPage,
-                  arguments: ThreadPageRouterData(kz: tid, pid: null));
-            },
+        onPressed: onTap ?? () => _openThread(context),
         color: Colors.transparent,
         elevation: 0,
         // 透明按钮默认悬停高度为 4，会在整张卡片上产生明显暗影。
@@ -184,7 +214,7 @@ class ThreadSummary extends StatelessWidget {
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          author.name,
+                          displayAuthor,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style:
@@ -234,10 +264,14 @@ class ThreadSummary extends StatelessWidget {
                             target: TiebaReportTarget(
                                 kind: TiebaReportKind.thread,
                                 userId: author.id,
-                                name: author.name,
+                                name: displayAuthor,
                                 portrait: author.portrait,
                                 threadId: tid,
-                                summary: title.isEmpty ? excerpt : title,
+                                summary: isReply
+                                    ? (excerpt.isEmpty
+                                        ? resolvedOrigin
+                                        : excerpt)
+                                    : (title.isEmpty ? excerpt : title),
                                 source: fname)),
                         child: Padding(
                           padding: const EdgeInsets.all(TiebananaMetrics.gapXs),
@@ -251,46 +285,76 @@ class ThreadSummary extends StatelessWidget {
                   ),
               ],
             ),
-            //标题。「回复」没有标题（title 为空串）时整块不画，别留一条空行。
-            if (title.isNotEmpty) ...<Widget>[
+            if (isReply) ...<Widget>[
+              // 方案 B：前置原帖语境锚点条 + 主色回复正文
               const SizedBox(height: TiebananaMetrics.gapSm),
-              ExtendedText(
-                title,
-                specialTextSpanBuilder: TiebaSpanBuilder(),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.titleSmall?.copyWith(color: fgPrimary),
+              _ReplyOriginBar(
+                originTitle: resolvedOrigin,
+                selected: selected,
+                onTap: onOriginTap ?? () => _openThread(context),
               ),
-            ],
-            //被引用内容：用户主页的回复会带一条被引用的原文。
-            if (quote.isNotEmpty) ...<Widget>[
-              const SizedBox(height: TiebananaMetrics.gapSm),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: TiebananaMetrics.gapSm + 2,
-                  vertical: TiebananaMetrics.gapSm + 1,
+              if (hasExcerpt) ...<Widget>[
+                const SizedBox(height: TiebananaMetrics.gapSm),
+                ThreadPreviewExcerpt(
+                  contents: firstPostContent,
+                  color: fgPrimary,
+                  maxLines: 3,
+                  textStyle: textTheme.bodyLarge,
                 ),
-                decoration: BoxDecoration(
-                  color: tokens.quoteBackground,
-                  borderRadius: TiebananaMetrics.brSm,
+              ] else if (!hasMedia) ...<Widget>[
+                const SizedBox(height: TiebananaMetrics.gapSm),
+                Text(
+                  '发表了一条回复',
+                  style: textTheme.bodyMedium?.copyWith(color: fgMeta),
                 ),
-                child: ExtendedText(
-                  quote,
+              ],
+            ] else ...<Widget>[
+              //标题。「回复」没有标题（title 为空串）时整块不画，别留一条空行。
+              if (title.isNotEmpty) ...<Widget>[
+                const SizedBox(height: TiebananaMetrics.gapSm),
+                ExtendedText(
+                  title,
                   specialTextSpanBuilder: TiebaSpanBuilder(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.bodySmall?.copyWith(color: tokens.quoteText),
+                  style: textTheme.titleSmall?.copyWith(color: fgPrimary),
                 ),
-              ),
-            ],
-            //正文摘要
-            if (ThreadPreviewExcerpt.hasContent(firstPostContent)) ...<Widget>[
-              const SizedBox(height: TiebananaMetrics.gapXs),
-              ThreadPreviewExcerpt(contents: firstPostContent),
+              ],
+              //被引用内容：用户主页的回复会带一条被引用的原文。
+              if (quote.isNotEmpty) ...<Widget>[
+                const SizedBox(height: TiebananaMetrics.gapSm),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: TiebananaMetrics.gapSm + 2,
+                    vertical: TiebananaMetrics.gapSm + 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: tokens.quoteBackground,
+                    borderRadius: TiebananaMetrics.brSm,
+                  ),
+                  child: ExtendedText(
+                    quote,
+                    specialTextSpanBuilder: TiebaSpanBuilder(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(color: tokens.quoteText),
+                  ),
+                ),
+              ],
+              //正文摘要
+              if (hasExcerpt) ...<Widget>[
+                const SizedBox(height: TiebananaMetrics.gapXs),
+                ThreadPreviewExcerpt(
+                  contents: firstPostContent,
+                  color: selected
+                      ? tokens.onPrimaryContainer
+                      : tokens.textSecondary,
+                ),
+              ],
             ],
             //缩略图（最多三张，固定 3 列等宽等高）
-            if (ThreadPreviewMedia.hasContent(firstPostContent)) ...<Widget>[
+            if (hasMedia) ...<Widget>[
               const SizedBox(height: TiebananaMetrics.gapSm),
               ThreadPreviewMedia(contents: firstPostContent, threadId: tid),
             ],
@@ -325,9 +389,11 @@ class ThreadSummary extends StatelessWidget {
                             onTap: () => showShareSheet(
                               context,
                               ShareContent(
-                                title: title.trim().isEmpty
+                                title: (isReply ? resolvedOrigin : title)
+                                        .trim()
+                                        .isEmpty
                                     ? (excerpt.isEmpty ? '贴吧帖子' : excerpt)
-                                    : title,
+                                    : (isReply ? resolvedOrigin : title),
                                 url: 'https://tieba.baidu.com/p/$tid',
                                 source: fname.isEmpty ? '贴吧' : '$fname吧',
                                 icon: Icons.article_outlined,
@@ -386,6 +452,92 @@ class ThreadSummary extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 方案 B：前置原帖语境锚点条。
+///
+/// 独立承担悬停与点击反馈，明确提示当前点击将进入原帖。
+class _ReplyOriginBar extends StatelessWidget {
+  const _ReplyOriginBar({
+    required this.originTitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String originTitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  static final BorderRadius _radius = BorderRadius.circular(9);
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    final Color bg =
+        selected ? tokens.surface.withValues(alpha: .45) : tokens.fill;
+    final Color tagColor =
+        selected ? tokens.onPrimaryContainer : tokens.primary;
+    final Color titleColor =
+        selected ? tokens.onPrimaryContainer : tokens.textSecondary;
+    final Color chevronColor =
+        selected ? tokens.onPrimaryContainer : tokens.textTertiary;
+
+    return Material(
+      color: bg,
+      borderRadius: _radius,
+      child: InkWell(
+        borderRadius: _radius,
+        hoverColor: selected
+            ? tokens.surface.withValues(alpha: .28)
+            : tokens.primaryContainer.withValues(alpha: .72),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          child: Row(
+            children: <Widget>[
+              Icon(
+                Icons.subdirectory_arrow_right_rounded,
+                size: 14,
+                color: tagColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '回复原帖',
+                style: textTheme.labelSmall?.copyWith(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: tagColor,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: ExtendedText(
+                  originTitle,
+                  specialTextSpanBuilder: TiebaSpanBuilder(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: titleColor,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 15,
+                color: chevronColor,
+              ),
+            ],
+          ),
         ),
       ),
     );

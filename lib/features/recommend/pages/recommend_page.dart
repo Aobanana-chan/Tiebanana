@@ -26,6 +26,12 @@ import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 typedef RecommendLoader = Future<RecommendPage> Function(
     int pageThreadCount, int pn);
 
+void _openRecommendedThread(BuildContext context, TiebaThreadInfo thread) {
+  Navigator.pushNamed(context, PageRouter.threadPage,
+      arguments: ThreadPageRouterData(
+          kz: thread.id, pid: thread.isReply ? thread.replyPostId : null));
+}
+
 class RecommendPan extends StatefulWidget {
   final FloatingSearchBarController controller;
 
@@ -401,7 +407,16 @@ class _RecommendPanState extends State<RecommendPan> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  anchor.title.isEmpty ? '${anchor.fname}吧帖子' : anchor.title,
+                  () {
+                    final String title = anchor.isReply
+                        ? (TiebaThreadInfo.stripReplyPrefix(anchor.originTitle)
+                                .isNotEmpty
+                            ? TiebaThreadInfo.stripReplyPrefix(
+                                anchor.originTitle)
+                            : TiebaThreadInfo.stripReplyPrefix(anchor.title))
+                        : anchor.title;
+                    return title.isEmpty ? '${anchor.fname}吧帖子' : title;
+                  }(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -424,11 +439,7 @@ class _RecommendPanState extends State<RecommendPan> {
                   width: double.infinity,
                   height: 30,
                   child: FilledButton.icon(
-                    onPressed: () {
-                      Navigator.pushNamed(context, PageRouter.threadPage,
-                          arguments:
-                              ThreadPageRouterData(kz: anchor.id, pid: null));
-                    },
+                     onPressed: () => _openRecommendedThread(context, anchor),
                     style: FilledButton.styleFrom(
                       backgroundColor: tokens.accentFill,
                       foregroundColor: tokens.accentOn,
@@ -752,7 +763,16 @@ class RecommendFeed extends StatelessWidget {
       desktop: desktop,
       showForumChip: desktop,
       selected: isSelected,
-      onTap: onSelectThread == null ? null : () => onSelectThread!(info),
+      isReply: info.isReply,
+      originTitle: info.originTitle,
+      onTap: info.isReply && info.replyPostId != null
+          ? () => _openRecommendedThread(context, info)
+          : onSelectThread == null
+              ? null
+              : () => onSelectThread!(info),
+      onOriginTap: info.isReply
+          ? () => _openRecommendedThread(context, info)
+          : null,
     );
   }
 }
@@ -1009,6 +1029,30 @@ class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
         int.tryParse(t.lastTimeInt) ?? int.tryParse(t.createTime) ?? 0;
     final String when =
         stamp > 0 ? TiebaParser.getPostTime(intTime: stamp) : '';
+    final TiebaThreadPagePost? firstFloor = _page?.posts.firstOrNull;
+    final String displayTitle = () {
+      if (!t.isReply) return t.title;
+      final String explicit = TiebaThreadInfo.stripReplyPrefix(t.originTitle);
+      if (explicit.isNotEmpty) return explicit;
+      final String stripped = TiebaThreadInfo.stripReplyPrefix(t.title);
+      if (stripped.isNotEmpty) return stripped;
+      return t.fname.isNotEmpty ? '${t.fname}吧的帖子' : '';
+    }();
+    final String displayAuthor = () {
+      if (!t.isReply) return t.author.name;
+      if (firstFloor != null) {
+        final String resolved = _page?.userListSet[firstFloor.uid]?.name ??
+            firstFloor.nameShow ??
+            '';
+        if (resolved.trim().isNotEmpty) return resolved;
+      }
+      return '原帖作者加载中';
+    }();
+    final String replyExcerpt = t.isReply
+        ? TiebaParser.parserContentString(t.firstPostContent).trim()
+        : '';
+    final String replyAuthor =
+        t.author.name.trim().isEmpty ? '贴吧用户' : t.author.name;
     final List<TiebaThreadPagePost> replies = _page?.posts
             .where((TiebaThreadPagePost p) => p.floor != '1')
             .take(5)
@@ -1044,7 +1088,7 @@ class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
               ],
               Expanded(
                 child: Text(
-                  when.isEmpty ? t.author.name : '${t.author.name} · $when',
+                  when.isEmpty ? displayAuthor : '$displayAuthor · $when',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -1054,11 +1098,7 @@ class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
                 ),
               ),
               OutlinedButton.icon(
-                onPressed: () => Navigator.pushNamed(
-                  context,
-                  PageRouter.threadPage,
-                  arguments: ThreadPageRouterData(kz: t.id, pid: null),
-                ),
+                 onPressed: () => _openRecommendedThread(context, t),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: tokens.textSecondary,
                   side: BorderSide(color: tokens.line),
@@ -1074,10 +1114,10 @@ class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
               ),
             ],
           ),
-          if (t.title.isNotEmpty) ...<Widget>[
+          if (displayTitle.isNotEmpty) ...<Widget>[
             const SizedBox(height: 12),
             Text(
-              t.title,
+              displayTitle,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -1086,15 +1126,63 @@ class _DesktopSplitReaderState extends State<_DesktopSplitReader> {
                   ),
             ),
           ],
+          if (t.isReply) ...<Widget>[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+              decoration: BoxDecoration(
+                color: tokens.fill,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 14,
+                      color: tokens.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      replyExcerpt.isEmpty
+                          ? '来自 $replyAuthor 的回复动态'
+                          : '来自 $replyAuthor 的回复：「$replyExcerpt」',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            height: 1.5,
+                            color: tokens.textSecondary,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
-          ...TiebaParser.parseContent(
-            context,
-            _page?.posts.firstOrNull?.content ?? t.firstPostContent,
-            _page?.imgs ?? const <String>[],
-            _page?.imgsOrgSrc ?? const <String>[],
-            selectable: true,
-            forumName: t.fname,
-          ),
+          if (t.isReply && firstFloor == null)
+            Text(
+              _loading ? '正在加载原帖主楼…' : '原帖主楼暂未加载，点击「全屏阅读」查看完整帖子',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: tokens.textTertiary),
+            )
+          else
+            ...TiebaParser.parseContent(
+              context,
+              firstFloor?.content ?? t.firstPostContent,
+              _page?.imgs ?? const <String>[],
+              _page?.imgsOrgSrc ?? const <String>[],
+              selectable: true,
+              forumName: t.fname,
+            ),
           const Divider(height: 22),
           if (_loading)
             const Padding(

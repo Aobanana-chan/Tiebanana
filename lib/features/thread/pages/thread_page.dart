@@ -333,6 +333,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
   // pid 响应可能只包含目标楼层之后的内容，先补全所在页再向前翻。
   bool _needsFullLocatedPage = false;
   final Map<String, GlobalKey> _floorKeys = <String, GlobalKey>{};
+  bool _initialFloorJumpStarted = false;
 
   // 两种模式各自记录页码和是否有更多，切换时保留各自的翻页进度。
   int _normalTopPn = 1;
@@ -387,6 +388,33 @@ class ThreadPageMainState extends State<ThreadPageMain>
     _controller.addListener(_onScrollNext);
     _controller.addListener(_onScrollPrev);
     replyEvents.addListener(_onReplySent);
+    _scheduleInitialFloorJump();
+  }
+
+  void _scheduleInitialFloorJump() {
+    final target = widget.pid;
+    if (target == null || _initialFloorJumpStarted) return;
+    if (!_sortedFloors().any((floor) => floor.id == target)) return;
+    _initialFloorJumpStarted = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToFloor(target));
+  }
+
+  Future<void> _jumpToFloor(String target) async {
+    // SliverList 只构建视口附近的楼层。缓存合并后目标可能不在首屏，
+    // 逐屏推进到目标挂载，再精确对齐，给顶部导航栏留出空间。
+    while (mounted && _controller.hasClients) {
+      final floorContext = _floorKeys[target]?.currentContext;
+      if (floorContext != null && floorContext.mounted) {
+        await Scrollable.ensureVisible(floorContext, alignment: 0.2);
+        return;
+      }
+      final position = _controller.position;
+      final next = math.min(position.pixels + position.viewportDimension,
+          position.maxScrollExtent);
+      if (next <= position.pixels) return;
+      position.jumpTo(next);
+      await WidgetsBinding.instance.endOfFrame;
+    }
   }
 
   void _sessionChanged() {
@@ -440,6 +468,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
     collectImages();
     _threadAgree ??= _createThreadAgree();
     if (mounted) setState(() {});
+    _scheduleInitialFloorJump();
   }
 
   /// 同一模式下其它已加载页里的楼层 id。
