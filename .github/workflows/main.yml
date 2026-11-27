@@ -294,3 +294,4 @@ jobs:
           artifactErrorsFailBuild: true
           bodyFile: build/release-notes.md
           allowUpdates: true
+          removeArtifacts: true

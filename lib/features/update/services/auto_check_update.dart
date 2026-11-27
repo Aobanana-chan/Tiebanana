@@ -10,8 +10,13 @@ import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 
 ///自动检查版本更新
 class AutoCheckUpdate extends APPStateCallback {
-  static const String _lastCheckKey = "latestAutoCheckUpdate";
+  AutoCheckUpdate({
+    Future<UpdateCheckResult> Function() checkUpdate = Version.checkUpdate,
+  }) : _checkUpdate = checkUpdate;
+
+  static const String _lastReminderKey = "latestAutoUpdateReminder";
   static const String _ignoredVersionKey = "ignoredUpdateVersion";
+  final Future<UpdateCheckResult> Function() _checkUpdate;
 
   @override
   void afterInit() {}
@@ -21,41 +26,40 @@ class AutoCheckUpdate extends APPStateCallback {
 
   @override
   void onHomeFormPageCreate(BuildContext context) {
+    if (done) return;
+    done = true;
     // 更新页只处理 Android APK；其他平台不弹“去下载 APK”的提示。
-    if (!Version.isAndroidPlatform ||
-        !Global.setting.checkUpdateAutomaticlly ||
-        isCanceled()) {
-      done = true;
+    if (!Version.isAndroidPlatform || !Global.setting.checkUpdateAutomaticlly) {
       return;
     }
 
     unawaited(_check(context));
-    done = true;
   }
 
   Future<void> _check(BuildContext context) async {
     try {
-      final UpdateCheckResult result = await Version.checkUpdate();
-
-      // 只在成功后记录时间戳；失败时下次冷启动重试，成功当天只请求一次。
-      if (result.failed) {
-        return;
-      }
-      await Global.profile.setInt(
-        _lastCheckKey,
-        DateTime.now().millisecondsSinceEpoch,
-      );
-
+      final UpdateCheckResult result = await _checkUpdate();
+      final String? latestVersion = result.latestVersion;
       if (!result.hasUpdate ||
           !context.mounted ||
-          result.latestVersion == _ignoredVersion) {
+          latestVersion == null ||
+          latestVersion == Global.profile.getString(_ignoredVersionKey)) {
         return;
       }
 
-      final _UpdateChoice? choice = await showDialog<_UpdateChoice>(
+      // 每次冷启动都检查，避免当天早些时候的结果掩盖刚发布的新版本。
+      // 只限制同一天对同一版本重复弹窗，不限制请求。
+      final DateTime now = DateTime.now();
+      final String reminder =
+          '${now.year}-${now.month}-${now.day}:$latestVersion';
+      if (Global.profile.getString(_lastReminderKey) == reminder) {
+        return;
+      }
+
+      final Future<_UpdateChoice?> dialog = showDialog<_UpdateChoice>(
         context: context,
         builder: (BuildContext builder) => TiebaActionDialog<_UpdateChoice>(
-          title: "发现新版本 ${result.latestVersion}",
+          title: "发现新版本 $latestVersion",
           content: SizedBox(
             width: double.maxFinite,
             child: ConstrainedBox(
@@ -74,38 +78,19 @@ class AutoCheckUpdate extends APPStateCallback {
           ],
         ),
       );
-      if (!context.mounted) {
-        return;
-      }
+      await Global.profile.setString(_lastReminderKey, reminder);
+      final _UpdateChoice? choice = await dialog;
       if (choice == _UpdateChoice.update) {
-        Navigator.pushNamed(context, PageRouter.appUpdate);
-      } else if (choice == _UpdateChoice.ignore &&
-          result.latestVersion != null) {
-        await Global.profile.setString(
-          _ignoredVersionKey,
-          result.latestVersion!,
-        );
+        if (context.mounted) {
+          Navigator.pushNamed(context, PageRouter.appUpdate);
+        }
+      } else if (choice == _UpdateChoice.ignore) {
+        await Global.profile.setString(_ignoredVersionKey, latestVersion);
       }
     } catch (error) {
       // 自动检查属于后台行为，任何异常都不应打断首页。
       debugPrint('自动检查更新失败：$error');
     }
-  }
-
-  String? get _ignoredVersion => Global.profile.getString(_ignoredVersionKey);
-
-  bool isCanceled() {
-    var time = Global.profile.getInt(_lastCheckKey);
-    if (time != null) {
-      var date = DateTime.fromMillisecondsSinceEpoch(time);
-      var now = DateTime.now();
-      if (date.year == now.year &&
-          date.month == now.month &&
-          date.day == now.day) {
-        return true;
-      }
-    }
-    return false;
   }
 }
 
