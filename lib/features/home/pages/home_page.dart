@@ -43,6 +43,8 @@ class _HomePageState extends State<HomePage> {
   var _currentPage = 0;
   late ForumState forumState;
   PageController controller = PageController();
+  final GlobalKey _pageViewKey = GlobalKey();
+  bool? _lastDesktop;
   DateTime? lastPopTime;
   late bool Function() onWillPop;
   List<FloatingSearchBarController> barController = [];
@@ -271,7 +273,22 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final User user = Provider.of<User>(context);
     final bool desktop = !AppBreakpoints.isCompact(context);
+    if (!controller.hasClients && controller.initialPage != _currentPage) {
+      controller.dispose();
+      controller = PageController(initialPage: _currentPage);
+    }
+    if (_lastDesktop != null && _lastDesktop != desktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !controller.hasClients) return;
+        if (controller.page != _currentPage.toDouble()) {
+          controller.jumpToPage(_currentPage);
+        }
+      });
+    }
+    _lastDesktop = desktop;
+
     final Widget pageView = PageView(
+      key: _pageViewKey,
       physics: const NeverScrollableScrollPhysics(),
       controller: controller,
       children: page,
@@ -279,34 +296,25 @@ class _HomePageState extends State<HomePage> {
 
     Widget childpage;
     if (user.isLogin == false) {
-      childpage = Scaffold(
-        body: ChangeNotifierProvider.value(
-          value: forumState,
-          builder: (context, child) => const LoginPage(),
-        ),
+      childpage = const Scaffold(
+        body: LoginPage(),
       );
     } else if (desktop) {
-      final ({String title, String subtitle}) meta = _desktopBarMeta(user);
-      childpage = ChangeNotifierProvider.value(
-        value: forumState,
-        builder: (BuildContext context, _) => ListenableBuilder(
-          listenable: MessageBadge.listenable,
-          builder: (BuildContext context, _) {
-            final ({String title, String subtitle}) liveMeta =
-                _desktopBarMeta(user);
-            return DesktopShellFrame(
-              title: liveMeta.title,
-              subtitle: liveMeta.subtitle,
-              activeTab: _currentPage,
-              onSelectTab: goToTab,
-              onRefresh: _refreshActiveDesktopTab,
-              child: pageView,
-            );
-          },
-        ),
+      childpage = ListenableBuilder(
+        listenable: MessageBadge.listenable,
+        builder: (BuildContext context, _) {
+          final ({String title, String subtitle}) liveMeta =
+              _desktopBarMeta(user);
+          return DesktopShellFrame(
+            title: liveMeta.title,
+            subtitle: liveMeta.subtitle,
+            activeTab: _currentPage,
+            onSelectTab: goToTab,
+            onRefresh: _refreshActiveDesktopTab,
+            child: pageView,
+          );
+        },
       );
-      // Avoid unused variable warning for meta when ListenableBuilder builds.
-      assert(meta.title.isNotEmpty);
     } else {
       childpage = Scaffold(
         resizeToAvoidBottomInset: false,
@@ -337,20 +345,20 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        body: ChangeNotifierProvider.value(
-          value: forumState,
-          builder: (context, child) => pageView,
-        ),
+        body: pageView,
       );
     }
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        if (!onWillPop() || !context.mounted) return;
-        await AppExit.handleRootBack(context);
-      },
-      child: childpage,
+    return ChangeNotifierProvider.value(
+      value: forumState,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          if (!onWillPop() || !context.mounted) return;
+          await AppExit.handleRootBack(context);
+        },
+        child: childpage,
+      ),
     );
   }
 
