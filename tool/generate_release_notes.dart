@@ -54,7 +54,7 @@ String generateReleaseNotes({
   if (downloads.isEmpty || changes.isEmpty) {
     throw FormatException('下载说明或 $version 的 Changelog 为空');
   }
-  return '## 下载说明\n\n$downloads\n\n## 本版本更新（$version）\n\n$changes\n';
+  return '## 本版本更新（$version）\n\n$changes\n\n## 下载说明\n\n$downloads\n';
 }
 
 void main(List<String> args) {

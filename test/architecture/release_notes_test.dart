@@ -16,7 +16,7 @@ void main() {
 不要出现在发布说明中。
 ''';
 
-  test('下载说明在前，提取 tag 对应版本且保留内部 Markdown', () {
+  test('本版本更新在前，下载说明在后，且保留内部 Markdown', () {
     final result = generateReleaseNotes(
       tag: 'v1.2.3',
       readme: readme.replaceAll('\n', '\r\n'),
@@ -34,7 +34,8 @@ void main() {
 旧版更新
 ''',
     );
-    expect(result.indexOf('## 下载说明'), lessThan(result.indexOf('## 本版本更新')));
+    expect(result, startsWith('## 本版本更新（1.2.3）\n\n'));
+    expect(result, contains('\n\n## 下载说明\n\n### Android'));
     expect(result, contains('实验性，未经测试，需要自行签名。'));
     expect(result, contains('### 修复\n- **修复内容**'));
     expect(result, contains('## 代码块内的标题'));
@@ -51,7 +52,7 @@ void main() {
           readme: readme,
           changelog: '## 1.2.30\n其他更新\n## $heading\n本次更新',
         ),
-        endsWith('本次更新\n'),
+        startsWith('## 本版本更新（1.2.3）\n\n本次更新\n\n## 下载说明\n'),
       );
     }
   });
