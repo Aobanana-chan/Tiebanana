@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:flutter/services.dart';
@@ -184,17 +185,59 @@ class _UpdatePageState extends State<UpdatePage> {
   }
 
   Widget _buildDownloadSection(UpdateCheckResult result) {
+    if (!Version.supportsUpdateReminders) {
+      return _buildFallback(result, '当前平台没有提供安装包，请前往发布页查看。');
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return _buildPlatformDownload(
+          result,
+          url: result.iosIpaUrl,
+          label: '下载未签名 IPA',
+          instructions: '需要 iOS 15.0 或更高版本。下载后需要自行签名并安装。',
+          missingMessage: '本次发布未找到 iOS 安装包，请前往发布页查看。',
+        );
+      case TargetPlatform.windows:
+        return _buildPlatformDownload(
+          result,
+          url: result.windowsZipUrl,
+          label: '下载 Windows x64 ZIP',
+          instructions:
+              '适用于 Windows 10 / 11 64 位。解压后保留整个目录，运行 Tiebanana/tiebanana.exe。',
+          missingMessage: '本次发布未找到 Windows x64 安装包，请前往发布页查看。',
+        );
+      default:
+        return _buildAndroidDownloads(result);
+    }
+  }
+
+  Widget _buildPlatformDownload(
+    UpdateCheckResult result, {
+    required String? url,
+    required String label,
+    required String instructions,
+    required String missingMessage,
+  }) {
+    if (url == null) return _buildFallback(result, missingMessage);
+    return Column(
+      children: <Widget>[
+        Text(instructions, textAlign: TextAlign.center),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: () => _launch(url),
+          icon: const Icon(Icons.download_rounded, size: 18),
+          label: Text(label),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAndroidDownloads(UpdateCheckResult result) {
     final List<AndroidUpdateAsset> assets = <AndroidUpdateAsset>[
       for (final String abi in androidUpdateAbis)
         if (result.downloads[abi] != null) result.downloads[abi]!,
     ];
 
-    if (!Version.isAndroidPlatform) {
-      return _buildFallback(
-        result,
-        "当前平台暂不支持应用内更新，请前往发布页查看。",
-      );
-    }
     if (assets.isEmpty) {
       return _buildFallback(
         result,

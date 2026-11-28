@@ -3,9 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiebanana/app/global.dart';
+import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
+import 'package:tiebanana/features/update/data/github_get_latest_version.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/pages/app_update_page.dart';
 import 'package:tiebanana/features/update/services/auto_check_update.dart';
 import 'package:tiebanana/features/update/state/update_reminder.dart';
 import 'package:tiebanana/features/update/widgets/update_badge.dart';
@@ -120,5 +123,58 @@ void main() {
     await tester.pump();
     expect(find.byType(Badge), findsNothing);
     expect(UpdateReminder.shouldPrompt('v1.1.1'), isFalse);
+  });
+
+  for (final (platform, downloadLabel) in <(TargetPlatform, String)>[
+    (TargetPlatform.iOS, '下载未签名 IPA'),
+    (TargetPlatform.windows, '下载 Windows x64 ZIP'),
+  ]) {
+    testWidgets('$platform 会提示更新并显示对应的下载入口', (tester) async {
+      const result = UpdateCheckResult(
+        status: UpdateStatus.available,
+        currentVersion: '1.1.0',
+        latestVersion: 'v1.1.1',
+        iosIpaUrl: 'https://example.com/Tiebanana-ios-unsigned.ipa',
+        windowsZipUrl: 'https://example.com/Tiebanana-windows-x64.zip',
+      );
+      final checker = AutoCheckUpdate(checkUpdate: () async => result);
+      await tester.pumpWidget(ChangeNotifierProvider(
+        create: (_) => APPSettingProvider(),
+        child: MaterialApp(
+          theme: TiebananaTheme.light(seedOf('blue'), 16),
+          routes: {
+            PageRouter.appUpdate: (_) =>
+                UpdatePage(checkUpdate: () async => result),
+          },
+          home: Builder(builder: (context) {
+            checker.onHomeFormPageCreate(context);
+            return const Scaffold(body: UpdateBadge());
+          }),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('发现新版本 v1.1.1'), findsOneWidget);
+      expect(UpdateReminder.showDot.value, isTrue);
+      await tester.tap(find.text('前往更新'));
+      await tester.pumpAndSettle();
+      expect(find.text(downloadLabel), findsOneWidget);
+      expect(find.textContaining('下载 arm64'), findsNothing);
+      expect(UpdateReminder.showDot.value, isFalse);
+    }, variant: TargetPlatformVariant({platform}));
+  }
+
+  test('根据发布包后缀提取链接，不把源码 ZIP 或空链接识别为安装包', () {
+    final assets = <Assets>[
+      Assets(
+          name: 'source.zip',
+          browserDownloadUrl: 'https://example.com/source.zip'),
+      Assets(name: 'Tiebanana-windows-x64.zip', browserDownloadUrl: ' '),
+      Assets(
+          name: 'Tiebanana-ios-unsigned.ipa',
+          browserDownloadUrl: 'https://example.com/ios.ipa'),
+    ];
+    expect(findReleaseAssetUrl(assets, '-ios-unsigned.ipa'),
+        'https://example.com/ios.ipa');
+    expect(findReleaseAssetUrl(assets, '-windows-x64.zip'), isNull);
   });
 }

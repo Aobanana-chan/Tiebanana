@@ -63,6 +63,8 @@ class UpdateCheckResult {
     this.latestVersion,
     this.notes = '',
     this.downloads = const <String, AndroidUpdateAsset>{},
+    this.iosIpaUrl,
+    this.windowsZipUrl,
     this.releasePageUrl,
     this.error,
   });
@@ -80,6 +82,9 @@ class UpdateCheckResult {
 
   /// ABI → 安装包；只包含本次 Release 实际提供的 ABI。
   final Map<String, AndroidUpdateAsset> downloads;
+
+  final String? iosIpaUrl;
+  final String? windowsZipUrl;
 
   /// Release 页面地址，资产缺失或非 Android 平台时作为兜底入口。
   final String? releasePageUrl;
@@ -121,7 +126,18 @@ class Version {
   static Future<UpdateCheckResult>? _inFlight;
   static String? _deviceAbi;
 
-  /// 更新检查与 APK 下载只在 Android 上提供。
+  /// GitHub Releases 提供安装包的平台。
+  static bool get supportsUpdateReminders =>
+      !kIsWeb &&
+      switch (defaultTargetPlatform) {
+        TargetPlatform.android ||
+        TargetPlatform.iOS ||
+        TargetPlatform.windows =>
+          true,
+        _ => false,
+      };
+
+  /// ABI 检测与 APK 下载仅适用于 Android。
   static bool get isAndroidPlatform =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
@@ -252,6 +268,12 @@ class Version {
         downloads: hasUpdate
             ? mapAndroidAssetsByAbi(release.assets)
             : const <String, AndroidUpdateAsset>{},
+        iosIpaUrl: hasUpdate
+            ? findReleaseAssetUrl(release.assets, '-ios-unsigned.ipa')
+            : null,
+        windowsZipUrl: hasUpdate
+            ? findReleaseAssetUrl(release.assets, '-windows-x64.zip')
+            : null,
         releasePageUrl: release.htmlUrl,
       );
     } catch (error, stack) {
@@ -268,6 +290,17 @@ class Version {
       error: error,
     );
   }
+}
+
+/// 按发布工作流使用的文件名后缀找下载链接，不把源代码 ZIP 当作安装包。
+String? findReleaseAssetUrl(List<Assets>? assets, String suffix) {
+  for (final Assets asset in assets ?? const <Assets>[]) {
+    final String? url = asset.browserDownloadUrl?.trim();
+    if (asset.name?.endsWith(suffix) == true && url != null && url.isNotEmpty) {
+      return url;
+    }
+  }
+  return null;
 }
 
 /// 从 Release 资产里挑出各 ABI 的安装包。

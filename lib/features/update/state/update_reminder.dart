@@ -20,7 +20,7 @@ class UpdateReminder {
   /// 下次冷启动检查失败时，仍保留已发现且未读的版本提示。
   static void restore() {
     final String? version = Global.profile.getString(_detectedVersionKey);
-    _detectedVersion = Version.isAndroidPlatform &&
+    _detectedVersion = Version.supportsUpdateReminders &&
             version != null &&
             isNewerVersion(Version.currentVersion, version)
         ? version
@@ -59,7 +59,7 @@ class UpdateReminder {
   }
 
   static Future<void> recordCheck(UpdateCheckResult result) async {
-    if (!Version.isAndroidPlatform || result.failed) return;
+    if (!Version.supportsUpdateReminders || result.failed) return;
     final String? version = result.hasUpdate ? result.latestVersion : null;
     _detectedVersion = version;
     refreshDot();
@@ -71,7 +71,7 @@ class UpdateReminder {
   }
 
   static Future<void> markViewed(UpdateCheckResult result) async {
-    if (!Version.isAndroidPlatform || result.failed) return;
+    if (!Version.supportsUpdateReminders || result.failed) return;
     final String? version = result.hasUpdate ? result.latestVersion : null;
     await Future.wait(<Future<void>>[
       // 先同步更新 SharedPreferences 的内存值，再刷新红点。
