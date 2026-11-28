@@ -107,7 +107,7 @@ void main() {
   });
 
   test('初始化失败只调用一次，不自动重试；手动重试可以恢复', () async {
-    final BootState boot = BootState();
+    final BootState boot = BootState(rethrowInitializationErrors: false);
     addTearDown(boot.dispose);
     var calls = 0;
     await boot.initialize(() async {
@@ -126,6 +126,22 @@ void main() {
     expect(boot.error, isNull);
   });
 
+  test('Debug 模式保留原始初始化异常和堆栈', () async {
+    final boot = BootState();
+    addTearDown(boot.dispose);
+    final error = StateError('初始化失败');
+    final stack = StackTrace.current;
+    await boot.initialize(() => Future<void>.error(error, stack)).then<void>(
+      (_) => fail('初始化异常应继续抛出'),
+      onError: (Object actualError, StackTrace actualStack) {
+        expect(actualError, same(error));
+        expect(actualStack, same(stack));
+      },
+    );
+    await boot.initialize(() async {});
+    expect(boot.value, isTrue);
+  });
+
   test('初始化进行中忽略重复请求', () async {
     final BootState boot = BootState();
     addTearDown(boot.dispose);
@@ -142,7 +158,7 @@ void main() {
   });
 
   testWidgets('初始化失败显示重试入口，手动重试成功后进入应用', (tester) async {
-    final BootState boot = BootState();
+    final BootState boot = BootState(rethrowInitializationErrors: false);
     await tester.pumpWidget(BootstrapApp(
       boot: boot,
       app: const _FakeApp(),

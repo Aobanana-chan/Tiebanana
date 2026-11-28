@@ -46,7 +46,7 @@ void main() {
   });
 
   testWidgets('启动失败能打开诊断页', (tester) async {
-    final boot = BootState();
+    final boot = BootState(rethrowInitializationErrors: false);
     await tester.pumpWidget(BootstrapApp(boot: boot, app: const SizedBox()));
     await boot.initialize(() async => throw StateError('test'));
     await tester.pump();

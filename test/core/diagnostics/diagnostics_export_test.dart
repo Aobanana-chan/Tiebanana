@@ -58,10 +58,16 @@ void main() {
     PathProviderPlatform.instance = _Paths(directory.path);
     try {
       final logs = Directory('${directory.path}/logs');
+      // 模拟之前由非 Debug 构建写入的日志。
+      final writer = AppLog();
+      await writer.initialize(logs);
+      writer.record('test.export_failed', level: 'error');
+      await writer.flush();
       await AppLog.shared.initialize(logs);
       await File('${logs.path}/cookies').writeAsString('BDUSS=secret');
       await File('${logs.path}/database.db').writeAsString('private');
-      AppLog.shared.record('test.export_failed', level: 'error');
+      AppLog.shared.error('uncaught.zone', StateError('debug'), null);
+      AppLog.shared.protocolException('parser.failed', {});
       final file = await Diagnostics.shared.createBundle();
       final archive = ZipDecoder().decodeBytes(await file.readAsBytes());
       expect(archive.files.map((f) => f.name), contains('manifest.json'));
@@ -72,6 +78,8 @@ void main() {
           isTrue);
       final contents = archive.files.map((f) => utf8.decode(f.content)).join();
       expect(contents, contains('test.export'));
+      expect(contents, isNot(contains('uncaught.zone')));
+      expect(contents, isNot(contains('parser.failed')));
       expect(contents, isNot(contains('secret')));
       expect(contents, isNot(contains('private')));
       final manifest =

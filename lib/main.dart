@@ -1,7 +1,9 @@
 import 'package:tiebanana/app/navigation/app_router.dart';
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
@@ -28,9 +30,31 @@ import 'package:tiebanana/core/diagnostics/diagnostics.dart';
 final _appNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  runZoned(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    final previousFlutterError = FlutterError.onError;
+  if (kDebugMode) {
+    unawaited(_startApp());
+    return;
+  }
+
+  runZoned(_startApp, zoneSpecification: ZoneSpecification(
+    handleUncaughtError: (self, parent, zone, error, stackTrace) {
+      AppLog.shared.error('uncaught.zone', error, stackTrace);
+      parent.handleUncaughtError(zone, error, stackTrace);
+    },
+  ));
+}
+
+Future<void> _startApp() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final previousFlutterError = FlutterError.onError;
+  if (kDebugMode) {
+    FlutterError.onError = (details) {
+      // 布局溢出捕捉
+      if (details.library == 'rendering library' && details.stack == null) {
+        developer.debugger(message: details.exceptionAsString());
+      }
+      previousFlutterError?.call(details);
+    };
+  } else {
     FlutterError.onError = (details) {
       AppLog.shared.error('uncaught.flutter', details.exception, details.stack);
       previousFlutterError?.call(details);
@@ -39,52 +63,47 @@ void main() {
       AppLog.shared.error('uncaught.platform', error, stack);
       return false; // 保留引擎默认错误输出。
     };
+  }
 
-    // 开屏先上，初始化并行跑：启动期由开屏动画覆盖，初始化在后台执行。
-    // Global.init() 里最慢的是登录态那一次网络请求，正好被前四拍吃掉。
-    final BootState boot = BootState();
-    const splashCompletedKey = 'splash.completed';
-    final preferences = SharedPreferences.getInstance();
-    Future<void> initialize() => boot.initialize(() async {
-          await Diagnostics.shared.initialize();
-          MediaKit.ensureInitialized();
-          final prefs = await preferences;
-          boot.setSplashSkippable(prefs.getBool(splashCompletedKey) ?? false);
-          await Global.init();
-          // 缓存维护不阻塞开屏与登录初始化。
-          unawaited(ImageCacheManager.shared
-              .start()
-              .catchError((Object error, StackTrace stack) {
-            AppLog.shared.error('cache.initialize_failed', error, stack);
-            debugPrint('初始化图片缓存管理失败：$error');
-          }));
-          LifeTimeCallback().afterInit();
-        });
-
-    Future<void> recordSplashCompleted() async {
-      try {
+  // 开屏先上，初始化并行跑：启动期由开屏动画覆盖，初始化在后台执行。
+  // Global.init() 里最慢的是登录态那一次网络请求，正好被前四拍吃掉。
+  final BootState boot = BootState();
+  const splashCompletedKey = 'splash.completed';
+  final preferences = SharedPreferences.getInstance();
+  Future<void> initialize() => boot.initialize(() async {
+        await Diagnostics.shared.initialize();
+        MediaKit.ensureInitialized();
         final prefs = await preferences;
-        await prefs.setBool(splashCompletedKey, true);
-      } catch (error, stack) {
-        AppLog.shared.error('startup.splash_record_failed', error, stack);
-        // 记录失败不影响进入应用，下次仍按首次启动完整播放。
-        debugPrint('保存开屏播放记录失败：$error');
-      }
-    }
+        boot.setSplashSkippable(prefs.getBool(splashCompletedKey) ?? false);
+        await Global.init();
+        // 缓存维护不阻塞开屏与登录初始化。
+        unawaited(ImageCacheManager.shared
+            .start()
+            .catchError((Object error, StackTrace stack) {
+          AppLog.shared.error('cache.initialize_failed', error, stack);
+          debugPrint('初始化图片缓存管理失败：$error');
+        }));
+        LifeTimeCallback().afterInit();
+      });
 
-    runApp(BootstrapApp(
-      boot: boot,
-      app: const App(),
-      onRetry: initialize,
-      onSplashCompleted: () => unawaited(recordSplashCompleted()),
-    ));
-    await initialize();
-  }, zoneSpecification: ZoneSpecification(
-    handleUncaughtError: (self, parent, zone, error, stackTrace) {
-      AppLog.shared.error('uncaught.zone', error, stackTrace);
-      parent.handleUncaughtError(zone, error, stackTrace);
-    },
+  Future<void> recordSplashCompleted() async {
+    try {
+      final prefs = await preferences;
+      await prefs.setBool(splashCompletedKey, true);
+    } catch (error, stack) {
+      AppLog.shared.error('startup.splash_record_failed', error, stack);
+      // 记录失败不影响进入应用，下次仍按首次启动完整播放。
+      debugPrint('保存开屏播放记录失败：$error');
+    }
+  }
+
+  runApp(BootstrapApp(
+    boot: boot,
+    app: const App(),
+    onRetry: initialize,
+    onSplashCompleted: () => unawaited(recordSplashCompleted()),
   ));
+  await initialize();
 }
 
 class App extends StatelessWidget {
@@ -142,10 +161,7 @@ class App extends StatelessWidget {
                   // 主题只由「种子 + 用户字号」决定，见 lib/shared/theme/。
                   theme: TiebananaTheme.light(seed, theme.fontSize),
                   darkTheme: TiebananaTheme.dark(seed, theme.fontSize),
-                  localizationsDelegates: const [
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                  ],
+                  localizationsDelegates: GlobalMaterialLocalizations.delegates,
                   supportedLocales: const [
                     Locale('zh', 'CN'),
                     Locale('en', 'US'),

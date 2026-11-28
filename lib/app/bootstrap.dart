@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tiebanana/core/diagnostics/app_log.dart';
 import 'package:tiebanana/features/diagnostics/pages/diagnostics_page.dart';
@@ -12,8 +13,9 @@ import 'package:tiebanana/shared/widgets/phone_viewport.dart';
 /// 开屏与初始化**并行**：先挂开屏，初始化在同一个 zone 里运行，
 /// 完成后把这里置 true，开屏进入交接。启动期全程由开屏动画覆盖。
 class BootState extends ValueNotifier<bool> {
-  BootState() : super(false);
+  BootState({this.rethrowInitializationErrors = kDebugMode}) : super(false);
 
+  final bool rethrowInitializationErrors;
   Object? error;
   bool _initializing = false;
   bool _canSkipSplash = false;
@@ -37,6 +39,7 @@ class BootState extends ValueNotifier<bool> {
       await initialize();
       markReady();
     } catch (e, stackTrace) {
+      if (rethrowInitializationErrors) rethrow;
       AppLog.shared.error('startup.failed', e, stackTrace);
       error = e;
       debugPrint('应用初始化失败：$e');

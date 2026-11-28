@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:dio/dio.dart';
 import 'package:tieba_contract/tieba_contract.dart';
@@ -9,12 +10,13 @@ import 'package:tieba_contract/tieba_contract.dart';
 /// 本地诊断日志，只记录白名单字段。
 class AppLog {
   AppLog({
+    this.recordingEnabled = true,
     this.maxFileBytes = 2 * 1024 * 1024,
     this.maxTotalBytes = 20 * 1024 * 1024,
     this.retention = const Duration(days: 7),
   });
 
-  static final shared = AppLog();
+  static final shared = AppLog(recordingEnabled: !kDebugMode);
   static const _fields = {
     'phase',
     'durationMs',
@@ -44,6 +46,7 @@ class AppLog {
     'parser',
     'rawType',
   };
+  final bool recordingEnabled;
   final int maxFileBytes;
   final int maxTotalBytes;
   final Duration retention;
@@ -102,7 +105,7 @@ class AppLog {
       Map<String, Object?> data = const {},
       StackTrace? stack,
       Map<String, Object?>? snapshot}) {
-    if (level != 'error') return;
+    if (!recordingEnabled || level != 'error') return;
     if (!RegExp(r'^[a-z][a-z0-9_.]{0,79}$').hasMatch(event)) return;
     final safe = <String, Object?>{};
     for (final entry in data.entries) {
@@ -169,6 +172,7 @@ class AppLog {
 
   /// 协议侧传来的快照已脱敏，这里再次做结构过滤。
   void protocolException(String event, Map<String, Object?> data) {
+    if (!recordingEnabled) return;
     // 私信长连接只记录失败与慢登录；成功事件不进日志，避免刷屏。
     const Set<String> chatEvents = <String>{
       'chat.login_failed',
