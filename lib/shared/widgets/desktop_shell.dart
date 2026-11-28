@@ -408,46 +408,64 @@ class _DesktopSidebar extends StatelessWidget {
         expanded ? 11 : 8,
         11,
       ),
-      child: Column(
-        crossAxisAlignment:
-            expanded ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
-        children: <Widget>[
-          _buildBrand(context, tokens),
-          const SizedBox(height: 8),
-          for (int i = 0; i < _navItems.length; i++) ...<Widget>[
-            _buildNavItem(context, tokens, i, _navItems[i]),
-            if (i < _navItems.length - 1) const SizedBox(height: 3),
-          ],
-          if (expanded &&
-              forumState != null &&
-              forumState!.forums.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 12),
-            Expanded(child: _buildQuickForums(context, tokens)),
-          ] else
-            const Spacer(),
-          if (expanded) ...<Widget>[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-              child: Divider(height: 1, thickness: 1, color: tokens.line),
-            ),
-          ] else ...<Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: SizedBox(
-                width: 28,
-                child: Divider(height: 1, thickness: 1, color: tokens.line),
-              ),
-            ),
-          ],
-          _buildAboutEntry(context, tokens),
-          const SizedBox(height: 6),
-          _buildAccountCard(context, tokens),
-        ],
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          // 按动画当前帧的内容宽度切换布局，给横排的图标、文字和角标留出空间。
+          const double minExpandedContentWidth = 148;
+          final bool showLabels = constraints.maxWidth >= minExpandedContentWidth;
+          return Column(
+            crossAxisAlignment: showLabels
+                ? CrossAxisAlignment.stretch
+                : CrossAxisAlignment.center,
+            children: <Widget>[
+              _buildBrand(tokens, showLabels: showLabels),
+              const SizedBox(height: 8),
+              for (int i = 0; i < _navItems.length; i++) ...<Widget>[
+                _buildNavItem(
+                  context,
+                  tokens,
+                  i,
+                  _navItems[i],
+                  showLabels: showLabels,
+                ),
+                if (i < _navItems.length - 1) const SizedBox(height: 3),
+              ],
+              if (showLabels &&
+                  forumState != null &&
+                  forumState!.forums.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 12),
+                Expanded(child: _buildQuickForums(context, tokens)),
+              ] else
+                const Spacer(),
+              if (showLabels)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  child: Divider(height: 1, thickness: 1, color: tokens.line),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SizedBox(
+                    width: 28,
+                    child: Divider(height: 1, thickness: 1, color: tokens.line),
+                  ),
+                ),
+              _buildAboutEntry(context, tokens, showLabels: showLabels),
+              const SizedBox(height: 6),
+              _buildAccountCard(context, tokens, showLabels: showLabels),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildAboutEntry(BuildContext context, TiebananaTokens tokens) {
+  Widget _buildAboutEntry(
+    BuildContext context,
+    TiebananaTokens tokens, {
+    required bool showLabels,
+  }) {
     final bool selected = activeAbout;
     final Color fg =
         selected ? tokens.onPrimaryContainer : tokens.textSecondary;
@@ -455,7 +473,7 @@ class _DesktopSidebar extends StatelessWidget {
     final IconData iconData =
         selected ? Icons.info_rounded : Icons.info_outline_rounded;
 
-    if (!expanded) {
+    if (!showLabels) {
       return Tooltip(
         message: '关于与更新',
         child: Material(
@@ -516,7 +534,7 @@ class _DesktopSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildBrand(BuildContext context, TiebananaTokens tokens) {
+  Widget _buildBrand(TiebananaTokens tokens, {required bool showLabels}) {
     final Widget logo = ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Image.asset(
@@ -527,7 +545,24 @@ class _DesktopSidebar extends StatelessWidget {
       ),
     );
 
-    if (!expanded) {
+    final Widget toggle = Tooltip(
+      message: expanded ? '折叠侧边栏' : '展开侧边栏',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onToggleFold,
+        child: SizedBox(
+          width: 26,
+          height: showLabels ? 26 : 22,
+          child: Icon(
+            expanded ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+            size: 16,
+            color: tokens.textTertiary,
+          ),
+        ),
+      ),
+    );
+
+    if (!showLabels) {
       return Padding(
         padding: const EdgeInsets.only(top: 3, bottom: 9),
         child: Column(
@@ -543,22 +578,7 @@ class _DesktopSidebar extends StatelessWidget {
             ),
             if (canExpand) ...<Widget>[
               const SizedBox(height: 6),
-              Tooltip(
-                message: '展开侧边栏',
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: onToggleFold,
-                  child: SizedBox(
-                    width: 26,
-                    height: 22,
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 16,
-                      color: tokens.textTertiary,
-                    ),
-                  ),
-                ),
-              ),
+              toggle,
             ],
           ],
         ),
@@ -600,22 +620,7 @@ class _DesktopSidebar extends StatelessWidget {
               ),
             ),
           ),
-          Tooltip(
-            message: '折叠侧边栏',
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: onToggleFold,
-              child: SizedBox(
-                width: 26,
-                height: 26,
-                child: Icon(
-                  Icons.chevron_left_rounded,
-                  size: 16,
-                  color: tokens.textTertiary,
-                ),
-              ),
-            ),
-          ),
+          if (canExpand) toggle,
         ],
       ),
     );
@@ -625,8 +630,9 @@ class _DesktopSidebar extends StatelessWidget {
     BuildContext context,
     TiebananaTokens tokens,
     int index,
-    ({IconData icon, IconData activeIcon, String label}) item,
-  ) {
+    ({IconData icon, IconData activeIcon, String label}) item, {
+    required bool showLabels,
+  }) {
     final bool selected = activeTab == index;
     final Color fg =
         selected ? tokens.onPrimaryContainer : tokens.textSecondary;
@@ -635,7 +641,7 @@ class _DesktopSidebar extends StatelessWidget {
     final bool isMessage = index == 2;
     final bool isProfile = index == 3;
 
-    if (!expanded) {
+    if (!showLabels) {
       final Widget iconWidget = Icon(iconData, size: 20, color: fg);
       return Tooltip(
         message: item.label,
@@ -804,7 +810,11 @@ class _DesktopSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountCard(BuildContext context, TiebananaTokens tokens) {
+  Widget _buildAccountCard(
+    BuildContext context,
+    TiebananaTokens tokens, {
+    required bool showLabels,
+  }) {
     final TiebananaAccount? account = AccountStore.current;
     final String name = (user?.name.isNotEmpty ?? false)
         ? user!.name
@@ -815,7 +825,7 @@ class _DesktopSidebar extends StatelessWidget {
         ? (forumCount > 0 ? '$forumCount 个关注的吧' : '点击切换账号')
         : '点击登录账号';
 
-    if (!expanded) {
+    if (!showLabels) {
       return Tooltip(
         message: name,
         child: Material(
