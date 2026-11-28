@@ -4,6 +4,7 @@ import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/account/widgets/account_switch_sheet.dart';
+import 'package:tiebanana/features/update/widgets/update_badge.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 import 'package:tiebanana/shared/widgets/setting_group.dart';
 
@@ -41,6 +42,7 @@ class SettingPanel extends StatelessWidget {
             SettingRow(
               icon: Icons.settings_outlined,
               title: '设置',
+              trailing: const UpdateBadge(),
               showChevron: true,
               onTap: () => Navigator.pushNamed(context, PageRouter.appSetting),
             ),

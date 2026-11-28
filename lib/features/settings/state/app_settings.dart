@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/app/global.dart';
+import 'package:tiebanana/features/update/state/update_reminder.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 
 ///应用设置Provider
 class APPSettingProvider with ChangeNotifier {
+  bool get checkUpdateAutomatically => Global.setting.checkUpdateAutomaticlly;
+
+  set checkUpdateAutomatically(bool value) {
+    if (value == checkUpdateAutomatically) return;
+    Global.setting.checkUpdateAutomaticlly = value;
+    Global.saveProfile();
+    UpdateReminder.refreshDot();
+    notifyListeners();
+  }
+
   // 获取当前主题，如果未设置主题，则默认使用蓝色主题
   String get theme {
     return Global.setting.theme!;

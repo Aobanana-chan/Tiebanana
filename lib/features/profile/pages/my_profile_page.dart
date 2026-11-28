@@ -23,6 +23,7 @@ import 'package:tiebanana/features/settings/pages/image_cache_page.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/features/settings/widgets/setting_panel.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/widgets/update_badge.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
@@ -508,6 +509,7 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
             icon: Icons.storage_outlined,
             label: '存储与诊断',
             badge: cacheText,
+            showUpdateBadge: true,
             selected: _section == _ProfileSection.storage,
             onTap: () => setState(() => _section = _ProfileSection.storage),
           ),
@@ -569,6 +571,7 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
               _HorizontalMenuPill(
                 icon: item.icon,
                 label: item.label,
+                showUpdateBadge: item.sec == _ProfileSection.storage,
                 selected: _section == item.sec,
                 onTap: () => setState(() => _section = item.sec),
               ),
@@ -1048,9 +1051,8 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
           title: '自动检查更新',
           subtitle: '手动检查入口位于「关于」',
           trailing: SettingSwitch(
-            value: setting.checkUpdateAutomaticlly,
-            onChanged: (bool v) =>
-                _commitSetting(() => setting.checkUpdateAutomaticlly = v),
+            value: provider.checkUpdateAutomatically,
+            onChanged: (bool v) => provider.checkUpdateAutomatically = v,
           ),
         ),
         _SettingItemRow(
@@ -1449,7 +1451,7 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
               textStyle:
                   const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
             ),
-            child: const Text('查看'),
+            child: const UpdateBadge(child: Text('查看')),
           ),
         ),
       ],
@@ -1464,6 +1466,7 @@ class _MenuRow extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.badge,
+    this.showUpdateBadge = false,
     this.showChevron = false,
     this.danger = false,
   });
@@ -1473,6 +1476,7 @@ class _MenuRow extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final String? badge;
+  final bool showUpdateBadge;
   final bool showChevron;
   final bool danger;
 
@@ -1494,7 +1498,10 @@ class _MenuRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: <Widget>[
-                Icon(icon, size: 16, color: fg),
+                if (showUpdateBadge)
+                  UpdateBadge(child: Icon(icon, size: 16, color: fg))
+                else
+                  Icon(icon, size: 16, color: fg),
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
@@ -1545,6 +1552,7 @@ class _HorizontalMenuPill extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.showUpdateBadge = false,
     this.danger = false,
   });
 
@@ -1552,6 +1560,7 @@ class _HorizontalMenuPill extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool showUpdateBadge;
   final bool danger;
 
   @override
@@ -1573,7 +1582,10 @@ class _HorizontalMenuPill extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Icon(icon, size: 15, color: fg),
+                if (showUpdateBadge)
+                  UpdateBadge(child: Icon(icon, size: 15, color: fg))
+                else
+                  Icon(icon, size: 15, color: fg),
                 const SizedBox(width: 6),
                 Text(
                   label,

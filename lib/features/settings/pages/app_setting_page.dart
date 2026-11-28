@@ -3,6 +3,7 @@ import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:provider/provider.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/widgets/update_badge.dart';
 import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/core/cache/image_cache_manager.dart';
@@ -364,6 +365,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
 
   Widget _generalGroup(BuildContext context) {
     final APPSetting setting = Global.setting;
+    final APPSettingProvider settings = context.watch<APPSettingProvider>();
     return SettingGroup(
       children: <Widget>[
         SettingRow(
@@ -390,9 +392,8 @@ class _AppSettingPageState extends State<AppSettingPage> {
           title: '自动检查更新',
           // 手动检查入口位于「关于」页。
           trailing: SettingSwitch(
-            value: setting.checkUpdateAutomaticlly,
-            onChanged: (bool value) =>
-                _commit(() => setting.checkUpdateAutomaticlly = value),
+            value: settings.checkUpdateAutomatically,
+            onChanged: (bool value) => settings.checkUpdateAutomatically = value,
           ),
         ),
         SettingRow(
@@ -453,6 +454,7 @@ class _AppSettingPageState extends State<AppSettingPage> {
           icon: Icons.info_outline_rounded,
           title: '关于',
           value: Version.displayVersion,
+          trailing: const UpdateBadge(),
           showChevron: true,
           onTap: () => Navigator.pushNamed(context, PageRouter.about),
         ),

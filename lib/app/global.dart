@@ -12,6 +12,7 @@ import 'package:tiebanana/app/backend.dart';
 import 'package:tiebanana/features/history/data/dao_api.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/state/update_reminder.dart';
 import 'package:tiebanana/features/account/data/credential_store.dart';
 import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/features/account/state/login_failure.dart';
@@ -90,6 +91,7 @@ class Global {
     } else {
       setting = APPSetting.fromJson(json5Decode(settingload));
     }
+    UpdateReminder.restore();
 
     await initializeNotifications();
 

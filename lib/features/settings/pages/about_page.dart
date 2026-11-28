@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiebanana/features/settings/data/license.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/widgets/update_badge.dart';
 import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/app/navigation/link_router.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -41,6 +42,7 @@ class AboutPage extends StatelessWidget {
                 title: '检查更新',
                 subtitle: '更新内容会显示在版本页里',
                 value: Version.displayVersion,
+                trailing: const UpdateBadge(),
                 showChevron: true,
                 onTap: () => Navigator.pushNamed(context, PageRouter.appUpdate),
               ),

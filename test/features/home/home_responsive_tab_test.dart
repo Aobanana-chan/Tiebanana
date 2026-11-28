@@ -13,10 +13,16 @@ import 'package:tiebanana/features/profile/pages/my_profile_page.dart';
 import 'package:tiebanana/features/recommend/pages/recommend_page.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/features/settings/pages/app_setting_page.dart';
+import 'package:tiebanana/features/settings/pages/about_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/pages/app_update_page.dart';
+import 'package:tiebanana/features/update/state/update_reminder.dart';
+import 'package:tiebanana/features/update/widgets/update_badge.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
 import 'package:tiebanana/shared/widgets/desktop_shell.dart';
+import 'package:tiebanana/shared/widgets/setting_group.dart';
 
 Widget _wrapHome() {
   return MultiProvider(
@@ -37,7 +43,7 @@ Widget _wrapHome() {
 }
 
 /// 与 [_wrapHome] 相同，但带「应用设置」命名路由，用于验证窄屏设置页在拉宽后退场。
-Widget _wrapHomeWithSettingsRoute() {
+Widget _wrapHomeWithSettingsRoute({UpdateCheckResult? updateResult}) {
   return MultiProvider(
     providers: <ChangeNotifierProvider<dynamic>>[
       ChangeNotifierProvider<APPSettingProvider>(
@@ -52,6 +58,10 @@ Widget _wrapHomeWithSettingsRoute() {
       theme: TiebananaTheme.light(seedOf('blue'), 16),
       routes: <String, WidgetBuilder>{
         PageRouter.appSetting: (_) => const AppSettingPage(),
+        PageRouter.about: (_) => const AboutPage(),
+        if (updateResult != null)
+          PageRouter.appUpdate: (_) =>
+              UpdatePage(checkUpdate: () async => updateResult),
       },
       home: const HomePage(),
     ),
@@ -82,8 +92,50 @@ void main() {
     });
     Global.profile = await SharedPreferences.getInstance();
     Global.setting = APPSetting.fromJson(defaultAPPSetting);
+    UpdateReminder.restore();
     Global.tiebaAPI = DemoTiebaApi(latency: Duration.zero);
     MessageReminder.reset();
+  });
+
+  testWidgets('窄屏更新红点沿各级入口显示，看到更新页后消失', (tester) async {
+    tester.view.physicalSize = const Size(430, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const result = UpdateCheckResult(
+      status: UpdateStatus.available,
+      currentVersion: '1.1.0',
+      latestVersion: 'v1.1.1',
+    );
+    await UpdateReminder.recordCheck(result);
+    await tester.pumpWidget(_wrapHomeWithSettingsRoute(updateResult: result));
+    await _pumpFrames(tester);
+
+    final dots = find.descendant(
+      of: find.byType(UpdateBadge),
+      matching: find.byType(Badge),
+    );
+    expect(dots.hitTestable(), findsWidgets);
+    await tester.tap(find.text('个人'));
+    await _pumpFrames(tester);
+    expect(
+        find.descendant(
+            of: find.widgetWithText(SettingRow, '设置'), matching: dots),
+        findsOneWidget);
+    await tester.tap(find.text('设置'));
+    await _pumpFrames(tester);
+    await tester.scrollUntilVisible(find.text('关于'), 300);
+    expect(dots.hitTestable(), findsOneWidget);
+    await tester.tap(find.text('关于'));
+    await _pumpFrames(tester);
+    expect(dots.hitTestable(), findsOneWidget);
+    await tester.tap(find.text('检查更新'));
+    await _pumpFrames(tester);
+    expect(find.text('最新版本：v1.1.1'), findsOneWidget);
+    await tester.pageBack();
+    await _pumpFrames(tester);
+    expect(dots, findsNothing);
   });
 
   testWidgets('宽屏切到个人页后缩窄到手机宽度，页签与显示内容仍保持为个人页', (
@@ -107,7 +159,9 @@ void main() {
 
     expect(find.byType(UserPage), findsOneWidget);
     expect(
-      tester.widget<DesktopShellFrame>(find.byType(DesktopShellFrame)).activeTab,
+      tester
+          .widget<DesktopShellFrame>(find.byType(DesktopShellFrame))
+          .activeTab,
       3,
     );
 
@@ -141,7 +195,9 @@ void main() {
 
     expect(find.byType(DesktopShellFrame), findsOneWidget);
     expect(
-      tester.widget<DesktopShellFrame>(find.byType(DesktopShellFrame)).activeTab,
+      tester
+          .widget<DesktopShellFrame>(find.byType(DesktopShellFrame))
+          .activeTab,
       1,
     );
     expect(find.byType(RecommendPan), findsOneWidget);

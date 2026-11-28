@@ -20,6 +20,7 @@ import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
 import 'package:tiebanana/shared/widgets/message_badge.dart';
+import 'package:tiebanana/features/update/widgets/update_badge.dart';
 
 /// 桌面端统一壳层（`≥ 720dp`）：左侧导航栏（76px 图标轨 / 220px 展开侧边栏）
 /// + 顶部 56px 全局栏 + 主工作区。
@@ -483,6 +484,7 @@ class _DesktopSidebar extends StatelessWidget {
     final Color bg = selected ? tokens.primaryContainer : Colors.transparent;
     final IconData iconData = selected ? item.activeIcon : item.icon;
     final bool isMessage = index == 2;
+    final bool isProfile = index == 3;
 
     if (!expanded) {
       final Widget iconWidget = Icon(iconData, size: 20, color: fg);
@@ -501,7 +503,9 @@ class _DesktopSidebar extends StatelessWidget {
               child: Center(
                 child: isMessage
                     ? MessageBadge(compactDot: true, child: iconWidget)
-                    : iconWidget,
+                    : isProfile
+                        ? UpdateBadge(child: iconWidget)
+                        : iconWidget,
               ),
             ),
           ),
@@ -536,6 +540,7 @@ class _DesktopSidebar extends StatelessWidget {
                 ),
               ),
               if (isMessage) const MessageBadge(),
+              if (isProfile) const UpdateBadge(),
             ],
           ),
         ),
@@ -747,10 +752,12 @@ class _DesktopSidebar extends StatelessWidget {
                   child: SizedBox(
                     width: 26,
                     height: 26,
-                    child: Icon(
-                      Icons.settings_outlined,
-                      size: 16,
-                      color: tokens.textTertiary,
+                    child: UpdateBadge(
+                      child: Icon(
+                        Icons.settings_outlined,
+                        size: 16,
+                        color: tokens.textTertiary,
+                      ),
                     ),
                   ),
                 ),

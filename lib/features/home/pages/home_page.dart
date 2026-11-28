@@ -24,6 +24,7 @@ import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:app_links/app_links.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/link_router.dart';
+import 'package:tiebanana/features/update/widgets/update_badge.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
@@ -354,8 +355,8 @@ class _HomePageState extends State<HomePage> {
                   selectedIcon: _messageBadge(const Icon(Icons.notifications)),
                   label: "消息"),
               const NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
+                  icon: UpdateBadge(child: Icon(Icons.person_outline)),
+                  selectedIcon: UpdateBadge(child: Icon(Icons.person)),
                   label: "个人"),
             ],
           ),

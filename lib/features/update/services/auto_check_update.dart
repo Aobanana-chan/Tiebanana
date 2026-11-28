@@ -5,6 +5,7 @@ import 'package:tiebanana/app/lifecycle/app_lifecycle_hook.dart';
 import 'package:tiebanana/features/update/data/version.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/features/update/state/update_reminder.dart';
 import 'package:tiebanana/features/update/widgets/update_release_notes.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 
@@ -14,8 +15,6 @@ class AutoCheckUpdate extends APPStateCallback {
     Future<UpdateCheckResult> Function() checkUpdate = Version.checkUpdate,
   }) : _checkUpdate = checkUpdate;
 
-  static const String _lastReminderKey = "latestAutoUpdateReminder";
-  static const String _ignoredVersionKey = "ignoredUpdateVersion";
   final Future<UpdateCheckResult> Function() _checkUpdate;
 
   @override
@@ -39,20 +38,15 @@ class AutoCheckUpdate extends APPStateCallback {
   Future<void> _check(BuildContext context) async {
     try {
       final UpdateCheckResult result = await _checkUpdate();
+      // 请求期间也可能关闭自动检查。
+      if (!Global.setting.checkUpdateAutomaticlly) return;
+      await UpdateReminder.recordCheck(result);
       final String? latestVersion = result.latestVersion;
       if (!result.hasUpdate ||
           !context.mounted ||
+          !Global.setting.checkUpdateAutomaticlly ||
           latestVersion == null ||
-          latestVersion == Global.profile.getString(_ignoredVersionKey)) {
-        return;
-      }
-
-      // 每次冷启动都检查，避免当天早些时候的结果掩盖刚发布的新版本。
-      // 只限制同一天对同一版本重复弹窗，不限制请求。
-      final DateTime now = DateTime.now();
-      final String reminder =
-          '${now.year}-${now.month}-${now.day}:$latestVersion';
-      if (Global.profile.getString(_lastReminderKey) == reminder) {
+          !UpdateReminder.shouldPrompt(latestVersion)) {
         return;
       }
 
@@ -78,14 +72,14 @@ class AutoCheckUpdate extends APPStateCallback {
           ],
         ),
       );
-      await Global.profile.setString(_lastReminderKey, reminder);
+      await UpdateReminder.markPrompted(latestVersion);
       final _UpdateChoice? choice = await dialog;
       if (choice == _UpdateChoice.update) {
         if (context.mounted) {
           Navigator.pushNamed(context, PageRouter.appUpdate);
         }
       } else if (choice == _UpdateChoice.ignore) {
-        await Global.profile.setString(_ignoredVersionKey, latestVersion);
+        await UpdateReminder.ignore(latestVersion);
       }
     } catch (error) {
       // 自动检查属于后台行为，任何异常都不应打断首页。

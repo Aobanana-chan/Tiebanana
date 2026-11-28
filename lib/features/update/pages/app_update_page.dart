@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:tiebanana/features/update/data/version.dart';
+import 'package:tiebanana/features/update/state/update_reminder.dart';
 import 'package:tiebanana/features/update/widgets/update_release_notes.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
@@ -10,7 +11,9 @@ import 'package:url_launcher/url_launcher_string.dart';
 ///App更新页面
 
 class UpdatePage extends StatefulWidget {
-  const UpdatePage({super.key});
+  const UpdatePage({super.key, this.checkUpdate = Version.checkUpdate});
+
+  final Future<UpdateCheckResult> Function() checkUpdate;
 
   @override
   State<UpdatePage> createState() => _UpdatePageState();
@@ -40,7 +43,7 @@ class _UpdatePageState extends State<UpdatePage> {
     if (mounted) {
       setState(() => _loading = true);
     }
-    final UpdateCheckResult result = await Version.checkUpdate();
+    final UpdateCheckResult result = await widget.checkUpdate();
     if (!mounted) {
       return;
     }
@@ -48,6 +51,11 @@ class _UpdatePageState extends State<UpdatePage> {
       _result = result;
       _loading = false;
     });
+    try {
+      await UpdateReminder.markViewed(result);
+    } catch (error) {
+      debugPrint('保存更新已读状态失败：$error');
+    }
   }
 
   Future<void> _launch(String url) async {
@@ -106,7 +114,7 @@ class _UpdatePageState extends State<UpdatePage> {
             const SizedBox(height: 8),
             Center(child: Text("当前版本：${Version.displayVersion}")),
             const SizedBox(height: 4),
-            _buildLatestVersion(tokens),
+            _buildLatestVersion(),
             const SizedBox(height: 8),
             if (_loading && _result == null)
               const Padding(
@@ -131,7 +139,7 @@ class _UpdatePageState extends State<UpdatePage> {
     );
   }
 
-  Widget _buildLatestVersion(TiebananaTokens tokens) {
+  Widget _buildLatestVersion() {
     if (_loading && _result == null) {
       return const Center(child: Text("最新版本：检查中…"));
     }
@@ -139,20 +147,7 @@ class _UpdatePageState extends State<UpdatePage> {
     if (latest == null) {
       return const Center(child: Text("最新版本：未知"));
     }
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text("最新版本：$latest"),
-        if (_result!.hasUpdate) ...<Widget>[
-          const SizedBox(width: 4),
-          Icon(
-            Icons.brightness_1,
-            color: tokens.danger,
-            size: 8,
-          ),
-        ],
-      ],
-    );
+    return Center(child: Text("最新版本：$latest"));
   }
 
   Widget _buildFailure() {
