@@ -265,11 +265,13 @@ class ThreadCacheCodec {
 
   static Map<String, dynamic> pageInfo(TiebaPageInfo p) => {
         'currentPage': p.currentPage,
+        if (p.totalPage != null) 'totalPage': p.totalPage,
         'hasMore': p.hasMore,
         'hasPrev': p.hasPrev,
       };
   static TiebaPageInfo readPageInfo(Map<String, dynamic> j) => TiebaPageInfo(
       currentPage: j['currentPage'],
+      totalPage: j['totalPage'] as int?,
       hasMore: j['hasMore'],
       hasPrev: j['hasPrev']);
   static Map<String, dynamic> page(TiebaThreadPage p) => {

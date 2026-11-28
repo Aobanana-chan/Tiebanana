@@ -17,6 +17,7 @@ import 'package:tiebanana/shared/content/special_span.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/layout/page_wrap.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/desktop_panel.dart';
 import 'package:tiebanana/shared/widgets/desktop_shell.dart';
@@ -322,11 +323,16 @@ class ThreadPageMainState extends State<ThreadPageMain>
   final TextEditingController _jumpInput = TextEditingController();
 
   bool _loading = false;
+  bool _jumping = false;
   bool _replyRefreshPending = false;
   String? _replyFloorId;
   bool _loadingPrevious = false;
   bool _previousFailed = false;
   bool _nextFailed = false;
+  final GlobalKey _scrollViewKey = GlobalKey();
+  int _visiblePage = 1;
+  int? _normalTotalPage;
+  int? _lzTotalPage;
 
   /// 内容和底部提示共享同一位移；松手后回弹到提示高度，完成后才收起。
   late final AnimationController _bottomPull =
@@ -393,19 +399,107 @@ class ThreadPageMainState extends State<ThreadPageMain>
         ? widget.page.hasMore
         : widget.page.page.hasMore;
     _normalHasPrev = widget.page.hasPrev || _normalTopPn > 1;
+    _normalTotalPage =
+        _mergeTotalPage(null, widget.page.page, pn, _normalBottomPn);
+    _visiblePage = pn;
     info.hasMore = _normalHasMore;
     info.hasPrev = _normalHasPrev;
 
     _stored = ValueNotifier<bool>(info.isStored);
     _stored.addListener(_storeChanged);
-    _threadAgree = _createThreadAgree();
+    _threadAgree ??= _createThreadAgree();
 
     collectImages();
 
     _controller.addListener(_onScrollNext);
     _controller.addListener(_onScrollPrev);
+    _controller.addListener(_onScrollTrackPage);
     replyEvents.addListener(_onReplySent);
     _scheduleInitialFloorJump();
+  }
+
+  int? get _currentTotalPage => lz ? _lzTotalPage : _normalTotalPage;
+
+  String _pageLabel(int current, int? total) =>
+      total != null ? '第 $current / $total 页' : '第 $current 页';
+
+  int? _mergeTotalPage(
+    int? prev,
+    TiebaPageInfo page,
+    int pn,
+    int maxLoadedPn,
+  ) {
+    if (page.totalPage != null && page.totalPage! > 0) {
+      return page.totalPage;
+    }
+    if (!page.hasMore && pn >= maxLoadedPn) {
+      return math.max(1, pn);
+    }
+    if (page.hasMore && prev != null && pn >= prev) {
+      return null;
+    }
+    return prev;
+  }
+
+  void _onScrollTrackPage() {
+    final int next = _detectVisiblePage();
+    if (next != _visiblePage && mounted) {
+      setState(() => _visiblePage = next);
+    }
+  }
+
+  void _scheduleVisiblePageSync() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_controller.hasClients) return;
+      final int next = _detectVisiblePage();
+      if (next != _visiblePage) {
+        setState(() => _visiblePage = next);
+      }
+    });
+  }
+
+  int _detectVisiblePage() {
+    final int topPn = lz ? _lzTopPn : _normalTopPn;
+    final int bottomPn = lz ? _lzBottomPn : _normalBottomPn;
+    if (!_controller.hasClients) return _visiblePage;
+    final ScrollPosition position = _controller.position;
+    if (position.pixels <= 8) return topPn;
+    if (position.extentAfter <= 16 && position.maxScrollExtent > 0) {
+      return bottomPn;
+    }
+
+    final Map<String, int> postToPage = <String, int>{};
+    for (final MapEntry<int, List<TiebaThreadPagePost>> entry
+        in info.postPage.entries) {
+      if ((entry.key < 0) != lz) continue;
+      final int pageNo = entry.key.abs();
+      for (final TiebaThreadPagePost post in entry.value) {
+        postToPage[post.id] = pageNo;
+      }
+    }
+    if (postToPage.isEmpty) return topPn;
+
+    final RenderObject? scrollRender =
+        _scrollViewKey.currentContext?.findRenderObject();
+    if (scrollRender is RenderBox && scrollRender.attached) {
+      final double scrollTop = scrollRender.localToGlobal(Offset.zero).dy;
+      final double thresholdY =
+          scrollTop + math.min(120, scrollRender.size.height * 0.25);
+      for (final TiebaThreadPagePost post in _sortedFloors()) {
+        final RenderObject? render =
+            _floorKeys[post.id]?.currentContext?.findRenderObject();
+        if (render is RenderBox && render.attached) {
+          final double bottom =
+              render.localToGlobal(Offset.zero).dy + render.size.height;
+          if (bottom > thresholdY) {
+            final int? matched = postToPage[post.id];
+            if (matched != null) return matched;
+          }
+        }
+      }
+    }
+    final int upper = math.max(topPn, bottomPn);
+    return _visiblePage.clamp(topPn, upper);
   }
 
   void _scheduleInitialFloorJump() {
@@ -416,13 +510,13 @@ class ThreadPageMainState extends State<ThreadPageMain>
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToFloor(target));
   }
 
-  Future<void> _jumpToFloor(String target) async {
+  Future<void> _jumpToFloor(String target, {double alignment = 0.2}) async {
     // SliverList 只构建视口附近的楼层。缓存合并后目标可能不在首屏，
     // 逐屏推进到目标挂载，再精确对齐，给顶部导航栏留出空间。
     while (mounted && _controller.hasClients) {
       final floorContext = _floorKeys[target]?.currentContext;
       if (floorContext != null && floorContext.mounted) {
-        await Scrollable.ensureVisible(floorContext, alignment: 0.2);
+        await Scrollable.ensureVisible(floorContext, alignment: alignment);
         return;
       }
       final position = _controller.position;
@@ -472,11 +566,15 @@ class ThreadPageMainState extends State<ThreadPageMain>
       if (pn <= _lzTopPn) _lzHasPrev = page.page.hasPrev;
       _lzTopPn = math.min(_lzTopPn, pn);
       _lzBottomPn = math.max(_lzBottomPn, pn);
+      _lzTotalPage =
+          _mergeTotalPage(_lzTotalPage, page.page, pn, _lzBottomPn);
     } else {
       if (pn >= _normalBottomPn) _normalHasMore = page.page.hasMore;
       if (pn <= _normalTopPn) _normalHasPrev = page.page.hasPrev;
       _normalTopPn = math.min(_normalTopPn, pn);
       _normalBottomPn = math.max(_normalBottomPn, pn);
+      _normalTotalPage =
+          _mergeTotalPage(_normalTotalPage, page.page, pn, _normalBottomPn);
     }
     info.topPn = lz ? _lzTopPn : _normalTopPn;
     info.bottomPn = lz ? _lzBottomPn : _normalBottomPn;
@@ -486,6 +584,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
     _threadAgree ??= _createThreadAgree();
     if (mounted) setState(() {});
     _scheduleInitialFloorJump();
+    _scheduleVisiblePageSync();
   }
 
   /// 同一模式下其它已加载页里的楼层 id。
@@ -741,13 +840,23 @@ class ThreadPageMainState extends State<ThreadPageMain>
         markMissingDeleted: true, aliveIds: _aliveFloorIds(key));
     info.userListSet.addAll(page.userListSet);
     if (lz) {
-      if (pn >= _lzBottomPn) _lzHasMore = page.page.hasMore;
+      if (pn >= _lzBottomPn) {
+        _lzHasMore = page.page.hasMore;
+        info.page = page.page;
+      }
       _lzTopPn = math.min(_lzTopPn, pn);
       _lzBottomPn = math.max(_lzBottomPn, pn);
+      _lzTotalPage =
+          _mergeTotalPage(_lzTotalPage, page.page, pn, _lzBottomPn);
     } else {
-      if (pn >= _normalBottomPn) _normalHasMore = page.page.hasMore;
+      if (pn >= _normalBottomPn) {
+        _normalHasMore = page.page.hasMore;
+        info.page = page.page;
+      }
       _normalTopPn = math.min(_normalTopPn, pn);
       _normalBottomPn = math.max(_normalBottomPn, pn);
+      _normalTotalPage =
+          _mergeTotalPage(_normalTotalPage, page.page, pn, _normalBottomPn);
     }
     info.hasMore = lz ? _lzHasMore : _normalHasMore;
     info.hasPrev = lz ? _lzHasPrev : _normalHasPrev;
@@ -757,6 +866,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
     if (page.tid == info.tid && page.title.isNotEmpty) {
       info.thread = page.thread;
     }
+    _scheduleVisiblePageSync();
   }
 
   void _onReplySent() {
@@ -940,13 +1050,19 @@ class ThreadPageMainState extends State<ThreadPageMain>
           info.postPage[key] ?? [], page.posts,
           markMissingDeleted: true, aliveIds: _aliveFloorIds(key));
       if (lz) {
-        if (pn >= _lzBottomPn) _lzHasMore = page.page.hasMore;
+        if (pn >= _lzBottomPn) {
+          _lzHasMore = page.page.hasMore;
+          info.page = page.page;
+        }
         if (pn <= _lzTopPn) _lzHasPrev = page.page.hasPrev;
         _lzTopPn = math.min(_lzTopPn, pn);
         _lzBottomPn = math.max(_lzBottomPn, pn);
+        _lzTotalPage =
+            _mergeTotalPage(_lzTotalPage, page.page, pn, _lzBottomPn);
       } else {
         if (pn >= _normalBottomPn) {
           _normalHasMore = page.page.hasMore;
+          info.page = page.page;
         }
         if (pn <= _normalTopPn) {
           _normalHasPrev = page.page.hasPrev;
@@ -954,6 +1070,11 @@ class ThreadPageMainState extends State<ThreadPageMain>
         if (refresh || previous) _needsFullLocatedPage = false;
         _normalTopPn = math.min(_normalTopPn, pn);
         _normalBottomPn = math.max(_normalBottomPn, pn);
+        _normalTotalPage =
+            _mergeTotalPage(_normalTotalPage, page.page, pn, _normalBottomPn);
+      }
+      if (refresh) {
+        info.page = page.page;
       }
       info.hasMore = lz ? _lzHasMore : _normalHasMore;
       info.hasPrev = lz ? _lzHasPrev : _normalHasPrev;
@@ -965,6 +1086,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
         collectImages();
         _threadAgree ??= _createThreadAgree();
       });
+      _scheduleVisiblePageSync();
       if (previous) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !_controller.hasClients) return;
@@ -1009,11 +1131,12 @@ class ThreadPageMainState extends State<ThreadPageMain>
 
   ///只看楼主。两种模式各自缓存页数据，来回切换时复用。
   void onlyLz() {
-    if (_loading || _bottomRefreshing) return;
+    if (_loading || _bottomRefreshing || _jumping) return;
     _bottomResultTimer?.cancel();
     _bottomNoNewContent = false;
     _newBottomFloorIds.clear();
     _bottomPull.value = 0;
+    _jumpInput.clear();
     setState(() {
       _previousFailed = false;
       _nextFailed = false;
@@ -1023,9 +1146,143 @@ class ThreadPageMainState extends State<ThreadPageMain>
       info.bottomPn = lz ? _lzBottomPn : _normalBottomPn;
       info.hasMore = lz ? _lzHasMore : _normalHasMore;
       info.hasPrev = lz ? _lzHasPrev : _normalHasPrev;
+      _visiblePage = info.topPn ?? 1;
     });
     if (_currentPosts.isEmpty) {
       _fetchPage(1, refresh: true);
+    } else {
+      _scheduleVisiblePageSync();
+    }
+  }
+
+  /// 跳转到指定页：正序下已加载页直接滚动定位；未加载页切换至目标页内容。
+  Future<void> jumpToPage(int targetPage) async {
+    if (_loading || _manualRefreshing || _bottomRefreshing || _jumping) return;
+    if (targetPage < 1) return;
+    final int? total = _currentTotalPage;
+    if (total != null && targetPage > total) {
+      Fluttertoast.showToast(msg: '共 $total 页，请输入 1–$total');
+      return;
+    }
+
+    final int key = targetPage * (lz ? -1 : 1);
+    final List<TiebaThreadPagePost>? loaded = info.postPage[key];
+    if (_sortMode == 1 && loaded != null && loaded.isNotEmpty) {
+      final int topPn = lz ? _lzTopPn : _normalTopPn;
+      if (targetPage == topPn) {
+        if (_controller.hasClients) {
+          _controller.jumpTo(0);
+        }
+        if (mounted && _visiblePage != targetPage) {
+          setState(() => _visiblePage = targetPage);
+        }
+        return;
+      }
+      final TiebaThreadPagePost anchorPost = loaded.firstWhere(
+        (TiebaThreadPagePost p) => p.floor != '1',
+        orElse: () => loaded.first,
+      );
+      await _jumpToFloor(anchorPost.id, alignment: 0.12);
+      if (mounted) {
+        setState(() => _visiblePage = targetPage);
+      }
+      return;
+    }
+
+    session.retry();
+    _bottomResultTimer?.cancel();
+    _bottomNoNewContent = false;
+    _newBottomFloorIds.clear();
+    _bottomPull.value = 0;
+    setState(() {
+      _jumping = true;
+      _previousFailed = false;
+      _nextFailed = false;
+      _bottomRefreshFailed = false;
+    });
+    try {
+      final TiebaThreadPage page = await Global.tiebaAPI
+          .getThreadPage(widget.kz, pn: targetPage, onlyLz: lz);
+      if (!mounted || cacheUid != (AccountStore.currentUid ?? '')) return;
+      await Global.threadCache.savePage(cacheUid, page,
+          onlyLz: lz,
+          stored: isStored && (Global.setting.markedCache ?? true));
+      if (!mounted) return;
+
+      final int actualPn =
+          page.page.currentPage > 0 ? page.page.currentPage : targetPage;
+      final int actualKey = actualPn * (lz ? -1 : 1);
+      info.postPage.removeWhere((int k, _) => (k < 0) == lz);
+      info.postPage[actualKey] = ThreadCache.mergePosts(
+        <TiebaThreadPagePost>[],
+        page.posts,
+        markMissingDeleted: true,
+      );
+      info.userListSet.addAll(page.userListSet);
+      info.page = page.page;
+      if (page.tid == info.tid && page.title.isNotEmpty) {
+        info.thread = page.thread;
+      }
+
+      if (lz) {
+        _lzTopPn = actualPn;
+        _lzBottomPn = actualPn;
+        _lzHasMore = page.page.hasMore;
+        _lzHasPrev = page.page.hasPrev;
+        _lzTotalPage =
+            _mergeTotalPage(_lzTotalPage, page.page, actualPn, _lzBottomPn);
+      } else {
+        _normalTopPn = actualPn;
+        _normalBottomPn = actualPn;
+        _normalHasMore = page.page.hasMore;
+        _normalHasPrev = page.page.hasPrev;
+        _needsFullLocatedPage = false;
+        _normalTotalPage = _mergeTotalPage(
+            _normalTotalPage, page.page, actualPn, _normalBottomPn);
+      }
+      info.topPn = lz ? _lzTopPn : _normalTopPn;
+      info.bottomPn = lz ? _lzBottomPn : _normalBottomPn;
+      info.hasMore = lz ? _lzHasMore : _normalHasMore;
+      info.hasPrev = lz ? _lzHasPrev : _normalHasPrev;
+
+      final Set<String> activeIds = <String>{
+        for (final List<TiebaThreadPagePost> list in info.postPage.values)
+          for (final TiebaThreadPagePost p in list) p.id,
+      };
+      _floorKeys.removeWhere((String id, _) => !activeIds.contains(id));
+
+      collectImages();
+      _threadAgree ??= _createThreadAgree();
+      setState(() {
+        _jumping = false;
+        _visiblePage = actualPn;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_controller.hasClients) return;
+        _controller.jumpTo(0);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      session.fail(e);
+      setState(() => _jumping = false);
+      Fluttertoast.showToast(msg: '跳页失败，请稍后重试');
+    }
+  }
+
+  Future<void> _openJumpPageDialog() async {
+    final int? page = await showAdaptivePanel<int>(
+      context: context,
+      maxWidth: 400,
+      builder: (BuildContext context) => _JumpPageSheet(
+        currentPage: _visiblePage,
+        totalPage: _currentTotalPage,
+        hasMore: info.hasMore,
+        loadedStart: info.topPn ?? _visiblePage,
+        loadedEnd: info.bottomPn ?? _visiblePage,
+      ),
+    );
+    if (page != null && mounted) {
+      await jumpToPage(page);
     }
   }
 
@@ -1138,18 +1395,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
       return;
     }
     if (value == 'jump') {
-      final int? page = await showDialog<int>(
-        context: context,
-        builder: (BuildContext context) => _JumpPageDialog(
-          currentPage: info.page.currentPage,
-        ),
-      );
-      if (page != null && mounted) {
-        await _fetchPage(page, refresh: true);
-        if (_controller.hasClients) {
-          _controller.jumpTo(0);
-        }
-      }
+      await _openJumpPageDialog();
       return;
     }
     if (value == 'share') {
@@ -1201,14 +1447,20 @@ class ThreadPageMainState extends State<ThreadPageMain>
         shape: RoundedRectangleBorder(borderRadius: TiebananaMetrics.brLg),
         onSelected: _handleMenu,
         icon: Icon(Icons.more_vert_rounded, color: tokens.textSecondary),
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-          _appMenuItem(context, 'refresh', Icons.refresh_rounded, '刷新帖子'),
-          _appMenuItem(
-              context, 'jump', Icons.format_list_numbered_rounded, '跳页'),
-          _appMenuItem(context, 'share', Icons.ios_share_rounded, '分享'),
-          if ((int.tryParse(info.tid) ?? 0) > 0)
-            _appMenuItem(context, 'report', Icons.flag_outlined, '举报帖子'),
-        ],
+        itemBuilder: (BuildContext context) {
+          final int? total = _currentTotalPage;
+          final String jumpLabel = total != null
+              ? '跳页（$_visiblePage / $total）'
+              : '跳页（第 $_visiblePage 页）';
+          return <PopupMenuEntry<String>>[
+            _appMenuItem(context, 'refresh', Icons.refresh_rounded, '刷新帖子'),
+            _appMenuItem(
+                context, 'jump', Icons.format_list_numbered_rounded, jumpLabel),
+            _appMenuItem(context, 'share', Icons.ios_share_rounded, '分享'),
+            if ((int.tryParse(info.tid) ?? 0) > 0)
+              _appMenuItem(context, 'report', Icons.flag_outlined, '举报帖子'),
+          ];
+        },
       ),
       const SizedBox(width: 4),
     ];
@@ -1253,14 +1505,21 @@ class ThreadPageMainState extends State<ThreadPageMain>
         children: <Widget>[
           for (int i = 0; i < labels.length; i++) ...<Widget>[
             if (i != 0) const SizedBox(width: 6),
-            Expanded(
-              child: _SortButton(
-                label: labels[i],
-                active: _sortMode == i,
-                onTap: () => setState(() => _sortMode = i),
-              ),
+            _SortButton(
+              label: labels[i],
+              active: _sortMode == i,
+              onTap: () => setState(() => _sortMode = i),
             ),
           ],
+          const SizedBox(width: 8),
+          const Spacer(),
+          Flexible(
+            fit: FlexFit.loose,
+            child: _PageJumpChip(
+              label: _pageLabel(_visiblePage, _currentTotalPage),
+              onTap: _openJumpPageDialog,
+            ),
+          ),
         ],
       ),
     );
@@ -1518,6 +1777,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
                       child: NotificationListener<ScrollNotification>(
                         onNotification: _onBottomScrollNotification,
                         child: CustomScrollView(
+                          key: _scrollViewKey,
                           controller: _controller,
                           physics: _ThreadScrollPhysics(
                               bottomPull: () => _bottomPull.value,
@@ -1641,6 +1901,17 @@ class ThreadPageMainState extends State<ThreadPageMain>
                         child: _listFooter(tokens),
                       ),
                     ),
+                    if (_jumping)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: MediaQuery.paddingOf(context).top + kToolbarHeight,
+                        child: LinearProgressIndicator(
+                          minHeight: 2,
+                          color: tokens.primary,
+                          backgroundColor: Colors.transparent,
+                        ),
+                      ),
                   ],
                 )),
               ),
@@ -1682,12 +1953,18 @@ class ThreadPageMainState extends State<ThreadPageMain>
 
   Future<void> _jumpToPageInput() async {
     final int? p = int.tryParse(_jumpInput.text.trim());
+    final int? total = _currentTotalPage;
     if (p == null || p < 1) {
       Fluttertoast.showToast(msg: '请输入有效页码');
       return;
     }
-    await _fetchPage(p, refresh: true);
-    if (_controller.hasClients) _controller.jumpTo(0);
+    if (total != null && p > total) {
+      Fluttertoast.showToast(msg: '共 $total 页，请输入 1–$total');
+      return;
+    }
+    _jumpInput.clear();
+    FocusScope.of(context).unfocus();
+    await jumpToPage(p);
   }
 
   Widget _buildDesktopShell(
@@ -1699,7 +1976,8 @@ class ThreadPageMainState extends State<ThreadPageMain>
     final bool twoCol = width >= AppBreakpoints.mediumMax;
     final double sideWidth = width >= 1100 ? 288 : 268;
     final List<Widget> floors = buildFloor(desktop: true);
-    final int currentPage = info.page.currentPage;
+    final int currentPage = _visiblePage;
+    final int? totalPage = _currentTotalPage;
 
     final Widget mainFeed = ClipRect(
       child: Stack(
@@ -1714,6 +1992,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
             child: NotificationListener<ScrollNotification>(
               onNotification: _onBottomScrollNotification,
               child: CustomScrollView(
+                key: _scrollViewKey,
                 controller: _controller,
                 physics: _ThreadScrollPhysics(
                   bottomPull: () => _bottomPull.value,
@@ -1884,15 +2163,10 @@ class ThreadPageMainState extends State<ThreadPageMain>
                             label: Text(_manualRefreshing ? '正在刷新…' : '刷新最新回复'),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            '第 $currentPage 页',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                                  fontSize: 11,
-                                  color: tokens.textTertiary,
-                                ),
+                          _PageJumpChip(
+                            label: _pageLabel(currentPage, totalPage),
+                            compact: true,
+                            onTap: _openJumpPageDialog,
                           ),
                           if (info.hasMore) ...<Widget>[
                             const SizedBox(width: 10),
@@ -1929,6 +2203,17 @@ class ThreadPageMainState extends State<ThreadPageMain>
               child: _listFooter(tokens),
             ),
           ),
+          if (_jumping)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: tokens.primary,
+                backgroundColor: Colors.transparent,
+              ),
+            ),
         ],
       ),
     );
@@ -2014,12 +2299,23 @@ class ThreadPageMainState extends State<ThreadPageMain>
             ),
           ],
           const Spacer(),
-          Text(
-            '已加载 $loadedCount 条回复',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 11,
-                  color: tokens.textTertiary,
-                ),
+          _PageJumpChip(
+            label: _pageLabel(_visiblePage, _currentTotalPage),
+            compact: true,
+            onTap: _openJumpPageDialog,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            fit: FlexFit.loose,
+            child: Text(
+              '已加载 $loadedCount 条回复',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 11,
+                    color: tokens.textTertiary,
+                  ),
+            ),
           ),
         ],
       ),
@@ -2027,6 +2323,12 @@ class ThreadPageMainState extends State<ThreadPageMain>
   }
 
   Widget _desktopSideColumn(TiebananaTokens tokens) {
+    final int? totalPage = _currentTotalPage;
+    final bool busy = _loading || _jumping;
+    final bool canPrev = _visiblePage > 1 && !busy;
+    final bool canNext =
+        (totalPage != null ? _visiblePage < totalPage : info.hasMore) && !busy;
+    final bool canLast = totalPage != null && _visiblePage < totalPage && !busy;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -2260,49 +2562,72 @@ class ThreadPageMainState extends State<ThreadPageMain>
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      '跳转页码',
+                      '页码跳转',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 12,
                             color: tokens.textSecondary,
                           ),
                     ),
                   ),
-                  SizedBox(
-                    width: 48,
-                    height: 26,
-                    child: TextField(
-                      controller: _jumpInput,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      onSubmitted: (_) => _jumpToPageInput(),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 11,
-                            color: tokens.textPrimary,
+                  _PageJumpChip(
+                    label: _pageLabel(_visiblePage, totalPage),
+                    compact: true,
+                    onTap: _openJumpPageDialog,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: <Widget>[
+                  _SmallCtrlIcon(
+                    icon: Icons.first_page_rounded,
+                    tooltip: '首页',
+                    onTap: canPrev ? () => jumpToPage(1) : null,
+                  ),
+                  _SmallCtrlIcon(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: '上一页',
+                    onTap: canPrev ? () => jumpToPage(_visiblePage - 1) : null,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: SizedBox(
+                      height: 26,
+                      child: TextField(
+                        controller: _jumpInput,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: <TextInputFormatter>[
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onSubmitted: (_) => _jumpToPageInput(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontSize: 11,
+                              color: tokens.textPrimary,
+                            ),
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.zero,
+                          filled: true,
+                          fillColor: tokens.fill,
+                          hintText:
+                              totalPage != null ? '1-$totalPage' : '$_visiblePage',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: tokens.line),
                           ),
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.zero,
-                        filled: true,
-                        fillColor: tokens.fill,
-                        hintText: '${info.page.currentPage}',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: tokens.line),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: tokens.line),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: tokens.line),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: 4),
                   SizedBox(
                     height: 26,
                     child: OutlinedButton(
-                      onPressed: _jumpToPageInput,
+                      onPressed: _jumping ? null : _jumpToPageInput,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: tokens.textSecondary,
                         side: BorderSide(color: tokens.line),
@@ -2315,6 +2640,17 @@ class ThreadPageMainState extends State<ThreadPageMain>
                       ),
                       child: const Text('Go'),
                     ),
+                  ),
+                  const SizedBox(width: 2),
+                  _SmallCtrlIcon(
+                    icon: Icons.chevron_right_rounded,
+                    tooltip: '下一页',
+                    onTap: canNext ? () => jumpToPage(_visiblePage + 1) : null,
+                  ),
+                  _SmallCtrlIcon(
+                    icon: Icons.last_page_rounded,
+                    tooltip: '末页',
+                    onTap: canLast ? () => jumpToPage(totalPage) : null,
                   ),
                 ],
               ),
@@ -2371,6 +2707,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
     replyEvents.removeListener(_onReplySent);
     _controller.removeListener(_onScrollNext);
     _controller.removeListener(_onScrollPrev);
+    _controller.removeListener(_onScrollTrackPage);
     _controller.dispose();
     _bottomResultTimer?.cancel();
     _bottomPull.dispose();
@@ -2596,14 +2933,468 @@ class _SortButton extends StatelessWidget {
         onTap: onTap,
         child: SizedBox(
           height: 36,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            child: Center(
+              child: Text(
+                label,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                      color: active
+                          ? tokens.onPrimaryContainer
+                          : tokens.textSecondary,
+                    ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PageJumpChip extends StatelessWidget {
+  const _PageJumpChip({
+    required this.label,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Tooltip(
+      message: '页码跳转',
+      child: Material(
+        color: tokens.fill,
+        borderRadius: TiebananaMetrics.brPill,
+        child: InkWell(
+          borderRadius: TiebananaMetrics.brPill,
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 9 : 11,
+              vertical: compact ? 5 : 8,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: compact ? 11 : 12,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textSecondary,
+                      fontFeatures: const <FontFeature>[
+                        FontFeature.tabularFigures(),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  Icons.unfold_more_rounded,
+                  size: compact ? 13 : 15,
+                  color: tokens.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JumpPageSheet extends StatefulWidget {
+  const _JumpPageSheet({
+    required this.currentPage,
+    required this.totalPage,
+    required this.hasMore,
+    required this.loadedStart,
+    required this.loadedEnd,
+  });
+
+  final int currentPage;
+  final int? totalPage;
+  final bool hasMore;
+  final int loadedStart;
+  final int loadedEnd;
+
+  @override
+  State<_JumpPageSheet> createState() => _JumpPageSheetState();
+}
+
+class _JumpPageSheetState extends State<_JumpPageSheet> {
+  final TextEditingController _controller = TextEditingController();
+  late int _selectedPage;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    final int? total = widget.totalPage;
+    _selectedPage = total != null
+        ? widget.currentPage.clamp(1, math.max(1, total))
+        : math.max(1, widget.currentPage);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _setSelected(int page, {bool syncInput = true}) {
+    final int? total = widget.totalPage;
+    final int clamped =
+        total != null ? page.clamp(1, math.max(1, total)) : math.max(1, page);
+    setState(() {
+      _selectedPage = clamped;
+      _errorText = null;
+      if (syncInput) {
+        _controller.text = '$clamped';
+        _controller.selection =
+            TextSelection.collapsed(offset: _controller.text.length);
+      }
+    });
+  }
+
+  void _onTextChanged(String raw) {
+    final String text = raw.trim();
+    if (text.isEmpty) {
+      setState(() => _errorText = null);
+      return;
+    }
+    final int? parsed = int.tryParse(text);
+    final int? total = widget.totalPage;
+    if (parsed == null || parsed < 1) {
+      setState(() => _errorText = '请输入大于 0 的页码');
+      return;
+    }
+    if (total != null && parsed > total) {
+      setState(() => _errorText = '共 $total 页，请输入 1–$total');
+      return;
+    }
+    setState(() {
+      _selectedPage = parsed;
+      _errorText = null;
+    });
+  }
+
+  void _submit() {
+    final String text = _controller.text.trim();
+    final int? total = widget.totalPage;
+    if (text.isNotEmpty) {
+      final int? page = int.tryParse(text);
+      if (page == null || page < 1) {
+        setState(() => _errorText = '请输入大于 0 的页码');
+        return;
+      }
+      if (total != null && page > total) {
+        setState(() => _errorText = '共 $total 页，请输入 1–$total');
+        return;
+      }
+      Navigator.pop(context, page);
+      return;
+    }
+    if (total != null) {
+      Navigator.pop(context, _selectedPage);
+      return;
+    }
+    setState(() => _errorText = '请输入页码');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    final int? total = widget.totalPage;
+    final int current = widget.currentPage;
+    final bool canFirst = current > 1;
+    final bool canPrev = current > 1;
+    final bool canNext =
+        total != null ? current < total : widget.hasMore;
+    final bool canLast = total != null && current < total;
+    final bool showSlider = total != null && total > 1;
+    final String statusText =
+        total != null ? '第 $current / $total 页' : '当前第 $current 页';
+    final bool hasRange = widget.loadedStart < widget.loadedEnd;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              if (MediaQuery.sizeOf(context).width < AppBreakpoints.compactMax)
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: tokens.lineStrong,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              Row(
+                children: <Widget>[
+                  Text(
+                    '页码跳转',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: tokens.primaryContainer,
+                      borderRadius: TiebananaMetrics.brPill,
+                    ),
+                    child: Text(
+                      statusText,
+                      style: textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: tokens.onPrimaryContainer,
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Material(
+                    color: tokens.fill,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () => Navigator.pop(context),
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: tokens.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (hasRange || total == null) ...<Widget>[
+                const SizedBox(height: 4),
+                Text(
+                  hasRange
+                      ? '已连续加载第 ${widget.loadedStart}–${widget.loadedEnd} 页'
+                      : '暂未获取到总页数，可直接输入页码跳转',
+                  style: textTheme.labelSmall
+                      ?.copyWith(color: tokens.textTertiary),
+                ),
+              ],
+              const SizedBox(height: 14),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _QuickPageButton(
+                      label: '首页',
+                      onTap: canFirst ? () => Navigator.pop(context, 1) : null,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _QuickPageButton(
+                      label: '上一页',
+                      onTap: canPrev
+                          ? () => Navigator.pop(context, current - 1)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _QuickPageButton(
+                      label: '下一页',
+                      onTap: canNext
+                          ? () => Navigator.pop(context, current + 1)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _QuickPageButton(
+                      label: '末页',
+                      onTap:
+                          canLast ? () => Navigator.pop(context, total) : null,
+                    ),
+                  ),
+                ],
+              ),
+              if (showSlider) ...<Widget>[
+                const SizedBox(height: 14),
+                Row(
+                  children: <Widget>[
+                    Text(
+                      '拖动选择',
+                      style: textTheme.labelMedium
+                          ?.copyWith(color: tokens.textSecondary),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '第 $_selectedPage / $total 页',
+                      style: textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: tokens.primary,
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: tokens.primary,
+                    inactiveTrackColor: tokens.lineStrong,
+                    thumbColor: tokens.primary,
+                    overlayColor: tokens.primary.withValues(alpha: 0.14),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    min: 1,
+                    max: total.toDouble(),
+                    divisions: total <= 200 ? total - 1 : null,
+                    value: _selectedPage.clamp(1, total).toDouble(),
+                    onChanged: (double value) => _setSelected(value.round()),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      '第 1 页',
+                      style: textTheme.labelSmall
+                          ?.copyWith(color: tokens.textTertiary),
+                    ),
+                    Text(
+                      '第 $total 页',
+                      style: textTheme.labelSmall
+                          ?.copyWith(color: tokens.textTertiary),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _StepIconButton(
+                    icon: Icons.remove_rounded,
+                    tooltip: '减一页',
+                    onTap: _selectedPage > 1
+                        ? () => _setSelected(_selectedPage - 1)
+                        : null,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      onChanged: _onTextChanged,
+                      onSubmitted: (_) => _submit(),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        filled: true,
+                        fillColor: tokens.fill,
+                        hintText: total != null
+                            ? '输入页码 (1–$total)'
+                            : '输入页码（当前第 $current 页）',
+                        errorText: _errorText,
+                        border: OutlineInputBorder(
+                          borderRadius: TiebananaMetrics.brCtl,
+                          borderSide: BorderSide(color: tokens.line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: TiebananaMetrics.brCtl,
+                          borderSide: BorderSide(color: tokens.line),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  _StepIconButton(
+                    icon: Icons.add_rounded,
+                    tooltip: '加一页',
+                    onTap: total == null || _selectedPage < total
+                        ? () => _setSelected(_selectedPage + 1)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _submit,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(68, 40),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: TiebananaMetrics.brCtl),
+                    ),
+                    child: const Text('跳转'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickPageButton extends StatelessWidget {
+  const _QuickPageButton({required this.label, this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool enabled = onTap != null;
+    return Material(
+      color: enabled ? tokens.fill : tokens.fill.withValues(alpha: 0.45),
+      borderRadius: TiebananaMetrics.brCtl,
+      child: InkWell(
+        borderRadius: TiebananaMetrics.brCtl,
+        onTap: onTap,
+        child: SizedBox(
+          height: 34,
           child: Center(
             child: Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                    color: active
-                        ? tokens.onPrimaryContainer
-                        : tokens.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    color: enabled ? tokens.textPrimary : tokens.textTertiary,
                   ),
             ),
           ),
@@ -2613,60 +3404,40 @@ class _SortButton extends StatelessWidget {
   }
 }
 
-class _JumpPageDialog extends StatefulWidget {
-  const _JumpPageDialog({required this.currentPage});
+class _StepIconButton extends StatelessWidget {
+  const _StepIconButton({
+    required this.icon,
+    required this.tooltip,
+    this.onTap,
+  });
 
-  final int currentPage;
-
-  @override
-  State<_JumpPageDialog> createState() => _JumpPageDialogState();
-}
-
-class _JumpPageDialogState extends State<_JumpPageDialog> {
-  final TextEditingController _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final int? page = int.tryParse(_controller.text.trim());
-    if (page == null || page < 1) {
-      Fluttertoast.showToast(msg: '请输入正确的页码');
-      return;
-    }
-    Navigator.pop(context, page);
-  }
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: TiebananaMetrics.brLg),
-      title: const Text('跳页'),
-      content: TextField(
-        controller: _controller,
-        keyboardType: TextInputType.number,
-        autofocus: true,
-        inputFormatters: <TextInputFormatter>[
-          FilteringTextInputFormatter.digitsOnly,
-        ],
-        onSubmitted: (_) => _submit(),
-        decoration: InputDecoration(
-          hintText: '当前第 ${widget.currentPage} 页',
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool enabled = onTap != null;
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: tokens.fill,
+        borderRadius: TiebananaMetrics.brCtl,
+        child: InkWell(
+          borderRadius: TiebananaMetrics.brCtl,
+          onTap: onTap,
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Icon(
+              icon,
+              size: 18,
+              color: enabled ? tokens.textPrimary : tokens.textTertiary,
+            ),
+          ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
-        TextButton(
-          onPressed: _submit,
-          child: const Text('跳转'),
-        ),
-      ],
     );
   }
 }
@@ -2834,16 +3605,17 @@ class _SmallCtrlIcon extends StatelessWidget {
     super.key,
     required this.icon,
     required this.tooltip,
-    required this.onTap,
+    this.onTap,
   });
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool enabled = onTap != null;
     return Tooltip(
       message: tooltip,
       child: InkWell(
@@ -2852,7 +3624,11 @@ class _SmallCtrlIcon extends StatelessWidget {
         child: SizedBox(
           width: 28,
           height: 28,
-          child: Icon(icon, size: 16, color: tokens.textSecondary),
+          child: Icon(
+            icon,
+            size: 16,
+            color: enabled ? tokens.textSecondary : tokens.textTertiary,
+          ),
         ),
       ),
     );

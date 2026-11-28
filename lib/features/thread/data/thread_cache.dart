@@ -78,7 +78,10 @@ class ThreadCache {
         final bounds = j['bounds'] as Map<String, dynamic>?;
         page.page = bounds?['$pn'] == null
             ? TiebaPageInfo(
-                currentPage: pn, hasMore: page.hasMore, hasPrev: pn > 1)
+                currentPage: pn,
+                totalPage: page.page.totalPage,
+                hasMore: page.hasMore,
+                hasPrev: pn > 1)
             : ThreadCacheCodec.readPageInfo(bounds!['$pn']);
       }
       return page;
