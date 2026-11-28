@@ -25,18 +25,47 @@ const List<String> androidUpdateAbis = <String>[
   'x86_64',
 ];
 
+/// 一次发布中某个平台安装包的通用描述（Windows ZIP / iOS IPA 等）。
+class ReleasePackageAsset {
+  const ReleasePackageAsset({
+    required this.name,
+    required this.url,
+    this.sizeBytes,
+    this.digest,
+  });
+
+  final String name;
+  final String url;
+  final int? sizeBytes;
+
+  /// GitHub Release 资产摘要，形如 `sha256:...`。
+  final String? digest;
+
+  /// 去掉 `sha256:` 前缀后的十六进制摘要；缺失或算法不是 SHA-256 时为 null。
+  String? get sha256 {
+    final String? value = digest?.trim();
+    if (value == null || !value.toLowerCase().startsWith('sha256:')) {
+      return null;
+    }
+    final String hex = value.substring(7).trim();
+    return hex.isEmpty ? null : hex;
+  }
+}
+
 /// 一次发布中某个 ABI 对应的安装包。
 class AndroidUpdateAsset {
   const AndroidUpdateAsset({
     required this.abi,
     required this.name,
     required this.url,
+    this.sizeBytes,
     this.digest,
   });
 
   final String abi;
   final String name;
   final String url;
+  final int? sizeBytes;
 
   /// GitHub Release 资产摘要，形如 `sha256:...`。
   final String? digest;
@@ -61,10 +90,13 @@ class UpdateCheckResult {
     required this.status,
     required this.currentVersion,
     this.latestVersion,
+    this.publishedAt,
     this.notes = '',
     this.downloads = const <String, AndroidUpdateAsset>{},
     this.iosIpaUrl,
     this.windowsZipUrl,
+    this.iosAsset,
+    this.windowsAsset,
     this.releasePageUrl,
     this.error,
   });
@@ -77,6 +109,9 @@ class UpdateCheckResult {
   /// 线上 Release 的 tag，例如 `v0.2.2`。
   final String? latestVersion;
 
+  /// GitHub Release 发布时间（ISO 8601 字符串）。
+  final String? publishedAt;
+
   /// Release 正文（Markdown），可能为空。
   final String notes;
 
@@ -86,13 +121,49 @@ class UpdateCheckResult {
   final String? iosIpaUrl;
   final String? windowsZipUrl;
 
-  /// Release 页面地址，资产缺失或非 Android 平台时作为兜底入口。
+  /// 含文件名、体积、SHA-256 的 Windows / iOS 资产元数据。
+  final ReleasePackageAsset? windowsAsset;
+  final ReleasePackageAsset? iosAsset;
+
+  /// Release 页面地址，资产缺失或非三大平台时作为兜底入口。
   final String? releasePageUrl;
 
   final Object? error;
 
   bool get hasUpdate => status == UpdateStatus.available;
   bool get failed => status == UpdateStatus.failed;
+
+  String? get effectiveWindowsUrl => windowsAsset?.url ?? windowsZipUrl;
+  String? get effectiveIosUrl => iosAsset?.url ?? iosIpaUrl;
+
+  ReleasePackageAsset? get effectiveWindowsAsset {
+    if (windowsAsset != null) return windowsAsset;
+    final String? url = windowsZipUrl;
+    if (url == null || url.isEmpty) return null;
+    return ReleasePackageAsset(
+      name: _fileNameFromUrl(url, 'Tiebanana-windows-x64.zip'),
+      url: url,
+    );
+  }
+
+  ReleasePackageAsset? get effectiveIosAsset {
+    if (iosAsset != null) return iosAsset;
+    final String? url = iosIpaUrl;
+    if (url == null || url.isEmpty) return null;
+    return ReleasePackageAsset(
+      name: _fileNameFromUrl(url, 'Tiebanana-ios-unsigned.ipa'),
+      url: url,
+    );
+  }
+
+  static String _fileNameFromUrl(String url, String fallback) {
+    final Uri? uri = Uri.tryParse(url);
+    if (uri != null && uri.pathSegments.isNotEmpty) {
+      final String last = uri.pathSegments.last.trim();
+      if (last.isNotEmpty) return last;
+    }
+    return fallback;
+  }
 }
 
 /// APP 版本与更新检查。
@@ -122,6 +193,7 @@ class Version {
   );
 
   static String _currentVersion = '';
+  static String _buildNumber = '';
   static Future<void>? _initFuture;
   static Future<UpdateCheckResult>? _inFlight;
   static String? _deviceAbi;
@@ -141,12 +213,48 @@ class Version {
   static bool get isAndroidPlatform =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
+  /// 当前运行平台在多平台更新页对应的默认键（非三大平台返回 null）。
+  static String? get currentPlatformKey {
+    if (kIsWeb) return null;
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'android',
+      TargetPlatform.windows => 'windows',
+      TargetPlatform.iOS => 'ios',
+      _ => null,
+    };
+  }
+
+  /// 当前运行平台的可读标签。
+  static String get currentPlatformLabel {
+    if (kIsWeb) return 'Web 浏览器';
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android =>
+        _deviceAbi == null ? 'Android' : 'Android · $_deviceAbi',
+      TargetPlatform.windows => 'Windows x64',
+      TargetPlatform.iOS => 'iOS',
+      TargetPlatform.macOS => 'macOS',
+      TargetPlatform.linux => 'Linux',
+      TargetPlatform.fuchsia => 'Fuchsia',
+    };
+  }
+
   /// 当前安装版本，来自 `pubspec.yaml` 的 version（发布构建由 tag 注入）。
   static String get currentVersion => _currentVersion;
+
+  /// 当前构建号（`pubspec.yaml` 中的 `+buildNumber`）。
+  static String get buildNumber => _buildNumber;
 
   /// 界面上展示的版本号。
   static String get displayVersion =>
       _currentVersion.isEmpty ? '未知' : 'v$_currentVersion';
+
+  /// 含构建号的完整版本展示（如 `v1.1.1+7`）。
+  static String get fullDisplayVersion {
+    if (_currentVersion.isEmpty) return '未知';
+    return _buildNumber.isEmpty
+        ? 'v$_currentVersion'
+        : 'v$_currentVersion+$_buildNumber';
+  }
 
   /// 读取运行时版本。应在界面展示前调用一次（见 `Global.init`）。
   static Future<void> init() {
@@ -163,6 +271,7 @@ class Version {
     try {
       final PackageInfo info = await PackageInfo.fromPlatform();
       _currentVersion = info.version;
+      _buildNumber = info.buildNumber;
     } catch (error) {
       // 测试环境或平台通道不可用时保持空值，界面显示“未知”。
       debugPrint('读取应用版本失败：$error');
@@ -170,14 +279,16 @@ class Version {
   }
 
   @visibleForTesting
-  static void debugSetCurrentVersion(String value) {
+  static void debugSetCurrentVersion(String value, {String buildNumber = ''}) {
     _currentVersion = value;
+    _buildNumber = buildNumber;
     _initFuture = Future<void>.value();
   }
 
   @visibleForTesting
   static void debugReset() {
     _currentVersion = '';
+    _buildNumber = '';
     _initFuture = null;
     _inFlight = null;
     _deviceAbi = null;
@@ -260,20 +371,22 @@ class Version {
       }
 
       final bool hasUpdate = isNewerVersion(_currentVersion, latestTag);
+      final ReleasePackageAsset? iosAsset =
+          findReleaseAsset(release.assets, '-ios-unsigned.ipa');
+      final ReleasePackageAsset? windowsAsset =
+          findReleaseAsset(release.assets, '-windows-x64.zip');
       return UpdateCheckResult(
         status: hasUpdate ? UpdateStatus.available : UpdateStatus.upToDate,
         currentVersion: _currentVersion,
         latestVersion: latestTag,
+        publishedAt: release.publishedAt,
         notes: release.body ?? '',
-        downloads: hasUpdate
-            ? mapAndroidAssetsByAbi(release.assets)
-            : const <String, AndroidUpdateAsset>{},
-        iosIpaUrl: hasUpdate
-            ? findReleaseAssetUrl(release.assets, '-ios-unsigned.ipa')
-            : null,
-        windowsZipUrl: hasUpdate
-            ? findReleaseAssetUrl(release.assets, '-windows-x64.zip')
-            : null,
+        // 即便当前已是最新版本，也保留多平台资产以便跨设备下载与核对 SHA-256。
+        downloads: mapAndroidAssetsByAbi(release.assets),
+        iosIpaUrl: iosAsset?.url,
+        windowsZipUrl: windowsAsset?.url,
+        iosAsset: iosAsset,
+        windowsAsset: windowsAsset,
         releasePageUrl: release.htmlUrl,
       );
     } catch (error, stack) {
@@ -292,16 +405,29 @@ class Version {
   }
 }
 
-/// 按发布工作流使用的文件名后缀找下载链接，不把源代码 ZIP 当作安装包。
-String? findReleaseAssetUrl(List<Assets>? assets, String suffix) {
+/// 按发布工作流使用的文件名后缀找安装包资产（含文件名、体积与 SHA-256）。
+ReleasePackageAsset? findReleaseAsset(List<Assets>? assets, String suffix) {
   for (final Assets asset in assets ?? const <Assets>[]) {
+    final String? name = asset.name?.trim();
     final String? url = asset.browserDownloadUrl?.trim();
-    if (asset.name?.endsWith(suffix) == true && url != null && url.isNotEmpty) {
-      return url;
+    if (name != null &&
+        name.endsWith(suffix) &&
+        url != null &&
+        url.isNotEmpty) {
+      return ReleasePackageAsset(
+        name: name,
+        url: url,
+        sizeBytes: asset.size,
+        digest: asset.digest,
+      );
     }
   }
   return null;
 }
+
+/// 按发布工作流使用的文件名后缀找下载链接，不把源代码 ZIP 当作安装包。
+String? findReleaseAssetUrl(List<Assets>? assets, String suffix) =>
+    findReleaseAsset(assets, suffix)?.url;
 
 /// 从 Release 资产里挑出各 ABI 的安装包。
 ///
@@ -321,6 +447,7 @@ Map<String, AndroidUpdateAsset> mapAndroidAssetsByAbi(List<Assets>? assets) {
           abi: abi,
           name: name,
           url: url,
+          sizeBytes: asset.size,
           digest: asset.digest,
         );
         break;

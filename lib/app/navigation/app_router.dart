@@ -109,7 +109,10 @@ abstract class AppRouter {
       return const AboutPage();
     },
     "appUpdate": (context) {
-      return const UpdatePage();
+      final Object? args = ModalRoute.of(context)?.settings.arguments;
+      return UpdatePage(
+        initialPlatform: args is String ? args : null,
+      );
     }
   };
 }

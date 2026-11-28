@@ -7,6 +7,9 @@ import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/update/state/update_reminder.dart';
 import 'package:tiebanana/features/update/widgets/update_release_notes.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
+import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
+import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/widgets/alert_dialog.dart';
 
 ///自动检查版本更新
@@ -52,25 +55,55 @@ class AutoCheckUpdate extends APPStateCallback {
 
       final Future<_UpdateChoice?> dialog = showDialog<_UpdateChoice>(
         context: context,
-        builder: (BuildContext builder) => TiebaActionDialog<_UpdateChoice>(
-          title: "发现新版本 $latestVersion",
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ConstrainedBox(
+        builder: (BuildContext builder) {
+          final Size size = MediaQuery.sizeOf(builder);
+          final bool desktop = AppBreakpoints.isDesktopWidth(size.width);
+          final TiebananaTokens tokens = TiebananaTokens.of(builder);
+          return TiebaActionDialog<_UpdateChoice>(
+            title: "发现新版本 $latestVersion",
+            content: ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(builder).height * 0.4,
+                maxWidth: desktop ? 500 : double.maxFinite,
+                maxHeight: size.height * (desktop ? 0.46 : 0.4),
               ),
-              child: SingleChildScrollView(
-                child: UpdateReleaseNotes(notes: result.notes),
+              child: SizedBox(
+                width: desktop ? 500 : double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 3),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: tokens.primaryContainer,
+                        borderRadius: TiebananaMetrics.brPill,
+                      ),
+                      child: Text(
+                        '当前平台：${Version.currentPlatformLabel}',
+                        style: Theme.of(builder).textTheme.labelSmall?.copyWith(
+                              color: tokens.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: UpdateReleaseNotes(notes: result.notes),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: const <TiebaDialogAction<_UpdateChoice>>[
-            TiebaDialogAction<_UpdateChoice>('跳过此版本', _UpdateChoice.ignore),
-            TiebaDialogAction<_UpdateChoice>('稍后', _UpdateChoice.later),
-            TiebaDialogAction<_UpdateChoice>('前往更新', _UpdateChoice.update),
-          ],
-        ),
+            actions: const <TiebaDialogAction<_UpdateChoice>>[
+              TiebaDialogAction<_UpdateChoice>('跳过此版本', _UpdateChoice.ignore),
+              TiebaDialogAction<_UpdateChoice>('稍后', _UpdateChoice.later),
+              TiebaDialogAction<_UpdateChoice>('前往更新', _UpdateChoice.update),
+            ],
+          );
+        },
       );
       await UpdateReminder.markPrompted(latestVersion);
       final _UpdateChoice? choice = await dialog;

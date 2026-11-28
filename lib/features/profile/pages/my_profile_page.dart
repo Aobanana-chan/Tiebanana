@@ -22,8 +22,6 @@ import 'package:tiebanana/features/search/widgets/search_bar.dart';
 import 'package:tiebanana/features/settings/pages/image_cache_page.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/features/settings/widgets/setting_panel.dart';
-import 'package:tiebanana/features/update/data/version.dart';
-import 'package:tiebanana/features/update/widgets/update_badge.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
@@ -509,7 +507,6 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
             icon: Icons.storage_outlined,
             label: '存储与诊断',
             badge: cacheText,
-            showUpdateBadge: true,
             selected: _section == _ProfileSection.storage,
             onTap: () => setState(() => _section = _ProfileSection.storage),
           ),
@@ -571,7 +568,6 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
               _HorizontalMenuPill(
                 icon: item.icon,
                 label: item.label,
-                showUpdateBadge: item.sec == _ProfileSection.storage,
                 selected: _section == item.sec,
                 onTap: () => setState(() => _section = item.sec),
               ),
@@ -1436,24 +1432,6 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
             child: const Text('打开'),
           ),
         ),
-        _SettingItemRow(
-          title: '关于 Tiebanana',
-          subtitle: '版本与开源许可 · ${Version.displayVersion}',
-          trailing: OutlinedButton(
-            onPressed: () => Navigator.pushNamed(context, PageRouter.about),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: tokens.textSecondary,
-              side: BorderSide(color: tokens.line),
-              minimumSize: const Size(0, 28),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              textStyle:
-                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-            ),
-            child: const UpdateBadge(child: Text('查看')),
-          ),
-        ),
       ],
     );
   }
@@ -1466,7 +1444,6 @@ class _MenuRow extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.badge,
-    this.showUpdateBadge = false,
     this.showChevron = false,
     this.danger = false,
   });
@@ -1476,7 +1453,6 @@ class _MenuRow extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final String? badge;
-  final bool showUpdateBadge;
   final bool showChevron;
   final bool danger;
 
@@ -1498,10 +1474,7 @@ class _MenuRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: <Widget>[
-                if (showUpdateBadge)
-                  UpdateBadge(child: Icon(icon, size: 16, color: fg))
-                else
-                  Icon(icon, size: 16, color: fg),
+                Icon(icon, size: 16, color: fg),
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
@@ -1552,7 +1525,6 @@ class _HorizontalMenuPill extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    this.showUpdateBadge = false,
     this.danger = false,
   });
 
@@ -1560,7 +1532,6 @@ class _HorizontalMenuPill extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final bool showUpdateBadge;
   final bool danger;
 
   @override
@@ -1582,10 +1553,7 @@ class _HorizontalMenuPill extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                if (showUpdateBadge)
-                  UpdateBadge(child: Icon(icon, size: 15, color: fg))
-                else
-                  Icon(icon, size: 15, color: fg),
+                Icon(icon, size: 15, color: fg),
                 const SizedBox(width: 6),
                 Text(
                   label,

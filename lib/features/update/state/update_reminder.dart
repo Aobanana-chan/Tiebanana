@@ -17,6 +17,12 @@ class UpdateReminder {
   static ValueListenable<bool> get showDot => _showDot;
   static String? _detectedVersion;
 
+  /// 最近一次检查发现的新版本号（如果存在）。
+  static String? get detectedVersion => _detectedVersion;
+
+  static bool isIgnored(String version) =>
+      version == Global.profile.getString(_ignoredVersionKey);
+
   /// 下次冷启动检查失败时，仍保留已发现且未读的版本提示。
   static void restore() {
     final String? version = Global.profile.getString(_detectedVersionKey);
@@ -83,6 +89,13 @@ class UpdateReminder {
   static Future<void> ignore(String version) async {
     final Future<bool> write =
         Global.profile.setString(_ignoredVersionKey, version);
+    refreshDot();
+    await write;
+  }
+
+  static Future<void> unignore(String version) async {
+    if (!isIgnored(version)) return;
+    final Future<bool> write = Global.profile.remove(_ignoredVersionKey);
     refreshDot();
     await write;
   }

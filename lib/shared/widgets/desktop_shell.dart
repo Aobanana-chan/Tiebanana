@@ -33,7 +33,9 @@ class DesktopShellFrame extends StatefulWidget {
     required this.child,
     this.subtitle,
     this.activeTab = 0,
+    this.activeAbout = false,
     this.onSelectTab,
+    this.onAboutTap,
     this.onRefresh,
     this.onBack,
     this.onSearchTap,
@@ -49,8 +51,12 @@ class DesktopShellFrame extends StatefulWidget {
   /// 当前高亮的一级分区下标：0 首页 / 1 动态 / 2 消息 / 3 个人；二级页面可传 -1。
   final int activeTab;
 
+  /// 是否高亮侧边栏底部的「关于与更新」入口。
+  final bool activeAbout;
+
   /// 根页面切页签回调；为 null 时设置 [Global.desktopTabRequest] 并退回首页根路由。
   final ValueChanged<int>? onSelectTab;
+  final VoidCallback? onAboutTap;
   final FutureOr<void> Function()? onRefresh;
   final VoidCallback? onBack;
   final VoidCallback? onSearchTap;
@@ -93,6 +99,21 @@ class _DesktopShellFrameState extends State<DesktopShellFrame>
     }
     Global.desktopTabRequest.value = index;
     Navigator.of(context).popUntil((Route<dynamic> r) => r.isFirst);
+  }
+
+  void _openAbout() {
+    if (widget.onAboutTap != null) {
+      widget.onAboutTap!();
+      return;
+    }
+    if (widget.activeAbout) {
+      if (ModalRoute.of(context)?.settings.name == PageRouter.appUpdate &&
+          Navigator.of(context).canPop()) {
+        Navigator.of(context).pushReplacementNamed(PageRouter.about);
+      }
+      return;
+    }
+    Navigator.pushNamed(context, PageRouter.about);
   }
 
   void _openSearch() {
@@ -267,8 +288,10 @@ class _DesktopShellFrameState extends State<DesktopShellFrame>
                 expanded: expanded,
                 canExpand: canExpand,
                 activeTab: widget.activeTab,
+                activeAbout: widget.activeAbout,
                 onToggleFold: _toggleSidebarFold,
                 onSelectTab: _selectTab,
+                onOpenAbout: _openAbout,
                 forumState: forumState,
                 user: user,
                 signingAll: _signingAll,
@@ -315,8 +338,10 @@ class _DesktopSidebar extends StatelessWidget {
     required this.expanded,
     required this.canExpand,
     required this.activeTab,
+    required this.activeAbout,
     required this.onToggleFold,
     required this.onSelectTab,
+    required this.onOpenAbout,
     required this.forumState,
     required this.user,
     required this.signingAll,
@@ -328,8 +353,10 @@ class _DesktopSidebar extends StatelessWidget {
   final bool expanded;
   final bool canExpand;
   final int activeTab;
+  final bool activeAbout;
   final VoidCallback onToggleFold;
   final ValueChanged<int> onSelectTab;
+  final VoidCallback onOpenAbout;
   final ForumState? forumState;
   final User? user;
   final bool signingAll;
@@ -398,8 +425,93 @@ class _DesktopSidebar extends StatelessWidget {
             Expanded(child: _buildQuickForums(context, tokens)),
           ] else
             const Spacer(),
+          if (expanded) ...<Widget>[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Divider(height: 1, thickness: 1, color: tokens.line),
+            ),
+          ] else ...<Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SizedBox(
+                width: 28,
+                child: Divider(height: 1, thickness: 1, color: tokens.line),
+              ),
+            ),
+          ],
+          _buildAboutEntry(context, tokens),
+          const SizedBox(height: 6),
           _buildAccountCard(context, tokens),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAboutEntry(BuildContext context, TiebananaTokens tokens) {
+    final bool selected = activeAbout;
+    final Color fg =
+        selected ? tokens.onPrimaryContainer : tokens.textSecondary;
+    final Color bg = selected ? tokens.primaryContainer : Colors.transparent;
+    final IconData iconData =
+        selected ? Icons.info_rounded : Icons.info_outline_rounded;
+
+    if (!expanded) {
+      return Tooltip(
+        message: '关于与更新',
+        child: Material(
+          color: bg,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            hoverColor: tokens.primary.withValues(alpha: .05),
+            onTap: onOpenAbout,
+            child: SizedBox(
+              width: double.infinity,
+              height: 36,
+              child: Center(
+                child: UpdateBadge(
+                  child: Icon(iconData, size: 19, color: fg),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        hoverColor: tokens.primary.withValues(alpha: .05),
+        onTap: onOpenAbout,
+        child: SizedBox(
+          height: 36,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: <Widget>[
+                Icon(iconData, size: 18, color: fg),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '关于与更新',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontSize: 13,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                          color: fg,
+                        ),
+                  ),
+                ),
+                const UpdateBadge(),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -416,38 +528,75 @@ class _DesktopSidebar extends StatelessWidget {
     );
 
     if (!expanded) {
-      final Widget icon = Padding(
-        padding: const EdgeInsets.only(top: 3, bottom: 11),
-        child: canExpand
-            ? Tooltip(
+      return Padding(
+        padding: const EdgeInsets.only(top: 3, bottom: 9),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Tooltip(
+              message: '关于与更新',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: onOpenAbout,
+                child: logo,
+              ),
+            ),
+            if (canExpand) ...<Widget>[
+              const SizedBox(height: 6),
+              Tooltip(
                 message: '展开侧边栏',
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
                   onTap: onToggleFold,
-                  child: logo,
+                  child: SizedBox(
+                    width: 26,
+                    height: 22,
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: tokens.textTertiary,
+                    ),
+                  ),
                 ),
-              )
-            : logo,
+              ),
+            ],
+          ],
+        ),
       );
-      return Center(child: icon);
     }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(5, 3, 2, 9),
       child: Row(
         children: <Widget>[
-          logo,
-          const SizedBox(width: 9),
           Expanded(
-            child: Text(
-              'Tiebanana',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: 'TiebananaWordmark',
-                fontSize: 19,
-                height: 1,
-                color: tokens.textPrimary,
+            child: Tooltip(
+              message: '关于与更新',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: onOpenAbout,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: <Widget>[
+                      logo,
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          'Tiebanana',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'TiebananaWordmark',
+                            fontSize: 19,
+                            height: 1,
+                            color: tokens.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
