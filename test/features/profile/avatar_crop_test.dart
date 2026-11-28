@@ -202,4 +202,65 @@ void main() {
     expect(output.getPixel(16, 16).r, greaterThan(200));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('桌面端居中裁切弹窗支持缩放预览、重新选图与导出JPEG', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.reset);
+
+    Uint8List? result;
+    await tester.pumpWidget(MaterialApp(
+      theme: TiebananaTheme.light(seedOf('blue'), 16),
+      home: Builder(
+        builder: (BuildContext context) => Scaffold(
+          body: TextButton(
+            onPressed: () async {
+              result = await showAvatarCropDialog(
+                context,
+                imageBytes: _fixture(),
+                outputSize: 32,
+                onRepick: () async => _fixture(width: 80, height: 80),
+              );
+            },
+            child: const Text('打开桌面裁切'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('打开桌面裁切'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    for (var i = 0; i < 100; i++) {
+      if (find.byType(CircularProgressIndicator).evaluate().isEmpty) break;
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('裁切头像'), findsOneWidget);
+    expect(find.text('裁切效果预览'), findsOneWidget);
+    expect(find.text('重新选图'), findsOneWidget);
+    expect(find.text('1.0×'), findsOneWidget);
+
+    final Slider slider = tester.widget<Slider>(find.byType(Slider));
+    slider.onChanged!(2.5);
+    await tester.pump();
+    expect(find.text('2.5×'), findsOneWidget);
+
+    await tester.tap(find.text('使用并上传'));
+    await tester.pump();
+    for (var i = 0; i < 100 && result == null; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    await tester.pumpAndSettle();
+
+    expect(result, isNotNull);
+    final output = img.decodeJpg(result!)!;
+    expect(output.width, 32);
+    expect(output.height, 32);
+    expect(tester.takeException(), isNull);
+  });
 }

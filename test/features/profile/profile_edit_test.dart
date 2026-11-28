@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show FontLoader;
+import 'package:flutter/services.dart' show FontLoader, LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -11,11 +11,13 @@ import 'package:image/image.dart' as img;
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tieba_contract/testing.dart';
 import 'package:tiebanana/app/global.dart';
+import 'package:tiebanana/core/config/default_config.dart';
 import 'package:tiebanana/features/profile/state/profile_events.dart';
 import 'package:tiebanana/features/profile/pages/profile_edit_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
+import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 
 class _ProfileApi extends DemoTiebaApi {
   bool fail = false;
@@ -494,5 +496,140 @@ void main() {
     await tester.tap(find.text('去登录'));
     await tester.pumpAndSettle();
     expect(find.text('登录入口'), findsOneWidget);
+  });
+
+  Future<void> pumpDesktopPage(
+    WidgetTester tester, {
+    Size size = const Size(1280, 800),
+    bool dark = false,
+    double fontSize = 14,
+  }) async {
+    Global.setting = APPSetting.fromJson(defaultAPPSetting);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = size;
+    addTearDown(tester.view.reset);
+    final ThemeData base = dark
+        ? TiebananaTheme.dark(seedOf('blue'), fontSize)
+        : TiebananaTheme.light(seedOf('blue'), fontSize);
+    await tester.pumpWidget(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: base.copyWith(
+          textTheme: base.textTheme.apply(fontFamily: 'ProfilePreview')),
+      routes: <String, WidgetBuilder>{
+        PageRouter.profileEdit: (_) => const ProfileEditPage(),
+        PageRouter.login: (_) => const Scaffold(body: Text('登录入口')),
+      },
+      home: Builder(
+        builder: (BuildContext context) => Scaffold(
+          body: TextButton(
+            onPressed: () =>
+                Navigator.pushNamed(context, PageRouter.profileEdit),
+            child: const Text('打开编辑'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('打开编辑'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+
+  for (final ({Size size, bool dark, double fontSize}) variant
+      in <({Size size, bool dark, double fontSize})>[
+    (size: const Size(1280, 800), dark: false, fontSize: 14),
+    (size: const Size(1280, 800), dark: true, fontSize: 14),
+    (size: const Size(1080, 800), dark: false, fontSize: 14),
+    (size: const Size(820, 800), dark: false, fontSize: 20),
+  ]) {
+    testWidgets(
+      '宽屏多断点无溢出 ${variant.size.width.toInt()} dark=${variant.dark} fs=${variant.fontSize}',
+      (WidgetTester tester) async {
+        await pumpDesktopPage(
+          tester,
+          size: variant.size,
+          dark: variant.dark,
+          fontSize: variant.fontSize,
+        );
+        expect(find.byType(DesktopShellFrame), findsOneWidget);
+        expect(find.text('主页签名预览'), findsOneWidget);
+        expect(find.text('只读账号信息'), findsOneWidget);
+        expect(find.text('已与贴吧同步'), findsOneWidget);
+        expect(find.text('保存修改'), findsNWidgets(2));
+        if (variant.size.width == 820) {
+          final double badgeW = tester
+              .getSize(find
+                  .ancestor(
+                    of: find.text('♂ 男'),
+                    matching: find.byType(Container),
+                  )
+                  .first)
+              .width;
+          expect(badgeW, lessThan(120));
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('宽屏实时预览、还原修改与Ctrl+S保存闭环', (WidgetTester tester) async {
+    await pumpDesktopPage(tester);
+    expect(find.text('已与贴吧同步'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, '宽屏新昵称');
+    await tester.enterText(find.byType(TextFormField).last, '宽屏新签名');
+    await tester.tap(find.text('女'));
+    await tester.pump();
+
+    expect(find.text('有未保存修改'), findsOneWidget);
+    expect(find.text('宽屏新昵称'), findsNWidgets(2)); // 左栏实时预览 + 右栏输入框
+    expect(find.text('宽屏新签名'), findsNWidgets(2));
+    expect(find.text('♀ 女'), findsOneWidget);
+
+    await tester.tap(find.text('还原修改'));
+    await tester.pump();
+    expect(find.text('已与贴吧同步'), findsOneWidget);
+    expect(api.saves, 0);
+
+    await tester.enterText(find.byType(TextFormField).first, '快捷键保存昵称');
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+
+    expect(api.saves, 1);
+    expect(api.sentNickname, '快捷键保存昵称');
+    expect(find.text('已与贴吧同步'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    profileEvents.clearProfileRefresh('10001');
+  });
+
+  testWidgets('宽屏审核中态与超时待确认横幅正常展示和恢复', (WidgetTester tester) async {
+    api.nicknameEditing = true;
+    await pumpDesktopPage(tester);
+    expect(find.text('昵称审核中'), findsNWidgets(2));
+    expect(find.text('审核中，暂不支持修改'), findsOneWidget);
+    expect(
+        tester.widget<TextFormField>(find.byType(TextFormField).first).enabled,
+        isFalse);
+
+    api.pendingSave = Completer<void>();
+    await tester.enterText(find.byType(TextFormField).last, '待确认签名');
+    await tester.pump();
+    await tester.tap(find.text('保存修改').first);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pump();
+
+    expect(find.text('修改结果待确认'), findsOneWidget);
+    expect(find.text('修改结果待确认，暂不重复提交'), findsOneWidget);
+    expect(find.text('重新读取贴吧资料'), findsOneWidget);
+    api.pendingSave!.complete();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('重新读取贴吧资料'));
+    await tester.pumpAndSettle();
+    expect(find.text('修改结果待确认，暂不重复提交'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }
