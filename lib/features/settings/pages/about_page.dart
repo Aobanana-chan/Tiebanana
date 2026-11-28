@@ -25,11 +25,11 @@ const String _authorName = 'Aobanana-chan';
 const String _authorGithubUrl = 'https://github.com/Aobanana-chan';
 
 /// 「关于 Tiebanana」页面：
-/// - `≥ 720dp` 接入 `DesktopShellFrame` + `PageWrap(1060)`：
+/// - `≥ 720dp` 接入 `DesktopShellFrame` + `PageWrap(1060)` + `DesktopPageHeader`：
 ///   - `≥ 900dp` 左 `304/276dp` 停靠品牌与运行档案卡 + 右 `1fr` 更新入口/项目/声明卡；
 ///   - `720–899dp` 顶部满宽横向品牌卡 + 下方满宽卡片组；
 ///   - 开源许可打开居中 `560dp` 对话框（支持一键复制全文）。
-/// - `< 720dp` 保留移动端舒适单列布局并同步平台芯片与更新状态。
+/// - `< 720dp` 保持同一套「品牌档案卡 + 版本与多平台更新卡 + 作者/仓库/许可卡 + 声明卡」视觉层级。
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
 
@@ -139,7 +139,7 @@ class _AboutPageState extends State<AboutPage> {
       activeTab: -1,
       activeAbout: true,
       title: '关于 Tiebanana',
-      subtitle: '个人与设置 · ${Version.fullDisplayVersion}',
+      subtitle: '个人与设置 · ${Version.displayVersion}',
       child: SingleChildScrollView(
         child: PageWrap(
           child: Column(
@@ -159,14 +159,14 @@ class _AboutPageState extends State<AboutPage> {
                         horizontal: false,
                         onCopyEnv: () => _copyText(
                           context,
-                          'Tiebanana ${Version.fullDisplayVersion} (${Version.currentPlatformLabel})',
-                          '已复制环境摘要：${Version.fullDisplayVersion}',
+                          'Tiebanana ${Version.displayVersion} (${Version.currentPlatformLabel})',
+                          '已复制环境摘要：${Version.displayVersion}',
                         ),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: _buildDesktopRightColumn(context, autoCheck),
+                      child: _buildDetailCards(context, autoCheck),
                     ),
                   ],
                 )
@@ -178,12 +178,12 @@ class _AboutPageState extends State<AboutPage> {
                       horizontal: true,
                       onCopyEnv: () => _copyText(
                         context,
-                        'Tiebanana ${Version.fullDisplayVersion} (${Version.currentPlatformLabel})',
-                        '已复制环境摘要：${Version.fullDisplayVersion}',
+                        'Tiebanana ${Version.displayVersion} (${Version.currentPlatformLabel})',
+                        '已复制环境摘要：${Version.displayVersion}',
                       ),
                     ),
                     const SizedBox(height: 14),
-                    _buildDesktopRightColumn(context, autoCheck),
+                    _buildDetailCards(context, autoCheck),
                   ],
                 ),
             ],
@@ -193,7 +193,43 @@ class _AboutPageState extends State<AboutPage> {
     );
   }
 
-  Widget _buildDesktopRightColumn(BuildContext context, bool autoCheck) {
+  Widget _buildMobile(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool autoCheck = _readAutoCheck(context);
+
+    return Scaffold(
+      backgroundColor: tokens.bg,
+      appBar: AppBar(
+        backgroundColor: tokens.bg,
+        foregroundColor: tokens.textPrimary,
+        surfaceTintColor: Colors.transparent,
+        title: const Text('关于'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          TiebananaMetrics.pageGutter,
+          TiebananaMetrics.gapSm,
+          TiebananaMetrics.pageGutter,
+          TiebananaMetrics.gapXl,
+        ),
+        children: <Widget>[
+          _AboutBrandDockCard(
+            horizontal: false,
+            onCopyEnv: () => _copyText(
+              context,
+              'Tiebanana ${Version.displayVersion} (${Version.currentPlatformLabel})',
+              '已复制环境摘要：${Version.displayVersion}',
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildDetailCards(context, autoCheck),
+        ],
+      ),
+    );
+  }
+
+  /// 右侧 / 竖屏下方三张统一卡片（版本与多平台更新 + 作者仓库许可 + 声明）。
+  Widget _buildDetailCards(BuildContext context, bool autoCheck) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TextTheme textTheme = Theme.of(context).textTheme;
 
@@ -211,71 +247,112 @@ class _AboutPageState extends State<AboutPage> {
                   final bool highlight = showDot && detected != null;
                   return Container(
                     margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 13),
                     decoration: BoxDecoration(
                       color:
                           highlight ? tokens.primaryContainer : tokens.fill,
                       borderRadius: TiebananaMetrics.brMd,
                     ),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Row(
-                                children: <Widget>[
-                                  if (highlight) ...<Widget>[
-                                    const UpdateBadge(),
-                                    const SizedBox(width: 8),
-                                  ],
-                                  Flexible(
-                                    child: Text(
-                                      highlight
-                                          ? '发现新版本 $detected'
-                                          : '当前版本 ${Version.displayVersion}',
-                                      style: textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: highlight
-                                            ? tokens.onPrimaryContainer
-                                            : tokens.textPrimary,
-                                      ),
+                    child: LayoutBuilder(
+                      builder:
+                          (BuildContext context, BoxConstraints constraints) {
+                        final Widget infoBlock = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                if (highlight) ...<Widget>[
+                                  const UpdateBadge(),
+                                  const SizedBox(width: 7),
+                                ],
+                                Flexible(
+                                  child: Text(
+                                    highlight
+                                        ? '发现新版本 $detected'
+                                        : '当前版本 ${Version.displayVersion}',
+                                    style: textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: highlight
+                                          ? tokens.onPrimaryContainer
+                                          : tokens.textPrimary,
                                     ),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                highlight
-                                    ? '包含 Android / Windows / iOS 多平台安装包与校验'
-                                    : '支持跨平台获取 APK、Windows ZIP 与 iOS IPA',
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: highlight
-                                      ? tokens.onPrimaryContainer
-                                          .withValues(alpha: 0.85)
-                                      : tokens.textSecondary,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        FilledButton(
-                          onPressed: () => _openUpdate(context),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: highlight
-                                ? tokens.primary
-                                : tokens.accentFill,
-                            foregroundColor: tokens.accentOn,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: TiebananaMetrics.brCtl,
+                              ],
                             ),
-                          ),
-                          child: Text(highlight ? '查看更新' : '检查更新'),
-                        ),
-                      ],
+                            const SizedBox(height: 3),
+                            Text(
+                              highlight
+                                  ? '含 Android / Windows / iOS 安装包与校验'
+                                  : '支持 Android / Windows / iOS 多平台下载与 SHA-256 校验',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: highlight
+                                    ? tokens.onPrimaryContainer
+                                        .withValues(alpha: 0.85)
+                                    : tokens.textSecondary,
+                              ),
+                            ),
+                          ],
+                        );
+
+                        final Widget ctaButton = highlight
+                            ? FilledButton(
+                                onPressed: () => _openUpdate(context),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: tokens.primary,
+                                  foregroundColor: tokens.accentOn,
+                                  minimumSize: const Size(0, 32),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: TiebananaMetrics.brCtl,
+                                  ),
+                                  textStyle: textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                child: const Text('查看更新与下载'),
+                              )
+                            : FilledButton.tonal(
+                                onPressed: () => _openUpdate(context),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: tokens.primaryContainer,
+                                  foregroundColor: tokens.onPrimaryContainer,
+                                  minimumSize: const Size(0, 32),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: TiebananaMetrics.brCtl,
+                                  ),
+                                  textStyle: textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                child: const Text('检查更新'),
+                              );
+
+                        if (constraints.maxWidth < 330) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              infoBlock,
+                              const SizedBox(height: 10),
+                              ctaButton,
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          children: <Widget>[
+                            Expanded(child: infoBlock),
+                            const SizedBox(width: 12),
+                            ctaButton,
+                          ],
+                        );
+                      },
                     ),
                   );
                 },
@@ -313,10 +390,10 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Divider(height: 1, thickness: 1, color: tokens.line),
-              SettingRow(
-                icon: Icons.system_update_alt_rounded,
+              _AboutActionRow(
+                icon: Icons.download_rounded,
                 title: '启动时自动检查更新',
-                subtitle: '同步自应用设置 · 检测到新正式版时提示更新日志',
+                subtitle: '同步自应用设置 · 检测到正式版时提示更新日志',
                 trailing: SettingSwitch(
                   value: autoCheck,
                   onChanged: (bool value) => _setAutoCheck(context, value),
@@ -330,36 +407,40 @@ class _AboutPageState extends State<AboutPage> {
         DesktopPanel(
           child: Column(
             children: <Widget>[
-              SettingRow(
+              _AboutActionRow(
                 icon: Icons.person_outline_rounded,
                 title: '作者',
                 subtitle: 'GitHub 个人主页',
                 value: _authorName,
-                showChevron: true,
+                trailingIcon: Icons.open_in_new_rounded,
                 onTap: () => AppUtil.openLink(context, _authorGithubUrl),
               ),
               Divider(height: 1, thickness: 1, color: tokens.line),
-              SettingRow(
+              _AboutActionRow(
                 icon: Icons.code_rounded,
                 title: '项目仓库',
                 subtitle: Version.repositoryUrl,
                 trailing: IconButton(
                   tooltip: '复制仓库地址',
+                  visualDensity: VisualDensity.compact,
+                  constraints:
+                      const BoxConstraints.tightFor(width: 28, height: 28),
+                  padding: EdgeInsets.zero,
                   icon: Icon(Icons.copy_rounded,
-                      size: 18, color: tokens.textTertiary),
+                      size: 16, color: tokens.textTertiary),
                   onPressed: () =>
                       _copyText(context, Version.repositoryUrl, '已复制项目仓库地址'),
                 ),
-                showChevron: true,
+                trailingIcon: Icons.open_in_new_rounded,
                 onTap: () => AppUtil.openLink(context, Version.repositoryUrl),
               ),
               Divider(height: 1, thickness: 1, color: tokens.line),
-              SettingRow(
+              _AboutActionRow(
                 icon: Icons.description_outlined,
                 title: '开源许可',
                 subtitle: 'Copyright (c) 2026 Tiebanana contributors',
                 value: 'MIT',
-                showChevron: true,
+                trailingIcon: Icons.chevron_right_rounded,
                 onTap: () => _openLicense(context),
               ),
             ],
@@ -380,122 +461,101 @@ class _AboutPageState extends State<AboutPage> {
       ],
     );
   }
+}
 
-  Widget _buildMobile(BuildContext context) {
+class _AboutActionRow extends StatelessWidget {
+  const _AboutActionRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.value,
+    this.trailing,
+    this.trailingIcon,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final String? value;
+  final Widget? trailing;
+  final IconData? trailingIcon;
+
+  @override
+  Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     final TextTheme textTheme = Theme.of(context).textTheme;
-    final bool autoCheck = _readAutoCheck(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        foregroundColor: tokens.textPrimary,
-        surfaceTintColor: Colors.transparent,
-        title: const Text('关于'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: TiebananaMetrics.gapXl),
-        children: <Widget>[
-          _AboutBrandDockCard(
-            horizontal: false,
-            margin: const EdgeInsets.fromLTRB(
-              TiebananaMetrics.pageGutter,
-              TiebananaMetrics.gapSm + 2,
-              TiebananaMetrics.pageGutter,
-              0,
-            ),
-            onCopyEnv: () => _copyText(
-              context,
-              'Tiebanana ${Version.fullDisplayVersion} (${Version.currentPlatformLabel})',
-              '已复制环境摘要：${Version.fullDisplayVersion}',
-            ),
-          ),
-          SettingGroup(
-            children: <Widget>[
-              SettingRow(
-                icon: Icons.system_update_alt_rounded,
-                title: '检查更新',
-                subtitle: '支持 Android / Windows / iOS 多平台下载与校验',
-                value: Version.displayVersion,
-                trailing: const UpdateBadge(),
-                showChevron: true,
-                onTap: () => _openUpdate(context),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: tokens.fill,
+                borderRadius: BorderRadius.circular(10),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: <Widget>[
-                    _PlatformChip(
-                      label: 'Android APK',
-                      activeHost: Version.currentPlatformKey == 'android',
-                      onTap: () => _openUpdate(context, platform: 'android'),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 17, color: tokens.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.titleSmall?.copyWith(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
                     ),
-                    _PlatformChip(
-                      label: 'Windows ZIP',
-                      activeHost: Version.currentPlatformKey == 'windows',
-                      onTap: () => _openUpdate(context, platform: 'windows'),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelSmall?.copyWith(
+                      fontSize: 11.5,
+                      color: tokens.textTertiary,
                     ),
-                    _PlatformChip(
-                      label: 'iOS IPA',
-                      activeHost: Version.currentPlatformKey == 'ios',
-                      onTap: () => _openUpdate(context, platform: 'ios'),
-                    ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            if (value != null) ...<Widget>[
+              const SizedBox(width: 8),
+              Text(
+                value!,
+                style: textTheme.bodySmall?.copyWith(
+                  color: tokens.textSecondary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              SettingRow(
-                icon: Icons.autorenew_rounded,
-                title: '启动时自动检查更新',
-                trailing: SettingSwitch(
-                  value: autoCheck,
-                  onChanged: (bool value) => _setAutoCheck(context, value),
-                ),
-                onTap: () => _setAutoCheck(context, !autoCheck),
+            ],
+            if (trailing != null) ...<Widget>[
+              const SizedBox(width: 8),
+              trailing!,
+            ],
+            if (trailingIcon != null) ...<Widget>[
+              const SizedBox(width: 6),
+              Icon(
+                trailingIcon,
+                size: trailingIcon == Icons.open_in_new_rounded ? 14 : 18,
+                color: tokens.textSecondary,
               ),
             ],
-          ),
-          SettingGroup(
-            children: <Widget>[
-              SettingRow(
-                icon: Icons.description_outlined,
-                title: '开源许可',
-                value: 'MIT',
-                showChevron: true,
-                onTap: () => _openLicense(context),
-              ),
-              SettingRow(
-                icon: Icons.person_outline_rounded,
-                title: '作者',
-                subtitle: 'GitHub 主页',
-                value: _authorName,
-                showChevron: true,
-                onTap: () => AppUtil.openLink(context, _authorGithubUrl),
-              ),
-              SettingRow(
-                icon: Icons.code_rounded,
-                title: '项目仓库',
-                subtitle: Version.repositoryUrl,
-                showChevron: true,
-                onTap: () => AppUtil.openLink(context, Version.repositoryUrl),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              TiebananaMetrics.gapLg,
-              TiebananaMetrics.gapLg,
-              TiebananaMetrics.gapLg,
-              0,
-            ),
-            child: Text(
-              'Tiebanana 是非官方的贴吧客户端\n以 MIT 许可开放源代码',
-              textAlign: TextAlign.center,
-              style: textTheme.labelSmall?.copyWith(color: tokens.textTertiary),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -505,12 +565,10 @@ class _AboutBrandDockCard extends StatelessWidget {
   const _AboutBrandDockCard({
     required this.horizontal,
     required this.onCopyEnv,
-    this.margin,
   });
 
   final bool horizontal;
   final VoidCallback onCopyEnv;
-  final EdgeInsetsGeometry? margin;
 
   @override
   Widget build(BuildContext context) {
@@ -532,13 +590,13 @@ class _AboutBrandDockCard extends StatelessWidget {
             ),
             child: Row(
               children: <Widget>[
-                _BrandIcon(size: 64),
+                const _BrandIcon(size: 64),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      _WordmarkText(fontSize: 22),
+                      const _WordmarkText(fontSize: 22),
                       const SizedBox(height: 4),
                       Text(
                         '轻一点，逛贴吧。',
@@ -547,7 +605,7 @@ class _AboutBrandDockCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _BrandPills(),
+                      const _BrandPills(),
                     ],
                   ),
                 ),
@@ -593,7 +651,7 @@ class _AboutBrandDockCard extends StatelessWidget {
         children: <Widget>[
           _LedgerRow(
             label: '应用版本',
-            value: Version.fullDisplayVersion,
+            value: Version.displayVersion,
             trailing: IconButton(
               tooltip: '复制环境信息',
               visualDensity: VisualDensity.compact,
@@ -625,7 +683,6 @@ class _AboutBrandDockCard extends StatelessWidget {
 
     if (horizontal) {
       return DesktopPanel(
-        margin: margin,
         borderRadius: TiebananaMetrics.brXl,
         child: IntrinsicHeight(
           child: Row(
@@ -641,7 +698,6 @@ class _AboutBrandDockCard extends StatelessWidget {
     }
 
     return DesktopPanel(
-      margin: margin,
       borderRadius: TiebananaMetrics.brXl,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -828,13 +884,15 @@ class _PlatformChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
     return Material(
-      color: activeHost ? tokens.primaryContainer : tokens.fill,
+      color: tokens.fill,
       borderRadius: TiebananaMetrics.brPill,
       child: InkWell(
         borderRadius: TiebananaMetrics.brPill,
+        hoverColor: tokens.primaryContainer.withValues(alpha: 0.7),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Container(
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -843,7 +901,7 @@ class _PlatformChip extends StatelessWidget {
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: tokens.primary,
+                    color: tokens.assistantBadgeForeground,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -852,9 +910,8 @@ class _PlatformChip extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: activeHost
-                          ? tokens.onPrimaryContainer
-                          : tokens.textSecondary,
+                      fontSize: 11.5,
+                      color: tokens.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
               ),

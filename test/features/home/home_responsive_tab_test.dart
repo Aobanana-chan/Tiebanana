@@ -130,7 +130,7 @@ void main() {
     await tester.tap(find.text('关于'));
     await _pumpFrames(tester);
     expect(dots.hitTestable(), findsOneWidget);
-    await tester.tap(find.text('检查更新'));
+    await tester.tap(find.text('查看更新与下载'));
     await _pumpFrames(tester);
     expect(find.text('最新版本：v1.1.1'), findsOneWidget);
     await tester.pageBack();

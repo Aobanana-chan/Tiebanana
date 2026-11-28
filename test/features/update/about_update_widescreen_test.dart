@@ -163,7 +163,8 @@ void main() {
     expect(find.byType(DesktopShellFrame), findsOneWidget);
     expect(find.byType(PageWrap), findsOneWidget);
     expect(find.text('关于 Tiebanana'), findsWidgets);
-    expect(find.text('v1.1.1+7'), findsOneWidget);
+    expect(find.text('v1.1.1'), findsWidgets);
+    expect(find.text('v1.1.1+7'), findsNothing);
 
     // 打开 MIT 许可弹窗并复制全文
     await tester.tap(find.text('开源许可'));
