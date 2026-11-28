@@ -7,6 +7,7 @@ import 'package:tiebanana/features/moderation/pages/report_page.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
+import 'package:tiebanana/shared/widgets/adaptive_panel.dart';
 
 bool isOwnModerationTarget(String uid) =>
     uid.isNotEmpty &&
@@ -44,16 +45,13 @@ Future<void> openReportPage(
 Future<void> showUserModerationMenu(BuildContext context,
     {required String uid, required String name, String portrait = ''}) async {
   if (isOwnModerationTarget(uid) || (int.tryParse(uid) ?? 0) <= 0) return;
-  final action = await showModalBottomSheet<String>(
+  final action = await showAdaptivePanel<String>(
       context: context,
+      maxWidth: 400,
       showDragHandle: true,
-      backgroundColor: TiebananaTokens.of(context).surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-              top: Radius.circular(TiebananaMetrics.radiusXl))),
       builder: (context) => SafeArea(
           child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
