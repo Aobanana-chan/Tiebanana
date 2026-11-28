@@ -1,4 +1,5 @@
 import 'package:extended_image/extended_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -9,6 +10,128 @@ import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/features/media/state/image_upload.dart';
 
+List<String> _buildEmojiAssets() {
+  return <String>[
+    'image_emoticon.png',
+    for (int i = 2; i <= 129; i++)
+      if (AssetList.emojis.contains('image_emoticon$i.png'))
+        'image_emoticon$i.png',
+  ];
+}
+
+void _insertEmojiToken(TextEditingController controller, String fileName) {
+  final String key = fileName.replaceFirst('.png', '');
+  final String? label = emojiFileMapping[key];
+  if (label == null) return;
+  final String token = '#($label)';
+  final TextEditingValue value = controller.value;
+  if (value.selection.isValid) {
+    final int start = value.selection.start;
+    final int end = value.selection.end;
+    final String newText = value.text.replaceRange(start, end, token);
+    controller.value = value.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: start + token.length),
+    );
+  } else {
+    final String next = controller.text + token;
+    controller.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
+  }
+}
+
+WormEffect _emojiIndicatorEffect(TiebananaTokens tokens) {
+  return WormEffect(
+    spacing: 20,
+    dotWidth: 7,
+    dotHeight: 7,
+    activeDotColor: tokens.textTertiary,
+    dotColor: tokens.fill,
+  );
+}
+
+mixin _EmojiPageWheelMixin<T extends StatefulWidget> on State<T> {
+  late final PageController _pageController = PageController();
+  int _currentPage = 0;
+  int? _targetPage;
+  double _wheelAccum = 0;
+  DateTime? _lastWheelAt;
+  DateTime? _lastTouchpadTurnAt;
+
+  int get _pageCount;
+  int get _effectivePage => _targetPage ?? _currentPage;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _handlePageChanged(int index) {
+    if (_currentPage != index) {
+      setState(() => _currentPage = index);
+    }
+  }
+
+  Future<void> _goToPage(int page) async {
+    final int count = _pageCount;
+    if (count <= 0) return;
+    final int target = page.clamp(0, count - 1);
+    if (target == _effectivePage) return;
+    setState(() => _targetPage = target);
+    await _pageController.animateToPage(
+      target,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+    );
+    if (mounted && _targetPage == target) {
+      setState(() => _targetPage = null);
+    }
+  }
+
+  void _stepPage(int delta) {
+    _goToPage(_effectivePage + delta);
+  }
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    final double dy = event.scrollDelta.dy;
+    final double dx = event.scrollDelta.dx;
+    final double delta = dy.abs() >= dx.abs() ? dy : dx;
+    if (delta == 0) return;
+
+    const double threshold = 24.0;
+    final DateTime now = DateTime.now();
+
+    if (delta.abs() >= threshold) {
+      _wheelAccum = 0;
+      _lastWheelAt = now;
+      _stepPage(delta > 0 ? 1 : -1);
+      return;
+    }
+
+    if (_lastTouchpadTurnAt != null &&
+        now.difference(_lastTouchpadTurnAt!) <
+            const Duration(milliseconds: 180)) {
+      return;
+    }
+    if (_lastWheelAt != null &&
+        now.difference(_lastWheelAt!) > const Duration(milliseconds: 220)) {
+      _wheelAccum = 0;
+    }
+    _lastWheelAt = now;
+    _wheelAccum += delta;
+    if (_wheelAccum.abs() >= threshold) {
+      final int step = _wheelAccum > 0 ? 1 : -1;
+      _wheelAccum = 0;
+      _lastTouchpadTurnAt = now;
+      _stepPage(step);
+    }
+  }
+}
+
 class EmojiPanel extends StatefulWidget {
   final TextEditingController controller;
   final double height;
@@ -18,126 +141,111 @@ class EmojiPanel extends StatefulWidget {
   State<EmojiPanel> createState() => _EmojiPanelState();
 }
 
-class _EmojiPanelState extends State<EmojiPanel> {
-  late PageController controller;
-  List<String> emoji = [];
+class _EmojiPanelState extends State<EmojiPanel>
+    with _EmojiPageWheelMixin<EmojiPanel> {
   static const int _crossAxisCount = 7;
   static const int _rowCount = 3;
-  static const double _mainAxisExtent = 30;
-  static const double _mainAxisSpacing = 20;
-  late final TextEditingController textController;
+  static const int _perPage = _crossAxisCount * _rowCount;
+  static const double _mainAxisExtent = 34;
+  static const double _mainAxisSpacing = 12;
+  static const double _gridHeight =
+      _mainAxisExtent * _rowCount + _mainAxisSpacing * (_rowCount - 1);
+
+  late final List<String> _emojis = _buildEmojiAssets();
+
   @override
-  void initState() {
-    super.initState();
-    controller = PageController();
-    emoji.add("image_emoticon.png");
-    for (var i = 2; i <= 129; i++) {
-      if (AssetList.emojis.contains("image_emoticon$i.png")) {
-        emoji.add("image_emoticon$i.png");
-      }
-    }
+  int get _pageCount => (_emojis.length / _perPage).ceil();
 
-    textController = widget.controller;
-  }
-
-  List<String> emojiPage(int page) => emoji.sublist(
-      page * _crossAxisCount * _rowCount,
-      (page + 1) * _crossAxisCount * _rowCount > emoji.length
-          ? emoji.length
-          : (page + 1) * _crossAxisCount * _rowCount);
-
-  void insertText(String text) {
-    final TextEditingValue value = textController.value;
-    final int start = value.selection.baseOffset;
-    int end = value.selection.extentOffset;
-    if (value.selection.isValid) {
-      String newText = '';
-      if (value.selection.isCollapsed) {
-        if (end > 0) {
-          newText += value.text.substring(0, end);
-        }
-        newText += text;
-        if (value.text.length > end) {
-          newText += value.text.substring(end, value.text.length);
-        }
-      } else {
-        newText = value.text.replaceRange(start, end, text);
-        end = start;
-      }
-
-      textController.value = value.copyWith(
-          text: newText,
-          selection: value.selection.copyWith(
-              baseOffset: end + text.length, extentOffset: end + text.length));
-    } else {
-      textController.value = TextEditingValue(
-          text: text,
-          selection:
-              TextSelection.fromPosition(TextPosition(offset: text.length)));
-    }
+  List<String> _itemsFor(int page) {
+    final int start = page * _perPage;
+    final int end =
+        (start + _perPage) > _emojis.length ? _emojis.length : start + _perPage;
+    return _emojis.sublist(start, end);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(maxHeight: widget.height),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 10),
-          constraints: const BoxConstraints(
-              maxHeight: (_mainAxisExtent + _mainAxisSpacing) * _rowCount),
-          child: PageView.builder(
-            itemCount: (emoji.length / (_crossAxisCount * _rowCount)).ceil(),
-            controller: controller,
-            itemBuilder: (BuildContext context, int pageindex) {
-              return GridView.builder(
-                shrinkWrap: true,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    mainAxisExtent: _mainAxisExtent,
-                    crossAxisCount: _crossAxisCount,
-                    mainAxisSpacing: _mainAxisSpacing,
-                    crossAxisSpacing: 5),
-                itemCount: emojiPage(pageindex).length,
-                itemBuilder: (BuildContext context, int index) {
-                  return GestureDetector(
-                    onTap: () {
-                      var emojiName =
-                          emojiPage(pageindex)[index].replaceFirst(".png", "");
-                      insertText("#(${emojiFileMapping[emojiName]})");
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerSignal: _handlePointerSignal,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: widget.height),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                child: SizedBox(
+                  height: _gridHeight,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _pageCount,
+                    onPageChanged: _handlePageChanged,
+                    itemBuilder: (BuildContext context, int pageIndex) {
+                      final List<String> pageItems = _itemsFor(pageIndex);
+                      return GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.zero,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          mainAxisExtent: _mainAxisExtent,
+                          crossAxisCount: _crossAxisCount,
+                          mainAxisSpacing: _mainAxisSpacing,
+                          crossAxisSpacing: 4,
+                        ),
+                        itemCount: pageItems.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final String file = pageItems[index];
+                          final String? label =
+                              emojiFileMapping[file.replaceFirst('.png', '')];
+                          return Tooltip(
+                            message: label ?? '',
+                            waitDuration: const Duration(milliseconds: 500),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () =>
+                                    _insertEmojiToken(widget.controller, file),
+                                child: Center(
+                                  child: ExtendedImage.asset(
+                                    'assets/emoji/$file',
+                                    width: 26,
+                                    height: 26,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
-                    child: ExtendedImage.asset(
-                      "assets/emoji/${emojiPage(pageindex)[index]}",
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: SmoothPageIndicator(
+                  controller: _pageController,
+                  count: _pageCount,
+                  onDotClicked: _goToPage,
+                  effect: _emojiIndicatorEffect(tokens),
+                ),
+              ),
+            ),
+          ],
         ),
-        Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          child: SmoothPageIndicator(
-            controller: controller,
-            count: (emoji.length / (_crossAxisCount * _rowCount)).ceil(),
-            onDotClicked: (index) {
-              controller.animateToPage(index,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut);
-            },
-            effect: WormEffect(
-                spacing: 20,
-                dotWidth: 7,
-                dotHeight: 7,
-                activeDotColor: TiebananaTokens.of(context).textTertiary,
-                dotColor: TiebananaTokens.of(context).fill),
-          ),
-        )
-      ]),
+      ),
     );
   }
 }
 
-/// 桌面端锚定在表情按钮上方的悬浮 Popover（`364 × 280dp`，标题「贴吧表情」，`7 × 3` 分页）。
+/// 桌面端锚定在表情按钮上方的悬浮 Popover（`364 × 200dp`，标题「贴吧表情」，`7 × 3` 分页）。
 Future<void> showEmojiPopover({
   required BuildContext context,
   required GlobalKey anchorKey,
@@ -148,7 +256,7 @@ Future<void> showEmojiPopover({
       anchorKey.currentContext?.findRenderObject() as RenderBox?;
   final Size screen = MediaQuery.sizeOf(context);
   const double popW = 364;
-  const double popH = 280;
+  const double popH = 200;
 
   double left = 16;
   double top = (screen.height - popH) / 2;
@@ -205,20 +313,20 @@ class DesktopEmojiPopover extends StatefulWidget {
   State<DesktopEmojiPopover> createState() => _DesktopEmojiPopoverState();
 }
 
-class _DesktopEmojiPopoverState extends State<DesktopEmojiPopover> {
+class _DesktopEmojiPopoverState extends State<DesktopEmojiPopover>
+    with _EmojiPageWheelMixin<DesktopEmojiPopover> {
   static const int _cols = 7;
   static const int _rows = 3;
   static const int _perPage = _cols * _rows;
+  static const double _cellExtent = 38;
+  static const double _mainAxisSpacing = 4;
+  static const double _crossAxisSpacing = 4;
+  static const double _gridHeight =
+      _cellExtent * _rows + _mainAxisSpacing * (_rows - 1);
 
-  late final List<String> _emojis = <String>[
-    'image_emoticon.png',
-    for (int i = 2; i <= 129; i++)
-      if (AssetList.emojis.contains('image_emoticon$i.png'))
-        'image_emoticon$i.png',
-  ];
+  late final List<String> _emojis = _buildEmojiAssets();
 
-  int _page = 0;
-
+  @override
   int get _pageCount => (_emojis.length / _perPage).ceil();
 
   List<String> _itemsFor(int page) {
@@ -228,58 +336,34 @@ class _DesktopEmojiPopoverState extends State<DesktopEmojiPopover> {
     return _emojis.sublist(start, end);
   }
 
-  void _insert(String fileName) {
-    final String key = fileName.replaceFirst('.png', '');
-    final String? label = emojiFileMapping[key];
-    if (label == null) return;
-    final String token = '#($label)';
-    final TextEditingValue value = widget.controller.value;
-    final int start = value.selection.baseOffset;
-    int end = value.selection.extentOffset;
-    if (value.selection.isValid) {
-      final String newText = value.selection.isCollapsed
-          ? value.text.substring(0, end) + token + value.text.substring(end)
-          : value.text.replaceRange(start, end, token);
-      if (!value.selection.isCollapsed) end = start;
-      widget.controller.value = value.copyWith(
-        text: newText,
-        selection: TextSelection.collapsed(offset: end + token.length),
-      );
-    } else {
-      final String next = widget.controller.text + token;
-      widget.controller.value = TextEditingValue(
-        text: next,
-        selection: TextSelection.collapsed(offset: next.length),
-      );
-    }
-    widget.onInserted?.call();
-  }
-
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
-    final List<String> pageItems = _itemsFor(_page);
-    return Container(
-      width: 364,
-      height: 280,
-      padding: const EdgeInsets.all(11),
-      decoration: BoxDecoration(
-        color: tokens.surface,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: tokens.line),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: tokens.shadow,
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Text(
+    final int activePage = _effectivePage;
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerSignal: _handlePointerSignal,
+      child: Container(
+        width: 364,
+        padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
+        decoration: BoxDecoration(
+          color: tokens.surface,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: tokens.line),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: tokens.shadow,
+              blurRadius: 28,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
                 '贴吧表情',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       fontSize: 11.5,
@@ -287,62 +371,87 @@ class _DesktopEmojiPopoverState extends State<DesktopEmojiPopover> {
                       color: tokens.textSecondary,
                     ),
               ),
-              const Spacer(),
-              _pageBtn(
-                tokens,
-                icon: Icons.chevron_left_rounded,
-                onTap: _page > 0 ? () => setState(() => _page--) : null,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${_page + 1} / $_pageCount',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: tokens.textSecondary,
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 4),
-              _pageBtn(
-                tokens,
-                icon: Icons.chevron_right_rounded,
-                onTap: _page < _pageCount - 1
-                    ? () => setState(() => _page++)
-                    : null,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: _cols,
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 4,
-              ),
-              itemCount: pageItems.length,
-              itemBuilder: (BuildContext context, int index) {
-                final String file = pageItems[index];
-                return InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => _insert(file),
-                  child: Center(
-                    child: ExtendedImage.asset(
-                      'assets/emoji/$file',
-                      width: 24,
-                      height: 24,
-                    ),
-                  ),
-                );
-              },
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            SizedBox(
+              height: _gridHeight,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: _pageCount,
+                onPageChanged: _handlePageChanged,
+                itemBuilder: (BuildContext context, int pageIndex) {
+                  final List<String> pageItems = _itemsFor(pageIndex);
+                  return GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      mainAxisExtent: _cellExtent,
+                      crossAxisCount: _cols,
+                      mainAxisSpacing: _mainAxisSpacing,
+                      crossAxisSpacing: _crossAxisSpacing,
+                    ),
+                    itemCount: pageItems.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final String file = pageItems[index];
+                      final String? label =
+                          emojiFileMapping[file.replaceFirst('.png', '')];
+                      return Tooltip(
+                        message: label ?? '',
+                        waitDuration: const Duration(milliseconds: 500),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
+                            _insertEmojiToken(widget.controller, file);
+                            widget.onInserted?.call();
+                          },
+                          child: Center(
+                            child: ExtendedImage.asset(
+                              'assets/emoji/$file',
+                              width: 24,
+                              height: 24,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                _pageBtn(
+                  tokens,
+                  icon: Icons.chevron_left_rounded,
+                  tooltip: '上一页',
+                  onTap: activePage > 0 ? () => _stepPage(-1) : null,
+                ),
+                const SizedBox(width: 12),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: SmoothPageIndicator(
+                    controller: _pageController,
+                    count: _pageCount,
+                    onDotClicked: _goToPage,
+                    effect: _emojiIndicatorEffect(tokens),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _pageBtn(
+                  tokens,
+                  icon: Icons.chevron_right_rounded,
+                  tooltip: '下一页',
+                  onTap:
+                      activePage < _pageCount - 1 ? () => _stepPage(1) : null,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -350,24 +459,29 @@ class _DesktopEmojiPopoverState extends State<DesktopEmojiPopover> {
   Widget _pageBtn(
     TiebananaTokens tokens, {
     required IconData icon,
+    required String tooltip,
     VoidCallback? onTap,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(6),
-      onTap: onTap,
-      child: Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          color: tokens.fill,
+    return Tooltip(
+      message: tooltip,
+      waitDuration: const Duration(milliseconds: 500),
+      child: Material(
+        color: tokens.fill,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
           borderRadius: BorderRadius.circular(6),
-        ),
-        child: Icon(
-          icon,
-          size: 15,
-          color: onTap == null
-              ? tokens.textTertiary.withValues(alpha: 0.4)
-              : tokens.textSecondary,
+          onTap: onTap,
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: Icon(
+              icon,
+              size: 15,
+              color: onTap == null
+                  ? tokens.textTertiary.withValues(alpha: 0.4)
+                  : tokens.textSecondary,
+            ),
+          ),
         ),
       ),
     );

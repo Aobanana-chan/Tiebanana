@@ -905,12 +905,9 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet>
                           ),
                         );
                       },
-                      child: SizedBox(
+                      child: EmojiPanel(
+                        controller: controller,
                         height: _keyboardHeight,
-                        child: EmojiPanel(
-                          controller: controller,
-                          height: _keyboardHeight,
-                        ),
                       ),
                     ),
                 ],

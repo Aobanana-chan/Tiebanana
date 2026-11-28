@@ -1323,10 +1323,7 @@ class _ThreadComposePageState extends State<ThreadComposePage>
                         icon: const Icon(Icons.visibility_outlined, size: 18),
                         label: const Text('预览')),
                 ])),
-            if (_emoji)
-              SizedBox(
-                  height: 240,
-                  child: EmojiPanel(controller: _body, height: 240)),
+            if (_emoji) EmojiPanel(controller: _body, height: 240),
           ])),
     );
   }
