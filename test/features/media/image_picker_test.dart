@@ -233,4 +233,173 @@ void main() {
     expect(model.hasPending, isFalse);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('宽屏桌面文件模式：空态、双栏检视、保序调整与灯箱预览', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var round = 0;
+    List<dynamic>? poppedResult;
+    await tester.pumpWidget(MaterialApp(
+      theme: TiebananaTheme.light(seedOf('blue'), 14),
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: TextButton(
+            onPressed: () async {
+              poppedResult = await Navigator.push<List<dynamic>>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ImagePickerRoute(
+                    filePicker: (_) async {
+                      round++;
+                      if (round == 1) return <AssetEntity>[];
+                      return <AssetEntity>[
+                        AssetEntity(
+                            id: 'file-a',
+                            typeInt: 1,
+                            width: 1920,
+                            height: 1080),
+                        AssetEntity(
+                            id: 'file-b', typeInt: 1, width: 800, height: 600),
+                      ];
+                    },
+                  ),
+                ),
+              );
+            },
+            child: const Text('打开选图'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('打开选图'));
+    await tester.pumpAndSettle();
+
+    // 首次返回空列表时显示虚线引导空态，不留空白
+    expect(find.text('从本地文件夹选择图片'), findsOneWidget);
+    expect(find.text('已选 0 张'), findsOneWidget);
+
+    // 再次选择两张图片，展示双栏网格与右侧检视顺序
+    await tester.tap(find.text('从文件夹选择'));
+    await tester.pumpAndSettle();
+    expect(find.text('已选 2 张'), findsOneWidget);
+    expect(find.text('焦点预览与顺序'), findsOneWidget);
+    expect(find.text('发送顺序（2）'), findsOneWidget);
+    expect(find.text('1920 × 1080 px'), findsOneWidget);
+
+    // 点击第二张图片切换焦点而不误删
+    await tester.tap(find.byKey(const ValueKey('selected-file-b')));
+    await tester.pumpAndSettle();
+    expect(find.text('已选 2 张'), findsOneWidget);
+    expect(find.text('800 × 600 px'), findsOneWidget);
+
+    // 将第 2 张上移到第 1 位
+    await tester.tap(find.byTooltip('上移').last);
+    await tester.pumpAndSettle();
+
+    // 打开居中灯箱预览并测试缩放与翻页
+    await tester.tap(find.text('放大查看'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 2'), findsOneWidget);
+    expect(find.text('100%'), findsOneWidget);
+    await tester.tap(find.byTooltip('放大'));
+    await tester.pumpAndSettle();
+    expect(find.text('125%'), findsOneWidget);
+    await tester.tap(find.text('下一张'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 / 2'), findsOneWidget);
+    await tester.tap(find.text('关闭'));
+    await tester.pumpAndSettle();
+
+    // 开启原图并确认返回：保持调序后的 LinkedHashSet 顺序
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('添加（2）'));
+    await tester.pumpAndSettle();
+
+    expect(poppedResult, isNotNull);
+    final selected = poppedResult![0] as Set<AssetEntity>;
+    expect(selected.map((e) => e.id).toList(), <String>['file-b', 'file-a']);
+    expect(poppedResult![1], isTrue);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  testWidgets('宽屏桌面头像模式：隐藏原图开关并展示头像校验面板', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(MaterialApp(
+      theme: TiebananaTheme.dark(seedOf('pink'), 14),
+      home: ImagePickerRoute(
+        singleSelection: true,
+        filePicker: (_) async => <AssetEntity>[
+          AssetEntity(id: 'av-1', typeInt: 1, width: 1024, height: 1024),
+        ],
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('选择头像'), findsOneWidget);
+    expect(find.text('头像预览与校验'), findsOneWidget);
+    expect(find.byType(Switch), findsNothing);
+    expect(find.text('裁切头像'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  testWidgets('宽屏相册模式：1280 三栏切换相册保留已选，1080 收起左栏改用弹窗', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await open(tester);
+    expect(find.text('全部相册'), findsOneWidget);
+    expect(find.text('另一个相册'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('recent-0')));
+    await tester.pumpAndSettle();
+    expect(find.text('发送顺序（1）'), findsOneWidget);
+
+    await tester.tap(find.text('另一个相册'));
+    await tester.pumpAndSettle();
+    expect(albumQueries, 2);
+    expect(find.text('添加（1）'), findsOneWidget);
+
+    // 收缩到 1080dp：左侧相册目录收起，改为按钮弹窗切换
+    tester.view.physicalSize = const Size(1080, 800);
+    await tester.pumpAndSettle();
+    expect(find.text('全部相册 ›'), findsOneWidget);
+    await tester.tap(find.text('全部相册 ›'));
+    await tester.pumpAndSettle();
+    expect(find.text('全部相册'), findsOneWidget);
+    await tester.tap(find.text('最近项目').last);
+    await tester.pumpAndSettle();
+    expect(albumQueries, 3);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final width in <double>[1280, 1080, 820, 640]) {
+    testWidgets('多断点宽度 $width 下桌面选图无溢出', (tester) async {
+      tester.view.physicalSize = Size(width, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(MaterialApp(
+        theme: TiebananaTheme.light(seedOf('blue'), 16),
+        home: ImagePickerRoute(
+          filePicker: (_) async => <AssetEntity>[
+            AssetEntity(id: 'w1', typeInt: 1, width: 1200, height: 800),
+            AssetEntity(id: 'w2', typeInt: 1, width: 800, height: 1200),
+          ],
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('已选 2 张'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+  }
 }

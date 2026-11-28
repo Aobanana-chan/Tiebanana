@@ -16,6 +16,12 @@ class LocalImageAsset extends AssetEntity {
 
   final File localFile;
 
+  @override
+  String? get title {
+    final List<String> parts = localFile.path.split(RegExp(r'[/\\]'));
+    return parts.isEmpty ? null : parts.last;
+  }
+
   static Future<LocalImageAsset> fromFile(File file) async {
     final buffer = await ui.ImmutableBuffer.fromFilePath(file.path);
     try {
