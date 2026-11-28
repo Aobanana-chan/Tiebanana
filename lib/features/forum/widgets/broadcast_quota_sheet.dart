@@ -9,18 +9,20 @@ import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 /// 原生只读 `used_cnt / has_cnt`；发布与编辑在网页版完成。
 Future<void> showBroadcastQuotaSheet(
   BuildContext context,
-  TiebaBroadcastQuota quota,
-) async {
-  final bool wide = MediaQuery.sizeOf(context).width >= 900;
-  if (wide) {
+  TiebaBroadcastQuota quota, {
+  bool? wide,
+}) async {
+  final bool isWide = wide ?? MediaQuery.sizeOf(context).width >= 720;
+  if (isWide) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
     await showDialog<void>(
       context: context,
-      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.54),
+      barrierColor: tokens.imageScrim.withValues(alpha: 0.45),
       builder: (BuildContext dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 360),
+          constraints: const BoxConstraints(maxWidth: 380),
           child: _QuotaPanel(quota: quota, hostContext: context, wide: true),
         ),
       ),
@@ -59,13 +61,14 @@ class _QuotaPanel extends StatelessWidget {
         total <= 0 ? '当前没有吧广播额度' : (quota.remaining <= 0 ? '本月吧广播次数已用完' : '');
 
     return Container(
-      width: wide ? 360 : double.infinity,
-      padding: EdgeInsets.fromLTRB(16, wide ? 20 : 8, 16, wide ? 20 : 24),
+      width: wide ? 380 : double.infinity,
+      padding: EdgeInsets.fromLTRB(16, wide ? 18 : 8, 16, wide ? 18 : 24),
       decoration: BoxDecoration(
         color: tokens.surface,
         borderRadius: wide
-            ? BorderRadius.circular(24)
+            ? BorderRadius.circular(20)
             : const BorderRadius.vertical(top: Radius.circular(26)),
+        border: wide ? Border.all(color: tokens.line) : null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
