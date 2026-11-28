@@ -8,19 +8,29 @@ import 'package:tiebanana/features/message/models/chat_route_data.dart';
 import 'package:tiebanana/features/message/pages/chat_page.dart';
 import 'package:tiebanana/features/message/state/message_reminder.dart';
 import 'package:tiebanana/features/message/widgets/conversation_card.dart';
+import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/skeleton.dart';
 import 'package:tiebanana/shared/widgets/state_view.dart';
 
 /// 私信页签：会话列表；宽屏（≥ 900dp）切成左右两栏。
 class PrivateMessagePanel extends StatefulWidget {
-  const PrivateMessagePanel({super.key, this.onBrowse, this.refreshSignal});
+  const PrivateMessagePanel({
+    super.key,
+    this.onBrowse,
+    this.refreshSignal,
+    this.manualRefreshController,
+  });
 
   final VoidCallback? onBrowse;
 
   /// 新消息到达时由消息页触发：重新读取会话列表，但不打断当前浏览。
   final Listenable? refreshSignal;
+
+  /// 桌面端顶栏手动刷新时的协作控制器（拉出指示器并提示错误）。
+  final TabRefreshController? manualRefreshController;
 
   @override
   State<PrivateMessagePanel> createState() => _PrivateMessagePanelState();
@@ -37,6 +47,8 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
   }
 
   final List<TiebaConversation> _items = <TiebaConversation>[];
+  final TiebananaRefreshController _refreshIndicator =
+      TiebananaRefreshController();
   bool _loading = true;
   bool _refreshing = false;
   Object? _error;
@@ -46,6 +58,7 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
   void initState() {
     super.initState();
     widget.refreshSignal?.addListener(_onRefreshSignal);
+    widget.manualRefreshController?.attach(this, onRefresh: _manualRefresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _load();
     });
@@ -58,19 +71,33 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
       oldWidget.refreshSignal?.removeListener(_onRefreshSignal);
       widget.refreshSignal?.addListener(_onRefreshSignal);
     }
+    if (oldWidget.manualRefreshController != widget.manualRefreshController) {
+      oldWidget.manualRefreshController?.detach(this);
+      widget.manualRefreshController?.attach(this, onRefresh: _manualRefresh);
+    }
   }
 
   @override
   void dispose() {
+    widget.manualRefreshController?.detach(this);
     widget.refreshSignal?.removeListener(_onRefreshSignal);
     super.dispose();
+  }
+
+  Future<void> _manualRefresh() async {
+    if (!mounted) return;
+    if (_refreshIndicator.isAttached) {
+      await _refreshIndicator.show();
+    } else {
+      await _load(silent: true, notifyOnError: true);
+    }
   }
 
   void _onRefreshSignal() {
     if (mounted) _load(silent: true);
   }
 
-  Future<void> _load({bool silent = false}) async {
+  Future<void> _load({bool silent = false, bool notifyOnError = false}) async {
     if (_refreshing) return;
     _refreshing = true;
     if (!silent && _items.isEmpty && mounted) {
@@ -110,6 +137,9 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
         _loading = false;
         _error = error;
       });
+      if (notifyOnError && _items.isNotEmpty) {
+        Fluttertoast.showToast(msg: '刷新失败，请稍后重试');
+      }
     } finally {
       _refreshing = false;
     }
@@ -320,9 +350,9 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
         );
       },
     );
-    if (!scrollable) return list;
     return TiebananaRefreshIndicator(
-      onRefresh: () => _load(silent: true),
+      controller: _refreshIndicator,
+      onRefresh: () => _load(silent: true, notifyOnError: true),
       child: list,
     );
   }
@@ -355,9 +385,9 @@ class _PrivateMessagePanelState extends State<PrivateMessagePanel> {
         );
       },
     );
-    if (!scrollable) return bodyWidget;
     return TiebananaRefreshIndicator(
-      onRefresh: () => _load(silent: true),
+      controller: _refreshIndicator,
+      onRefresh: () => _load(silent: true, notifyOnError: true),
       child: bodyWidget,
     );
   }

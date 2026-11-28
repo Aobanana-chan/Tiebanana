@@ -101,12 +101,12 @@ class _ThreadPageState extends State<ThreadPageRoute> {
     }
   }
 
-  void _retry() {
+  Future<void> _retry() async {
     if (_loading) return;
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
     _session.retry();
     setState(() => _loading = true);
-    _refresh();
+    await _refresh();
   }
 
   @override

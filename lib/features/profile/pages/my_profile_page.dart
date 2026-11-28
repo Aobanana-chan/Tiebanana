@@ -24,6 +24,7 @@ import 'package:tiebanana/features/settings/state/app_settings.dart';
 import 'package:tiebanana/features/settings/widgets/setting_panel.dart';
 import 'package:tiebanana/features/update/data/version.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
+import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
@@ -36,11 +37,13 @@ import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/desktop_panel.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
 import 'package:tiebanana/shared/widgets/setting_group.dart';
+import 'package:tiebanana/shared/widgets/tiebanana_refresh_indicator.dart';
 
 ///用户信息和设置界面
 class UserPage extends StatefulWidget {
   final FloatingSearchBarController controller;
-  const UserPage({super.key, required this.controller});
+  final TabRefreshController? refreshController;
+  const UserPage({super.key, required this.controller, this.refreshController});
 
   @override
   _UserPageState createState() => _UserPageState();
@@ -53,6 +56,10 @@ class _UserPageState extends State<UserPage> {
   /// 而 `getuserinfo`（`getMyInfo`）只有身份、**没有这四项计数**，
   /// uid 直接使用登录时写入的本地缓存。
   late Future<TiebaUserProfile> _profile;
+  TiebaUserProfile? _cachedUser;
+  final TiebananaRefreshController _refreshIndicator =
+      TiebananaRefreshController();
+  final ValueNotifier<int> _workbenchRefresh = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -60,13 +67,46 @@ class _UserPageState extends State<UserPage> {
     _profile = _loadProfile();
     profileEvents.addListener(_onProfileSaved);
     Global.desktopRefreshTick.addListener(_onDesktopRefresh);
+    widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
+  }
+
+  @override
+  void didUpdateWidget(covariant UserPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshController != widget.refreshController) {
+      oldWidget.refreshController?.detach(this);
+      widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
+    }
   }
 
   void _onDesktopRefresh() {
+    if (mounted) unawaited(_refreshFromShell());
+  }
+
+  Future<void> _refreshFromShell() async {
     if (!mounted) return;
-    setState(() {
-      _profile = _loadProfile();
-    });
+    if (_refreshIndicator.isAttached) {
+      await _refreshIndicator.show();
+    } else {
+      await _refreshProfile(notifyOnError: true);
+    }
+  }
+
+  Future<void> _refreshProfile({bool notifyOnError = false}) async {
+    final Future<TiebaUserProfile> next = _loadProfile();
+    if (mounted) {
+      setState(() {
+        _profile = next;
+      });
+    }
+    _workbenchRefresh.value++;
+    try {
+      await next;
+    } catch (_) {
+      if (notifyOnError && mounted && _cachedUser != null) {
+        Fluttertoast.showToast(msg: '刷新失败，请稍后重试');
+      }
+    }
   }
 
   void _onProfileSaved() {
@@ -80,6 +120,8 @@ class _UserPageState extends State<UserPage> {
 
   @override
   void dispose() {
+    widget.refreshController?.detach(this);
+    _workbenchRefresh.dispose();
     Global.desktopRefreshTick.removeListener(_onDesktopRefresh);
     profileEvents.removeListener(_onProfileSaved);
     super.dispose();
@@ -90,7 +132,9 @@ class _UserPageState extends State<UserPage> {
     if (uid.isEmpty) {
       throw Exception("缺少本地 uid");
     }
-    return Global.tiebaAPI.getUserInfo(uid: uid);
+    final TiebaUserProfile profile = await Global.tiebaAPI.getUserInfo(uid: uid);
+    _cachedUser = profile;
+    return profile;
   }
 
   /// 昵称：优先昵称（name_show），为空时退回用户名（name）。
@@ -100,10 +144,14 @@ class _UserPageState extends State<UserPage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
+        final double windowWidth = MediaQuery.sizeOf(context).width;
         final double width = constraints.maxWidth.isFinite
             ? constraints.maxWidth
-            : MediaQuery.sizeOf(context).width;
-        final bool desktop = width >= AppBreakpoints.compactMax;
+            : windowWidth;
+        // 布局档位跟窗口走：宽屏壳层占掉侧栏后内容宽度会少 76–220dp，
+        // 用内容宽度判断会在 720dp 附近出现「外壳已是宽屏、个人页还是手机版」。
+        // 内容宽度只用来决定页内单栏 / 双栏。
+        final bool desktop = windowWidth >= AppBreakpoints.compactMax;
         return FutureBuilder<TiebaUserProfile>(
           future: _profile,
           builder:
@@ -118,7 +166,7 @@ class _UserPageState extends State<UserPage> {
                   child: Text("加载中..."),
                 );
               default:
-                final TiebaUserProfile? user = snapshot.data;
+                final TiebaUserProfile? user = snapshot.data ?? _cachedUser;
                 if (user != null) {
                   SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
                     if (!context.mounted) return;
@@ -126,10 +174,15 @@ class _UserPageState extends State<UserPage> {
                         _displayName(user);
                   });
                   if (desktop) {
-                    return _DesktopProfileWorkbench(
-                      user: user,
-                      displayName: _displayName(user),
-                      width: width,
+                    return TiebananaRefreshIndicator(
+                      controller: _refreshIndicator,
+                      onRefresh: () => _refreshProfile(notifyOnError: true),
+                      child: _DesktopProfileWorkbench(
+                        user: user,
+                        displayName: _displayName(user),
+                        width: width,
+                        refreshSignal: _workbenchRefresh,
+                      ),
                     );
                   }
                   return Column(
@@ -194,11 +247,13 @@ class _DesktopProfileWorkbench extends StatefulWidget {
     required this.user,
     required this.displayName,
     required this.width,
+    this.refreshSignal,
   });
 
   final TiebaUserProfile user;
   final String displayName;
   final double width;
+  final Listenable? refreshSignal;
 
   @override
   State<_DesktopProfileWorkbench> createState() =>
@@ -242,7 +297,27 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
         .fontSize
         .roundToDouble()
         .clamp(12.0, 20.0);
+    widget.refreshSignal?.addListener(_onRefreshSignal);
     unawaited(_loadCounts());
+  }
+
+  @override
+  void didUpdateWidget(covariant _DesktopProfileWorkbench oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshSignal != widget.refreshSignal) {
+      oldWidget.refreshSignal?.removeListener(_onRefreshSignal);
+      widget.refreshSignal?.addListener(_onRefreshSignal);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.refreshSignal?.removeListener(_onRefreshSignal);
+    super.dispose();
+  }
+
+  void _onRefreshSignal() {
+    if (mounted) unawaited(_loadCounts());
   }
 
   Future<void> _loadCounts() async {
@@ -340,6 +415,7 @@ class _DesktopProfileWorkbenchState extends State<_DesktopProfileWorkbench> {
     final TiebaUserProfile user = widget.user;
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: PageWrap(
         maxWidth: AppBreakpoints.pageMaxWidth,
         child: Column(

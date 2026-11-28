@@ -475,7 +475,10 @@ class _ForumHomePageState extends State<ForumHomePage>
                     title: '${widget.kw}吧',
                     activeTab: -1,
                     replaceForumRoute: true,
-                    onRefresh: () => setState(init),
+                    onRefresh: () async {
+                      setState(init);
+                      await initForum;
+                    },
                     child: errBody,
                   );
                 }
@@ -513,7 +516,10 @@ class _ForumHomePageState extends State<ForumHomePage>
                     title: '${widget.kw}吧',
                     activeTab: -1,
                     replaceForumRoute: true,
-                    onRefresh: () => setState(init),
+                    onRefresh: () async {
+                      setState(init);
+                      await initForum;
+                    },
                     child: emptyTabs,
                   );
                 }

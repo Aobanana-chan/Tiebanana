@@ -16,9 +16,11 @@ import 'package:tiebanana/features/message/widgets/reminder_sheet.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
+import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/widgets/floating_search_app_bar.dart';
 import 'package:tiebanana/shared/widgets/keep_alive_wrapper.dart';
 import 'package:tiebanana/shared/widgets/skeleton.dart';
@@ -112,8 +114,16 @@ class MessagePan extends StatefulWidget {
   /// 用一个回调比自己去 push 一个首页路由干净。
   final VoidCallback? onBrowse;
 
-  const MessagePan(
-      {super.key, required this.controller, this.loaders, this.onBrowse});
+  /// 桌面端顶栏触发刷新时的协作控制器。
+  final TabRefreshController? refreshController;
+
+  const MessagePan({
+    super.key,
+    required this.controller,
+    this.loaders,
+    this.onBrowse,
+    this.refreshController,
+  });
 
   @override
   _MessagePanState createState() => _MessagePanState();
@@ -142,6 +152,7 @@ class _MessagePanState extends State<MessagePan>
 
   /// 通知私信页签重新读取会话列表。
   final ValueNotifier<int> _listRefresh = ValueNotifier<int>(0);
+  final TabRefreshController _privateRefreshController = TabRefreshController();
   final GlobalKey _desktopReminderKey = GlobalKey();
 
   @override
@@ -164,18 +175,36 @@ class _MessagePanState extends State<MessagePan>
     MessageReminder.chatUnread.addListener(_onReminderChanged);
     NotificationReminder.instance.addListener(_onNotificationChanged);
     Global.desktopRefreshTick.addListener(_onDesktopRefresh);
+    widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) NotificationReminder.instance.ensureLoaded();
     });
   }
 
+  @override
+  void didUpdateWidget(covariant MessagePan oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshController != widget.refreshController) {
+      oldWidget.refreshController?.detach(this);
+      widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
+    }
+  }
+
   void _onDesktopRefresh() {
+    if (mounted) unawaited(_refreshFromShell());
+  }
+
+  Future<void> _refreshFromShell() async {
     if (!mounted) return;
     final _TabState tab = _tabs[_selectedTab];
     if (tab.meta.kind == null) {
-      _listRefresh.value++;
+      await _privateRefreshController.refresh();
+      return;
+    }
+    if (tab.refreshController.isAttached) {
+      await tab.refreshController.show();
     } else {
-      _refresh(tab);
+      await _refresh(tab, notifyOnError: true);
     }
   }
 
@@ -250,6 +279,7 @@ class _MessagePanState extends State<MessagePan>
 
   @override
   void dispose() {
+    widget.refreshController?.detach(this);
     _liveRefresh?.cancel();
     if (_routeSubscribed) {
       appRouteObserver.unsubscribe(this);
@@ -326,7 +356,7 @@ class _MessagePanState extends State<MessagePan>
   }
 
   /// 下拉刷新 / 首次加载。已有内容时保留列表，错误显示在底部。
-  Future<void> _refresh(_TabState tab) async {
+  Future<void> _refresh(_TabState tab, {bool notifyOnError = false}) async {
     final MessageLoader? loader = _loaderOf(tab);
     if (loader == null || tab.refreshing) {
       return;
@@ -365,6 +395,9 @@ class _MessagePanState extends State<MessagePan>
         tab.loading = false;
         tab.error = error;
       });
+      if (notifyOnError && tab.items.isNotEmpty) {
+        Fluttertoast.showToast(msg: '刷新失败，请稍后重试');
+      }
     } finally {
       tab.refreshing = false;
     }
@@ -755,6 +788,7 @@ class _MessagePanState extends State<MessagePan>
       return PrivateMessagePanel(
         onBrowse: widget.onBrowse,
         refreshSignal: _listRefresh,
+        manualRefreshController: _privateRefreshController,
       );
     }
     return MessageFeed(
@@ -766,7 +800,8 @@ class _MessagePanState extends State<MessagePan>
       loadingMore: tab.loadingMore,
       moreError: tab.moreError,
       scrollController: tab.scroll,
-      onRefresh: () => _refresh(tab),
+      refreshController: tab.refreshController,
+      onRefresh: () => _refresh(tab, notifyOnError: true),
       onRetry: () => _retry(tab),
       onLoadMore: () => _nextPage(tab),
       onBrowse: widget.onBrowse,
@@ -810,6 +845,8 @@ class _TabState {
   final MessageTabMeta meta;
   final List<TiebaMessage> items = <TiebaMessage>[];
   final ScrollController scroll = ScrollController();
+  final TiebananaRefreshController refreshController =
+      TiebananaRefreshController();
 
   int pn = 1;
   bool hasMore = false;
@@ -846,6 +883,7 @@ class MessageFeed extends StatelessWidget {
     required this.loadingMore,
     required this.moreError,
     required this.scrollController,
+    this.refreshController,
     required this.onRefresh,
     required this.onRetry,
     required this.onLoadMore,
@@ -864,6 +902,7 @@ class MessageFeed extends StatelessWidget {
   final bool loadingMore;
   final Object? moreError;
   final ScrollController scrollController;
+  final TiebananaRefreshController? refreshController;
   final Future<void> Function() onRefresh;
   final VoidCallback onRetry;
   final VoidCallback onLoadMore;
@@ -905,6 +944,7 @@ class MessageFeed extends StatelessWidget {
     final bool showFooter = loadingMore || moreError != null;
     final int leading = hasHeader ? 1 : 0;
     return TiebananaRefreshIndicator(
+      controller: refreshController,
       onRefresh: onRefresh,
       child: ListView.builder(
         padding: desktop
@@ -938,6 +978,7 @@ class MessageFeed extends StatelessWidget {
   Widget _sheet(BuildContext context, Widget child, {bool center = true}) {
     final Widget bodyChild = _wrapMax(child);
     return TiebananaRefreshIndicator(
+      controller: refreshController,
       onRefresh: onRefresh,
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {

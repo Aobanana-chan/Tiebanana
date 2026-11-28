@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:tiebanana/features/forum/state/forum_state.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/controllers/back_to_top_controller.dart';
+import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
+import 'package:tiebanana/shared/widgets/app_toast.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
@@ -37,9 +39,17 @@ class RecommendPan extends StatefulWidget {
 
   /// 返回键的「先回顶」协作对象。主界面按下返回时先问它，再走退出流程。
   final BackToTopController? backController;
+
+  /// 桌面端顶栏触发刷新时的协作控制器。
+  final TabRefreshController? refreshController;
   final RecommendLoader? loader;
-  const RecommendPan(
-      {super.key, required this.controller, this.backController, this.loader});
+  const RecommendPan({
+    super.key,
+    required this.controller,
+    this.backController,
+    this.refreshController,
+    this.loader,
+  });
 
   @override
   _RecommendPanState createState() => _RecommendPanState();
@@ -79,6 +89,7 @@ class _RecommendPanState extends State<RecommendPan> {
     super.initState();
     refresh();
     Global.desktopRefreshTick.addListener(_onDesktopRefresh);
+    widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
 
     widget.backController?.attach(
       this,
@@ -95,12 +106,41 @@ class _RecommendPanState extends State<RecommendPan> {
     });
   }
 
+  @override
+  void didUpdateWidget(covariant RecommendPan oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshController != widget.refreshController) {
+      oldWidget.refreshController?.detach(this);
+      widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
+    }
+  }
+
   void _onDesktopRefresh() {
-    if (mounted) refresh();
+    if (mounted) unawaited(_refreshFromShell());
+  }
+
+  Future<void> _refreshFromShell() async {
+    if (!mounted) return;
+    if (_isScrolled()) {
+      unawaited(controller.animateTo(
+        0,
+        duration: TiebananaMetrics.durationBase,
+        curve: TiebananaMetrics.curveStandard,
+      ));
+    }
+    if (_refreshController.isAttached) {
+      await _refreshController.show();
+    } else {
+      await refresh();
+    }
+    if (mounted && _moreError != null && recommend.isNotEmpty) {
+      Fluttertoast.showToast(msg: '刷新失败，请稍后重试');
+    }
   }
 
   @override
   void dispose() {
+    widget.refreshController?.detach(this);
     Global.desktopRefreshTick.removeListener(_onDesktopRefresh);
     widget.backController?.detach(this);
     controller.dispose();

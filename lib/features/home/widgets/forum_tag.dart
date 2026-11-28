@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
@@ -21,6 +22,7 @@ import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';
+import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
 import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/layout/page_wrap.dart';
 import 'package:tiebanana/shared/widgets/avatar_image.dart';
@@ -30,10 +32,13 @@ import 'package:tieba_contract/tieba_contract.dart';
 
 ///主页贴合集
 class TagPan extends StatefulWidget {
-  const TagPan({super.key, this.historyLoader});
+  const TagPan({super.key, this.historyLoader, this.refreshController});
 
   ///最近浏览的取数入口。默认读本地历史库，测试可注入假数据。
   final List<ViewHistoryPageModel> Function()? historyLoader;
+
+  /// 桌面端顶栏触发刷新时的协作控制器。
+  final TabRefreshController? refreshController;
 
   @override
   _TagPanState createState() => _TagPanState();
@@ -54,14 +59,37 @@ class _TagPanState extends State<TagPan> with RouteAware {
   /// 是否已向 [appRouteObserver] 订阅，didChangeDependencies 中按此判断是否注册。
   bool _routeSubscribed = false;
 
+  /// 桌面端顶栏触发刷新时，同步拉出下拉刷新指示器。
+  final TiebananaRefreshController _refreshController =
+      TiebananaRefreshController();
+
   @override
   void initState() {
     super.initState();
     Global.desktopRefreshTick.addListener(_onDesktopRefresh);
+    widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
+  }
+
+  @override
+  void didUpdateWidget(covariant TagPan oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshController != widget.refreshController) {
+      oldWidget.refreshController?.detach(this);
+      widget.refreshController?.attach(this, onRefresh: _refreshFromShell);
+    }
   }
 
   void _onDesktopRefresh() {
-    if (mounted) _refresh(syncForums: true);
+    if (mounted) unawaited(_refreshFromShell());
+  }
+
+  Future<void> _refreshFromShell() async {
+    if (!mounted) return;
+    if (_refreshController.isAttached) {
+      await _refreshController.show();
+    } else {
+      await _refresh(syncForums: true, notifyOnError: true);
+    }
   }
 
   @override
@@ -84,6 +112,7 @@ class _TagPanState extends State<TagPan> with RouteAware {
 
   @override
   void dispose() {
+    widget.refreshController?.detach(this);
     Global.desktopRefreshTick.removeListener(_onDesktopRefresh);
     _filterController.dispose();
     if (_routeSubscribed) {
@@ -121,13 +150,23 @@ class _TagPanState extends State<TagPan> with RouteAware {
     _history = _readHistory();
   }
 
-  Future<void> _refresh({bool syncForums = true}) async {
+  Future<void> _refresh({
+    bool syncForums = true,
+    bool notifyOnError = false,
+  }) async {
+    ForumState? forumState;
     if (syncForums && mounted) {
-      await Provider.of<ForumState>(context, listen: false).refresh();
+      forumState = Provider.of<ForumState>(context, listen: false);
+      await forumState.refresh();
     }
     _loadHistory();
     if (mounted) {
       setState(() {});
+      if (notifyOnError &&
+          forumState?.error != null &&
+          forumState!.forums.isNotEmpty) {
+        Fluttertoast.showToast(msg: '刷新失败，请稍后重试');
+      }
     }
   }
 
@@ -369,48 +408,52 @@ class _TagPanState extends State<TagPan> with RouteAware {
             : '${forums.length} 个关注的吧 · $signedCount 个今天已签到'
                 '${unsignedCount > 0 ? '，还差 $unsignedCount 个' : '，今日已全签'}';
 
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: PageWrap(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                DesktopPageHeader(
-                  title: greetingTitle,
-                  subtitle: subtitle,
-                ),
-                if (twoCol)
-                  LayoutBuilder(
-                    builder:
-                        (BuildContext context, BoxConstraints constraints) {
-                      // 先把左栏宽度算出来再交给网格：`IntrinsicHeight` 内部
-                      // 不能出现 `LayoutBuilder`，否则查询固有高度会抛异常。
-                      final double leftWidth =
-                          (constraints.maxWidth - 16 - rightWidth)
-                              .clamp(0.0, double.infinity);
-                      return IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            Expanded(
-                              child: forumsPanel(
-                                gridWidth: (leftWidth - 30)
-                                    .clamp(0.0, double.infinity),
+        return TiebananaRefreshIndicator(
+          controller: _refreshController,
+          onRefresh: () => _refresh(syncForums: true, notifyOnError: true),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: PageWrap(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  DesktopPageHeader(
+                    title: greetingTitle,
+                    subtitle: subtitle,
+                  ),
+                  if (twoCol)
+                    LayoutBuilder(
+                      builder:
+                          (BuildContext context, BoxConstraints constraints) {
+                        // 先把左栏宽度算出来再交给网格：`IntrinsicHeight` 内部
+                        // 不能出现 `LayoutBuilder`，否则查询固有高度会抛异常。
+                        final double leftWidth =
+                            (constraints.maxWidth - 16 - rightWidth)
+                                .clamp(0.0, double.infinity);
+                        return IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Expanded(
+                                child: forumsPanel(
+                                  gridWidth: (leftWidth - 30)
+                                      .clamp(0.0, double.infinity),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            SizedBox(width: rightWidth, child: recentPanel),
-                          ],
-                        ),
-                      );
-                    },
-                  )
-                else ...<Widget>[
-                  forumsPanel(),
-                  const SizedBox(height: 16),
-                  recentPanel,
+                              const SizedBox(width: 16),
+                              SizedBox(width: rightWidth, child: recentPanel),
+                            ],
+                          ),
+                        );
+                      },
+                    )
+                  else ...<Widget>[
+                    forumsPanel(),
+                    const SizedBox(height: 16),
+                    recentPanel,
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );

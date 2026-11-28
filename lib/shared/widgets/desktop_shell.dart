@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -48,7 +50,7 @@ class DesktopShellFrame extends StatefulWidget {
 
   /// 根页面切页签回调；为 null 时设置 [Global.desktopTabRequest] 并退回首页根路由。
   final ValueChanged<int>? onSelectTab;
-  final VoidCallback? onRefresh;
+  final FutureOr<void> Function()? onRefresh;
   final VoidCallback? onBack;
   final VoidCallback? onSearchTap;
   final bool hideSearchPill;
@@ -59,9 +61,21 @@ class DesktopShellFrame extends StatefulWidget {
   State<DesktopShellFrame> createState() => _DesktopShellFrameState();
 }
 
-class _DesktopShellFrameState extends State<DesktopShellFrame> {
+class _DesktopShellFrameState extends State<DesktopShellFrame>
+    with SingleTickerProviderStateMixin {
   final GlobalKey _bellKey = GlobalKey();
   bool _signingAll = false;
+  bool _refreshing = false;
+  late final AnimationController _refreshController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
 
   static T? _maybeRead<T>(BuildContext context, {bool listen = true}) {
     try {
@@ -99,12 +113,42 @@ class _DesktopShellFrameState extends State<DesktopShellFrame> {
     }
   }
 
-  void _triggerRefresh() {
-    if (widget.onRefresh != null) {
-      widget.onRefresh!();
-      return;
+  Future<void> _triggerRefresh() async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    _refreshController.repeat();
+    try {
+      final FutureOr<void> result;
+      if (widget.onRefresh != null) {
+        result = widget.onRefresh!();
+      } else {
+        Global.desktopRefreshTick.value++;
+        result = null;
+      }
+      if (result is Future<void>) {
+        await result;
+      }
+      if (mounted) {
+        final double v = _refreshController.value;
+        await _refreshController
+            .animateTo(
+              1.0,
+              duration: Duration(
+                milliseconds: ((1.0 - v) * 450).round().clamp(160, 450),
+              ),
+              curve: Curves.easeOut,
+            )
+            .orCancel;
+      }
+    } on TickerCanceled {
+      // 页面销毁或动画被打断，忽略。
+    } finally {
+      if (mounted) {
+        _refreshController.stop();
+        _refreshController.value = 0.0;
+        setState(() => _refreshing = false);
+      }
     }
-    Global.desktopRefreshTick.value++;
   }
 
   void _toggleSidebarFold() {
@@ -206,11 +250,13 @@ class _DesktopShellFrameState extends State<DesktopShellFrame> {
         const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _goBack,
         const SingleActivator(LogicalKeyboardKey.bracketLeft, control: true):
             _goBack,
-        const SingleActivator(LogicalKeyboardKey.f5): _triggerRefresh,
-        const SingleActivator(LogicalKeyboardKey.keyR, control: true):
-            _triggerRefresh,
+        const SingleActivator(LogicalKeyboardKey.f5): () =>
+            unawaited(_triggerRefresh()),
+        const SingleActivator(LogicalKeyboardKey.keyR, control: true): () =>
+            unawaited(_triggerRefresh()),
       },
       child: FocusScope(
+        autofocus: true,
         child: Scaffold(
           backgroundColor: tokens.bg,
           resizeToAvoidBottomInset: false,
@@ -240,7 +286,9 @@ class _DesktopShellFrameState extends State<DesktopShellFrame> {
                       onBack: _goBack,
                       hideSearchPill: widget.hideSearchPill,
                       onSearchTap: _openSearch,
-                      onRefresh: _triggerRefresh,
+                      onRefresh: () => unawaited(_triggerRefresh()),
+                      refreshing: _refreshing,
+                      refreshTurns: _refreshController,
                       bellKey: _bellKey,
                       onBellTap: _openBell,
                       onToggleBrightness: () => _toggleBrightness(context),
@@ -747,6 +795,8 @@ class _DesktopTopBar extends StatelessWidget {
     required this.hideSearchPill,
     required this.onSearchTap,
     required this.onRefresh,
+    required this.refreshing,
+    required this.refreshTurns,
     required this.bellKey,
     required this.onBellTap,
     required this.onToggleBrightness,
@@ -763,6 +813,8 @@ class _DesktopTopBar extends StatelessWidget {
   final bool hideSearchPill;
   final VoidCallback onSearchTap;
   final VoidCallback onRefresh;
+  final bool refreshing;
+  final Animation<double> refreshTurns;
   final GlobalKey bellKey;
   final VoidCallback onBellTap;
   final VoidCallback onToggleBrightness;
@@ -777,14 +829,16 @@ class _DesktopTopBar extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final TiebananaAccount? account = AccountStore.current;
 
-    return Container(
-      height: AppBreakpoints.topBarHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: tokens.bar,
-        border: Border(bottom: BorderSide(color: tokens.line)),
-      ),
-      child: Row(
+    return Stack(
+      children: <Widget>[
+        Container(
+          height: AppBreakpoints.topBarHeight,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: tokens.bar,
+            border: Border(bottom: BorderSide(color: tokens.line)),
+          ),
+          child: Row(
         children: <Widget>[
           _TopIconBtn(
             icon: Icons.arrow_back_rounded,
@@ -897,9 +951,9 @@ class _DesktopTopBar extends StatelessWidget {
           ] else
             const Spacer(),
           if (trailing != null) ...trailing!,
-          _TopIconBtn(
-            icon: Icons.refresh_rounded,
-            tooltip: '刷新 (F5)',
+          _RefreshIconBtn(
+            turns: refreshTurns,
+            refreshing: refreshing,
             onTap: onRefresh,
           ),
           ListenableBuilder(
@@ -942,6 +996,61 @@ class _DesktopTopBar extends StatelessWidget {
             ),
           ],
         ],
+      ),
+        ),
+        if (refreshing)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 2,
+            child: LinearProgressIndicator(
+              minHeight: 2,
+              backgroundColor: Colors.transparent,
+              color: tokens.primary,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _RefreshIconBtn extends StatelessWidget {
+  const _RefreshIconBtn({
+    required this.turns,
+    required this.refreshing,
+    required this.onTap,
+  });
+
+  final Animation<double> turns;
+  final bool refreshing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final Color fg = refreshing ? tokens.primary : tokens.textSecondary;
+    return Tooltip(
+      message: refreshing ? '正在刷新…' : '刷新 (F5)',
+      child: Material(
+        color: refreshing
+            ? tokens.primaryContainer.withValues(alpha: 0.65)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: SizedBox(
+            width: 34,
+            height: 34,
+            child: Center(
+              child: RotationTransition(
+                turns: turns,
+                child: Icon(Icons.refresh_rounded, size: 18, color: fg),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -11,6 +11,7 @@ import 'package:tiebanana/features/message/state/message_reminder.dart';
 import 'package:tiebanana/features/message/state/notification_reminder.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/shared/controllers/back_to_top_controller.dart';
+import 'package:tiebanana/shared/controllers/tab_refresh_controller.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';
 import 'package:tiebanana/features/forum/state/forum_state.dart';
 import 'package:tiebanana/features/home/widgets/forum_tag.dart';
@@ -51,6 +52,9 @@ class _HomePageState extends State<HomePage> {
 
   /// 每个页签一个：返回键先问当前页签「列表回顶了没」，回了才走退出流程。
   List<BackToTopController> backToTopController = [];
+
+  /// 桌面端顶栏刷新按钮转发给当前激活页签的协作对象。
+  List<TabRefreshController> tabRefreshController = [];
 
   /// 当前页签下标。分页器本身不滚动，只在这里更新；消息页据此暂停后台轮询。
   final ValueNotifier<int> _activeTab = ValueNotifier<int>(0);
@@ -99,6 +103,7 @@ class _HomePageState extends State<HomePage> {
     for (var i = 0; i < 4; i++) {
       barController.add(FloatingSearchBarController());
       backToTopController.add(BackToTopController());
+      tabRefreshController.add(TabRefreshController());
     }
     page = _buildPages();
     MessageReminder.reset();
@@ -124,12 +129,14 @@ class _HomePageState extends State<HomePage> {
           key: ValueKey<String>('home-$revision'),
           child: _Home(
             controller: barController[0],
+            refreshController: tabRefreshController[0],
           )),
       KeepAliveWrapper(
           key: ValueKey<String>('recommend-$revision'),
           child: _Recommand(
             controller: barController[1],
             backController: backToTopController[1],
+            refreshController: tabRefreshController[1],
           )),
       KeepAliveWrapper(
           key: ValueKey<String>('message-$revision'),
@@ -138,6 +145,7 @@ class _HomePageState extends State<HomePage> {
             index: 2,
             child: _Notifaction(
               controller: barController[2],
+              refreshController: tabRefreshController[2],
               onBrowse: () => goToTab(0),
             ),
           )),
@@ -145,6 +153,7 @@ class _HomePageState extends State<HomePage> {
           key: ValueKey<String>('user-$revision'),
           child: _UserAndSettings(
             controller: barController[3],
+            refreshController: tabRefreshController[3],
           ))
     ];
   }
@@ -257,16 +266,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _refreshActiveDesktopTab() {
-    switch (_currentPage) {
-      case 0:
-        forumState.refresh();
-      case 2:
-        MessageReminder.refresh();
-        MessageReminder.refreshChat();
-        NotificationReminder.instance.refresh();
+  Future<void> _refreshActiveDesktopTab() async {
+    final TabRefreshController current = tabRefreshController[_currentPage];
+    if (_currentPage == 2) {
+      await Future.wait(<Future<void>>[
+        current.refresh(),
+        MessageReminder.refresh(),
+        MessageReminder.refreshChat(),
+        NotificationReminder.instance.refresh(),
+      ]);
+      return;
     }
-    Global.desktopRefreshTick.value++;
+    if (current.isAttached) {
+      await current.refresh();
+    } else if (_currentPage == 0) {
+      await forumState.refresh();
+    }
   }
 
   @override
@@ -378,7 +393,8 @@ class _HomePageState extends State<HomePage> {
 //Home界面
 class _Home extends StatefulWidget {
   final FloatingSearchBarController controller;
-  const _Home({required this.controller});
+  final TabRefreshController refreshController;
+  const _Home({required this.controller, required this.refreshController});
 
   @override
   __HomeState createState() => __HomeState();
@@ -394,7 +410,7 @@ class __HomeState extends State<_Home> {
   Widget build(BuildContext context) {
     LifeTimeCallback().onHomeFormPageCreate(context);
     if (!AppBreakpoints.isCompact(context)) {
-      return const TagPan();
+      return TagPan(refreshController: widget.refreshController);
     }
     // decoration: const BoxDecoration(color: Color(0xFFF2F2F5)),
     return LayoutBuilder(
@@ -410,7 +426,7 @@ class __HomeState extends State<_Home> {
                 child: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: (() => widget.controller.close()),
-              child: const TagPan(),
+              child: TagPan(refreshController: widget.refreshController),
             )),
           ],
         );
@@ -423,7 +439,12 @@ class __HomeState extends State<_Home> {
 class _Recommand extends StatefulWidget {
   final FloatingSearchBarController controller;
   final BackToTopController backController;
-  const _Recommand({required this.controller, required this.backController});
+  final TabRefreshController refreshController;
+  const _Recommand({
+    required this.controller,
+    required this.backController,
+    required this.refreshController,
+  });
 
   @override
   __RecommandState createState() => __RecommandState();
@@ -435,6 +456,7 @@ class __RecommandState extends State<_Recommand> {
     return RecommendPan(
       controller: widget.controller,
       backController: widget.backController,
+      refreshController: widget.refreshController,
     );
   }
 }
@@ -442,10 +464,15 @@ class __RecommandState extends State<_Recommand> {
 //消息回复和@页
 class _Notifaction extends StatefulWidget {
   final FloatingSearchBarController controller;
+  final TabRefreshController refreshController;
 
   /// 空态「去逛逛」：切到首页页签。
   final VoidCallback? onBrowse;
-  const _Notifaction({required this.controller, this.onBrowse});
+  const _Notifaction({
+    required this.controller,
+    required this.refreshController,
+    this.onBrowse,
+  });
 
   @override
   __NotifactionState createState() => __NotifactionState();
@@ -456,6 +483,7 @@ class __NotifactionState extends State<_Notifaction> {
   Widget build(BuildContext context) {
     return MessagePan(
       controller: widget.controller,
+      refreshController: widget.refreshController,
       onBrowse: widget.onBrowse,
     );
   }
@@ -464,7 +492,11 @@ class __NotifactionState extends State<_Notifaction> {
 //个人界面与软件设置
 class _UserAndSettings extends StatefulWidget {
   final FloatingSearchBarController controller;
-  const _UserAndSettings({required this.controller});
+  final TabRefreshController refreshController;
+  const _UserAndSettings({
+    required this.controller,
+    required this.refreshController,
+  });
 
   @override
   __UserAndSettingsState createState() => __UserAndSettingsState();
@@ -475,6 +507,7 @@ class __UserAndSettingsState extends State<_UserAndSettings> {
   Widget build(BuildContext context) {
     return UserPage(
       controller: widget.controller,
+      refreshController: widget.refreshController,
     );
   }
 }
