@@ -83,11 +83,17 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
   final _originals = <int>{};
   final _failedOriginals = <int>{};
   final _loaded = <String, int?>{};
+  final _gestures = <int, GlobalKey<ExtendedImageGestureState>>{};
   late int _current;
   late final Object? _heroTag;
   bool _saving = false;
   bool _controlsVisible = true;
   bool _thumbnailsVisible = false;
+
+  bool get _currentImageIsZoomed {
+    final gesture = _gestures[_current]?.currentState;
+    return (gesture?.gestureDetails?.totalScale ?? 1) > 1;
+  }
 
   String? _original(int index) {
     final urls = widget.highQualityUrls;
@@ -316,6 +322,9 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                     ? ExtendedImageGesturePageView.builder(
                         controller: _pages,
                         itemCount: widget.imgUrls.length,
+                        // 放大后由图片处理整个拖动，避免斜向平移时误切页。
+                        shouldAccpetHorizontalOrVerticalDrag: (pointers) =>
+                            pointers.length == 1 && !_currentImageIsZoomed,
                         onPageChanged: (index) {
                           setState(() => _current = index);
                           _revealThumbnail();
@@ -334,6 +343,8 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
                             },
                             child: _ExplorerImage(
                               key: ValueKey(index),
+                              gestureKey: _gestures.putIfAbsent(index,
+                                  () => GlobalKey<ExtendedImageGestureState>()),
                               url: _source(index),
                               preview: widget.imgUrls[index],
                               onTap: () => setState(
@@ -670,6 +681,7 @@ class _ZoomedImgExplorerState extends State<ZoomedImgExplorer> {
 class _ExplorerImage extends StatefulWidget {
   const _ExplorerImage(
       {super.key,
+      required this.gestureKey,
       required this.url,
       required this.preview,
       required this.onTap,
@@ -677,6 +689,7 @@ class _ExplorerImage extends StatefulWidget {
       required this.onLoaded,
       required this.onOriginalFailed});
 
+  final GlobalKey<ExtendedImageGestureState> gestureKey;
   final String url;
   final String preview;
   final VoidCallback onTap;
@@ -690,7 +703,6 @@ class _ExplorerImage extends StatefulWidget {
 
 class _ExplorerImageState extends State<_ExplorerImage>
     with SingleTickerProviderStateMixin {
-  final _gesture = GlobalKey<ExtendedImageGestureState>();
   late final _zoom = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 180));
   VoidCallback? _zoomListener;
@@ -744,6 +756,15 @@ class _ExplorerImageState extends State<_ExplorerImage>
     _zoom.forward();
   }
 
+  GestureConfig _gestureConfig(ExtendedImageState _) => GestureConfig(
+        // 翻页由外层识别，避免图片将拖动中途转交给分页器。
+        inPageView: false,
+        reverseMousePointerScrollDirection: true,
+        initialScale: 1,
+        minScale: 1,
+        maxScale: 5,
+      );
+
   @override
   Widget build(BuildContext context) => GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -753,14 +774,9 @@ class _ExplorerImageState extends State<_ExplorerImage>
           cache: true,
           fit: BoxFit.contain,
           mode: ExtendedImageMode.gesture,
-          extendedImageGestureKey: _gesture,
+          extendedImageGestureKey: widget.gestureKey,
           handleLoadingProgress: true,
-          initGestureConfigHandler: (_) => GestureConfig(
-              reverseMousePointerScrollDirection: true,
-              inPageView: true,
-              initialScale: 1,
-              minScale: 1,
-              maxScale: 5),
+          initGestureConfigHandler: _gestureConfig,
           onDoubleTap: _doubleTap,
           loadStateChanged: (state) {
             switch (state.extendedImageLoadState) {
@@ -815,13 +831,8 @@ class _ExplorerImageState extends State<_ExplorerImage>
         cache: true,
         fit: BoxFit.contain,
         mode: ExtendedImageMode.gesture,
-        extendedImageGestureKey: _gesture,
-        initGestureConfigHandler: (_) => GestureConfig(
-            reverseMousePointerScrollDirection: true,
-            inPageView: true,
-            initialScale: 1,
-            minScale: 1,
-            maxScale: 5),
+        extendedImageGestureKey: widget.gestureKey,
+        initGestureConfigHandler: _gestureConfig,
         onDoubleTap: _doubleTap,
         loadStateChanged: (state) =>
             state.extendedImageLoadState == LoadState.completed

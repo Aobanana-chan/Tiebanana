@@ -328,7 +328,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('已加载图片双击缩放与还原，横屏不溢出', (tester) async {
+  testWidgets('宽屏放大后可斜向上下拖动，双击还原后恢复滑动切图', (tester) async {
     const url = 'https://test.invalid/loaded.png';
     final recorder = ui.PictureRecorder();
     Canvas(recorder).drawColor(Colors.blue, BlendMode.src);
@@ -340,8 +340,16 @@ void main() {
         provider,
         () => OneFrameImageStreamCompleter(
             Future.value(ImageInfo(image: image!))));
-    await open(tester, const ImgExplorer(imgUrl: url, heroTagSalt: 'zoom'),
-        size: const Size(600, 300));
+    final controller = ExtendedPageController();
+    addTearDown(controller.dispose);
+    await open(
+        tester,
+        ZoomedImgExplorer(
+          imgUrls: const [url, 'https://test.invalid/zoom-next.png'],
+          pageController: controller,
+          heroTagSalt: 'zoom',
+        ),
+        size: const Size(1200, 300));
     await tester.pump();
     final gesture = tester
         .state<ExtendedImageGestureState>(find.byType(ExtendedImageGesture));
@@ -356,8 +364,28 @@ void main() {
 
     await doubleTap();
     expect(gesture.gestureDetails!.totalScale, closeTo(2.5, .01));
+    // 图片放大后仍比视口窄。模拟上下拖动时夹杂一小段偏横的位移。
+    for (final direction in [1, -1]) {
+      final before = gesture.gestureDetails!.offset!.dy;
+      final drag = await tester.startGesture(center);
+      await drag.moveBy(Offset(0, 25.0 * direction));
+      await drag.moveBy(const Offset(-30, 0));
+      await drag.moveBy(Offset(-8, 50.0 * direction));
+      await tester.pump();
+      expect((gesture.gestureDetails!.offset!.dy - before) * direction,
+          greaterThan(20));
+      expect(controller.page, closeTo(0, .001));
+      await drag.up();
+      await tester.pumpAndSettle();
+      expect(find.text('1 / 2'), findsOneWidget);
+    }
+
     await doubleTap();
     expect(gesture.gestureDetails!.totalScale, closeTo(1, .01));
+    await tester.dragFrom(center, const Offset(-850, 0));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('2 / 2'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     PaintingBinding.instance.imageCache.clear();
