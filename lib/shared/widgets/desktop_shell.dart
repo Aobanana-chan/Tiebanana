@@ -9,6 +9,7 @@ import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/features/account/state/user_state.dart';
 import 'package:tiebanana/features/account/widgets/account_switch_sheet.dart';
+import 'package:tiebanana/features/forum/data/forum_visit_store.dart';
 import 'package:tiebanana/features/forum/state/forum_state.dart';
 import 'package:tiebanana/features/message/state/notification_reminder.dart';
 import 'package:tiebanana/features/message/widgets/reminder_sheet.dart';
@@ -461,48 +462,64 @@ class _DesktopSidebar extends StatelessWidget {
           // 按动画当前帧的内容宽度切换布局，给横排的图标、文字和角标留出空间。
           const double minExpandedContentWidth = 148;
           final bool showLabels = constraints.maxWidth >= minExpandedContentWidth;
-          return Column(
-            crossAxisAlignment: showLabels
-                ? CrossAxisAlignment.stretch
-                : CrossAxisAlignment.center,
-            children: <Widget>[
-              _buildBrand(tokens, showLabels: showLabels),
-              const SizedBox(height: 8),
-              for (int i = 0; i < _navItems.length; i++) ...<Widget>[
-                _buildNavItem(
-                  context,
-                  tokens,
-                  i,
-                  _navItems[i],
-                  showLabels: showLabels,
-                ),
-                if (i < _navItems.length - 1) const SizedBox(height: 3),
-              ],
-              if (showLabels &&
+          return ListenableBuilder(
+            listenable: Listenable.merge(<Listenable>[
+              ForumVisitStore.changes,
+              AccountStore.changes,
+            ]),
+            builder: (BuildContext context, _) {
+              final bool hasFollowed =
+                  forumState != null && forumState!.forums.isNotEmpty;
+              final List<_QuickForumItem> quick =
+                  showLabels && forumState != null
+                      ? _selectQuickForums(forumState!.forums)
+                      : const <_QuickForumItem>[];
+              final bool showQuickSection = showLabels &&
                   forumState != null &&
-                  forumState!.forums.isNotEmpty) ...<Widget>[
-                const SizedBox(height: 12),
-                Expanded(child: _buildQuickForums(context, tokens)),
-              ] else
-                const Spacer(),
-              if (showLabels)
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                  child: Divider(height: 1, thickness: 1, color: tokens.line),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: SizedBox(
-                    width: 28,
-                    child: Divider(height: 1, thickness: 1, color: tokens.line),
-                  ),
-                ),
-              _buildAboutEntry(context, tokens, showLabels: showLabels),
-              const SizedBox(height: 6),
-              _buildAccountCard(context, tokens, showLabels: showLabels),
-            ],
+                  (quick.isNotEmpty || hasFollowed);
+              return Column(
+                crossAxisAlignment: showLabels
+                    ? CrossAxisAlignment.stretch
+                    : CrossAxisAlignment.center,
+                children: <Widget>[
+                  _buildBrand(tokens, showLabels: showLabels),
+                  const SizedBox(height: 8),
+                  for (int i = 0; i < _navItems.length; i++) ...<Widget>[
+                    _buildNavItem(
+                      context,
+                      tokens,
+                      i,
+                      _navItems[i],
+                      showLabels: showLabels,
+                    ),
+                    if (i < _navItems.length - 1) const SizedBox(height: 3),
+                  ],
+                  if (showQuickSection) ...<Widget>[
+                    const SizedBox(height: 12),
+                    Expanded(child: _buildQuickForums(context, tokens, quick)),
+                  ] else
+                    const Spacer(),
+                  if (showLabels)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 6),
+                      child: Divider(height: 1, thickness: 1, color: tokens.line),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: SizedBox(
+                        width: 28,
+                        child:
+                            Divider(height: 1, thickness: 1, color: tokens.line),
+                      ),
+                    ),
+                  _buildAboutEntry(context, tokens, showLabels: showLabels),
+                  const SizedBox(height: 6),
+                  _buildAccountCard(context, tokens, showLabels: showLabels),
+                ],
+              );
+            },
           );
         },
       ),
@@ -751,9 +768,59 @@ class _DesktopSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickForums(BuildContext context, TiebananaTokens tokens) {
-    final List<LikeForumInfo> quick =
-        forumState!.forums.take(8).toList(growable: false);
+  static List<_QuickForumItem> _selectQuickForums(
+    List<LikeForumInfo> followed,
+  ) {
+    final Map<String, ForumVisitRecord> stats = ForumVisitStore.load();
+    if (stats.isEmpty) {
+      return const <_QuickForumItem>[];
+    }
+
+    final Map<String, ({int index, LikeForumInfo info})> followedByName =
+        <String, ({int index, LikeForumInfo info})>{
+      for (int i = 0; i < followed.length; i++)
+        followed[i].forumName.trim(): (index: i, info: followed[i]),
+    };
+
+    final List<_QuickForumItem> candidates = <_QuickForumItem>[];
+    int extraIndex = followed.length;
+    for (final ForumVisitRecord record in stats.values) {
+      if (record.count <= 0) {
+        continue;
+      }
+      final ({int index, LikeForumInfo info})? matched =
+          followedByName[record.forumName];
+      final LikeForumInfo? likeInfo = matched?.info;
+      final String avatar = (likeInfo != null && likeInfo.avatar.isNotEmpty)
+          ? likeInfo.avatar
+          : record.avatar;
+      candidates.add(_QuickForumItem(
+        forumName: likeInfo?.forumName ?? record.forumName,
+        avatar: avatar,
+        visitCount: record.count,
+        lastVisitAt: record.lastVisitAt,
+        originalIndex: matched?.index ?? extraIndex++,
+        likeInfo: likeInfo,
+      ));
+    }
+
+    candidates.sort((_QuickForumItem a, _QuickForumItem b) {
+      final int byCount = b.visitCount.compareTo(a.visitCount);
+      if (byCount != 0) return byCount;
+      final int byRecent = b.lastVisitAt.compareTo(a.lastVisitAt);
+      if (byRecent != 0) return byRecent;
+      return a.originalIndex.compareTo(b.originalIndex);
+    });
+
+    return candidates.take(8).toList(growable: false);
+  }
+
+  Widget _buildQuickForums(
+    BuildContext context,
+    TiebananaTokens tokens,
+    List<_QuickForumItem> quick,
+  ) {
+    final bool hasFollowed = forumState?.forums.isNotEmpty ?? false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -772,87 +839,107 @@ class _DesktopSidebar extends StatelessWidget {
                       ),
                 ),
               ),
-              Tooltip(
-                message: '一键签到',
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(6),
-                  onTap: signingAll ? null : onSignAll,
-                  child: SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: signingAll
-                        ? Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.8,
-                              color: tokens.primary,
-                            ),
-                          )
-                        : Icon(Icons.check_rounded,
-                            size: 14, color: tokens.textTertiary),
+              if (hasFollowed)
+                Tooltip(
+                  message: '一键签到',
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: signingAll ? null : onSignAll,
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: signingAll
+                          ? Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.8,
+                                color: tokens.primary,
+                              ),
+                            )
+                          : Icon(Icons.check_rounded,
+                              size: 14, color: tokens.textTertiary),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            itemCount: quick.length,
-            padding: EdgeInsets.zero,
-            itemBuilder: (BuildContext context, int index) {
-              final LikeForumInfo forum = quick[index];
-              final bool signed = forum.isSign != '0';
-              return InkWell(
-                borderRadius: BorderRadius.circular(9),
-                hoverColor: tokens.primary.withValues(alpha: .05),
-                onTap: () => onOpenForum(forum.forumName),
-                child: SizedBox(
-                  height: 31,
+          child: quick.isEmpty
+              ? Align(
+                  alignment: Alignment.topLeft,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 9),
-                    child: Row(
-                      children: <Widget>[
-                        _MiniForumAvatar(url: forum.avatar),
-                        const SizedBox(width: 9),
-                        Expanded(
-                          child: Text(
-                            forum.forumName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 12.5,
-                                      color: tokens.textSecondary,
-                                    ),
+                    padding: const EdgeInsets.fromLTRB(9, 4, 9, 0),
+                    child: Text(
+                      '暂无逛过的吧',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: tokens.textTertiary,
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        if (signed)
-                          Icon(Icons.check_rounded,
-                              size: 13, color: tokens.primary)
-                        else
-                          Text(
-                            'Lv.${forum.levelId}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: tokens.textTertiary,
-                              fontFeatures: const <FontFeature>[
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                      ],
                     ),
                   ),
+                )
+              : ListView.builder(
+                  itemCount: quick.length,
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (BuildContext context, int index) {
+                    final _QuickForumItem item = quick[index];
+                    final LikeForumInfo? forum = item.likeInfo;
+                    final bool signed = forum != null && forum.isSign != '0';
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(9),
+                      hoverColor: tokens.primary.withValues(alpha: .05),
+                      onTap: () => onOpenForum(item.forumName),
+                      child: SizedBox(
+                        height: 31,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 9),
+                          child: Row(
+                            children: <Widget>[
+                              _MiniForumAvatar(url: item.avatar),
+                              const SizedBox(width: 9),
+                              Expanded(
+                                child: Text(
+                                  item.forumName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        fontSize: 12.5,
+                                        color: tokens.textSecondary,
+                                      ),
+                                ),
+                              ),
+                              if (forum != null) ...<Widget>[
+                                const SizedBox(width: 6),
+                                if (signed)
+                                  Icon(Icons.check_rounded,
+                                      size: 13, color: tokens.primary)
+                                else
+                                  Text(
+                                    'Lv.${forum.levelId}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: tokens.textTertiary,
+                                      fontFeatures: const <FontFeature>[
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );
@@ -975,6 +1062,24 @@ class _DesktopSidebar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _QuickForumItem {
+  const _QuickForumItem({
+    required this.forumName,
+    required this.avatar,
+    required this.visitCount,
+    required this.lastVisitAt,
+    required this.originalIndex,
+    this.likeInfo,
+  });
+
+  final String forumName;
+  final String avatar;
+  final int visitCount;
+  final int lastVisitAt;
+  final int originalIndex;
+  final LikeForumInfo? likeInfo;
 }
 
 class _MiniForumAvatar extends StatelessWidget {

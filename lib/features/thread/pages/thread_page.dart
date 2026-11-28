@@ -24,6 +24,7 @@ import 'package:tiebanana/shared/widgets/desktop_shell.dart';
 import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/features/account/data/account_store.dart';
 import 'package:tiebanana/app/global.dart';
+import 'package:tiebanana/features/forum/data/forum_visit_store.dart';
 import 'package:tiebanana/features/thread/state/reply_events.dart';
 import 'package:tiebanana/features/thread/data/thread_cache.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -56,11 +57,24 @@ class _ThreadPageState extends State<ThreadPageRoute> {
   TiebaThreadPage? _page;
   bool _loading = true;
   bool _showLoadError = false;
+  bool _recordedForumVisit = false;
+
+  void _recordForumVisit(TiebaThreadPage page) {
+    if (_recordedForumVisit) return;
+    if (_uid != (AccountStore.currentUid ?? '')) return;
+    final String forumName = page.forumName.trim();
+    if (forumName.isEmpty) return;
+    _recordedForumVisit = true;
+    ForumVisitStore.recordVisit(forumName, avatar: page.avatar);
+  }
 
   Future<void> _load() async {
     final cached = await Global.threadCache.read(_uid, widget.kz);
     if (!mounted) return;
-    if (cached != null) setState(() => _page = cached);
+    if (cached != null) {
+      _recordForumVisit(cached);
+      setState(() => _page = cached);
+    }
     await _refresh();
   }
 
@@ -75,6 +89,7 @@ class _ThreadPageState extends State<ThreadPageRoute> {
           completePage: widget.pid == null);
       if (!mounted) return;
       Global.daoapi.storeViewHistory(data.tid, data.title, data.forumName);
+      _recordForumVisit(data);
       if (_mainKey.currentState != null) {
         _mainKey.currentState!
             .applyFreshPage(data, completePage: widget.pid == null);

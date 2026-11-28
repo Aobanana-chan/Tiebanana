@@ -6,6 +6,7 @@ import 'package:tieba_contract/tieba_contract.dart';
 import 'package:tiebanana/app/global.dart';
 import 'package:tiebanana/features/compose/models/thread_compose_route_data.dart';
 import 'package:tiebanana/features/compose/pages/thread_compose_page.dart';
+import 'package:tiebanana/features/forum/data/forum_visit_store.dart';
 import 'package:tiebanana/shared/content/tieba_parser.dart';
 import 'package:tiebanana/shared/controllers/app_bar_title.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
@@ -83,13 +84,31 @@ class _ForumHomePageState extends State<ForumHomePage>
   ForumPage? _forumPage;
   List<_ForumTabState> _tabs = <_ForumTabState>[];
   int _tabIndex = 0;
+  bool _recordedForumVisit = false;
 
   ///服务端上下文，翻页 / 切页签时回传。
   String _frsCommonInfo = '';
   String _topCardId = '';
 
+  void _recordForumVisit(ForumPage data) {
+    if (_recordedForumVisit) return;
+    final String forumName = data.forum.name.trim().isNotEmpty
+        ? data.forum.name.trim()
+        : widget.kw.trim();
+    if (forumName.isEmpty) return;
+    _recordedForumVisit = true;
+    ForumVisitStore.recordVisit(forumName, avatar: data.forum.avatar);
+  }
+
   void init() {
-    initForum = Global.tiebaAPI.getForumPage(kw: widget.kw, pn: 1);
+    initForum = Global.tiebaAPI.getForumPage(kw: widget.kw, pn: 1).then(
+      (ForumPage data) {
+        if (mounted) {
+          _recordForumVisit(data);
+        }
+        return data;
+      },
+    );
   }
 
   @override

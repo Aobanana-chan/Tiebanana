@@ -231,7 +231,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.refresh_rounded));
     await tester.pumpAndSettle();
 
-    expect(find.text('测试'), findsOneWidget);
+    expect(find.text('测试吧'), findsOneWidget);
     expect(find.text('刷新失败，请稍后重试'), findsOneWidget);
 
     // 3. 切到动态页签后点击刷新：顶栏进度条与页内刷新指示器同时出现
