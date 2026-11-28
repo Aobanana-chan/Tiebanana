@@ -12,6 +12,7 @@ import 'package:tiebanana/app/navigation/app_page_route.dart';
 import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/features/settings/pages/image_cache_page.dart';
 import 'package:tiebanana/features/diagnostics/pages/diagnostics_page.dart';
+import 'package:tiebanana/shared/layout/app_breakpoints.dart';
 import 'package:tiebanana/shared/theme/tiebanana_metrics.dart';
 import 'package:tiebanana/shared/theme/tiebanana_tokens.dart';
 import 'package:tiebanana/shared/theme/tiebanana_typography.dart';
@@ -52,6 +53,9 @@ class _AppSettingPageState extends State<AppSettingPage> {
   late double _fontSize;
   int? _imageCacheBytes;
 
+  /// 已经安排宽屏退场，避免同一帧里重复 pop。
+  bool _leavingForDesktop = false;
+
   @override
   void initState() {
     super.initState();
@@ -84,9 +88,30 @@ class _AppSettingPageState extends State<AppSettingPage> {
     Global.saveProfile();
   }
 
+  /// 窗口拉到桌面宽度后，本页并入主界面的「个人与设置」，自动退场。
+  ///
+  /// 本页只有手机布局，宽屏下留着会和后面的桌面骨架并存。退场只在
+  /// 没有子页面 / 弹窗盖在本页之上时发生（[ModalRoute.isCurrent]），
+  /// 正在编辑小尾巴、调整数量时保持现状，关掉之后下一次重建再退场。
+  void _maybeLeaveForDesktop(BuildContext context) {
+    if (_leavingForDesktop || !AppBreakpoints.isDesktop(context)) return;
+    final ModalRoute<Object?>? route = ModalRoute.of<Object?>(context);
+    if (route == null || !route.isCurrent) return;
+    final NavigatorState navigator = Navigator.of(context);
+    if (!navigator.canPop()) return;
+    _leavingForDesktop = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      navigator.pop();
+      // 退场后根页签停在「个人与设置」，与宽屏下的设置入口保持一致。
+      Global.desktopTabRequest.value = 3;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final TiebananaTokens tokens = TiebananaTokens.of(context);
+    _maybeLeaveForDesktop(context);
     return Scaffold(
       appBar: AppBar(
         // 概念图里设置页的顶栏与页面同色（不是 bar 的那层灰）。

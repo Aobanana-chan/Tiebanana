@@ -16,6 +16,10 @@ enum AppBreakpoint {
 }
 
 /// 桌面端与响应式布局常量。
+///
+/// 判断「用哪套骨架」（手机底栏 / 桌面壳层）一律看窗口宽度
+/// （`MediaQuery.sizeOf`）；宽屏壳层占掉侧栏后内容宽度会小 76–220dp，
+/// 内容宽度只用于页内单栏 / 双栏这类局部取舍。
 class AppBreakpoints {
   const AppBreakpoints._();
 

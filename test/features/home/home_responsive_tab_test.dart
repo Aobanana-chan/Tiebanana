@@ -12,6 +12,8 @@ import 'package:tiebanana/features/message/state/message_reminder.dart';
 import 'package:tiebanana/features/profile/pages/my_profile_page.dart';
 import 'package:tiebanana/features/recommend/pages/recommend_page.dart';
 import 'package:tiebanana/features/settings/state/app_settings.dart';
+import 'package:tiebanana/features/settings/pages/app_setting_page.dart';
+import 'package:tiebanana/app/navigation/route_names.dart';
 import 'package:tiebanana/shared/theme/tiebanana_seed.dart';
 import 'package:tiebanana/shared/theme/tiebanana_theme.dart';
 import 'package:tiebanana/shared/widgets/desktop_shell.dart';
@@ -32,6 +34,44 @@ Widget _wrapHome() {
       home: const HomePage(),
     ),
   );
+}
+
+/// 与 [_wrapHome] 相同，但带「应用设置」命名路由，用于验证窄屏设置页在拉宽后退场。
+Widget _wrapHomeWithSettingsRoute() {
+  return MultiProvider(
+    providers: <ChangeNotifierProvider<dynamic>>[
+      ChangeNotifierProvider<APPSettingProvider>(
+        create: (_) => APPSettingProvider(),
+      ),
+      ChangeNotifierProvider<User>(
+        create: (_) => User(),
+      ),
+    ],
+    child: MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: TiebananaTheme.light(seedOf('blue'), 16),
+      routes: <String, WidgetBuilder>{
+        PageRouter.appSetting: (_) => const AppSettingPage(),
+      },
+      home: const HomePage(),
+    ),
+  );
+}
+
+/// 显式推帧：页面里有常驻动画（订阅流刷新等），`pumpAndSettle` 会一直等下去。
+Future<void> _pumpFrames(WidgetTester tester, [int frames = 10]) async {
+  for (int i = 0; i < frames; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+/// 从窄屏底栏进「个人」，再点开设置页。
+Future<void> _openSettingsFromProfile(WidgetTester tester) async {
+  await tester.tap(find.text('个人'));
+  await _pumpFrames(tester, 4);
+
+  await tester.tap(find.text('设置'));
+  await _pumpFrames(tester);
 }
 
 void main() {
@@ -134,6 +174,61 @@ void main() {
     );
     expect(find.byType(RecommendPan), findsOneWidget);
     expect(find.byType(TagPan), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('窄屏打开设置页后拉宽窗口，设置页自动退场并落到宽屏「个人与设置」', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    // 高度给足，窄屏「个人」页的设置分组不用滚动就能点到。
+    tester.view.physicalSize = const Size(390, 1600);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_wrapHomeWithSettingsRoute());
+    await _pumpFrames(tester, 3);
+
+    await _openSettingsFromProfile(tester);
+    expect(find.text('应用设置'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(1280, 800);
+    await _pumpFrames(tester);
+
+    expect(find.text('应用设置'), findsNothing);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(DesktopShellFrame), findsOneWidget);
+    expect(find.text('我的空间'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('设置页上的弹窗没关时不退场，关掉之后才并入宽屏设置', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 1600);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_wrapHomeWithSettingsRoute());
+    await _pumpFrames(tester, 3);
+
+    await _openSettingsFromProfile(tester);
+
+    await tester.tap(find.text('首页历史记录数量'));
+    await _pumpFrames(tester, 4);
+    expect(find.text('可设置 1–50 条，默认 15 条'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(1280, 800);
+    await _pumpFrames(tester);
+
+    // 编辑中的弹窗和设置页都保留，等用户自己关掉。
+    expect(find.text('应用设置'), findsOneWidget);
+    expect(find.text('可设置 1–50 条，默认 15 条'), findsOneWidget);
+
+    await tester.tap(find.text('取消'));
+    await _pumpFrames(tester);
+
+    expect(find.text('应用设置'), findsNothing);
+    expect(find.text('我的空间'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
