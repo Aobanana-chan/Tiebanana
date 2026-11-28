@@ -22,6 +22,34 @@ import 'package:tiebanana/shared/widgets/avatar_image.dart';
 import 'package:tiebanana/shared/widgets/message_badge.dart';
 import 'package:tiebanana/features/update/widgets/update_badge.dart';
 
+/// 桌面端壳层控制器：让页面内部的操作按钮（例如帖子详情页侧栏的刷新按钮）
+/// 同步触发顶栏刷新旋转与顶部进度条。
+class DesktopShellController {
+  _DesktopShellFrameState? _state;
+
+  /// 当前是否有 [DesktopShellFrame] 挂载。
+  bool get isAttached => _state != null;
+
+  void _attach(_DesktopShellFrameState state) {
+    _state = state;
+  }
+
+  void _detach(_DesktopShellFrameState state) {
+    if (identical(_state, state)) {
+      _state = null;
+    }
+  }
+
+  /// 触发一次顶栏刷新动画与 [DesktopShellFrame.onRefresh] 回调。
+  Future<void> refresh() {
+    final _DesktopShellFrameState? state = _state;
+    if (state == null) {
+      return Future<void>.value();
+    }
+    return state._triggerRefresh();
+  }
+}
+
 /// 桌面端统一壳层（`≥ 720dp`）：左侧导航栏（76px 图标轨 / 220px 展开侧边栏）
 /// + 顶部 56px 全局栏 + 主工作区。
 ///
@@ -34,6 +62,7 @@ class DesktopShellFrame extends StatefulWidget {
     this.subtitle,
     this.activeTab = 0,
     this.activeAbout = false,
+    this.controller,
     this.onSelectTab,
     this.onAboutTap,
     this.onRefresh,
@@ -53,6 +82,9 @@ class DesktopShellFrame extends StatefulWidget {
 
   /// 是否高亮侧边栏底部的「关于与更新」入口。
   final bool activeAbout;
+
+  /// 可选控制器：允许页面内部按钮同步触发顶栏刷新态。
+  final DesktopShellController? controller;
 
   /// 根页面切页签回调；为 null 时设置 [Global.desktopTabRequest] 并退回首页根路由。
   final ValueChanged<int>? onSelectTab;
@@ -79,7 +111,23 @@ class _DesktopShellFrameState extends State<DesktopShellFrame>
   );
 
   @override
+  void initState() {
+    super.initState();
+    widget.controller?._attach(this);
+  }
+
+  @override
+  void didUpdateWidget(covariant DesktopShellFrame oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._detach(this);
+      widget.controller?._attach(this);
+    }
+  }
+
+  @override
   void dispose() {
+    widget.controller?._detach(this);
     _refreshController.dispose();
     super.dispose();
   }

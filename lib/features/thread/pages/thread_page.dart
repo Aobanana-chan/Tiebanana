@@ -278,6 +278,8 @@ class ThreadPageMainState extends State<ThreadPageMain>
   late final ThreadReadSession session;
   late final String cacheUid;
   bool _manualRefreshing = false;
+  final DesktopShellController _desktopShellController =
+      DesktopShellController();
 
   final ScrollController _controller = ScrollController();
 
@@ -481,6 +483,15 @@ class ThreadPageMainState extends State<ThreadPageMain>
           if (entry.key != key && (entry.key < 0) == (key < 0))
             for (final TiebaThreadPagePost p in entry.value) p.id,
       };
+
+  Future<void> _triggerManualRefresh() async {
+    if (_loading || _manualRefreshing || _bottomRefreshing) return;
+    if (_desktopShellController.isAttached) {
+      await _desktopShellController.refresh();
+    } else {
+      await _manualRefresh();
+    }
+  }
 
   Future<void> _manualRefresh() async {
     if (_loading || _manualRefreshing || _bottomRefreshing) return;
@@ -1561,9 +1572,13 @@ class ThreadPageMainState extends State<ThreadPageMain>
                               SliverToBoxAdapter(
                                   child: ListTile(
                                 dense: true,
-                                leading: Icon(session.paused
-                                    ? Icons.offline_bolt_outlined
-                                    : Icons.sync),
+                                leading: session.paused
+                                    ? const Icon(Icons.offline_bolt_outlined)
+                                    : const SizedBox.square(
+                                        dimension: 18,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
+                                      ),
                                 title: Text(session.paused
                                     ? '正在浏览缓存，自动请求已暂停'
                                     : '正在更新帖子…'),
@@ -1779,13 +1794,20 @@ class ThreadPageMainState extends State<ThreadPageMain>
                             horizontal: 14, vertical: 10),
                         child: Row(
                           children: <Widget>[
-                            Icon(
-                              session.paused
-                                  ? Icons.offline_bolt_outlined
-                                  : Icons.sync_rounded,
-                              size: 16,
-                              color: tokens.primary,
-                            ),
+                            if (session.paused)
+                              Icon(
+                                Icons.offline_bolt_outlined,
+                                size: 16,
+                                color: tokens.primary,
+                              )
+                            else
+                              SizedBox.square(
+                                dimension: 15,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: tokens.primary,
+                                ),
+                              ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -1795,7 +1817,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
                             ),
                             if (session.paused)
                               TextButton(
-                                onPressed: _manualRefresh,
+                                onPressed: _triggerManualRefresh,
                                 child: const Text('刷新'),
                               ),
                           ],
@@ -1823,7 +1845,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
                         children: <Widget>[
                           OutlinedButton.icon(
                             onPressed:
-                                _manualRefreshing ? null : _manualRefresh,
+                                _manualRefreshing ? null : _triggerManualRefresh,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: tokens.textSecondary,
                               side: BorderSide(color: tokens.line),
@@ -1835,8 +1857,16 @@ class ThreadPageMainState extends State<ThreadPageMain>
                               textStyle: const TextStyle(
                                   fontSize: 11, fontWeight: FontWeight.w600),
                             ),
-                            icon: const Icon(Icons.refresh_rounded, size: 14),
-                            label: const Text('刷新最新回复'),
+                            icon: _manualRefreshing
+                                ? SizedBox.square(
+                                    dimension: 13,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.8,
+                                      color: tokens.primary,
+                                    ),
+                                  )
+                                : const Icon(Icons.refresh_rounded, size: 14),
+                            label: Text(_manualRefreshing ? '正在刷新…' : '刷新最新回复'),
                           ),
                           const SizedBox(width: 10),
                           Text(
@@ -1926,6 +1956,7 @@ class ThreadPageMainState extends State<ThreadPageMain>
     );
 
     return DesktopShellFrame(
+      controller: _desktopShellController,
       title: '帖子详情',
       subtitle: '${info.forumName}吧 · ${info.title}',
       activeTab: -1,
@@ -2284,10 +2315,9 @@ class ThreadPageMainState extends State<ThreadPageMain>
                           ),
                     ),
                   ),
-                  _SmallCtrlIcon(
-                    icon: Icons.refresh_rounded,
-                    tooltip: '刷新',
-                    onTap: _manualRefresh,
+                  _SmallRefreshCtrlIcon(
+                    refreshing: _manualRefreshing,
+                    onTap: _triggerManualRefresh,
                   ),
                   _SmallCtrlIcon(
                     icon: Icons.share_outlined,
@@ -2680,6 +2710,103 @@ class _SideStatBtn extends StatelessWidget {
                     ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SmallRefreshCtrlIcon extends StatefulWidget {
+  const _SmallRefreshCtrlIcon({
+    required this.refreshing,
+    required this.onTap,
+  });
+
+  final bool refreshing;
+  final VoidCallback onTap;
+
+  @override
+  State<_SmallRefreshCtrlIcon> createState() => _SmallRefreshCtrlIconState();
+}
+
+class _SmallRefreshCtrlIconState extends State<_SmallRefreshCtrlIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.refreshing) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _SmallRefreshCtrlIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshing && !oldWidget.refreshing) {
+      _controller.repeat();
+    } else if (!widget.refreshing && oldWidget.refreshing) {
+      unawaited(_finishSpin());
+    }
+  }
+
+  Future<void> _finishSpin() async {
+    try {
+      final double v = _controller.value;
+      await _controller
+          .animateTo(
+            1.0,
+            duration: Duration(
+              milliseconds: ((1.0 - v) * 450).round().clamp(160, 450),
+            ),
+            curve: Curves.easeOut,
+          )
+          .orCancel;
+    } on TickerCanceled {
+      // 组件销毁或再次开始刷新时忽略。
+    } finally {
+      if (mounted && !widget.refreshing) {
+        _controller.stop();
+        _controller.value = 0.0;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TiebananaTokens tokens = TiebananaTokens.of(context);
+    final bool refreshing = widget.refreshing;
+    final Color fg = refreshing ? tokens.primary : tokens.textSecondary;
+    return Tooltip(
+      message: refreshing ? '正在刷新…' : '刷新',
+      child: Material(
+        color: refreshing
+            ? tokens.primaryContainer.withValues(alpha: 0.65)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(7),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(7),
+          onTap: refreshing ? null : widget.onTap,
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: Center(
+              child: RotationTransition(
+                turns: _controller,
+                child: Icon(Icons.refresh_rounded, size: 16, color: fg),
+              ),
+            ),
           ),
         ),
       ),
